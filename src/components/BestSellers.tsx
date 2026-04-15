@@ -1,49 +1,34 @@
 import { motion } from "motion/react";
 import { Plus, Star } from "lucide-react";
-
-const products = [
-  {
-    id: "p1",
-    name: "OG Court Polo",
-    category: "Pickleball",
-    price: "₱1,100",
-    image: "/images/product_polo.png",
-    colors: ["bg-offgrid-cream", "bg-offgrid-green", "bg-offgrid-lime"],
-    sold: 312,
-    tag: "Best Seller",
-  },
-  {
-    id: "p2",
-    name: "Fairway Tee",
-    category: "Golf",
-    price: "₱1,100",
-    image: "/images/product_tee_white.png",
-    colors: ["bg-offgrid-dark", "bg-offgrid-lime"],
-    sold: 248,
-    tag: "New",
-  },
-  {
-    id: "p3",
-    name: "Pilipinas Drop Tee",
-    category: "OG Pilipinas",
-    price: "₱1,100",
-    image: "/images/product_tee_graphic.png",
-    colors: ["bg-offgrid-cream", "bg-offgrid-dark"],
-    sold: 189,
-    tag: "PH Limited",
-  },
-  {
-    id: "p4",
-    name: "Off-Day Shorts",
-    category: "Everyday Wear",
-    price: "₱1,100",
-    image: "/images/product_shorts.png",
-    colors: ["bg-offgrid-green", "bg-offgrid-dark", "bg-offgrid-cream"],
-    sold: 156,
-  },
-];
+import { useStore } from "@/src/store/store";
+import { products, formatPrice } from "@/src/data/products";
 
 export function BestSellers() {
+  const { setSelectedProduct, addToCart, toggleCart } = useStore();
+
+  const handleProductClick = (productId: string) => {
+    const product = products.find(p => p.id === productId);
+    if (product) {
+      setSelectedProduct(product);
+    }
+  };
+
+  const handleQuickAdd = (productId: string) => {
+    const product = products.find(p => p.id === productId);
+    if (product) {
+      addToCart({
+        productId: product.id,
+        name: product.name,
+        image: product.image,
+        price: product.price,
+        size: "M",
+        color: product.colors[0].name,
+        quantity: 1,
+      });
+      toggleCart(true);
+    }
+  };
+
   return (
     <section id="shop" className="py-20 md:py-24 bg-offgrid-cream">
       <div className="container mx-auto px-6 md:px-12">
@@ -58,7 +43,7 @@ export function BestSellers() {
             </h2>
           </div>
           <div className="text-right">
-            <p className="text-offgrid-green/70 text-sm mb-2">All pieces ₱1,100</p>
+            <p className="text-offgrid-green/70 text-sm mb-2">All pieces {formatPrice(1100)}</p>
             <a href="#" className="inline-flex items-center text-sm font-bold uppercase tracking-[0.15em] text-offgrid-green hover:text-offgrid-lime transition-colors group">
               View All Products
               <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
@@ -76,7 +61,10 @@ export function BestSellers() {
               transition={{ duration: 0.5, delay: index * 0.1 }}
               className="group"
             >
-              <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-white mb-4">
+              <div 
+                className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-white mb-4 cursor-pointer"
+                onClick={() => handleProductClick(product.id)}
+              >
                 {product.tag && (
                   <span className="absolute top-4 left-4 z-10 px-3 py-1 bg-offgrid-cream/90 backdrop-blur-sm text-offgrid-green text-[10px] font-bold tracking-[0.15em] uppercase rounded-full">
                     {product.tag}
@@ -91,7 +79,13 @@ export function BestSellers() {
                 
                 {/* Quick Add Button */}
                 <div className="absolute inset-x-4 bottom-4 translate-y-12 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 z-20">
-                  <button className="w-full bg-offgrid-green text-offgrid-cream py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-offgrid-dark transition-colors shadow-lg cursor-pointer">
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleQuickAdd(product.id);
+                    }}
+                    className="w-full bg-offgrid-green text-offgrid-cream py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-offgrid-dark transition-colors shadow-lg cursor-pointer"
+                  >
                     <Plus className="w-4 h-4" />
                     Quick Add
                   </button>
@@ -103,7 +97,7 @@ export function BestSellers() {
                   <p className="text-[10px] font-semibold tracking-[0.2em] uppercase text-offgrid-green/50">
                     {product.category}
                   </p>
-                  <p className="font-bold text-offgrid-green text-sm">{product.price}</p>
+                  <p className="font-bold text-offgrid-green text-sm">{formatPrice(product.price)}</p>
                 </div>
                 <h3 className="text-base font-display font-bold text-offgrid-green mb-3">
                   {product.name}
@@ -114,7 +108,7 @@ export function BestSellers() {
                     {product.colors.map((color, i) => (
                       <div 
                         key={i} 
-                        className={`w-3.5 h-3.5 rounded-full border border-offgrid-green/20 ${color}`}
+                        className={`w-3.5 h-3.5 rounded-full border border-offgrid-green/20 ${color.value}`}
                       />
                     ))}
                   </div>

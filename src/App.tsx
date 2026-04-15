@@ -12,6 +12,9 @@ import { EventSection } from "./components/EventSection";
 import { SocialProof } from "./components/SocialProof";
 import { CTASection } from "./components/CTASection";
 import { Footer } from "./components/Footer";
+import { ProductModal } from "./components/ProductModal";
+import { CartDrawer } from "./components/CartDrawer";
+import { CheckoutModal } from "./components/CheckoutModal";
 
 export default function App() {
   return (
@@ -27,6 +30,11 @@ export default function App() {
         <CTASection />
       </main>
       <Footer />
+      
+      {/* E-Commerce Modals */}
+      <ProductModal />
+      <CartDrawer />
+      <CheckoutModal />
     </div>
   );
 }

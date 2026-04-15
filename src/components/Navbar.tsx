@@ -3,10 +3,14 @@ import { ShoppingBag, Menu, X } from "lucide-react";
 import { Button } from "./ui/Button";
 import { cn } from "@/src/lib/utils";
 import { motion, AnimatePresence } from "motion/react";
+import { useStore } from "@/src/store/store";
 
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { toggleCart, cart } = useStore();
+
+  const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -64,11 +68,26 @@ export function Navbar() {
             <Button variant="secondary" size="sm" className="hidden md:inline-flex">
               Shop Now
             </Button>
-            <button className={cn(
-              "p-2 transition-colors hover:text-offgrid-lime",
-              "text-offgrid-cream"
-            )}>
+            <button 
+              onClick={() => toggleCart()}
+              className={cn(
+                "p-2 transition-colors hover:text-offgrid-lime relative",
+                "text-offgrid-cream"
+              )}
+            >
               <ShoppingBag className="w-5 h-5" />
+              <AnimatePresence>
+                {itemCount > 0 && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0 }}
+                    className="absolute -top-1 -right-1 w-5 h-5 bg-offgrid-lime text-offgrid-dark rounded-full text-[10px] font-bold flex items-center justify-center shadow-md"
+                  >
+                    {itemCount}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </button>
             <button 
               className={cn("md:hidden p-2 transition-colors", "text-offgrid-cream")}

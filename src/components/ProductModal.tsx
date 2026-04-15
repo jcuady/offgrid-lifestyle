@@ -53,7 +53,7 @@ export function ProductModal() {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.3 }}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-offgrid-dark/80 backdrop-blur-sm p-4"
+        className="fixed inset-0 z-50 flex items-center justify-center bg-offgrid-dark/80 backdrop-blur-sm p-3 sm:p-4 md:p-6"
         onClick={handleClose}
       >
         <motion.div
@@ -61,15 +61,15 @@ export function ProductModal() {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ duration: 0.3, ease: "easeOut" }}
-          className="relative w-full max-w-5xl max-h-[90vh] bg-offgrid-cream rounded-2xl overflow-hidden shadow-2xl"
+          className="relative w-full max-w-5xl max-h-[95vh] sm:max-h-[90vh] bg-offgrid-cream rounded-2xl overflow-hidden shadow-2xl"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Close Button */}
           <button
             onClick={handleClose}
-            className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-offgrid-cream/90 backdrop-blur-sm flex items-center justify-center hover:bg-offgrid-green hover:text-offgrid-cream transition-colors shadow-md"
+            className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-offgrid-cream/90 backdrop-blur-sm flex items-center justify-center hover:bg-offgrid-green hover:text-offgrid-cream transition-colors shadow-md"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
 
           <div className="grid grid-cols-1 md:grid-cols-2 h-full overflow-y-auto">
@@ -88,35 +88,35 @@ export function ProductModal() {
             </div>
 
             {/* Product Details */}
-            <div className="p-8 md:p-10 flex flex-col">
-              <div className="mb-6">
+            <div className="p-6 sm:p-8 md:p-10 flex flex-col">
+              <div className="mb-5 sm:mb-6">
                 <p className="text-[10px] font-semibold tracking-[0.2em] uppercase text-offgrid-green/50 mb-2">
                   {selectedProduct.category}
                 </p>
-                <h2 className="text-3xl md:text-4xl font-display font-black text-offgrid-green leading-tight mb-3">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-display font-black text-offgrid-green leading-tight mb-2 sm:mb-3">
                   {selectedProduct.name}
                 </h2>
-                <p className="text-2xl font-display font-bold text-offgrid-lime">
+                <p className="text-xl sm:text-2xl font-display font-bold text-offgrid-lime">
                   {formatPrice(selectedProduct.price)}
                 </p>
               </div>
 
-              <p className="text-sm text-offgrid-green/70 leading-relaxed mb-8">
+              <p className="text-sm text-offgrid-green/70 leading-relaxed mb-6 sm:mb-8">
                 {selectedProduct.description}
               </p>
 
               {/* Color Selector */}
-              <div className="mb-6">
-                <label className="text-xs font-semibold tracking-[0.15em] uppercase text-offgrid-green mb-3 block">
+              <div className="mb-5 sm:mb-6">
+                <label className="text-xs font-semibold tracking-[0.15em] uppercase text-offgrid-green mb-2 sm:mb-3 block">
                   Color — <span className="text-offgrid-green/60">{selectedProduct.colors.find(c => c.value === selectedColor)?.name || selectedProduct.colors[0].name}</span>
                 </label>
-                <div className="flex gap-3">
+                <div className="flex gap-2 sm:gap-3">
                   {selectedProduct.colors.map((color) => (
                     <button
                       key={color.value}
                       onClick={() => setSelectedColor(color.value)}
                       className={cn(
-                        "w-10 h-10 rounded-full border-2 transition-all duration-200",
+                        "w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 transition-all duration-200",
                         selectedColor === color.value
                           ? "border-offgrid-green scale-110 shadow-md"
                           : "border-offgrid-green/20 hover:border-offgrid-green/40"
@@ -129,8 +129,8 @@ export function ProductModal() {
               </div>
 
               {/* Size Selector */}
-              <div className="mb-6">
-                <label className="text-xs font-semibold tracking-[0.15em] uppercase text-offgrid-green mb-3 block">
+              <div className="mb-5 sm:mb-6">
+                <label className="text-xs font-semibold tracking-[0.15em] uppercase text-offgrid-green mb-2 sm:mb-3 block">
                   Size
                 </label>
                 <div className="flex flex-wrap gap-2">
@@ -139,7 +139,7 @@ export function ProductModal() {
                       key={size}
                       onClick={() => setSelectedSize(size)}
                       className={cn(
-                        "px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border",
+                        "px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all duration-200 border",
                         selectedSize === size
                           ? "bg-offgrid-green text-offgrid-cream border-offgrid-green"
                           : "bg-transparent text-offgrid-green border-offgrid-green/30 hover:border-offgrid-green"
@@ -152,8 +152,8 @@ export function ProductModal() {
               </div>
 
               {/* Quantity Selector */}
-              <div className="mb-8">
-                <label className="text-xs font-semibold tracking-[0.15em] uppercase text-offgrid-green mb-3 block">
+              <div className="mb-6 sm:mb-8">
+                <label className="text-xs font-semibold tracking-[0.15em] uppercase text-offgrid-green mb-2 sm:mb-3 block">
                   Quantity
                 </label>
                 <div className="flex items-center gap-4">

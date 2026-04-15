@@ -53,7 +53,7 @@ export function Navbar() {
     { name: "Collections", action: () => handleScrollToSection("collections") },
     { name: "Shop", action: () => handleNavigate("/shop") },
     { name: "About", action: () => handleScrollToSection("about") },
-    { name: "Events", action: () => handleScrollToSection("events") },
+    { name: "Events", action: () => handleNavigate("/events") },
   ];
 
   return (

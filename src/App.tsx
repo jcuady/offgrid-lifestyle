@@ -17,6 +17,7 @@ import { ProductModal } from "./components/ProductModal";
 import { CartDrawer } from "./components/CartDrawer";
 import { CheckoutModal } from "./components/CheckoutModal";
 import { ShopPage } from "./pages/ShopPage";
+import { EventsPage } from "./pages/EventsPage";
 
 function HomePage() {
   return (
@@ -43,6 +44,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/shop" element={<ShopPage />} />
+          <Route path="/events" element={<EventsPage />} />
         </Routes>
         
         {/* E-Commerce Modals */}

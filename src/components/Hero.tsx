@@ -1,10 +1,12 @@
 import React, { useRef } from "react";
 import { motion, useScroll, useTransform, useMotionValue, useSpring } from "motion/react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "./ui/Button";
 import { ArrowRight } from "lucide-react";
 
 export function Hero() {
   const ref = useRef<HTMLElement>(null);
+  const navigate = useNavigate();
   
   // Scroll parallax
   const { scrollYProgress } = useScroll({
@@ -39,6 +41,17 @@ export function Hero() {
   const handleMouseLeave = () => {
     mouseX.set(0);
     mouseY.set(0);
+  };
+
+  const handleShopCollection = () => {
+    navigate("/shop");
+  };
+
+  const handleExploreSports = () => {
+    const collectionsSection = document.getElementById("collections");
+    if (collectionsSection) {
+      collectionsSection.scrollIntoView({ behavior: "smooth" });
+    }
   };
 
   return (
@@ -111,11 +124,11 @@ export function Hero() {
             transition={{ duration: 0.6, delay: 0.5 }}
             className="flex flex-col sm:flex-row gap-4"
           >
-            <Button variant="secondary" size="lg" className="group">
+            <Button variant="secondary" size="lg" className="group" onClick={handleShopCollection}>
               Shop Collection
               <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Button>
-            <Button variant="outline" size="lg" className="border-offgrid-cream/60 text-offgrid-cream hover:bg-offgrid-cream hover:text-offgrid-green backdrop-blur-sm bg-offgrid-cream/10">
+            <Button variant="outline" size="lg" className="border-offgrid-cream/60 text-offgrid-cream hover:bg-offgrid-cream hover:text-offgrid-green backdrop-blur-sm bg-offgrid-cream/10" onClick={handleExploreSports}>
               Explore Sports
             </Button>
           </motion.div>

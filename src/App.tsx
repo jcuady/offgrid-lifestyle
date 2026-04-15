@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Navbar } from "./components/Navbar";
 import { Hero } from "./components/Hero";
 import { FeaturedCollections } from "./components/FeaturedCollections";
@@ -15,13 +16,13 @@ import { Footer } from "./components/Footer";
 import { ProductModal } from "./components/ProductModal";
 import { CartDrawer } from "./components/CartDrawer";
 import { CheckoutModal } from "./components/CheckoutModal";
+import { ShopPage } from "./pages/ShopPage";
 
-export default function App() {
+function HomePage() {
   return (
-    <div className="min-h-screen bg-offgrid-cream font-sans text-offgrid-green overflow-x-hidden">
-      <Navbar />
+    <>
+      <Hero />
       <main>
-        <Hero />
         <FeaturedCollections />
         <BestSellers />
         <BrandStory />
@@ -30,11 +31,25 @@ export default function App() {
         <CTASection />
       </main>
       <Footer />
-      
-      {/* E-Commerce Modals */}
-      <ProductModal />
-      <CartDrawer />
-      <CheckoutModal />
-    </div>
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <Router>
+      <div className="min-h-screen bg-offgrid-cream font-sans text-offgrid-green overflow-x-hidden">
+        <Navbar />
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/shop" element={<ShopPage />} />
+        </Routes>
+        
+        {/* E-Commerce Modals */}
+        <ProductModal />
+        <CartDrawer />
+        <CheckoutModal />
+      </div>
+    </Router>
   );
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { ShoppingBag, Menu, X } from "lucide-react";
 import { Button } from "./ui/Button";
 import { cn } from "@/src/lib/utils";
@@ -9,6 +10,8 @@ export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { toggleCart, cart } = useStore();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -20,11 +23,37 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Close mobile menu on route change
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location]);
+
+  const handleNavigate = (path: string) => {
+    navigate(path);
+  };
+
+  const handleScrollToSection = (sectionId: string) => {
+    if (location.pathname !== "/") {
+      navigate("/");
+      setTimeout(() => {
+        const element = document.getElementById(sectionId);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 100);
+    } else {
+      const element = document.getElementById(sectionId);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  };
+
   const navLinks = [
-    { name: "Collections", href: "#collections" },
-    { name: "Shop", href: "#shop" },
-    { name: "About", href: "#about" },
-    { name: "Events", href: "#events" },
+    { name: "Collections", action: () => handleScrollToSection("collections") },
+    { name: "Shop", action: () => handleNavigate("/shop") },
+    { name: "About", action: () => handleScrollToSection("about") },
+    { name: "Events", action: () => handleScrollToSection("events") },
   ];
 
   return (
@@ -50,22 +79,22 @@ export function Navbar() {
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-8">
             {navLinks.map((link) => (
-              <a
+              <button
                 key={link.name}
-                href={link.href}
+                onClick={link.action}
                 className={cn(
-                  "text-sm font-medium transition-colors hover:text-offgrid-lime",
+                  "text-sm font-medium transition-colors hover:text-offgrid-lime cursor-pointer",
                   isScrolled ? "text-offgrid-cream/80" : "text-offgrid-cream/90"
                 )}
               >
                 {link.name}
-              </a>
+              </button>
             ))}
           </nav>
 
           {/* Actions */}
           <div className="flex items-center gap-4 z-50">
-            <Button variant="secondary" size="sm" className="hidden md:inline-flex">
+            <Button variant="secondary" size="sm" className="hidden md:inline-flex" onClick={() => handleNavigate("/shop")}>
               Shop Now
             </Button>
             <button 
@@ -110,18 +139,17 @@ export function Navbar() {
           >
             <nav className="flex flex-col gap-6 text-center mt-12">
               {navLinks.map((link) => (
-                <a
+                <button
                   key={link.name}
-                  href={link.href}
-                  className="text-3xl font-display font-bold text-offgrid-cream hover:text-offgrid-lime transition-colors"
-                  onClick={() => setIsMobileMenuOpen(false)}
+                  onClick={link.action}
+                  className="text-3xl font-display font-bold text-offgrid-cream hover:text-offgrid-lime transition-colors cursor-pointer"
                 >
                   {link.name}
-                </a>
+                </button>
               ))}
             </nav>
             <div className="mt-auto pb-8 flex justify-center">
-              <Button variant="secondary" size="lg" className="w-full max-w-xs">
+              <Button variant="secondary" size="lg" className="w-full max-w-xs" onClick={() => handleNavigate("/shop")}>
                 Shop Now
               </Button>
             </div>

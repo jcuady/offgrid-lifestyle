@@ -1,10 +1,12 @@
 import { motion } from "motion/react";
 import { Plus, Star } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useStore } from "@/src/store/store";
 import { products, formatPrice } from "@/src/data/products";
 
 export function BestSellers() {
   const { setSelectedProduct, addToCart, toggleCart } = useStore();
+  const navigate = useNavigate();
 
   const handleProductClick = (productId: string) => {
     const product = products.find(p => p.id === productId);
@@ -44,10 +46,13 @@ export function BestSellers() {
           </div>
           <div className="text-right">
             <p className="text-offgrid-green/70 text-sm mb-2">All pieces {formatPrice(1100)}</p>
-            <a href="#" className="inline-flex items-center text-sm font-bold uppercase tracking-[0.15em] text-offgrid-green hover:text-offgrid-lime transition-colors group">
+            <button 
+              onClick={() => navigate("/shop")}
+              className="inline-flex items-center text-sm font-bold uppercase tracking-[0.15em] text-offgrid-green hover:text-offgrid-lime transition-colors group cursor-pointer"
+            >
               View All Products
               <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
-            </a>
+            </button>
           </div>
         </div>
 

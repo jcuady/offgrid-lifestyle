@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { OrderStatus, PaymentStatus } from "@/src/types/commerce";
 import { cn } from "@/src/lib/utils";
 import {
@@ -21,6 +22,19 @@ const ORDER_TRANSITIONS: OrderStatus[] = [
   "cancelled",
 ];
 const PAYMENT_TRANSITIONS: PaymentStatus[] = ["unpaid", "deposit_paid", "fully_paid", "refunded"];
+const STATUS_FLOW: Record<OrderStatus, OrderStatus[]> = {
+  draft: ["pending_deposit", "cancelled"],
+  pending_deposit: ["confirmed", "cancelled"],
+  confirmed: ["in_production", "cancelled"],
+  in_production: ["shipped", "cancelled"],
+  shipped: ["delivered", "cancelled"],
+  delivered: [],
+  cancelled: [],
+};
+
+function canTransitionStatus(current: OrderStatus, next: OrderStatus): boolean {
+  return current === next || STATUS_FLOW[current].includes(next);
+}
 
 export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
   const isAdmin = role === "admin";
@@ -31,6 +45,7 @@ export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
   const updateRetailPaymentStatus = usePortalStore((state) => state.updateRetailPaymentStatus);
   const updateCustomOrderStatus = usePortalStore((state) => state.updateCustomOrderStatus);
   const updateCustomPaymentStatus = usePortalStore((state) => state.updateCustomPaymentStatus);
+  const [feedback, setFeedback] = useState<string | null>(null);
 
   const rows = [...retailOrders.map((entry) => ({ kind: "retail" as const, entry })), ...customOrders.map((entry) => ({ kind: "custom" as const, entry }))]
     .sort((a, b) => new Date(b.entry.createdAt).getTime() - new Date(a.entry.createdAt).getTime());
@@ -48,6 +63,11 @@ export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
       </p>
 
       <div className="mt-6 overflow-hidden rounded-2xl border border-offgrid-green/10 bg-white">
+        {feedback && (
+          <div className="border-b border-offgrid-green/10 bg-offgrid-green/[0.04] px-4 py-2 text-xs text-offgrid-green/75">
+            {feedback}
+          </div>
+        )}
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-offgrid-green/10 text-left">
             <thead className="bg-offgrid-green/5">
@@ -112,10 +132,18 @@ export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
                           <select
                             value={status}
                             onChange={(event) => {
+                              const next = event.target.value as OrderStatus;
+                              if (!canTransitionStatus(status, next)) {
+                                setFeedback(
+                                  `Invalid transition: ${formatOrderStatus(status)} → ${formatOrderStatus(next)}.`,
+                                );
+                                return;
+                              }
+                              setFeedback(`Order ${id} updated to ${formatOrderStatus(next)}.`);
                               if (row.kind === "retail") {
-                                updateRetailOrderStatus(id, event.target.value as OrderStatus);
+                                updateRetailOrderStatus(id, next);
                               } else {
-                                updateCustomOrderStatus(id, event.target.value as OrderStatus);
+                                updateCustomOrderStatus(id, next);
                               }
                             }}
                             className="rounded-lg border border-offgrid-green/20 px-2 py-1 text-xs"
@@ -130,10 +158,12 @@ export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
                             <select
                               value={payment}
                               onChange={(event) => {
+                                const next = event.target.value as PaymentStatus;
+                                setFeedback(`Payment for ${id} updated to ${formatPaymentStatus(next)}.`);
                                 if (row.kind === "retail") {
-                                  updateRetailPaymentStatus(id, event.target.value as PaymentStatus);
+                                  updateRetailPaymentStatus(id, next);
                                 } else {
-                                  updateCustomPaymentStatus(id, event.target.value as PaymentStatus);
+                                  updateCustomPaymentStatus(id, next);
                                 }
                               }}
                               className="rounded-lg border border-offgrid-green/20 px-2 py-1 text-xs"

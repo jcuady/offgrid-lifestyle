@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { ArrowLeft, Send, Check, AlertCircle, RotateCcw } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { useCustomOrderStore } from "@/src/store/useCustomOrderStore";
-import { usePortalStore } from "@/src/store/usePortalStore";
 import { CUT_OPTIONS, MATERIAL_OPTIONS, PRINT_OPTIONS, estimateUnitPrice } from "@/src/data/customOptions";
+import { localOrderService } from "@/src/services";
 import { cn } from "@/src/lib/utils";
 
 function SummaryRow({ label, value }: { label: string; value: React.ReactNode }) {
@@ -17,7 +17,6 @@ function SummaryRow({ label, value }: { label: string; value: React.ReactNode })
 
 export function StepSummary() {
   const { draft, updateDraft, prevStep, resetDraft } = useCustomOrderStore();
-  const recordCustomOrder = usePortalStore((state) => state.recordCustomOrder);
   const [submitted, setSubmitted] = useState(false);
 
   const cutLabel = CUT_OPTIONS.find((o) => o.id === draft.cut)?.label ?? "—";
@@ -44,7 +43,7 @@ export function StepSummary() {
       createdAt: draft.createdAt ?? new Date().toISOString(),
     } as const;
     updateDraft(submittedDraft);
-    recordCustomOrder(submittedDraft);
+    localOrderService.submitCustomOrder(submittedDraft);
     setSubmitted(true);
   };
 

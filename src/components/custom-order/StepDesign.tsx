@@ -1,8 +1,10 @@
-import { useMemo, type ChangeEvent } from "react";
+import { useMemo, useState, type ChangeEvent } from "react";
+import { Link } from "react-router-dom";
 import { Upload, Download, ArrowRight } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { useCustomOrderStore } from "@/src/store/useCustomOrderStore";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
+import { PRIMARY_DESIGN_TEMPLATE_ID, triggerTemplateDownload } from "@/src/lib/resolveTemplateDownload";
 
 export function StepDesign() {
   const { draft, updateDraft, nextStep } = useCustomOrderStore();
@@ -11,7 +13,23 @@ export function StepDesign() {
     () => customTemplatesRaw.filter((entry) => entry.isPublished),
     [customTemplatesRaw],
   );
-  const primaryTemplate = templates[0];
+  const primaryTemplate = useMemo(
+    () => templates.find((t) => t.id === PRIMARY_DESIGN_TEMPLATE_ID) ?? templates[0],
+    [templates],
+  );
+  const [primaryDlBusy, setPrimaryDlBusy] = useState(false);
+
+  const handlePrimaryDownload = async () => {
+    if (!primaryTemplate) return;
+    try {
+      setPrimaryDlBusy(true);
+      await triggerTemplateDownload(primaryTemplate);
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : "Download failed.");
+    } finally {
+      setPrimaryDlBusy(false);
+    }
+  };
 
   const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -31,16 +49,27 @@ export function StepDesign() {
         </p>
       </div>
 
-      <div className="bg-offgrid-green/5 rounded-xl p-4 sm:p-6">
-        <a
-          href={primaryTemplate?.fileUrl ?? "#"}
-          className="inline-flex items-center gap-2 text-sm font-semibold text-offgrid-green hover:text-offgrid-lime transition-colors"
-        >
-          <Download className="w-4 h-4" />
-          {primaryTemplate ? `Download ${primaryTemplate.name}` : "Download Design Template"}
-        </a>
-        <p className="text-[10px] text-offgrid-green/50 mt-1">
-          {primaryTemplate?.description ?? "Use our template for best results. Includes bleed lines and safe zones."}
+      <div className="bg-offgrid-green/5 rounded-xl p-4 sm:p-6 space-y-3">
+        <div>
+          <button
+            type="button"
+            disabled={!primaryTemplate || primaryDlBusy}
+            onClick={() => void handlePrimaryDownload()}
+            className="inline-flex items-center gap-2 text-sm font-semibold text-offgrid-green hover:text-offgrid-lime transition-colors disabled:pointer-events-none disabled:opacity-40"
+          >
+            <Download className="w-4 h-4" />
+            {primaryTemplate ? `Download ${primaryTemplate.name}` : "Download design template"}
+          </button>
+          <p className="text-[10px] text-offgrid-green/50 mt-1">
+            {primaryTemplate?.description ?? "Use our template for best results. Includes bleed lines and safe zones."}
+          </p>
+        </div>
+        <p className="text-xs text-offgrid-green/55 border-t border-offgrid-green/10 pt-3">
+          Need another silhouette?{" "}
+          <Link to="/custom/templates" className="font-semibold text-offgrid-green underline underline-offset-2 hover:text-offgrid-lime">
+            Browse all templates
+          </Link>
+          .
         </p>
       </div>
 

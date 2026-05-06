@@ -1,3 +1,5 @@
+import type { FabricType as ProductFabricType, GarmentCut as ProductGarmentCut } from "@/src/data/products";
+
 export type OrderType = "retail" | "custom";
 
 export type OrderStatus =
@@ -15,19 +17,8 @@ export type PaymentStatus =
   | "fully_paid"
   | "refunded";
 
-export type GarmentCut =
-  | "short_sleeve"
-  | "long_sleeve"
-  | "sleeveless"
-  | "polo"
-  | "tank"
-  | "shorts";
-
-export type FabricType =
-  | "dri_fit"
-  | "cotton"
-  | "running_mesh"
-  | "poly_blend";
+export type GarmentCut = ProductGarmentCut;
+export type FabricType = ProductFabricType;
 
 export type PrintMethod =
   | "sublimation"

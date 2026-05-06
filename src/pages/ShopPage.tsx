@@ -1,41 +1,43 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { motion } from "motion/react";
 import { useNavigate } from "react-router-dom";
-import { Filter, SlidersHorizontal, Grid3X3, List, Search, ChevronDown, Star } from "lucide-react";
-import { useShallow } from "zustand/react/shallow";
-import { useStore } from "@/src/store/store";
+import { SlidersHorizontal, Search, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { formatPrice, Product } from "@/src/data/products";
 import { Button } from "@/src/components/ui/Button";
 import { cn } from "@/src/lib/utils";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 
 type SortOption = "newest" | "price-asc" | "price-desc" | "bestselling" | "name-asc";
-type ViewMode = "grid" | "list";
 
 export function ShopPage() {
   const navigate = useNavigate();
-  const { setSelectedProduct, addToCart, toggleCart } = useStore(
-    useShallow((state) => ({
-      setSelectedProduct: state.setSelectedProduct,
-      addToCart: state.addToCart,
-      toggleCart: state.toggleCart,
-    })),
-  );
   const products = useSiteContentStore((state) => state.products);
   
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [sortBy, setSortBy] = useState<SortOption>("newest");
-  const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 12;
 
-  const categories = [
-    { value: "all", label: "All Products", count: products.length },
-    { value: "Pickleball", label: "Pickleball", count: products.filter(p => p.category === "Pickleball").length },
-    { value: "Golf", label: "Golf", count: products.filter(p => p.category === "Golf").length },
-    { value: "OG Pilipinas", label: "OG Pilipinas", count: products.filter(p => p.category === "OG Pilipinas").length },
-    { value: "Everyday Wear", label: "Everyday Wear", count: products.filter(p => p.category === "Everyday Wear").length },
-  ];
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategory, sortBy, searchQuery]);
+
+  const categories = useMemo(() => {
+    const unique = [...new Set(products.map((p) => p.category))].sort((a, b) =>
+      a.localeCompare(b),
+    );
+    return [
+      { value: "all", label: "All Products", count: products.length },
+      ...unique.map((cat) => ({
+        value: cat,
+        label: cat,
+        count: products.filter((p) => p.category === cat).length,
+      })),
+    ];
+  }, [products]);
 
   const filteredAndSortedProducts = useMemo(() => {
     let filtered = products;
@@ -70,24 +72,16 @@ export function ShopPage() {
           return 0; // newest (default order)
       }
     });
-  }, [selectedCategory, sortBy, searchQuery]);
+  }, [products, selectedCategory, sortBy, searchQuery]);
+
+  const totalPages = Math.ceil(filteredAndSortedProducts.length / ITEMS_PER_PAGE);
+  const paginatedProducts = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredAndSortedProducts.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredAndSortedProducts, currentPage]);
 
   const handleProductClick = (product: Product) => {
-    setSelectedProduct(product);
-  };
-
-  const handleQuickAdd = (product: Product, e: React.MouseEvent) => {
-    e.stopPropagation();
-    addToCart({
-      productId: product.id,
-      name: product.name,
-      image: product.image,
-      price: product.price,
-      size: "M",
-      color: product.colors[0].name,
-      quantity: 1,
-    });
-    toggleCart(true);
+    navigate(`/shop/${product.slug}`);
   };
 
   return (
@@ -175,28 +169,6 @@ export function ShopPage() {
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-offgrid-green/40 pointer-events-none" />
               </div>
-
-              {/* View Mode Toggle */}
-              <div className="hidden sm:flex items-center gap-1 p-1 rounded-xl border border-offgrid-green/10 bg-white">
-                <button
-                  onClick={() => setViewMode("grid")}
-                  className={cn(
-                    "p-2 rounded-lg transition-all",
-                    viewMode === "grid" ? "bg-offgrid-green text-offgrid-cream" : "text-offgrid-green/40 hover:text-offgrid-green"
-                  )}
-                >
-                  <Grid3X3 className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setViewMode("list")}
-                  className={cn(
-                    "p-2 rounded-lg transition-all",
-                    viewMode === "list" ? "bg-offgrid-green text-offgrid-cream" : "text-offgrid-green/40 hover:text-offgrid-green"
-                  )}
-                >
-                  <List className="w-4 h-4" />
-                </button>
-              </div>
             </div>
           </div>
 
@@ -270,23 +242,17 @@ export function ShopPage() {
             </Button>
           </motion.div>
         ) : (
-          /* Product Grid */
-          <div className={cn(
-            viewMode === "grid"
-              ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8"
-              : "flex flex-col gap-4"
-          )}>
-            {filteredAndSortedProducts.map((product, index) => (
-              <motion.div
-                key={product.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: index * 0.05 }}
-                className="group cursor-pointer"
-                onClick={() => handleProductClick(product)}
-              >
-                {viewMode === "grid" ? (
-                  /* Grid View */
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
+              {paginatedProducts.map((product, index) => (
+                <motion.div
+                  key={product.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: index * 0.05 }}
+                  className="group cursor-pointer"
+                  onClick={() => handleProductClick(product)}
+                >
                   <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-white mb-4">
                     {product.tag && (
                       <span className="absolute top-4 left-4 z-10 px-3 py-1 bg-offgrid-cream/90 backdrop-blur-sm text-offgrid-green text-[10px] font-bold tracking-[0.15em] uppercase rounded-full">
@@ -299,93 +265,83 @@ export function ShopPage() {
                       alt={product.name}
                       className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
                     />
-                    
-                    {/* Quick Add Button */}
-                    <div className="absolute inset-x-4 bottom-4 translate-y-12 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 z-20">
-                      <button 
-                        onClick={(e) => handleQuickAdd(product, e)}
-                        className="w-full bg-offgrid-green text-offgrid-cream py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-offgrid-dark transition-colors shadow-lg"
-                      >
-                        Quick Add
-                      </button>
-                    </div>
                   </div>
-                ) : (
-                  /* List View */
-                  <div className="flex gap-4 sm:gap-6 bg-white rounded-2xl p-4 sm:p-6">
-                    <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-xl overflow-hidden flex-shrink-0">
-                      <img
-                        src={product.image}
-                        alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                      />
-                    </div>
-                    <div className="flex-1 flex flex-col justify-between">
-                      <div>
-                        <div className="flex items-start justify-between gap-4 mb-2">
-                          <div>
-                            <p className="text-[10px] font-semibold tracking-[0.2em] uppercase text-offgrid-green/50 mb-1">
-                              {product.category}
-                            </p>
-                            <h3 className="text-lg font-display font-bold text-offgrid-green">
-                              {product.name}
-                            </h3>
-                          </div>
-                          {product.tag && (
-                            <span className="px-3 py-1 bg-offgrid-cream/90 text-offgrid-green text-[10px] font-bold tracking-[0.15em] uppercase rounded-full flex-shrink-0">
-                              {product.tag}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-sm text-offgrid-green/70 line-clamp-2 mb-3 hidden sm:block">
-                          {product.description}
-                        </p>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <p className="text-xl font-display font-bold text-offgrid-lime">
-                            {formatPrice(product.price)}
-                          </p>
-                          <div className="flex items-center gap-1 text-xs text-offgrid-green/60">
-                            <Star className="w-3 h-3 fill-offgrid-green text-offgrid-green" />
-                            <span className="font-bold text-offgrid-green">{product.sold}</span> sold
-                          </div>
-                        </div>
-                        <button 
-                          onClick={(e) => handleQuickAdd(product, e)}
-                          className="px-4 py-2 bg-offgrid-green text-offgrid-cream rounded-xl text-sm font-semibold hover:bg-offgrid-dark transition-colors"
-                        >
-                          Add to Cart
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
 
-                {/* Product Info */}
-                <div className="px-1">
-                  <div className="flex justify-between items-start mb-1">
-                    <p className="text-[10px] font-semibold tracking-[0.2em] uppercase text-offgrid-green/50">
-                      {product.category}
-                    </p>
-                    <p className="font-bold text-offgrid-green text-sm">{formatPrice(product.price)}</p>
+                  {/* Product Info */}
+                  <div className="px-1">
+                    <div className="flex justify-between items-start mb-1">
+                      <p className="text-[10px] font-semibold tracking-[0.2em] uppercase text-offgrid-green/50">
+                        {product.category}
+                      </p>
+                      <p className="font-bold text-offgrid-green text-sm">{formatPrice(product.price)}</p>
+                    </div>
+                    <h3 className="text-base font-display font-bold text-offgrid-green mb-2">
+                      {product.name}
+                    </h3>
+                    
+                    <div className="flex gap-1.5">
+                      {product.colors.map((color, i) => (
+                        <div 
+                          key={i} 
+                          className={`w-3.5 h-3.5 rounded-full border border-offgrid-green/20 ${color.value}`}
+                        />
+                      ))}
+                    </div>
                   </div>
-                  <h3 className="text-base font-display font-bold text-offgrid-green mb-2">
-                    {product.name}
-                  </h3>
-                  
-                  <div className="flex gap-1.5">
-                    {product.colors.map((color, i) => (
-                      <div 
-                        key={i} 
-                        className={`w-3.5 h-3.5 rounded-full border border-offgrid-green/20 ${color.value}`}
-                      />
-                    ))}
-                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-3 mt-16 pt-8 border-t border-offgrid-green/10">
+                <button
+                  onClick={() => {
+                    setCurrentPage(p => Math.max(1, p - 1));
+                    window.scrollTo({ top: 400, behavior: 'smooth' });
+                  }}
+                  disabled={currentPage === 1}
+                  className="w-10 h-10 rounded-xl flex items-center justify-center border border-offgrid-green/20 bg-white text-offgrid-green hover:border-offgrid-green/50 hover:bg-offgrid-green/5 disabled:opacity-40 disabled:hover:border-offgrid-green/20 disabled:hover:bg-white disabled:cursor-not-allowed transition-all outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offgrid-green"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                
+                <div className="hidden sm:flex items-center gap-2">
+                  {Array.from({ length: totalPages }).map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => {
+                        setCurrentPage(i + 1);
+                        window.scrollTo({ top: 400, behavior: 'smooth' });
+                      }}
+                      className={cn(
+                        "min-w-[2.5rem] h-10 px-3 rounded-xl flex items-center justify-center text-sm font-bold transition-all outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offgrid-green",
+                        currentPage === i + 1
+                          ? "bg-offgrid-green text-offgrid-cream border border-transparent shadow-md"
+                          : "bg-white border border-offgrid-green/20 text-offgrid-green hover:border-offgrid-green/50 hover:bg-offgrid-green/5"
+                      )}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
                 </div>
-              </motion.div>
-            ))}
-          </div>
+                
+                <div className="sm:hidden text-sm font-bold text-offgrid-green px-5 py-2.5 border border-offgrid-green/20 rounded-xl bg-white">
+                  {currentPage} <span className="text-offgrid-green/50 font-semibold mx-1">/</span> {totalPages}
+                </div>
+
+                <button
+                  onClick={() => {
+                    setCurrentPage(p => Math.min(totalPages, p + 1));
+                    window.scrollTo({ top: 400, behavior: 'smooth' });
+                  }}
+                  disabled={currentPage === totalPages}
+                  className="w-10 h-10 rounded-xl flex items-center justify-center border border-offgrid-green/20 bg-white text-offgrid-green hover:border-offgrid-green/50 hover:bg-offgrid-green/5 disabled:opacity-40 disabled:hover:border-offgrid-green/20 disabled:hover:bg-white disabled:cursor-not-allowed transition-all outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offgrid-green"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
 

@@ -7,28 +7,22 @@ import {
   CalendarDays,
   Palette,
   BarChart3,
-  UserCircle2,
 } from "lucide-react";
 import { LOGO_WORDMARK_WHITE } from "@/src/lib/brandAssets";
 import { cn } from "@/src/lib/utils";
 import { usePortalStore, type UserRole } from "@/src/store/usePortalStore";
+import { localAuthService } from "@/src/services";
 
 interface PortalLayoutProps {
-  role: UserRole;
+  role: Exclude<UserRole, "customer">;
 }
 
-const labelsByRole: Record<UserRole, string> = {
-  customer: "Customer Portal",
+const labelsByRole: Record<Exclude<UserRole, "customer">, string> = {
   admin: "Admin Console",
   staff: "Staff Workspace",
 };
 
-const navByRole: Record<UserRole, { name: string; to: string; icon: typeof LayoutDashboard }[]> = {
-  customer: [
-    { name: "Dashboard", to: "/portal/customer", icon: LayoutDashboard },
-    { name: "My Orders", to: "/portal/customer/orders", icon: ClipboardList },
-    { name: "Profile", to: "/portal/customer/profile", icon: UserCircle2 },
-  ],
+const navByRole: Record<Exclude<UserRole, "customer">, { name: string; to: string; icon: typeof LayoutDashboard }[]> = {
   admin: [
     { name: "Dashboard", to: "/portal/admin", icon: LayoutDashboard },
     { name: "Orders", to: "/portal/admin/orders", icon: ClipboardList },
@@ -47,7 +41,6 @@ const navByRole: Record<UserRole, { name: string; to: string; icon: typeof Layou
 export function PortalLayout({ role }: PortalLayoutProps) {
   const navigate = useNavigate();
   const user = usePortalStore((state) => state.currentUser);
-  const logout = usePortalStore((state) => state.logout);
   const navItems = navByRole[role];
 
   return (
@@ -112,7 +105,7 @@ export function PortalLayout({ role }: PortalLayoutProps) {
           <div className="mt-8 border-t border-offgrid-cream/10 pt-6">
             <button
               onClick={() => {
-                logout();
+                localAuthService.logout();
                 navigate("/login");
               }}
               className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-offgrid-cream/70 transition-colors hover:bg-offgrid-cream/10 hover:text-offgrid-cream"

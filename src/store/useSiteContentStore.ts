@@ -28,15 +28,129 @@ export interface CustomContentSection {
   updatedAt: string;
 }
 
+export type TemplateStorageKind = "static" | "idb";
+
 export interface CustomTemplateAsset {
   id: string;
   name: string;
   description: string;
   fileName: string;
+  /** Same-origin path for `storageKind: static`; optional / ignored for `idb`. */
   fileUrl: string;
   format: string;
   isPublished: boolean;
   updatedAt: string;
+  /** Bundled files use `static`; admin uploads use `idb` (blob in IndexedDB). */
+  storageKind?: TemplateStorageKind;
+  /** Optional image used as card preview on the templates page. */
+  previewImageUrl?: string;
+}
+
+/** Filenames match `public/templates/og-client/` (kebab-case). Shirt first for wizard default. */
+export function createCanonicalOgTemplates(updatedAt: string): CustomTemplateAsset[] {
+  const row = (
+    partial: Omit<CustomTemplateAsset, "updatedAt" | "isPublished" | "storageKind">,
+  ): CustomTemplateAsset => ({
+    ...partial,
+    updatedAt,
+    isPublished: true,
+    storageKind: "static",
+  });
+
+  return [
+    row({
+      id: "tpl-ogl-shirt",
+      name: "Shirt template",
+      description: "Short sleeve layout — safe zones and bleed for production.",
+      fileName: "oglifestyle-template-shirt.ai",
+      fileUrl: "/templates/og-client/oglifestyle-template-shirt.ai",
+      format: "AI",
+    }),
+    row({
+      id: "tpl-ogl-banner",
+      name: "Banner template",
+      description: "Wide banner artwork guides.",
+      fileName: "oglifestyle-template-banner.ai",
+      fileUrl: "/templates/og-client/oglifestyle-template-banner.ai",
+      format: "AI",
+    }),
+    row({
+      id: "tpl-og-roundneck",
+      name: "Round neck shirt template",
+      description: "Round neck silhouette — placement and margins.",
+      fileName: "og-roundneck-shirt-template.ai",
+      fileUrl: "/templates/og-client/og-roundneck-shirt-template.ai",
+      format: "AI",
+    }),
+    row({
+      id: "tpl-ogl-singlet",
+      name: "Singlet template",
+      description: "Singlet panels and print zones.",
+      fileName: "oglifestyle-template-singlet.ai",
+      fileUrl: "/templates/og-client/oglifestyle-template-singlet.ai",
+      format: "AI",
+    }),
+    row({
+      id: "tpl-ogl-longsleeves",
+      name: "Long sleeves template",
+      description: "Long sleeve layout — sleeves and torso guides.",
+      fileName: "oglifestyle-template-longsleeves.ai",
+      fileUrl: "/templates/og-client/oglifestyle-template-longsleeves.ai",
+      format: "AI",
+    }),
+    row({
+      id: "tpl-ogl-longsleeves-hoodie",
+      name: "Long sleeves hoodie template",
+      description: "Hoodie silhouette — hood, body, and sleeve zones.",
+      fileName: "oglifestyle-template-longsleeves-hoodie.ai",
+      fileUrl: "/templates/og-client/oglifestyle-template-longsleeves-hoodie.ai",
+      format: "AI",
+    }),
+    row({
+      id: "tpl-ogl-shorts",
+      name: "Shorts template",
+      description: "Shorts panels — waist, legs, and trim.",
+      fileName: "oglifestyle-template-shorts.ai",
+      fileUrl: "/templates/og-client/oglifestyle-template-shorts.ai",
+      format: "AI",
+    }),
+    row({
+      id: "tpl-facetowel-ai",
+      name: "Face towel template (Illustrator)",
+      description: "Vector towel layout — use with JPG reference if needed.",
+      fileName: "facetowel-template.ai",
+      fileUrl: "/templates/og-client/facetowel-template.ai",
+      format: "AI",
+      previewImageUrl: "/templates/og-client/facetowel-template.jpg",
+    }),
+    row({
+      id: "tpl-facetowel-jpg",
+      name: "Face towel reference (JPG)",
+      description: "Raster reference for face towel artwork.",
+      fileName: "facetowel-template.jpg",
+      fileUrl: "/templates/og-client/facetowel-template.jpg",
+      format: "JPG",
+      previewImageUrl: "/templates/og-client/facetowel-template.jpg",
+    }),
+    row({
+      id: "tpl-handtowel-ai",
+      name: "Hand towel template (Illustrator)",
+      description: "Vector towel layout — pair with JPG reference.",
+      fileName: "handtowel-template.ai",
+      fileUrl: "/templates/og-client/handtowel-template.ai",
+      format: "AI",
+      previewImageUrl: "/templates/og-client/handtowel-template.jpg",
+    }),
+    row({
+      id: "tpl-handtowel-jpg",
+      name: "Hand towel reference (JPG)",
+      description: "Raster reference for hand towel artwork.",
+      fileName: "handtowel-template.jpg",
+      fileUrl: "/templates/og-client/handtowel-template.jpg",
+      format: "JPG",
+      previewImageUrl: "/templates/og-client/handtowel-template.jpg",
+    }),
+  ];
 }
 
 interface SiteContentState {
@@ -120,8 +234,8 @@ const initialCustomSections: CustomContentSection[] = [
       "Tops: measure chest side seam to side seam and body length from neck base.\nShorts: measure waist relaxed and stretched, then outseam length.\nFor team runs, collect full roster sizes in one sheet before checkout.",
     heroImage:
       "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?q=80&w=1600&auto=format&fit=crop",
-    ctaLabel: "Download Template",
-    ctaHref: "/custom/order",
+    ctaLabel: "Browse Templates",
+    ctaHref: "/custom/templates",
     isPublished: true,
     updatedAt: nowIso(),
   },
@@ -172,28 +286,16 @@ const initialCustomSections: CustomContentSection[] = [
   },
 ];
 
-const initialTemplates: CustomTemplateAsset[] = [
-  {
-    id: "tpl-jersey",
-    name: "Jersey Front + Back Template",
-    description: "Includes safe zones and bleed guides.",
-    fileName: "offgrid-jersey-template-v1.pdf",
-    fileUrl: "#",
-    format: "PDF",
-    isPublished: true,
-    updatedAt: nowIso(),
-  },
-  {
-    id: "tpl-shorts",
-    name: "Shorts Template",
-    description: "Waist, side panel, and print zones.",
-    fileName: "offgrid-shorts-template-v1.ai",
-    fileUrl: "#",
-    format: "AI",
-    isPublished: true,
-    updatedAt: nowIso(),
-  },
-];
+const initialTemplates: CustomTemplateAsset[] = createCanonicalOgTemplates(nowIso());
+
+const SITE_CONTENT_PERSIST_VERSION = 2;
+
+type PersistedSiteContentSlice = {
+  products?: Product[];
+  events?: SiteEvent[];
+  customSections?: CustomContentSection[];
+  customTemplates?: CustomTemplateAsset[];
+};
 
 export const useSiteContentStore = create<SiteContentState>()(
   persist(
@@ -244,7 +346,26 @@ export const useSiteContentStore = create<SiteContentState>()(
     }),
     {
       name: "og-site-content",
-      version: 1,
+      version: SITE_CONTENT_PERSIST_VERSION,
+      migrate: (persistedState, version): PersistedSiteContentSlice => {
+        const p = persistedState as PersistedSiteContentSlice;
+        if (version < 2) {
+          return {
+            ...p,
+            customTemplates: createCanonicalOgTemplates(nowIso()),
+          };
+        }
+        if (p.customTemplates?.length) {
+          return {
+            ...p,
+            customTemplates: p.customTemplates.map((t) => ({
+              ...t,
+              storageKind: t.storageKind ?? "static",
+            })),
+          };
+        }
+        return p;
+      },
       partialize: (state) => ({
         products: state.products,
         events: state.events,

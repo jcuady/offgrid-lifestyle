@@ -5,6 +5,7 @@ import { Button } from "@/src/components/ui/Button";
 import { LOGO_WORDMARK_WHITE } from "@/src/lib/brandAssets";
 import { cn } from "@/src/lib/utils";
 import { getPortalLandingByRole, usePortalStore, type UserRole } from "@/src/store/usePortalStore";
+import { localAuthService } from "@/src/services";
 
 const roleButtons: { role: UserRole; label: string; helper: string }[] = [
   { role: "customer", label: "Customer", helper: "customer@offgrid.test" },
@@ -15,8 +16,6 @@ const roleButtons: { role: UserRole; label: string; helper: string }[] = [
 export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const login = usePortalStore((state) => state.login);
-  const loginAsRole = usePortalStore((state) => state.loginAsRole);
   const currentUser = usePortalStore((state) => state.currentUser);
 
   const [email, setEmail] = useState("customer@offgrid.test");
@@ -106,13 +105,13 @@ export function LoginPage() {
               size="lg"
               className="w-full"
               onClick={() => {
-                const result = login(email, password);
+                const result = localAuthService.login(email, password);
                 if (!result.ok) {
                   setError(result.message ?? "Unable to sign in");
                   return;
                 }
 
-                const freshUser = usePortalStore.getState().currentUser;
+                const freshUser = localAuthService.currentUser();
                 if (!freshUser) return;
                 if (redirectedFrom) {
                   navigate(redirectedFrom, { replace: true });
@@ -126,8 +125,8 @@ export function LoginPage() {
 
             <button
               onClick={() => {
-                loginAsRole("customer");
-                navigate("/portal/customer", { replace: true });
+                localAuthService.loginAsRole("customer");
+                navigate("/account/orders", { replace: true });
               }}
               className={cn(
                 "inline-flex w-full items-center justify-center gap-2 rounded-xl border border-offgrid-green/20 px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.15em] text-offgrid-green transition-colors",

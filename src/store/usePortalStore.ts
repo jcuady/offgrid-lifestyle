@@ -52,7 +52,7 @@ interface PortalState {
   loginAsRole: (role: UserRole) => void;
   logout: () => void;
   recordRetailOrder: (order: Order, customerName: string, customerEmail: string) => void;
-  recordCustomOrder: (draft: CustomOrderDraft) => void;
+  recordCustomOrder: (draft: CustomOrderDraft) => string;
   updateRetailOrderStatus: (orderId: string, status: OrderStatus) => void;
   updateRetailPaymentStatus: (orderId: string, paymentStatus: PaymentStatus) => void;
   updateCustomOrderStatus: (orderId: string, status: OrderStatus) => void;
@@ -84,7 +84,7 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
 ];
 
 export function getPortalLandingByRole(role: UserRole): string {
-  if (role === "customer") return "/portal/customer";
+  if (role === "customer") return "/account/orders";
   if (role === "admin") return "/portal/admin";
   return "/portal/staff";
 }
@@ -136,11 +136,13 @@ export const usePortalStore = create<PortalState>()(
           ],
         })),
 
-      recordCustomOrder: (draft) =>
+      recordCustomOrder: (draft) => {
+        const customOrderId =
+          draft.id ?? `CO-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
         set((state) => {
           const currentUser = state.currentUser;
           const customOrder: ManagedCustomOrder = {
-            id: `CO-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
+            id: customOrderId,
             type: "custom",
             status: draft.status === "draft" ? "pending_deposit" : draft.status,
             paymentStatus: "unpaid",
@@ -161,7 +163,9 @@ export const usePortalStore = create<PortalState>()(
             updatedAt: new Date().toISOString(),
           };
           return { customOrders: [customOrder, ...state.customOrders] };
-        }),
+        });
+        return customOrderId;
+      },
 
       updateRetailOrderStatus: (orderId, status) =>
         set((state) => ({

@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import type { SiteEvent } from "@/src/data/events";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
+import { localContentService } from "@/src/services";
 import { cn } from "@/src/lib/utils";
 
 const defaultDraft: SiteEvent = {
@@ -22,13 +23,11 @@ const defaultDraft: SiteEvent = {
 
 export function AdminEventsPage() {
   const events = useSiteContentStore((state) => state.events);
-  const addEvent = useSiteContentStore((state) => state.addEvent);
-  const updateEvent = useSiteContentStore((state) => state.updateEvent);
-  const removeEvent = useSiteContentStore((state) => state.removeEvent);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<SiteEvent>(defaultDraft);
   const [query, setQuery] = useState("");
+  const [formError, setFormError] = useState<string | null>(null);
 
   const sorted = useMemo(
     () => [...events].sort((a, b) => a.title.localeCompare(b.title)),
@@ -43,9 +42,19 @@ export function AdminEventsPage() {
   const reset = () => {
     setEditingId(null);
     setDraft(defaultDraft);
+    setFormError(null);
   };
 
   const submit = () => {
+    setFormError(null);
+    if (!draft.title.trim()) {
+      setFormError("Event title is required.");
+      return;
+    }
+    if (!draft.location.trim()) {
+      setFormError("Event location is required.");
+      return;
+    }
     const payload: SiteEvent = {
       ...draft,
       id: draft.id.trim() || `ev-${crypto.randomUUID().slice(0, 8)}`,
@@ -58,13 +67,13 @@ export function AdminEventsPage() {
     if (payload.featured) {
       events.forEach((event) => {
         if (event.id !== payload.id && event.featured) {
-          updateEvent(event.id, { featured: false });
+          localContentService.updateEvent(event.id, { featured: false });
         }
       });
     }
 
-    if (editingId) updateEvent(editingId, payload);
-    else addEvent(payload);
+    if (editingId) localContentService.updateEvent(editingId, payload);
+    else localContentService.addEvent(payload);
     reset();
   };
 
@@ -125,6 +134,54 @@ export function AdminEventsPage() {
               placeholder="Hero image URL"
               className="w-full rounded-xl border border-offgrid-green/20 px-3 py-2 text-sm"
             />
+            <textarea
+              rows={3}
+              value={draft.description}
+              onChange={(e) => setDraft((prev) => ({ ...prev, description: e.target.value }))}
+              placeholder="Event description"
+              className="w-full rounded-xl border border-offgrid-green/20 px-3 py-2 text-sm"
+            />
+            <div className="grid grid-cols-3 gap-2">
+              <input
+                value={draft.price}
+                onChange={(e) => setDraft((prev) => ({ ...prev, price: e.target.value }))}
+                placeholder="Price (₱1200 / Free)"
+                className="w-full rounded-xl border border-offgrid-green/20 px-3 py-2 text-sm"
+              />
+              <input
+                type="number"
+                value={draft.capacity ?? ""}
+                onChange={(e) =>
+                  setDraft((prev) => ({ ...prev, capacity: e.target.value ? Number(e.target.value) : undefined }))
+                }
+                placeholder="Capacity"
+                className="w-full rounded-xl border border-offgrid-green/20 px-3 py-2 text-sm"
+              />
+              <input
+                type="number"
+                value={draft.registered ?? ""}
+                onChange={(e) =>
+                  setDraft((prev) => ({ ...prev, registered: e.target.value ? Number(e.target.value) : undefined }))
+                }
+                placeholder="Registered"
+                className="w-full rounded-xl border border-offgrid-green/20 px-3 py-2 text-sm"
+              />
+            </div>
+            <textarea
+              rows={2}
+              value={draft.highlights.join(", ")}
+              onChange={(e) =>
+                setDraft((prev) => ({
+                  ...prev,
+                  highlights: e.target.value
+                    .split(",")
+                    .map((entry) => entry.trim())
+                    .filter(Boolean),
+                }))
+              }
+              placeholder="Highlights (comma separated)"
+              className="w-full rounded-xl border border-offgrid-green/20 px-3 py-2 text-sm"
+            />
             <div className="grid grid-cols-2 gap-2">
               <select
                 value={draft.category}
@@ -172,6 +229,11 @@ export function AdminEventsPage() {
               Reset
             </button>
           </div>
+          {formError && (
+            <p className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+              {formError}
+            </p>
+          )}
         </aside>
 
         <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-offgrid-green/10">
@@ -213,7 +275,7 @@ export function AdminEventsPage() {
                     <button
                       onClick={() => {
                         if (window.confirm(`Delete event "${event.title}"?`)) {
-                          removeEvent(event.id);
+                          localContentService.removeEvent(event.id);
                         }
                       }}
                       className="rounded-lg border border-red-300 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-red-700"

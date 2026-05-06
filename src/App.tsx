@@ -13,7 +13,7 @@ import { EventSection } from "./components/EventSection";
 import { SocialProof } from "./components/SocialProof";
 import { CTASection } from "./components/CTASection";
 import { Footer } from "./components/Footer";
-import { ProductModal } from "./components/ProductModal";
+import { ProductDetailPage } from "./pages/ProductDetailPage";
 import { CartDrawer } from "./components/CartDrawer";
 import { CheckoutModal } from "./components/CheckoutModal";
 import { ShopPage } from "./pages/ShopPage";
@@ -26,9 +26,9 @@ import { LoginPage } from "./pages/LoginPage";
 import { usePortalStore, getPortalLandingByRole } from "./store/usePortalStore";
 import { PortalLayout } from "./components/portal/PortalLayout";
 import { RequirePortalRole } from "./components/portal/RequirePortalRole";
-import { CustomerDashboardPage } from "./pages/portal/CustomerDashboardPage";
 import { CustomerOrdersPage } from "./pages/portal/CustomerOrdersPage";
 import { CustomerProfilePage } from "./pages/portal/CustomerProfilePage";
+import { CustomerOrderDetailPage } from "./pages/portal/CustomerOrderDetailPage";
 import { OperationsDashboardPage } from "./pages/portal/OperationsDashboardPage";
 import { OperationsOrdersPage } from "./pages/portal/OperationsOrdersPage";
 import { OperationsAnalyticsPage } from "./pages/portal/OperationsAnalyticsPage";
@@ -78,6 +78,7 @@ function AppFrame() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/shop" element={<ShopPage />} />
+        <Route path="/shop/:slug" element={<ProductDetailPage />} />
         <Route path="/events" element={<EventsPage />} />
         <Route path="/custom/order" element={<CustomOrderPage />} />
         <Route path="/custom/templates" element={<CustomTemplatesPage />} />
@@ -85,19 +86,33 @@ function AppFrame() {
         <Route path="/custom/:slug" element={<CustomSectionPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/portal" element={<PortalIndexRedirect />} />
-
         <Route
-          path="/portal/customer"
+          path="/account/orders"
           element={
             <RequirePortalRole roles={["customer"]}>
-              <PortalLayout role="customer" />
+              <CustomerOrdersPage />
             </RequirePortalRole>
           }
-        >
-          <Route index element={<CustomerDashboardPage />} />
-          <Route path="orders" element={<CustomerOrdersPage />} />
-          <Route path="profile" element={<CustomerProfilePage />} />
-        </Route>
+        />
+        <Route
+          path="/account/profile"
+          element={
+            <RequirePortalRole roles={["customer"]}>
+              <CustomerProfilePage />
+            </RequirePortalRole>
+          }
+        />
+        <Route
+          path="/account/orders/:orderId"
+          element={
+            <RequirePortalRole roles={["customer"]}>
+              <CustomerOrderDetailPage />
+            </RequirePortalRole>
+          }
+        />
+        <Route path="/portal/customer" element={<Navigate to="/account/orders" replace />} />
+        <Route path="/portal/customer/orders" element={<Navigate to="/account/orders" replace />} />
+        <Route path="/portal/customer/profile" element={<Navigate to="/account/profile" replace />} />
 
         <Route
           path="/portal/admin"
@@ -129,7 +144,6 @@ function AppFrame() {
         </Route>
       </Routes>
 
-      <ProductModal />
       <CartDrawer />
       <CheckoutModal />
     </div>

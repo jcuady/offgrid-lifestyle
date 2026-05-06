@@ -7,9 +7,8 @@ import { formatPrice } from "@/src/data/products";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 
 export function BestSellers() {
-  const { setSelectedProduct, addToCart, toggleCart } = useStore(
+  const { addToCart, toggleCart } = useStore(
     useShallow((state) => ({
-      setSelectedProduct: state.setSelectedProduct,
       addToCart: state.addToCart,
       toggleCart: state.toggleCart,
     })),
@@ -17,11 +16,8 @@ export function BestSellers() {
   const navigate = useNavigate();
   const products = useSiteContentStore((state) => state.products);
 
-  const handleProductClick = (productId: string) => {
-    const product = products.find(p => p.id === productId);
-    if (product) {
-      setSelectedProduct(product);
-    }
+  const handleProductClick = (slug: string) => {
+    navigate(`/shop/${slug}`);
   };
 
   const handleQuickAdd = (productId: string) => {
@@ -73,12 +69,10 @@ export function BestSellers() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="group"
+              className="group cursor-pointer"
+              onClick={() => handleProductClick(product.slug)}
             >
-              <div 
-                className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-white mb-4 cursor-pointer"
-                onClick={() => handleProductClick(product.id)}
-              >
+              <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-white mb-4">
                 {product.tag && (
                   <span className="absolute top-4 left-4 z-10 px-3 py-1 bg-offgrid-cream/90 backdrop-blur-sm text-offgrid-green text-[10px] font-bold tracking-[0.15em] uppercase rounded-full">
                     {product.tag}
@@ -90,20 +84,6 @@ export function BestSellers() {
                   alt={product.name}
                   className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
                 />
-                
-                {/* Quick Add Button */}
-                <div className="absolute inset-x-4 bottom-4 translate-y-12 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 z-20">
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleQuickAdd(product.id);
-                    }}
-                    className="w-full bg-offgrid-green text-offgrid-cream py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-offgrid-dark transition-colors shadow-lg cursor-pointer"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Quick Add
-                  </button>
-                </div>
               </div>
 
               <div className="px-1">

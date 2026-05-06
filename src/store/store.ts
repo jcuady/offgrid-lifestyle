@@ -1,8 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { Product } from "@/src/data/products";
-import { toRetailOrderPayload } from "@/src/types/commerce";
-import { usePortalStore } from "@/src/store/usePortalStore";
+import { localOrderService } from "@/src/services";
 
 // Types
 export interface CartItem {
@@ -33,9 +31,6 @@ interface StoreState {
   cart: CartItem[];
   isCartOpen: boolean;
   
-  // Product Modal
-  selectedProduct: Product | null;
-  
   // Checkout State
   isCheckoutOpen: boolean;
   checkoutStep: CheckoutStep;
@@ -49,9 +44,6 @@ interface StoreState {
   updateQuantity: (productId: string, size: string, color: string, quantity: number) => void;
   clearCart: () => void;
   toggleCart: (open?: boolean) => void;
-  
-  // Product Modal Actions
-  setSelectedProduct: (product: Product | null) => void;
   
   // Checkout Actions
   openCheckout: () => void;
@@ -74,7 +66,6 @@ export const useStore = create<StoreState>()(
   // Initial State
   cart: [],
   isCartOpen: false,
-  selectedProduct: null,
   isCheckoutOpen: false,
   checkoutStep: 1,
   shippingInfo: {
@@ -138,9 +129,6 @@ export const useStore = create<StoreState>()(
       isCartOpen: typeof open === "boolean" ? open : !state.isCartOpen,
     })),
 
-  // Product Modal Actions
-  setSelectedProduct: (product) => set({ selectedProduct: product }),
-
   // Checkout Actions
   openCheckout: () => {
     set({ isCheckoutOpen: true, checkoutStep: 1 });
@@ -158,21 +146,12 @@ export const useStore = create<StoreState>()(
   placeOrder: () => {
     const orderId = generateOrderId();
     const state = get();
-    const retailOrderPayload = toRetailOrderPayload(
-      state.cart,
-      state.shippingInfo,
-      state.paymentMethod,
+    localOrderService.submitRetailOrder({
       orderId,
-    );
-    const currentUser = usePortalStore.getState().currentUser;
-    const fallbackName = state.shippingInfo.fullName || currentUser?.name || "Guest Customer";
-    const fallbackEmail = state.shippingInfo.email || currentUser?.email || "guest@offgrid.local";
-
-    if (currentUser?.role === "customer") {
-      retailOrderPayload.customerId = currentUser.id;
-    }
-
-    usePortalStore.getState().recordRetailOrder(retailOrderPayload, fallbackName, fallbackEmail);
+      cart: state.cart,
+      shippingInfo: state.shippingInfo,
+      paymentMethod: state.paymentMethod,
+    });
 
     set({
       orderId,

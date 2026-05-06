@@ -9,9 +9,9 @@ export function CustomerProfilePage() {
   const shipping = useStore((state) => state.shippingInfo);
 
   return (
-    <div className="p-6 sm:p-8 lg:p-10">
+    <div className="mx-auto max-w-6xl px-6 pb-16 pt-28 sm:px-8 sm:pt-32 lg:px-10">
       <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-green/45">
-        Customer Profile
+        Account Profile
       </p>
       <h1 className="mt-2 text-4xl font-display font-black text-offgrid-green">Account Details</h1>
       <p className="mt-2 text-sm text-offgrid-green/60">
@@ -20,7 +20,7 @@ export function CustomerProfilePage() {
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-offgrid-green/10">
-          <h2 className="text-xl font-display font-bold text-offgrid-green">Portal Identity</h2>
+          <h2 className="text-xl font-display font-bold text-offgrid-green">Account Identity</h2>
           <div className="mt-4 space-y-2 text-sm text-offgrid-green/75">
             <p><span className="font-semibold">Name:</span> {user?.name ?? "N/A"}</p>
             <p><span className="font-semibold">Email:</span> {user?.email ?? "N/A"}</p>

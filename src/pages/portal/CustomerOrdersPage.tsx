@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { formatMoney } from "@/src/types/commerce";
 import { cn } from "@/src/lib/utils";
 import {
@@ -18,11 +19,20 @@ export function CustomerOrdersPage() {
   const customOrders = usePortalStore((state) => state.customOrders);
 
   const scopedRetail = useMemo(
-    () => retailOrders.filter((order) => !user || order.customerId === user.id),
+    () =>
+      retailOrders.filter(
+        (order) =>
+          !!user && (order.customerId === user.id || order.customerEmail.toLowerCase() === user.email.toLowerCase()),
+      ),
     [retailOrders, user],
   );
   const scopedCustom = useMemo(
-    () => customOrders.filter((order) => !user || order.customerId === user.id || order.customerEmail === user.email),
+    () =>
+      customOrders.filter(
+        (order) =>
+          !!user &&
+          (order.customerId === user.id || order.customerEmail.toLowerCase() === user.email.toLowerCase()),
+      ),
     [customOrders, user],
   );
 
@@ -37,9 +47,9 @@ export function CustomerOrdersPage() {
   }, [filter, scopedRetail, scopedCustom]);
 
   return (
-    <div className="p-6 sm:p-8 lg:p-10">
+    <div className="mx-auto max-w-6xl px-6 pb-16 pt-28 sm:px-8 sm:pt-32 lg:px-10">
       <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-green/45">
-        Customer Portal
+        Account
       </p>
       <h1 className="mt-2 text-4xl font-display font-black text-offgrid-green">My Orders</h1>
       <p className="mt-2 text-sm text-offgrid-green/60">
@@ -110,6 +120,24 @@ export function CustomerOrdersPage() {
                   <p className="mt-4 text-xs text-offgrid-green/55">
                     {order.lines.length} item(s) · Payment: {order.paymentMethod ?? "N/A"}
                   </p>
+                  <div className="mt-4 border-t border-offgrid-green/10 pt-4">
+                    <div className="flex gap-2 overflow-x-auto pb-1">
+                      {order.lines.slice(0, 4).map((line) => (
+                        <img
+                          key={line.lineItemId}
+                          src={line.image}
+                          alt={line.name}
+                          className="h-12 w-12 shrink-0 rounded-lg border border-offgrid-green/10 object-cover bg-white"
+                        />
+                      ))}
+                    </div>
+                    <Link
+                      to={`/account/orders/${order.id}`}
+                      className="mt-3 inline-flex rounded-xl border border-offgrid-green/20 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-offgrid-green hover:bg-offgrid-green/5"
+                    >
+                      View Order Details
+                    </Link>
+                  </div>
                 </article>
               );
             }
@@ -155,6 +183,17 @@ export function CustomerOrdersPage() {
                 <p className="mt-4 text-xs text-offgrid-green/55">
                   Qty: {order.quantity} · Cut: {order.cut ?? "N/A"} · Material: {order.material ?? "N/A"}
                 </p>
+                <div className="mt-4 border-t border-offgrid-green/10 pt-4">
+                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-lg border border-offgrid-green/10 bg-offgrid-green/5 text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/65">
+                    Custom
+                  </div>
+                  <Link
+                    to={`/account/orders/${order.id}`}
+                    className="mt-3 inline-flex rounded-xl border border-offgrid-green/20 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-offgrid-green hover:bg-offgrid-green/5"
+                  >
+                    View Order Details
+                  </Link>
+                </div>
               </article>
             );
           })

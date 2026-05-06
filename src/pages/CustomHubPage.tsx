@@ -213,6 +213,42 @@ export function CustomHubPage() {
                           </p>
                         ))}
                       </div>
+                      {section.slug === "sizing-chart" && (
+                        <div className="mt-4 rounded-xl border border-offgrid-green/15 bg-white p-4 sm:p-5">
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-offgrid-green/45">
+                            Sample Sizing Preview
+                          </p>
+                          <div className="mt-3 overflow-x-auto">
+                            <table className="min-w-full text-xs text-offgrid-green">
+                              <thead>
+                                <tr className="border-b border-offgrid-green/15 text-[10px] uppercase tracking-[0.12em] text-offgrid-green/55">
+                                  <th className="py-2 pr-4 text-left font-semibold">Size</th>
+                                  <th className="py-2 pr-4 text-left font-semibold">Chest (in)</th>
+                                  <th className="py-2 pr-4 text-left font-semibold">Length (in)</th>
+                                  <th className="py-2 text-left font-semibold">Waist (in)</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {[
+                                  ["XS", "18", "26", "26-28"],
+                                  ["M", "20", "28", "30-32"],
+                                  ["XL", "22", "30", "34-36"],
+                                ].map((row) => (
+                                  <tr key={row[0]} className="border-b border-offgrid-green/10 last:border-b-0">
+                                    <td className="py-2.5 pr-4 font-semibold">{row[0]}</td>
+                                    <td className="py-2.5 pr-4">{row[1]}</td>
+                                    <td className="py-2.5 pr-4">{row[2]}</td>
+                                    <td className="py-2.5">{row[3]}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                          <p className="mt-2 text-[11px] text-offgrid-green/55">
+                            Final chart can vary by cut. Confirm full roster sizing before checkout.
+                          </p>
+                        </div>
+                      )}
                       <Button className="mt-6 group" size="lg" onClick={() => followCta(navigate, section.ctaHref)}>
                         {section.ctaLabel}
                         <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />

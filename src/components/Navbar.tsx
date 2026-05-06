@@ -34,15 +34,25 @@ export function Navbar() {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
     };
+    handleScroll();
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  /** Keep header readable on non-home routes so brand/logo/action controls stay visible. */
+  const forceSolidOnTop =
+    location.pathname !== "/" ||
+    isMobileMenuOpen ||
+    isCartDropdownOpen ||
+    isCustomMenuOpen;
+  const navSolid = isScrolled || forceSolidOnTop;
 
   // Close mobile menu on route change
   useEffect(() => {
     setIsMobileMenuOpen(false);
     setIsCartDropdownOpen(false);
     setIsCustomMenuOpen(false);
+    setIsScrolled(window.scrollY > 50);
   }, [location]);
 
   useEffect(() => {
@@ -80,6 +90,9 @@ export function Navbar() {
     { name: "Collections", action: () => handleScrollToSection("collections") },
     { name: "Shop", action: () => handleNavigate("/shop") },
     { name: "Events", action: () => handleNavigate("/events") },
+    ...(currentUser?.role === "customer"
+      ? [{ name: "My Orders", action: () => handleNavigate("/account/orders") }]
+      : []),
   ];
 
   return (
@@ -87,9 +100,9 @@ export function Navbar() {
       <header
         className={cn(
           "fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out",
-          isScrolled
+          navSolid
             ? "bg-offgrid-green/95 backdrop-blur-md py-3 shadow-sm"
-            : "bg-transparent py-5"
+            : "bg-transparent py-5",
         )}
       >
         <div className="container mx-auto px-6 md:px-12 flex items-center justify-between">
@@ -113,7 +126,7 @@ export function Navbar() {
                 onClick={() => handleNavigate("/custom")}
                 className={cn(
                   "text-sm font-medium transition-colors hover:text-offgrid-lime cursor-pointer",
-                  isScrolled ? "text-offgrid-cream/80" : "text-offgrid-cream/90",
+                  navSolid ? "text-offgrid-cream/80" : "text-offgrid-cream/90",
                 )}
               >
                 Custom Order
@@ -154,7 +167,7 @@ export function Navbar() {
                 onClick={link.action}
                 className={cn(
                   "text-sm font-medium transition-colors hover:text-offgrid-lime cursor-pointer",
-                  isScrolled ? "text-offgrid-cream/80" : "text-offgrid-cream/90"
+                  navSolid ? "text-offgrid-cream/80" : "text-offgrid-cream/90",
                 )}
               >
                 {link.name}
@@ -168,15 +181,23 @@ export function Navbar() {
               Shop Now
             </Button>
             <button
-              onClick={() => handleNavigate(currentUser ? "/portal" : "/login")}
+              onClick={() =>
+                handleNavigate(
+                  currentUser
+                    ? currentUser.role === "customer"
+                      ? "/account/orders"
+                      : "/portal"
+                    : "/login",
+                )
+              }
               className={cn(
                 "hidden sm:inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] transition-colors",
                 "border-offgrid-cream/35 text-offgrid-cream hover:border-offgrid-lime hover:text-offgrid-lime",
               )}
-              title={currentUser ? "Open dashboard" : "Sign in"}
+              title={currentUser ? "Open account" : "Sign in"}
             >
               <UserRound className="w-3.5 h-3.5" />
-              {currentUser ? "Dashboard" : "Sign In"}
+              {currentUser ? "Account" : "Sign In"}
             </button>
             <div className="relative" ref={dropdownRef}>
               <button

@@ -1,12 +1,24 @@
 import { motion, AnimatePresence } from "motion/react";
 import { X, Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
+import { useShallow } from "zustand/react/shallow";
 import { useStore } from "@/src/store/store";
 import { Button } from "./ui/Button";
 import { formatPrice } from "@/src/data/products";
 import { cn } from "@/src/lib/utils";
 
 export function CartDrawer() {
-  const { cart, isCartOpen, toggleCart, updateQuantity, removeFromCart, openCheckout, clearCart } = useStore();
+  const { cart, isCartOpen, toggleCart, updateQuantity, removeFromCart, openCheckout, clearCart } =
+    useStore(
+      useShallow((state) => ({
+        cart: state.cart,
+        isCartOpen: state.isCartOpen,
+        toggleCart: state.toggleCart,
+        updateQuantity: state.updateQuantity,
+        removeFromCart: state.removeFromCart,
+        openCheckout: state.openCheckout,
+        clearCart: state.clearCart,
+      })),
+    );
 
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);

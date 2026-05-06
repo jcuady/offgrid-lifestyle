@@ -11,6 +11,8 @@ export interface Product {
   image: string;
   colors: ProductColor[];
   sizes: string[];
+  sizeRange: string;
+  cut: string;
   description: string;
   material: string;
   fit: string;
@@ -31,10 +33,12 @@ export const products: Product[] = [
       { name: "Forest Green", value: "bg-offgrid-green" },
       { name: "Lime", value: "bg-offgrid-lime" },
     ],
-    sizes: ["XS", "S", "M", "L", "XL", "2XL"],
+    sizes: ["2XS", "XS", "S", "M", "L", "XL", "2XL", "3XL"],
+    sizeRange: "2XS – 3XL",
+    cut: "Short Sleeve",
     description:
-      "Engineered for the court, styled for the culture. The OG Court Polo features moisture-wicking fabric with a relaxed fit that moves with you during intense rallies. The classic polo silhouette gets an OffGrid upgrade with subtle branding and premium stitching.",
-    material: "92% Polyester, 8% Spandex — Moisture-wicking, quick-dry fabric",
+      "Engineered for the court, styled for the culture. Moisture-wicking polo with relaxed fit — moves with you during intense rallies.",
+    material: "92% Polyester, 8% Spandex — Moisture-wicking, quick-dry",
     fit: "Relaxed fit with dropped shoulders. Model is 5'10\" wearing size M.",
     sold: 312,
     tag: "Best Seller",
@@ -50,9 +54,11 @@ export const products: Product[] = [
       { name: "Charcoal", value: "bg-offgrid-dark" },
       { name: "Lime", value: "bg-offgrid-lime" },
     ],
-    sizes: ["XS", "S", "M", "L", "XL", "2XL"],
+    sizes: ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"],
+    sizeRange: "XS – 5XL",
+    cut: "Short Sleeve",
     description:
-      "Sunrise to sunset, the Fairway Tee keeps you looking sharp across all 18 holes. Crafted from ultra-soft, breathable fabric with just the right amount of stretch for your full swing. Minimal design, maximum performance.",
+      "Sunrise to sunset across all 18 holes. Ultra-soft breathable fabric with 4-way stretch for your full swing. Minimal design, maximum performance.",
     material: "95% Micro Polyester, 5% Elastane — 4-way stretch, UV protection",
     fit: "Tailored fit with slightly longer back hem. Model is 6'0\" wearing size L.",
     sold: 248,
@@ -70,8 +76,10 @@ export const products: Product[] = [
       { name: "Charcoal", value: "bg-offgrid-dark" },
     ],
     sizes: ["XS", "S", "M", "L", "XL", "2XL"],
+    sizeRange: "XS – 2XL",
+    cut: "Short Sleeve",
     description:
-      "Rep the nation with pride. The Pilipinas Drop Tee features an exclusive graphic design celebrating Filipino athletic culture. Limited edition drop — once it's gone, it's gone. Perfect for everyday wear or showing up to the courts.",
+      "Rep the nation with pride. Exclusive graphic celebrating Filipino athletic culture. Limited drop — once it's gone, it's gone.",
     material: "100% Premium Cotton — Heavyweight 220 GSM, pre-shrunk",
     fit: "Oversized drop-shoulder fit. Model is 5'8\" wearing size S.",
     sold: 189,
@@ -89,9 +97,11 @@ export const products: Product[] = [
       { name: "Charcoal", value: "bg-offgrid-dark" },
       { name: "Cream", value: "bg-offgrid-cream" },
     ],
-    sizes: ["XS", "S", "M", "L", "XL", "2XL"],
+    sizes: ["2XS", "XS", "S", "M", "L", "XL", "2XL", "3XL"],
+    sizeRange: "2XS – 3XL",
+    cut: "Shorts",
     description:
-      "Your go-to shorts for rest days, errands, or spontaneous court sessions. The Off-Day Shorts combine comfort with clean aesthetics — featuring an elastic waistband, deep pockets, and that signature OffGrid minimal style.",
+      "Your go-to for rest days, errands, or spontaneous court sessions. Elastic waistband, deep pockets, signature OffGrid minimal style.",
     material: "88% Nylon, 12% Spandex — Stretch woven, water-resistant",
     fit: "Relaxed fit with 7\" inseam. Model is 5'10\" wearing size M.",
     sold: 156,

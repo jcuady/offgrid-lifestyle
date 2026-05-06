@@ -1,4 +1,5 @@
 import { Instagram, Facebook } from "lucide-react";
+import { LOGO_WORDMARK_WHITE } from "@/src/lib/brandAssets";
 
 export function Footer() {
   return (
@@ -8,10 +9,10 @@ export function Footer() {
           
           <div className="md:col-span-2">
             <a href="#" className="flex items-center mb-5">
-              <img 
-                src="/logo.png" 
-                alt="OffGrid Lifestyle" 
-                className="h-10 w-auto brightness-0 invert"
+              <img
+                src={LOGO_WORDMARK_WHITE}
+                alt="OFF GRID® — OffGrid Lifestyle"
+                className="h-10 w-auto"
               />
             </a>
             <p className="text-offgrid-cream/50 text-sm max-w-xs mb-7 leading-relaxed">
@@ -36,6 +37,7 @@ export function Footer() {
             <ul className="space-y-3 text-sm text-offgrid-cream/50">
               <li><a href="#collections" className="hover:text-offgrid-lime transition-colors">Collections</a></li>
               <li><a href="#shop" className="hover:text-offgrid-lime transition-colors">Best Sellers</a></li>
+              <li><a href="/custom" className="hover:text-offgrid-lime transition-colors">Custom Order</a></li>
               <li><a href="#events" className="hover:text-offgrid-lime transition-colors">Events</a></li>
             </ul>
           </div>

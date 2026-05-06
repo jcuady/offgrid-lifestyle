@@ -1,35 +1,37 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { X, ChevronDown, ChevronUp, Minus, Plus, ShoppingBag } from "lucide-react";
+import { X, Minus, Plus, ShoppingBag } from "lucide-react";
+import { useShallow } from "zustand/react/shallow";
 import { useStore } from "@/src/store/store";
-import { Product, formatPrice } from "@/src/data/products";
+import { formatPrice } from "@/src/data/products";
 import { Button } from "./ui/Button";
 import { cn } from "@/src/lib/utils";
 
 export function ProductModal() {
-  const { selectedProduct, setSelectedProduct, addToCart, toggleCart } = useStore();
+  const { selectedProduct, setSelectedProduct, addToCart, toggleCart } = useStore(
+    useShallow((state) => ({
+      selectedProduct: state.selectedProduct,
+      setSelectedProduct: state.setSelectedProduct,
+      addToCart: state.addToCart,
+      toggleCart: state.toggleCart,
+    })),
+  );
   const [selectedSize, setSelectedSize] = useState<string>("M");
   const [selectedColor, setSelectedColor] = useState<string>("");
   const [quantity, setQuantity] = useState(1);
-  const [showDetails, setShowDetails] = useState(false);
 
   const handleClose = () => {
     setSelectedProduct(null);
-    resetSelections();
-  };
-
-  const resetSelections = () => {
     setSelectedSize("M");
     setSelectedColor("");
     setQuantity(1);
-    setShowDetails(false);
   };
 
   const handleAddToCart = () => {
     if (!selectedProduct) return;
-    
-    const colorName = selectedProduct.colors.find(c => c.value === selectedColor)?.name || selectedProduct.colors[0].name;
-    
+    const colorName =
+      selectedProduct.colors.find((c) => c.value === selectedColor)?.name ||
+      selectedProduct.colors[0].name;
     addToCart({
       productId: selectedProduct.id,
       name: selectedProduct.name,
@@ -39,110 +41,155 @@ export function ProductModal() {
       color: colorName,
       quantity,
     });
-
     handleClose();
     toggleCart(true);
   };
 
   if (!selectedProduct) return null;
 
+  const activeColor =
+    selectedProduct.colors.find((c) => c.value === selectedColor) ||
+    selectedProduct.colors[0];
+
   return (
     <AnimatePresence>
       <motion.div
+        key="modal-backdrop"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={{ duration: 0.3 }}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-offgrid-dark/80 backdrop-blur-sm p-3 sm:p-4 md:p-6"
+        transition={{ duration: 0.25 }}
+        className="fixed inset-0 z-50 flex items-center justify-center bg-offgrid-dark/75 backdrop-blur-sm p-3 sm:p-5"
         onClick={handleClose}
       >
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          key="modal-panel"
+          initial={{ opacity: 0, scale: 0.96, y: 16 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          transition={{ duration: 0.3, ease: "easeOut" }}
-          className="relative w-full max-w-5xl max-h-[95vh] sm:max-h-[90vh] bg-offgrid-cream rounded-2xl overflow-hidden shadow-2xl"
+          exit={{ opacity: 0, scale: 0.96, y: 16 }}
+          transition={{ duration: 0.25, ease: "easeOut" }}
+          className="relative w-full max-w-4xl bg-offgrid-cream rounded-2xl overflow-hidden shadow-2xl"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Close Button */}
+          {/* Close */}
           <button
             onClick={handleClose}
-            className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-offgrid-cream/90 backdrop-blur-sm flex items-center justify-center hover:bg-offgrid-green hover:text-offgrid-cream transition-colors shadow-md"
+            className="absolute top-3 right-3 z-20 w-9 h-9 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center hover:bg-offgrid-green hover:text-offgrid-cream transition-colors shadow-sm"
+            aria-label="Close"
           >
-            <X className="w-4 h-4 sm:w-5 sm:h-5" />
+            <X className="w-4 h-4" />
           </button>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 h-full overflow-y-auto">
-            {/* Product Image */}
-            <div className="relative aspect-square md:aspect-auto bg-white">
-              <img
-                src={selectedProduct.image}
-                alt={selectedProduct.name}
-                className="w-full h-full object-cover"
-              />
+          <div className="grid grid-cols-1 md:grid-cols-2">
+
+            {/* ── Left: Image ── */}
+            <div className="relative bg-white">
+              {/* Tag */}
               {selectedProduct.tag && (
-                <span className="absolute top-4 left-4 px-3 py-1 bg-offgrid-cream/90 backdrop-blur-sm text-offgrid-green text-[10px] font-bold tracking-[0.15em] uppercase rounded-full">
+                <span className="absolute top-3 left-3 z-10 px-2.5 py-1 bg-offgrid-dark/80 backdrop-blur-sm text-offgrid-cream text-[9px] font-bold tracking-[0.18em] uppercase rounded-full">
                   {selectedProduct.tag}
                 </span>
               )}
+              {/* Sold social proof */}
+              <span className="absolute bottom-3 left-3 z-10 px-2.5 py-1 bg-offgrid-cream/90 backdrop-blur-sm text-offgrid-green text-[9px] font-semibold tracking-[0.15em] uppercase rounded-full">
+                {selectedProduct.sold.toLocaleString("en-PH")} sold
+              </span>
+              <img
+                src={selectedProduct.image}
+                alt={selectedProduct.name}
+                className="w-full aspect-square md:h-full md:aspect-auto object-cover"
+              />
             </div>
 
-            {/* Product Details */}
-            <div className="p-6 sm:p-8 md:p-10 flex flex-col">
-              <div className="mb-5 sm:mb-6">
-                <p className="text-[10px] font-semibold tracking-[0.2em] uppercase text-offgrid-green/50 mb-2">
-                  {selectedProduct.category}
-                </p>
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-display font-black text-offgrid-green leading-tight mb-2 sm:mb-3">
+            {/* ── Right: Details ── */}
+            <div className="flex flex-col p-5 sm:p-6 gap-4">
+
+              {/* Header */}
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-[9px] font-bold tracking-[0.2em] uppercase text-offgrid-green/45">
+                    {selectedProduct.category}
+                  </span>
+                  {/* Cut badge */}
+                  <span className="text-[9px] font-semibold tracking-[0.12em] uppercase px-2 py-0.5 rounded-full bg-offgrid-green/8 text-offgrid-green/60">
+                    {selectedProduct.cut}
+                  </span>
+                </div>
+                <h2 className="text-2xl sm:text-3xl font-display font-black text-offgrid-green leading-tight">
                   {selectedProduct.name}
                 </h2>
-                <p className="text-xl sm:text-2xl font-display font-bold text-offgrid-lime">
+                <p className="text-xl font-display font-bold text-offgrid-lime mt-0.5">
                   {formatPrice(selectedProduct.price)}
                 </p>
               </div>
 
-              <p className="text-sm text-offgrid-green/70 leading-relaxed mb-6 sm:mb-8">
+              {/* Description — clamped to 2 lines */}
+              <p className="text-sm text-offgrid-green/65 leading-relaxed line-clamp-2">
                 {selectedProduct.description}
               </p>
 
-              {/* Color Selector */}
-              <div className="mb-5 sm:mb-6">
-                <label className="text-xs font-semibold tracking-[0.15em] uppercase text-offgrid-green mb-2 sm:mb-3 block">
-                  Color — <span className="text-offgrid-green/60">{selectedProduct.colors.find(c => c.value === selectedColor)?.name || selectedProduct.colors[0].name}</span>
-                </label>
-                <div className="flex gap-2 sm:gap-3">
-                  {selectedProduct.colors.map((color) => (
-                    <button
-                      key={color.value}
-                      onClick={() => setSelectedColor(color.value)}
-                      className={cn(
-                        "w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 transition-all duration-200",
-                        selectedColor === color.value
-                          ? "border-offgrid-green scale-110 shadow-md"
-                          : "border-offgrid-green/20 hover:border-offgrid-green/40"
-                      )}
-                    >
-                      <div className={cn("w-full h-full rounded-full", color.value)} />
-                    </button>
-                  ))}
+              {/* Material + Fit row */}
+              <div className="flex flex-wrap gap-2">
+                <span className="text-[10px] font-medium text-offgrid-green/60 bg-offgrid-green/6 border border-offgrid-green/10 px-2.5 py-1 rounded-lg">
+                  {selectedProduct.material}
+                </span>
+                <span className="text-[10px] font-medium text-offgrid-green/60 bg-offgrid-green/6 border border-offgrid-green/10 px-2.5 py-1 rounded-lg">
+                  {selectedProduct.fit}
+                </span>
+              </div>
+
+              {/* Color */}
+              <div>
+                <p className="text-[10px] font-bold tracking-[0.18em] uppercase text-offgrid-green mb-2">
+                  Color —{" "}
+                  <span className="font-semibold text-offgrid-green/60 normal-case tracking-normal">
+                    {activeColor.name}
+                  </span>
+                </p>
+                <div className="flex gap-2">
+                  {selectedProduct.colors.map((color) => {
+                    const isSelected =
+                      selectedColor === color.value ||
+                      (!selectedColor && color === selectedProduct.colors[0]);
+                    return (
+                      <button
+                        key={color.value}
+                        onClick={() => setSelectedColor(color.value)}
+                        title={color.name}
+                        className={cn(
+                          "w-8 h-8 rounded-full border-2 transition-all duration-150 flex items-center justify-center",
+                          isSelected
+                            ? "border-offgrid-green scale-110 shadow"
+                            : "border-offgrid-green/20 hover:border-offgrid-green/50",
+                        )}
+                      >
+                        <div className={cn("w-full h-full rounded-full", color.value)} />
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* Size Selector */}
-              <div className="mb-5 sm:mb-6">
-                <label className="text-xs font-semibold tracking-[0.15em] uppercase text-offgrid-green mb-2 sm:mb-3 block">
-                  Size
-                </label>
-                <div className="flex flex-wrap gap-2">
+              {/* Size */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-[10px] font-bold tracking-[0.18em] uppercase text-offgrid-green">
+                    Size
+                  </p>
+                  <span className="text-[9px] text-offgrid-green/40 font-medium">
+                    {selectedProduct.sizeRange}
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
                   {selectedProduct.sizes.map((size) => (
                     <button
                       key={size}
                       onClick={() => setSelectedSize(size)}
                       className={cn(
-                        "px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all duration-200 border",
+                        "px-3 py-1 rounded-full text-[11px] font-semibold transition-all duration-150 border",
                         selectedSize === size
                           ? "bg-offgrid-green text-offgrid-cream border-offgrid-green"
-                          : "bg-transparent text-offgrid-green border-offgrid-green/30 hover:border-offgrid-green"
+                          : "bg-transparent text-offgrid-green border-offgrid-green/25 hover:border-offgrid-green",
                       )}
                     >
                       {size}
@@ -151,79 +198,41 @@ export function ProductModal() {
                 </div>
               </div>
 
-              {/* Quantity Selector */}
-              <div className="mb-6 sm:mb-8">
-                <label className="text-xs font-semibold tracking-[0.15em] uppercase text-offgrid-green mb-2 sm:mb-3 block">
-                  Quantity
-                </label>
-                <div className="flex items-center gap-4">
+              {/* Quantity + CTA row */}
+              <div className="flex items-center gap-3 mt-auto">
+                {/* Stepper */}
+                <div className="flex items-center gap-2 border border-offgrid-green/20 rounded-full px-3 py-1.5">
                   <button
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
                     disabled={quantity <= 1}
-                    className="w-10 h-10 rounded-full border border-offgrid-green/30 flex items-center justify-center hover:bg-offgrid-green/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-offgrid-green/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                   >
-                    <Minus className="w-4 h-4" />
+                    <Minus className="w-3 h-3" />
                   </button>
-                  <span className="text-lg font-display font-bold text-offgrid-green w-8 text-center">
+                  <span className="text-sm font-display font-bold text-offgrid-green w-5 text-center">
                     {quantity}
                   </span>
                   <button
                     onClick={() => setQuantity(Math.min(10, quantity + 1))}
                     disabled={quantity >= 10}
-                    className="w-10 h-10 rounded-full border border-offgrid-green/30 flex items-center justify-center hover:bg-offgrid-green/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-offgrid-green/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                   >
-                    <Plus className="w-4 h-4" />
+                    <Plus className="w-3 h-3" />
                   </button>
                 </div>
-              </div>
 
-              {/* Add to Cart Button */}
-              <Button
-                variant="default"
-                size="lg"
-                onClick={handleAddToCart}
-                className="w-full mb-6 group"
-              >
-                <ShoppingBag className="mr-2 w-5 h-5 group-hover:scale-110 transition-transform" />
-                Add to Cart — {formatPrice(selectedProduct.price * quantity)}
-              </Button>
-
-              {/* Material & Fit Accordion */}
-              <div className="border-t border-offgrid-green/10 pt-6 mt-auto">
-                <button
-                  onClick={() => setShowDetails(!showDetails)}
-                  className="w-full flex items-center justify-between text-sm font-semibold text-offgrid-green hover:text-offgrid-lime transition-colors"
+                {/* Add to Cart */}
+                <Button
+                  variant="default"
+                  size="lg"
+                  onClick={handleAddToCart}
+                  className="flex-1 group h-11"
                 >
-                  <span>Material & Fit Details</span>
-                  {showDetails ? (
-                    <ChevronUp className="w-4 h-4" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4" />
-                  )}
-                </button>
-                <AnimatePresence>
-                  {showDetails && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.3 }}
-                      className="overflow-hidden"
-                    >
-                      <div className="pt-4 space-y-3 text-sm text-offgrid-green/70">
-                        <div>
-                          <p className="font-semibold text-offgrid-green mb-1">Material</p>
-                          <p>{selectedProduct.material}</p>
-                        </div>
-                        <div>
-                          <p className="font-semibold text-offgrid-green mb-1">Fit</p>
-                          <p>{selectedProduct.fit}</p>
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                  <ShoppingBag className="mr-2 w-4 h-4 group-hover:scale-110 transition-transform" />
+                  Add to Cart — {formatPrice(selectedProduct.price * quantity)}
+                </Button>
               </div>
+
             </div>
           </div>
         </motion.div>

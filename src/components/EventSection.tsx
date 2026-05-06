@@ -1,9 +1,15 @@
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "./ui/Button";
 import { Calendar, MapPin, Trophy } from "lucide-react";
+import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 
 export function EventSection() {
+  const navigate = useNavigate();
+  const events = useSiteContentStore((state) => state.events);
+  const featuredEvent = events.find((entry) => entry.featured) ?? events[0];
+  const countdownDateLabel = featuredEvent ? `${featuredEvent.date} 2026 09:00:00` : "15 Jun 2026 09:00:00";
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
@@ -12,8 +18,7 @@ export function EventSection() {
   });
 
   useEffect(() => {
-    // Target date: June 15, 2026
-    const targetDate = new Date("2026-06-15T09:00:00").getTime();
+    const targetDate = new Date(countdownDateLabel).getTime();
 
     const interval = setInterval(() => {
       const now = new Date().getTime();
@@ -32,7 +37,9 @@ export function EventSection() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [countdownDateLabel]);
+
+  if (!featuredEvent) return null;
 
   return (
     <section id="events" className="relative py-28 md:py-32 overflow-hidden">
@@ -57,16 +64,18 @@ export function EventSection() {
         >
           <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full border border-offgrid-cream/20 bg-offgrid-cream/10 text-offgrid-cream/80 text-[10px] font-semibold tracking-[0.2em] uppercase mb-8 backdrop-blur-sm">
             <span className="w-2 h-2 rounded-full bg-offgrid-lime mr-2 animate-pulse" />
-            Official Launch Event
+            Featured Community Event
           </div>
           
           <h2 className="text-5xl md:text-7xl lg:text-8xl font-display font-black text-offgrid-cream leading-[0.95] mb-6">
-            Figaro <br />
-            <span className="italic font-normal text-offgrid-lime">Barako Cup 2026</span>
+            {featuredEvent.title.split(" ").slice(0, 2).join(" ")} <br />
+            <span className="italic font-normal text-offgrid-lime">
+              {featuredEvent.title.split(" ").slice(2).join(" ")}
+            </span>
           </h2>
           
           <p className="text-base md:text-lg text-offgrid-cream/70 mb-12 max-w-2xl mx-auto leading-relaxed">
-            OffGrid Lifestyle makes its official debut at the biggest pickleball community event in the Philippines. Be part of the movement.
+            {featuredEvent.description}
           </p>
 
           {/* Countdown Timer */}
@@ -99,23 +108,28 @@ export function EventSection() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-10 text-offgrid-cream/80 mb-12 text-sm font-medium">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-offgrid-lime" />
-              June 15, 2026
+              {featuredEvent.date}
             </div>
             <div className="flex items-center gap-2">
               <MapPin className="w-4 h-4 text-offgrid-lime" />
-              BGC, Metro Manila
+              {featuredEvent.location}
             </div>
             <div className="flex items-center gap-2">
               <Trophy className="w-4 h-4 text-offgrid-lime" />
-              Pickleball & More
+              {featuredEvent.category}
             </div>
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button variant="secondary" size="lg" className="w-full sm:w-auto">
+            <Button variant="secondary" size="lg" className="w-full sm:w-auto" onClick={() => navigate("/events")}>
               Join the Movement →
             </Button>
-            <Button variant="outline" size="lg" className="w-full sm:w-auto border-offgrid-cream/60 text-offgrid-cream hover:bg-offgrid-cream hover:text-offgrid-green bg-offgrid-cream/10 backdrop-blur-sm">
+            <Button
+              variant="outline"
+              size="lg"
+              className="w-full sm:w-auto border-offgrid-cream/60 text-offgrid-cream hover:bg-offgrid-cream hover:text-offgrid-green bg-offgrid-cream/10 backdrop-blur-sm"
+              onClick={() => navigate("/events")}
+            >
               Event Details
             </Button>
           </div>

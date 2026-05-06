@@ -2,17 +2,26 @@ import React, { useState, useMemo } from "react";
 import { motion } from "motion/react";
 import { useNavigate } from "react-router-dom";
 import { Filter, SlidersHorizontal, Grid3X3, List, Search, ChevronDown, Star } from "lucide-react";
+import { useShallow } from "zustand/react/shallow";
 import { useStore } from "@/src/store/store";
-import { products, formatPrice, Product } from "@/src/data/products";
+import { formatPrice, Product } from "@/src/data/products";
 import { Button } from "@/src/components/ui/Button";
 import { cn } from "@/src/lib/utils";
+import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 
 type SortOption = "newest" | "price-asc" | "price-desc" | "bestselling" | "name-asc";
 type ViewMode = "grid" | "list";
 
 export function ShopPage() {
   const navigate = useNavigate();
-  const { setSelectedProduct, addToCart, toggleCart } = useStore();
+  const { setSelectedProduct, addToCart, toggleCart } = useStore(
+    useShallow((state) => ({
+      setSelectedProduct: state.setSelectedProduct,
+      addToCart: state.addToCart,
+      toggleCart: state.toggleCart,
+    })),
+  );
+  const products = useSiteContentStore((state) => state.products);
   
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [sortBy, setSortBy] = useState<SortOption>("newest");
@@ -99,7 +108,7 @@ export function ShopPage() {
               <span className="italic font-normal text-offgrid-lime">Collection</span>
             </h1>
             <p className="text-offgrid-cream/70 text-sm md:text-base max-w-lg">
-              Premium Filipino sportswear for those who play different. All pieces ₱1,100.
+              Premium Filipino sportswear for those who play different.
             </p>
           </motion.div>
         </div>
@@ -395,13 +404,23 @@ export function ShopPage() {
             <p className="text-offgrid-cream/70 mb-8 max-w-lg mx-auto">
               Mix and match any pieces. Ships nationwide across the Philippines.
             </p>
-            <Button
-              variant="secondary"
-              size="lg"
-              onClick={() => navigate("/")}
-            >
-              Back to Home
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button
+                variant="secondary"
+                size="lg"
+                onClick={() => navigate("/")}
+              >
+                Back to Home
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                className="border-offgrid-cream/50 text-offgrid-cream hover:bg-offgrid-cream hover:text-offgrid-green"
+                onClick={() => navigate("/custom")}
+              >
+                Need Custom Team Gear?
+              </Button>
+            </div>
           </motion.div>
         </div>
       </div>

@@ -1,12 +1,21 @@
 import { motion } from "motion/react";
 import { Plus, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useShallow } from "zustand/react/shallow";
 import { useStore } from "@/src/store/store";
-import { products, formatPrice } from "@/src/data/products";
+import { formatPrice } from "@/src/data/products";
+import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 
 export function BestSellers() {
-  const { setSelectedProduct, addToCart, toggleCart } = useStore();
+  const { setSelectedProduct, addToCart, toggleCart } = useStore(
+    useShallow((state) => ({
+      setSelectedProduct: state.setSelectedProduct,
+      addToCart: state.addToCart,
+      toggleCart: state.toggleCart,
+    })),
+  );
   const navigate = useNavigate();
+  const products = useSiteContentStore((state) => state.products);
 
   const handleProductClick = (productId: string) => {
     const product = products.find(p => p.id === productId);

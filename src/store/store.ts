@@ -1,5 +1,8 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import { Product } from "@/src/data/products";
+import { toRetailOrderPayload } from "@/src/types/commerce";
+import { usePortalStore } from "@/src/store/usePortalStore";
 
 // Types
 export interface CartItem {
@@ -65,7 +68,9 @@ const generateOrderId = (): string => {
   return `OG-2026-${random}`;
 };
 
-export const useStore = create<StoreState>((set, get) => ({
+export const useStore = create<StoreState>()(
+  persist(
+  (set, get) => ({
   // Initial State
   cart: [],
   isCartOpen: false,
@@ -152,6 +157,23 @@ export const useStore = create<StoreState>((set, get) => ({
 
   placeOrder: () => {
     const orderId = generateOrderId();
+    const state = get();
+    const retailOrderPayload = toRetailOrderPayload(
+      state.cart,
+      state.shippingInfo,
+      state.paymentMethod,
+      orderId,
+    );
+    const currentUser = usePortalStore.getState().currentUser;
+    const fallbackName = state.shippingInfo.fullName || currentUser?.name || "Guest Customer";
+    const fallbackEmail = state.shippingInfo.email || currentUser?.email || "guest@offgrid.local";
+
+    if (currentUser?.role === "customer") {
+      retailOrderPayload.customerId = currentUser.id;
+    }
+
+    usePortalStore.getState().recordRetailOrder(retailOrderPayload, fallbackName, fallbackEmail);
+
     set({
       orderId,
       checkoutStep: 3,
@@ -176,4 +198,11 @@ export const useStore = create<StoreState>((set, get) => ({
       orderId: null,
       cart: [],
     }),
-}));
+}),
+    {
+      name: "og-cart",
+      version: 1,
+      partialize: (state) => ({ cart: state.cart }),
+    },
+  ),
+);

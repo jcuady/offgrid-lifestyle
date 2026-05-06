@@ -3,8 +3,13 @@ import { motion, useScroll, useTransform, useMotionValue, useSpring } from "moti
 import { useNavigate } from "react-router-dom";
 import { Button } from "./ui/Button";
 import { ArrowRight } from "lucide-react";
+import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 
 export function Hero() {
+  const products = useSiteContentStore((state) => state.products);
+  const itemsSold = products.reduce((sum, item) => sum + item.sold, 0);
+  const collections = new Set(products.map((entry) => entry.category)).size;
+
   const ref = useRef<HTMLElement>(null);
   const navigate = useNavigate();
   
@@ -156,12 +161,14 @@ export function Hero() {
       <div className="absolute bottom-0 left-0 right-0 z-10 border-t border-offgrid-cream/15 bg-offgrid-dark/30 backdrop-blur-lg py-5 hidden md:block">
         <div className="container mx-auto px-12 flex items-center gap-14">
           <div>
-            <p className="text-2xl font-display font-bold text-offgrid-cream tracking-tight">3,200+</p>
+            <p className="text-2xl font-display font-bold text-offgrid-cream tracking-tight">
+              {itemsSold.toLocaleString("en-PH")}+
+            </p>
             <p className="text-[10px] font-semibold tracking-[0.2em] text-offgrid-cream/50 uppercase mt-0.5">Items Sold</p>
           </div>
           <div className="w-px h-10 bg-offgrid-cream/15" />
           <div>
-            <p className="text-2xl font-display font-bold text-offgrid-cream tracking-tight">4 Sports</p>
+            <p className="text-2xl font-display font-bold text-offgrid-cream tracking-tight">{collections} Sports</p>
             <p className="text-[10px] font-semibold tracking-[0.2em] text-offgrid-cream/50 uppercase mt-0.5">Collections</p>
           </div>
           <div className="w-px h-10 bg-offgrid-cream/15" />

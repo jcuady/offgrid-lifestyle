@@ -8,163 +8,13 @@ import {
 } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { cn } from "@/src/lib/utils";
-
-interface Event {
-  id: string;
-  title: string;
-  subtitle: string;
-  date: string;
-  time: string;
-  location: string;
-  address: string;
-  image: string;
-  category: "tournament" | "community" | "launch" | "workshop";
-  status: "upcoming" | "ongoing" | "past";
-  capacity?: number;
-  registered?: number;
-  price: string;
-  description: string;
-  highlights: string[];
-  featured?: boolean;
-}
-
-const events: Event[] = [
-  {
-    id: "evt-1",
-    title: "Figaro Barako Cup 2026",
-    subtitle: "Official Brand Launch",
-    date: "June 15, 2026",
-    time: "9:00 AM - 6:00 PM",
-    location: "BGC, Taguig",
-    address: "Bonifacio Global City, Metro Manila",
-    image: "/images/event_barako.png",
-    category: "launch",
-    status: "upcoming",
-    capacity: 500,
-    registered: 347,
-    price: "Free",
-    description: "OffGrid Lifestyle makes its official debut at the biggest pickleball community event in the Philippines. Join us for a day of competitive play, exclusive merch drops, and cultural celebration.",
-    highlights: [
-      "Live pickleball tournament with ₱50K prize pool",
-      "Exclusive first look at OffGrid collections",
-      "Live DJ & local artists",
-      "Free samples & giveaways",
-      "Meet Filipino athletes & creators"
-    ],
-    featured: true
-  },
-  {
-    id: "evt-2",
-    title: "Sunrise Golf Clinic",
-    subtitle: "Learn from the Pros",
-    date: "July 12, 2026",
-    time: "6:00 AM - 10:00 AM",
-    location: "Wack Wack Golf Club",
-    address: "Mandaluyong, Metro Manila",
-    image: "https://images.unsplash.com/photo-1535970793555-9c98e4e2a73d?q=80&w=2940&auto=format&fit=crop",
-    category: "workshop",
-    status: "upcoming",
-    capacity: 50,
-    registered: 38,
-    price: "₱1,500",
-    description: "An exclusive morning golf clinic with professional coaches. Perfect for beginners and intermediate players looking to refine their game while testing OffGrid golf apparel.",
-    highlights: [
-      "4-hour intensive coaching session",
-      "Small group (max 10 per coach)",
-      "Complimentary OffGrid Fairway Tee",
-      "Video swing analysis",
-      "Networking breakfast included"
-    ]
-  },
-  {
-    id: "evt-3",
-    title: "Pickleball Social Night",
-    subtitle: "Play. Connect. Repeat.",
-    date: "August 5, 2026",
-    time: "6:00 PM - 10:00 PM",
-    location: "The Pickleball Club",
-    address: "Makati Sports Complex",
-    image: "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?q=80&w=2940&auto=format&fit=crop",
-    category: "community",
-    status: "upcoming",
-    capacity: 100,
-    registered: 67,
-    price: "₱500",
-    description: "Monthly community meetup for pickleball enthusiasts of all levels. Casual play, good vibes, and the chance to rep OffGrid on the court.",
-    highlights: [
-      "Open play for all skill levels",
-      "Equipment provided",
-      "Food & drinks included",
-      "Raffle draws",
-      "10% off all OffGrid gear"
-    ]
-  },
-  {
-    id: "evt-4",
-    title: "OffGrid Pilipinas Drop",
-    subtitle: "Limited Edition Launch",
-    date: "September 20, 2026",
-    time: "12:00 PM - 8:00 PM",
-    location: "SM Aura Premier",
-    address: "BGC, Taguig, Metro Manila",
-    image: "https://images.unsplash.com/photo-1556906781-9a412961c28c?q=80&w=2940&auto=format&fit=crop",
-    category: "launch",
-    status: "upcoming",
-    price: "Free",
-    description: "Exclusive pop-up launch of the OG Pilipinas collection. Be the first to cop limited edition pieces celebrating Filipino athletic culture.",
-    highlights: [
-      "First access to OG Pilipinas collection",
-      "Exclusive pop-up discounts",
-      "Live customization station",
-      "Photo booth with Filipino sports icons",
-      "Meet local athletes & influencers"
-    ]
-  },
-  {
-    id: "evt-5",
-    title: "Barako Cup 2025 - Recap",
-    subtitle: "Where It All Started",
-    date: "June 2025",
-    time: "Full Day Event",
-    location: "BGC, Taguig",
-    address: "Bonifacio Global City",
-    image: "/images/event_barako.png",
-    category: "tournament",
-    status: "past",
-    price: "N/A",
-    description: "Our inaugural community event brought together 300+ pickleball players for an unforgettable day of competition and culture.",
-    highlights: [
-      "300+ participants",
-      "50+ matches played",
-      "Featured in ESPN5",
-      "Sold out merch in 3 hours"
-    ]
-  },
-  {
-    id: "evt-6",
-    title: "Golf & Grill Summer",
-    subtitle: "Community Meetup",
-    date: "April 2025",
-    time: "Afternoon Event",
-    location: "Orchid Golf Club",
-    address: "Nuvali, Laguna",
-    image: "https://images.unsplash.com/photo-1559534175-1958218eb18e?q=80&w=2940&auto=format&fit=crop",
-    category: "community",
-    status: "past",
-    price: "N/A",
-    description: "Casual golf meetup followed by BBQ grill session. Built relationships, shared stories, and tested early OffGrid prototypes.",
-    highlights: [
-      "100+ community members",
-      "18-hole casual play",
-      "Live acoustic music",
-      "BBQ & local food"
-    ]
-  }
-];
+import type { SiteEvent } from "@/src/data/events";
+import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 
 export function EventsPage() {
   const navigate = useNavigate();
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const events = useSiteContentStore((state) => state.events);
+  const [selectedEvent, setSelectedEvent] = useState<SiteEvent | null>(null);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [registrationComplete, setRegistrationComplete] = useState(false);
   const [filter, setFilter] = useState<"all" | "upcoming" | "past">("all");
@@ -190,7 +40,7 @@ export function EventsPage() {
     }, 3000);
   };
 
-  const getCategoryIcon = (category: Event["category"]) => {
+  const getCategoryIcon = (category: SiteEvent["category"]) => {
     switch (category) {
       case "tournament": return Trophy;
       case "community": return Users;
@@ -200,7 +50,7 @@ export function EventsPage() {
     }
   };
 
-  const getCategoryColor = (category: Event["category"]) => {
+  const getCategoryColor = (category: SiteEvent["category"]) => {
     switch (category) {
       case "tournament": return "text-offgrid-lime";
       case "community": return "text-blue-500";

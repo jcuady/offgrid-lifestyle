@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, Check, CreditCard, Wallet, Banknote, Package, ChevronRight, MapPin, Truck } from "lucide-react";
+import { useShallow } from "zustand/react/shallow";
 import { useStore } from "@/src/store/store";
 import { Button } from "./ui/Button";
 import { formatPrice } from "@/src/data/products";
@@ -20,7 +21,22 @@ export function CheckoutModal() {
     placeOrder,
     orderId,
     resetCheckout,
-  } = useStore();
+  } = useStore(
+    useShallow((state) => ({
+      isCheckoutOpen: state.isCheckoutOpen,
+      closeCheckout: state.closeCheckout,
+      checkoutStep: state.checkoutStep,
+      setCheckoutStep: state.setCheckoutStep,
+      shippingInfo: state.shippingInfo,
+      setShippingInfo: state.setShippingInfo,
+      paymentMethod: state.paymentMethod,
+      setPaymentMethod: state.setPaymentMethod,
+      cart: state.cart,
+      placeOrder: state.placeOrder,
+      orderId: state.orderId,
+      resetCheckout: state.resetCheckout,
+    })),
+  );
 
   const [formData, setFormData] = useState(shippingInfo);
   const [cardDetails, setCardDetails] = useState({ number: "", expiry: "", cvv: "" });
@@ -444,14 +460,22 @@ export function CheckoutModal() {
                         </div>
                       </div>
 
-                      <Button
-                        variant="default"
-                        size="lg"
-                        onClick={handleContinueShopping}
-                        className="w-full sm:w-auto sm:max-w-xs h-12 sm:h-14"
-                      >
-                        Continue Shopping
-                      </Button>
+                      <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                        <Button
+                          variant="default"
+                          size="lg"
+                          onClick={handleContinueShopping}
+                          className="h-12 sm:h-14"
+                        >
+                          Continue Shopping
+                        </Button>
+                      </div>
+                      <p className="text-xs text-offgrid-green/40 mt-4">
+                        Need custom team gear?{" "}
+                        <a href="/custom" className="underline hover:text-offgrid-green transition-colors">
+                          Start a custom order
+                        </a>
+                      </p>
                     </motion.div>
                   )}
                 </AnimatePresence>

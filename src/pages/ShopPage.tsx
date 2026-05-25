@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { motion } from "motion/react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { SlidersHorizontal, Search, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { formatPrice, Product } from "@/src/data/products";
 import { Button } from "@/src/components/ui/Button";
@@ -11,9 +11,11 @@ type SortOption = "newest" | "price-asc" | "price-desc" | "bestselling" | "name-
 
 export function ShopPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const products = useSiteContentStore((state) => state.products);
+  const initialCategoryParam = searchParams.get("category") ?? "all";
   
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedCategory, setSelectedCategory] = useState<string>(initialCategoryParam);
   const [sortBy, setSortBy] = useState<SortOption>("newest");
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
@@ -38,6 +40,11 @@ export function ShopPage() {
       })),
     ];
   }, [products]);
+
+  useEffect(() => {
+    if (categories.some((entry) => entry.value === selectedCategory)) return;
+    setSelectedCategory("all");
+  }, [categories, selectedCategory]);
 
   const filteredAndSortedProducts = useMemo(() => {
     let filtered = products;

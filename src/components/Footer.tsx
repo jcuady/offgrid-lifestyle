@@ -1,20 +1,24 @@
+import { Link } from "react-router-dom";
 import { Instagram, Facebook } from "lucide-react";
+import { siteContainer } from "@/src/lib/brandLayout";
 import { LOGO_WORDMARK_WHITE } from "@/src/lib/brandAssets";
+import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 
 export function Footer() {
+  const footer = useSiteContentStore((s) => s.landingContent.footer);
   return (
     <footer className="bg-offgrid-dark text-offgrid-cream pt-16 pb-8 border-t border-offgrid-cream/8">
-      <div className="container mx-auto px-6 md:px-12">
+      <div className={siteContainer}>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-14">
           
           <div className="md:col-span-2">
-            <a href="#" className="flex items-center mb-5">
+            <Link to="/" className="mb-5 flex items-center">
               <img
                 src={LOGO_WORDMARK_WHITE}
                 alt="OFF GRID® — OffGrid Lifestyle"
                 className="h-10 w-auto"
               />
-            </a>
+            </Link>
             <p className="text-offgrid-cream/50 text-sm max-w-xs mb-7 leading-relaxed">
               Play Different. Live Off Grid.<br />
               Proudly made for Filipino athletes.
@@ -35,17 +39,17 @@ export function Footer() {
           <div>
             <h4 className="font-bold text-sm mb-5 tracking-wide">Shop</h4>
             <ul className="space-y-3 text-sm text-offgrid-cream/50">
-              <li><a href="#collections" className="hover:text-offgrid-lime transition-colors">Collections</a></li>
-              <li><a href="#shop" className="hover:text-offgrid-lime transition-colors">Best Sellers</a></li>
-              <li><a href="/custom" className="hover:text-offgrid-lime transition-colors">Custom Order</a></li>
-              <li><a href="#events" className="hover:text-offgrid-lime transition-colors">Events</a></li>
+              <li><Link to="/#collections" className="hover:text-offgrid-lime transition-colors">Collections</Link></li>
+              <li><Link to="/#shop" className="hover:text-offgrid-lime transition-colors">Best Sellers</Link></li>
+              <li><Link to="/custom" className="hover:text-offgrid-lime transition-colors">Custom Order</Link></li>
+              <li><Link to="/events" className="hover:text-offgrid-lime transition-colors">Events</Link></li>
             </ul>
           </div>
 
           <div>
             <h4 className="font-bold text-sm mb-5 tracking-wide">Support</h4>
             <ul className="space-y-3 text-sm text-offgrid-cream/50">
-              <li><a href="#about" className="hover:text-offgrid-lime transition-colors">About</a></li>
+              <li><Link to="/#about" className="hover:text-offgrid-lime transition-colors">About</Link></li>
               <li><a href="#" className="hover:text-offgrid-lime transition-colors">Contact</a></li>
               <li><a href="#" className="hover:text-offgrid-lime transition-colors">Sizing Guide</a></li>
             </ul>
@@ -54,7 +58,7 @@ export function Footer() {
         </div>
 
         <div className="flex flex-col md:flex-row justify-between items-center pt-7 border-t border-offgrid-cream/8 text-xs text-offgrid-cream/35">
-          <p>© 2026 OffGrid Lifestyle. All rights reserved.</p>
+          <p>{footer.copyright}</p>
           <div className="flex gap-6 mt-4 md:mt-0">
             <a href="#" className="hover:text-offgrid-cream transition-colors">Privacy Policy</a>
             <a href="#" className="hover:text-offgrid-cream transition-colors">Terms of Service</a>

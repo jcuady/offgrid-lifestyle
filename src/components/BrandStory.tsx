@@ -1,14 +1,18 @@
 import { motion } from "motion/react";
+import { sectionEyebrowOnDark, sectionPaddingDark, sectionTitleOnDark, siteContainer } from "@/src/lib/brandLayout";
+import { useSiteContentStore } from "@/src/store/useSiteContentStore";
+import { cn } from "@/src/lib/utils";
 
 export function BrandStory() {
+  const story = useSiteContentStore((s) => s.landingContent.brandStory);
   return (
-    <section id="about" className="py-24 md:py-32 bg-offgrid-dark text-offgrid-cream relative overflow-hidden">
+    <section id="about" className={cn(sectionPaddingDark, "relative overflow-hidden bg-offgrid-dark text-offgrid-cream")}>
       {/* Decorative background elements */}
       <div className="absolute top-0 right-0 w-1/2 h-full bg-offgrid-green/20 skew-x-12 translate-x-1/4" />
       <div className="absolute bottom-0 left-0 w-64 h-64 bg-offgrid-lime/5 rounded-full blur-3xl" />
 
-      <div className="container mx-auto px-6 md:px-12 relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+      <div className={cn(siteContainer, "relative z-10")}>
+        <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2 lg:gap-16">
           
           {/* Image Side */}
           <motion.div
@@ -20,15 +24,15 @@ export function BrandStory() {
           >
             <div className="aspect-[4/5] md:aspect-square rounded-2xl overflow-hidden">
               <img
-                src="/images/brand_story.png"
-                alt="OffGrid Lifestyle - Athletes at sunset"
+                src={story.image}
+                alt="OffGrid Lifestyle brand story"
                 className="w-full h-full object-cover"
               />
             </div>
             {/* Floating badge */}
-            <div className="absolute -bottom-6 -right-6 md:bottom-8 md:-right-10 bg-offgrid-lime text-offgrid-dark p-5 rounded-xl shadow-xl max-w-[180px] hidden sm:block">
-              <p className="font-display font-black text-3xl mb-1">2026</p>
-              <p className="text-[10px] font-semibold tracking-[0.2em] uppercase">Est. Philippines</p>
+            <div className="absolute -bottom-4 right-2 max-w-[min(180px,45vw)] rounded-xl bg-offgrid-lime p-4 text-offgrid-dark shadow-xl sm:-bottom-6 sm:-right-6 sm:p-5 md:bottom-8 md:-right-10">
+              <p className="font-display font-black text-3xl mb-1">{story.badgeEst}</p>
+              <p className="text-[10px] font-semibold tracking-[0.2em] uppercase">{story.badgeLocality}</p>
             </div>
           </motion.div>
 
@@ -38,53 +42,48 @@ export function BrandStory() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="max-w-xl"
+            className="max-w-xl min-w-0"
           >
-            <h2 className="text-4xl md:text-6xl font-display font-black leading-tight mb-8">
-              We don't just <br />
-              <span className="text-offgrid-lime italic font-normal">play the game.</span><br />
-              We live it.
+            <span className={sectionEyebrowOnDark}>{story.eyebrow}</span>
+            <h2 className={cn(sectionTitleOnDark, "mb-8 leading-tight")}>
+              {story.titleLine1} <br />
+              <span className="text-offgrid-lime italic font-normal">{story.titleLine2Italic}</span>
+              <br />
+              {story.titleLine3}
             </h2>
             
             <div className="space-y-5 text-base md:text-lg text-offgrid-cream/75 leading-relaxed">
-              <p>
-                OffGrid is for those who move differently — on and off the court.
-              </p>
-              <p>
-                Born in the Philippines, shaped by the players who refuse to fit the mold. 
-                Whether you're dinking on the pickleball court, dropping putts at sunrise, 
-                or just living your most expressive life — this is your uniform.
-              </p>
+              <p>{story.paragraph1}</p>
+              <p>{story.paragraph2}</p>
               <p className="font-medium text-offgrid-cream">
-                Hindi kami brand lang. <span className="text-offgrid-lime">Kultura kami.</span>
+                {story.paragraph3Prefix}{" "}
+                <span className="text-offgrid-lime">{story.paragraph3Highlight}</span>
               </p>
             </div>
 
             <div className="mt-10 pt-10 border-t border-offgrid-cream/10">
-              <p className="font-display text-xl italic text-offgrid-cream/40">
-                Play Different. Live Off Grid.
-              </p>
+              <p className="font-display text-xl italic text-offgrid-cream/40">{story.closingQuote}</p>
             </div>
 
             {/* Badges */}
             <div className="mt-10 flex flex-wrap gap-8">
               <div className="flex flex-col items-center gap-2">
                 <div className="w-12 h-12 rounded-full bg-offgrid-cream/5 flex items-center justify-center">
-                  <span className="text-xl">🎾</span>
+                  <span className="text-xl">⚡</span>
                 </div>
-                <span className="text-[10px] font-semibold tracking-[0.2em] uppercase text-offgrid-cream/50">Sport-First</span>
+                <span className="text-[10px] font-semibold tracking-[0.2em] uppercase text-offgrid-cream/50">{story.badgeGritty}</span>
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-12 h-12 rounded-full bg-offgrid-cream/5 flex items-center justify-center">
+                  <span className="text-xl">🏃</span>
+                </div>
+                <span className="text-[10px] font-semibold tracking-[0.2em] uppercase text-offgrid-cream/50">{story.badgeInMotion}</span>
               </div>
               <div className="flex flex-col items-center gap-2">
                 <div className="w-12 h-12 rounded-full bg-offgrid-cream/5 flex items-center justify-center">
                   <span className="text-xl">🇵🇭</span>
                 </div>
-                <span className="text-[10px] font-semibold tracking-[0.2em] uppercase text-offgrid-cream/50">Proudly Pinoy</span>
-              </div>
-              <div className="flex flex-col items-center gap-2">
-                <div className="w-12 h-12 rounded-full bg-offgrid-cream/5 flex items-center justify-center">
-                  <span className="text-xl">♻️</span>
-                </div>
-                <span className="text-[10px] font-semibold tracking-[0.2em] uppercase text-offgrid-cream/50">Sustainable</span>
+                <span className="text-[10px] font-semibold tracking-[0.2em] uppercase text-offgrid-cream/50">{story.badgeProudlyPinoy}</span>
               </div>
             </div>
           </motion.div>

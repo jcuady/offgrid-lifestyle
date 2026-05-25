@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import { Upload, Layers3, ClipboardCheck } from "lucide-react";
+import type { CustomProcessStepCopy } from "@/src/data/customPageContent";
 
 export interface ProcessStepMeta {
   icon: LucideIcon;
@@ -7,21 +8,22 @@ export interface ProcessStepMeta {
   desc: string;
 }
 
-/** Icons + copy for “How it works” — keep in sync with TOTAL_STEPS (3) in useCustomOrderStore. */
-export const CUSTOM_ORDER_PROCESS_STEPS: ProcessStepMeta[] = [
-  {
-    icon: Upload,
-    label: "Design",
-    desc: "Submit your artwork or use our template",
-  },
-  {
-    icon: Layers3,
-    label: "Specs",
-    desc: "Cut, fabric, and print method in one place",
-  },
-  {
-    icon: ClipboardCheck,
-    label: "Summary",
-    desc: "Review, get your quote, and confirm",
-  },
-];
+const PROCESS_STEP_ICONS = [Upload, Layers3, ClipboardCheck] as const;
+
+const WIZARD_STEP_ICONS = [Upload, Layers3, ClipboardCheck] as const;
+
+/** Icons fixed; labels/descriptions from CMS. */
+export function buildProcessSteps(copy: CustomProcessStepCopy[]): ProcessStepMeta[] {
+  return PROCESS_STEP_ICONS.map((icon, index) => ({
+    icon,
+    label: copy[index]?.label ?? `Step ${index + 1}`,
+    desc: copy[index]?.description ?? "",
+  }));
+}
+
+export function buildWizardStepIndicator(stepLabels: string[]) {
+  return WIZARD_STEP_ICONS.map((icon, index) => ({
+    icon,
+    label: stepLabels[index] ?? `Step ${index + 1}`,
+  }));
+}

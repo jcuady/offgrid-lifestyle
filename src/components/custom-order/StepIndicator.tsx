@@ -1,19 +1,16 @@
 import { cn } from "@/src/lib/utils";
-import { Upload, Layers3, ClipboardCheck } from "lucide-react";
+import { buildWizardStepIndicator } from "@/src/components/custom-order/customOrderFlowMeta";
 import { useCustomOrderStore, TOTAL_STEPS } from "@/src/store/useCustomOrderStore";
-
-const STEPS = [
-  { label: "Design", icon: Upload },
-  { label: "Specs", icon: Layers3 },
-  { label: "Summary", icon: ClipboardCheck },
-] as const;
+import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 
 export function StepIndicator() {
   const { currentStep, setStep } = useCustomOrderStore();
+  const stepLabels = useSiteContentStore((s) => s.customPageContent.wizard.stepLabels);
+  const steps = buildWizardStepIndicator(stepLabels);
 
   return (
     <div className="flex items-center justify-center gap-1 sm:gap-2 md:gap-3">
-      {STEPS.map((step, i) => {
+      {steps.map((step, i) => {
         const stepNum = i + 1;
         const isActive = stepNum === currentStep;
         const isComplete = stepNum < currentStep;
@@ -36,10 +33,9 @@ export function StepIndicator() {
               <span className="hidden md:inline">{step.label}</span>
             </button>
             {i < TOTAL_STEPS - 1 && (
-              <div className={cn(
-                "w-4 sm:w-8 h-px",
-                stepNum < currentStep ? "bg-offgrid-green" : "bg-offgrid-green/15",
-              )} />
+              <div
+                className={cn("w-4 sm:w-8 h-px", stepNum < currentStep ? "bg-offgrid-green" : "bg-offgrid-green/15")}
+              />
             )}
           </div>
         );

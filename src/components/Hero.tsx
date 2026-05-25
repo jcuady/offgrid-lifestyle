@@ -4,9 +4,12 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "./ui/Button";
 import { ArrowRight } from "lucide-react";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
+import { siteContainer } from "@/src/lib/brandLayout";
+import { cn } from "@/src/lib/utils";
 
 export function Hero() {
   const products = useSiteContentStore((state) => state.products);
+  const hero = useSiteContentStore((state) => state.landingContent.hero);
   const itemsSold = products.reduce((sum, item) => sum + item.sold, 0);
   const collections = new Set(products.map((entry) => entry.category)).size;
 
@@ -64,10 +67,10 @@ export function Hero() {
       ref={ref}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      className="relative h-screen min-h-[600px] flex items-end overflow-hidden"
+      className="relative flex h-[100svh] min-h-[520px] max-h-[1200px] items-end overflow-hidden"
       aria-label="Hero Section"
     >
-      {/* Background Image with 3D Parallax and Slow Zoom */}
+      {/* Brand-safe background (no third-party photo dependency). */}
       <motion.div 
         style={{ y: scrollY }}
         className="absolute inset-0 z-0 w-full h-full pointer-events-none"
@@ -76,21 +79,22 @@ export function Hero() {
           style={{ x: bgXOffset, y: bgYOffset }}
           className="absolute inset-0 w-[110%] h-[110%] -left-[5%] -top-[5%]"
         >
-          <motion.img
+          <div className="absolute inset-0 bg-offgrid-dark" />
+          <motion.div
             initial={{ scale: 1 }}
-            animate={{ scale: 1.05 }}
+            animate={{ scale: 1.06 }}
             transition={{ duration: 20, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
-            src="https://images.unsplash.com/photo-1638943355304-3a6e3427dc79?q=80&w=2940&auto=format&fit=crop"
-            alt="Golf course at golden hour - OffGrid Lifestyle"
-            className="w-full h-full object-cover"
-            referrerPolicy="no-referrer"
-          />
-          <div className="absolute inset-0 bg-offgrid-dark/30 mix-blend-multiply" />
-          <div className="absolute inset-0 bg-gradient-to-b from-offgrid-dark/70 via-transparent to-offgrid-dark/60" />
+            className="absolute inset-0"
+          >
+            <div className="absolute -left-10 top-[-10%] h-[55%] w-[60%] rounded-full bg-offgrid-green/60 blur-[120px]" />
+            <div className="absolute right-[-10%] top-[20%] h-[55%] w-[55%] rounded-full bg-offgrid-lime/15 blur-[120px]" />
+            <div className="absolute left-[25%] bottom-[-15%] h-[60%] w-[65%] rounded-full bg-offgrid-green/45 blur-[140px]" />
+          </motion.div>
+          <div className="absolute inset-0 bg-gradient-to-b from-offgrid-dark/40 via-offgrid-dark/25 to-offgrid-dark/85" />
         </motion.div>
       </motion.div>
 
-      <div className="container relative z-10 mx-auto px-6 md:px-12 pb-24 md:pb-28 pointer-events-none">
+      <div className={cn(siteContainer, "relative z-10 pb-32 sm:pb-36 md:pb-28 pointer-events-none")}>
         <motion.div 
           style={{ x: textXOffset, y: textYOffset }}
           className="max-w-5xl pointer-events-auto"
@@ -101,7 +105,7 @@ export function Hero() {
             transition={{ duration: 0.6, delay: 0.1 }}
           >
             <span className="inline-block py-1.5 px-4 rounded-full bg-offgrid-cream/15 backdrop-blur-md border border-offgrid-cream/20 text-offgrid-cream text-[10px] font-semibold tracking-[0.2em] uppercase mb-8 shadow-lg">
-              Premium Filipino Sportswear
+              {hero.badge}
             </span>
           </motion.div>
           
@@ -109,18 +113,29 @@ export function Hero() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-7xl md:text-[8rem] lg:text-[10rem] font-display font-black text-offgrid-cream leading-[0.85] tracking-tight mb-8 drop-shadow-2xl"
+            className="text-[2.5rem] min-[400px]:text-5xl sm:text-6xl md:text-7xl lg:text-[8rem] xl:text-[9rem] font-display font-black text-offgrid-cream leading-[0.88] tracking-tight mb-6 sm:mb-8 drop-shadow-2xl"
           >
-            OFF GRID<br />LIFESTYLE
+            {hero.titleLine1}
+            <br />
+            {hero.titleLine2}
           </motion.h1>
           
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
-            className="text-lg md:text-xl text-offgrid-cream/80 font-light italic mb-10 max-w-md drop-shadow-lg font-display"
+            className="text-lg md:text-xl text-offgrid-cream/85 font-light italic mb-3 max-w-md drop-shadow-lg font-display"
           >
-            Play Different. Live Off Grid.
+            {hero.tagline}
+          </motion.p>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.45 }}
+            className="text-[10px] md:text-xs text-offgrid-cream/70 font-semibold tracking-[0.2em] uppercase mb-10 max-w-md drop-shadow-lg"
+          >
+            {hero.locality}
           </motion.p>
           
           <motion.div
@@ -130,11 +145,11 @@ export function Hero() {
             className="flex flex-col sm:flex-row gap-4"
           >
             <Button variant="secondary" size="lg" className="group" onClick={handleShopCollection}>
-              Shop Collection
+              {hero.ctaShopLabel}
               <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Button>
             <Button variant="outline" size="lg" className="border-offgrid-cream/60 text-offgrid-cream hover:bg-offgrid-cream hover:text-offgrid-green backdrop-blur-sm bg-offgrid-cream/10" onClick={handleExploreSports}>
-              Explore Sports
+              {hero.ctaExploreLabel}
             </Button>
           </motion.div>
         </motion.div>
@@ -145,7 +160,7 @@ export function Hero() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1, duration: 1 }}
-        className="absolute bottom-12 right-12 hidden md:flex flex-col items-center gap-2 z-10 pointer-events-none"
+        className="absolute bottom-28 right-6 sm:right-12 hidden md:flex flex-col items-center gap-2 z-10 pointer-events-none"
       >
         <span className="text-offgrid-cream/60 text-xs font-medium tracking-widest uppercase rotate-90 origin-right translate-x-3 mb-8 drop-shadow-md">Scroll</span>
         <div className="w-[1px] h-12 bg-offgrid-cream/30 overflow-hidden backdrop-blur-sm">
@@ -157,24 +172,24 @@ export function Hero() {
         </div>
       </motion.div>
 
-      {/* Stats Bar */}
-      <div className="absolute bottom-0 left-0 right-0 z-10 border-t border-offgrid-cream/15 bg-offgrid-dark/30 backdrop-blur-lg py-5 hidden md:block">
-        <div className="container mx-auto px-12 flex items-center gap-14">
-          <div>
-            <p className="text-2xl font-display font-bold text-offgrid-cream tracking-tight">
+      {/* Stats — compact on mobile, full bar on md+ */}
+      <div className="absolute bottom-0 left-0 right-0 z-10 border-t border-offgrid-cream/15 bg-offgrid-dark/40 backdrop-blur-lg py-4 md:py-5">
+        <div className={cn(siteContainer, "flex items-center justify-between gap-4 sm:gap-6 md:justify-start md:gap-14")}>
+          <div className="min-w-0">
+            <p className="text-lg font-display font-bold text-offgrid-cream tracking-tight sm:text-2xl">
               {itemsSold.toLocaleString("en-PH")}+
             </p>
-            <p className="text-[10px] font-semibold tracking-[0.2em] text-offgrid-cream/50 uppercase mt-0.5">Items Sold</p>
+            <p className="text-[10px] font-semibold tracking-[0.2em] text-offgrid-cream/50 uppercase mt-0.5">{hero.statItemsSoldLabel}</p>
           </div>
-          <div className="w-px h-10 bg-offgrid-cream/15" />
-          <div>
-            <p className="text-2xl font-display font-bold text-offgrid-cream tracking-tight">{collections} Sports</p>
-            <p className="text-[10px] font-semibold tracking-[0.2em] text-offgrid-cream/50 uppercase mt-0.5">Collections</p>
+          <div className="hidden h-10 w-px bg-offgrid-cream/15 sm:block" />
+          <div className="min-w-0 shrink-0 text-right sm:text-left">
+            <p className="text-lg font-display font-bold text-offgrid-cream tracking-tight sm:text-2xl">{collections} Sports</p>
+            <p className="text-[10px] font-semibold tracking-[0.2em] text-offgrid-cream/50 uppercase mt-0.5">{hero.statCollectionsLabel}</p>
           </div>
-          <div className="w-px h-10 bg-offgrid-cream/15" />
-          <div>
-            <p className="text-2xl font-display font-bold text-offgrid-cream tracking-tight">PH</p>
-            <p className="text-[10px] font-semibold tracking-[0.2em] text-offgrid-cream/50 uppercase mt-0.5">Proudly Pinoy</p>
+          <div className="hidden h-10 w-px bg-offgrid-cream/15 md:block" />
+          <div className="hidden min-w-0 md:block">
+            <p className="text-sm font-semibold tracking-[0.2em] text-offgrid-cream uppercase">{hero.statLocalityLine}</p>
+            <p className="text-[10px] font-semibold tracking-[0.2em] text-offgrid-cream/50 uppercase mt-0.5">{hero.statLocalitySub}</p>
           </div>
         </div>
       </div>

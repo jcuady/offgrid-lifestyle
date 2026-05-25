@@ -3,55 +3,85 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { lazy, Suspense } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Navbar } from "./components/Navbar";
-import { Hero } from "./components/Hero";
-import { FeaturedCollections } from "./components/FeaturedCollections";
-import { BestSellers } from "./components/BestSellers";
-import { BrandStory } from "./components/BrandStory";
-import { EventSection } from "./components/EventSection";
-import { SocialProof } from "./components/SocialProof";
-import { CTASection } from "./components/CTASection";
-import { Footer } from "./components/Footer";
-import { ProductDetailPage } from "./pages/ProductDetailPage";
 import { CartDrawer } from "./components/CartDrawer";
 import { CheckoutModal } from "./components/CheckoutModal";
-import { ShopPage } from "./pages/ShopPage";
-import { EventsPage } from "./pages/EventsPage";
-import { CustomOrderPage } from "./pages/CustomOrderPage";
-import { CustomHubPage } from "./pages/CustomHubPage";
-import { CustomTemplatesPage } from "./pages/CustomTemplatesPage";
-import { CustomSectionPage } from "./pages/CustomSectionPage";
-import { LoginPage } from "./pages/LoginPage";
 import { usePortalStore, getPortalLandingByRole } from "./store/usePortalStore";
-import { PortalLayout } from "./components/portal/PortalLayout";
 import { RequirePortalRole } from "./components/portal/RequirePortalRole";
-import { CustomerOrdersPage } from "./pages/portal/CustomerOrdersPage";
-import { CustomerProfilePage } from "./pages/portal/CustomerProfilePage";
-import { CustomerOrderDetailPage } from "./pages/portal/CustomerOrderDetailPage";
-import { OperationsDashboardPage } from "./pages/portal/OperationsDashboardPage";
-import { OperationsOrdersPage } from "./pages/portal/OperationsOrdersPage";
-import { OperationsAnalyticsPage } from "./pages/portal/OperationsAnalyticsPage";
-import { AdminProductsPage } from "./pages/portal/AdminProductsPage";
-import { AdminEventsPage } from "./pages/portal/AdminEventsPage";
-import { AdminCustomContentPage } from "./pages/portal/AdminCustomContentPage";
 
-function HomePage() {
-  return (
-    <>
-      <Hero />
-      <main>
-        <FeaturedCollections />
-        <BestSellers />
-        <BrandStory />
-        <EventSection />
-        <SocialProof />
-        <CTASection />
-      </main>
-      <Footer />
-    </>
-  );
-}
+const HomePage = lazy(() => import("./pages/HomePage").then((m) => ({ default: m.HomePage })));
+const ProductDetailPage = lazy(() =>
+  import("./pages/ProductDetailPage").then((m) => ({ default: m.ProductDetailPage })),
+);
+const ShopPage = lazy(() => import("./pages/ShopPage").then((m) => ({ default: m.ShopPage })));
+const EventsPage = lazy(() => import("./pages/EventsPage").then((m) => ({ default: m.EventsPage })));
+const TestimonialsPage = lazy(() =>
+  import("./pages/TestimonialsPage").then((m) => ({ default: m.TestimonialsPage })),
+);
+const CustomOrderPage = lazy(() =>
+  import("./pages/CustomOrderPage").then((m) => ({ default: m.CustomOrderPage })),
+);
+const CustomHubPage = lazy(() =>
+  import("./pages/CustomHubPage").then((m) => ({ default: m.CustomHubPage })),
+);
+const CustomTemplatesPage = lazy(() =>
+  import("./pages/CustomTemplatesPage").then((m) => ({ default: m.CustomTemplatesPage })),
+);
+const CustomSectionPage = lazy(() =>
+  import("./pages/CustomSectionPage").then((m) => ({ default: m.CustomSectionPage })),
+);
+const LoginPage = lazy(() => import("./pages/LoginPage").then((m) => ({ default: m.LoginPage })));
+const PortalLayout = lazy(() =>
+  import("./components/portal/PortalLayout").then((m) => ({ default: m.PortalLayout })),
+);
+const CustomerOrdersPage = lazy(() =>
+  import("./pages/portal/CustomerOrdersPage").then((m) => ({ default: m.CustomerOrdersPage })),
+);
+const CustomerProfilePage = lazy(() =>
+  import("./pages/portal/CustomerProfilePage").then((m) => ({ default: m.CustomerProfilePage })),
+);
+const CustomerOrderDetailPage = lazy(() =>
+  import("./pages/portal/CustomerOrderDetailPage").then((m) => ({
+    default: m.CustomerOrderDetailPage,
+  })),
+);
+const OperationsDashboardPage = lazy(() =>
+  import("./pages/portal/OperationsDashboardPage").then((m) => ({
+    default: m.OperationsDashboardPage,
+  })),
+);
+const OperationsOrderDetailPage = lazy(() =>
+  import("./pages/portal/OperationsOrderDetailPage").then((m) => ({
+    default: m.OperationsOrderDetailPage,
+  })),
+);
+const OperationsOrdersPage = lazy(() =>
+  import("./pages/portal/OperationsOrdersPage").then((m) => ({ default: m.OperationsOrdersPage })),
+);
+const OperationsAnalyticsPage = lazy(() =>
+  import("./pages/portal/OperationsAnalyticsPage").then((m) => ({
+    default: m.OperationsAnalyticsPage,
+  })),
+);
+const AdminProductsPage = lazy(() =>
+  import("./pages/portal/AdminProductsPage").then((m) => ({ default: m.AdminProductsPage })),
+);
+const AdminEventsPage = lazy(() =>
+  import("./pages/portal/AdminEventsPage").then((m) => ({ default: m.AdminEventsPage })),
+);
+const AdminCustomContentPage = lazy(() =>
+  import("./pages/portal/AdminCustomContentPage").then((m) => ({
+    default: m.AdminCustomContentPage,
+  })),
+);
+const AdminLandingPage = lazy(() =>
+  import("./pages/portal/AdminLandingPage").then((m) => ({ default: m.AdminLandingPage })),
+);
+const AdminCustomPagesPage = lazy(() =>
+  import("./pages/portal/AdminCustomPagesPage").then((m) => ({ default: m.AdminCustomPagesPage })),
+);
 
 function PortalIndexRedirect() {
   const user = usePortalStore((state) => state.currentUser);
@@ -75,11 +105,19 @@ function AppFrame() {
   return (
     <div className="min-h-screen bg-offgrid-cream font-sans text-offgrid-green overflow-x-hidden">
       {!isPortalScreen && <Navbar />}
+      <Suspense
+        fallback={
+          <div className="mx-auto max-w-6xl px-6 pb-16 pt-28 sm:px-8 sm:pt-32 lg:px-10 text-sm text-offgrid-green/60">
+            Loading page...
+          </div>
+        }
+      >
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/shop" element={<ShopPage />} />
         <Route path="/shop/:slug" element={<ProductDetailPage />} />
         <Route path="/events" element={<EventsPage />} />
+        <Route path="/testimonials" element={<TestimonialsPage />} />
         <Route path="/custom/order" element={<CustomOrderPage />} />
         <Route path="/custom/templates" element={<CustomTemplatesPage />} />
         <Route path="/custom" element={<CustomHubPage />} />
@@ -123,7 +161,10 @@ function AppFrame() {
           }
         >
           <Route index element={<OperationsDashboardPage role="admin" />} />
+          <Route path="homepage" element={<AdminLandingPage />} />
+          <Route path="custom-pages" element={<AdminCustomPagesPage />} />
           <Route path="orders" element={<OperationsOrdersPage role="admin" />} />
+          <Route path="orders/:orderId" element={<OperationsOrderDetailPage />} />
           <Route path="analytics" element={<OperationsAnalyticsPage role="admin" />} />
           <Route path="products" element={<AdminProductsPage />} />
           <Route path="events" element={<AdminEventsPage />} />
@@ -140,9 +181,11 @@ function AppFrame() {
         >
           <Route index element={<OperationsDashboardPage role="staff" />} />
           <Route path="orders" element={<OperationsOrdersPage role="staff" />} />
+          <Route path="orders/:orderId" element={<OperationsOrderDetailPage />} />
           <Route path="analytics" element={<OperationsAnalyticsPage role="staff" />} />
         </Route>
       </Routes>
+      </Suspense>
 
       <CartDrawer />
       <CheckoutModal />

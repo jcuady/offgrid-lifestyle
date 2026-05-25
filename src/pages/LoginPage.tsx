@@ -30,8 +30,8 @@ export function LoginPage() {
   }, [currentUser, navigate]);
 
   return (
-    <div className="min-h-screen bg-offgrid-dark px-6 py-10">
-      <div className="mx-auto grid max-w-5xl overflow-hidden rounded-3xl border border-offgrid-cream/10 bg-offgrid-green shadow-2xl lg:grid-cols-2">
+    <div className="flex min-h-screen min-w-0 items-center overflow-x-hidden bg-offgrid-dark px-4 py-8 sm:px-6 sm:py-10">
+      <div className="mx-auto grid w-full min-w-0 max-w-5xl overflow-hidden rounded-2xl border border-offgrid-cream/10 bg-offgrid-green shadow-2xl sm:rounded-3xl lg:grid-cols-2">
         <section className="relative hidden overflow-hidden p-10 lg:block">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(197,211,48,0.25),transparent_45%),radial-gradient(circle_at_80%_80%,rgba(248,246,236,0.15),transparent_40%)]" />
           <div className="relative">

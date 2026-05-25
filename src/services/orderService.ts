@@ -23,6 +23,7 @@ export interface OrderService {
   submitCustomOrder: (draft: CustomOrderDraft) => string;
 }
 
+/** Persists via `usePortalStore` (localStorage). Production: POST to an API and email admins (e.g. Resend). */
 export const localOrderService: OrderService = {
   submitRetailOrder: ({ orderId, cart, shippingInfo, paymentMethod }) => {
     const retailOrderPayload = toRetailOrderPayload(cart, shippingInfo, paymentMethod, orderId);

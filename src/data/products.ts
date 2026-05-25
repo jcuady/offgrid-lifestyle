@@ -44,6 +44,8 @@ export interface Product {
   sold: number;
   stock?: number;
   tag?: string;
+  /** 1 = first in homepage Crowd Favorites; omit or 0 to exclude from that strip. */
+  homeBestSellerRank?: number;
   status: "draft" | "active" | "archived";
   metaTitle?: string;
   metaDescription?: string;
@@ -115,6 +117,7 @@ export const products: Product[] = [
     status: "draft",
     sold: 210,
     tag: "Best Seller",
+    homeBestSellerRank: 1,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     variants: [
@@ -144,6 +147,7 @@ export const products: Product[] = [
     shortDescription: "Classic cotton pickleball tee.",
     status: "draft",
     sold: 342,
+    homeBestSellerRank: 2,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     variants: [
@@ -416,6 +420,7 @@ export const products: Product[] = [
     shortDescription: "Pickleball lifestyle tee.",
     status: "draft",
     sold: 180,
+    homeBestSellerRank: 4,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
@@ -485,6 +490,7 @@ export const products: Product[] = [
     shortDescription: "Pickleball club tee.",
     status: "draft",
     sold: 280,
+    homeBestSellerRank: 3,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },

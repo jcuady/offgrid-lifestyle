@@ -9,12 +9,16 @@ import { motion, AnimatePresence } from "motion/react";
 import { useStore } from "@/src/store/store";
 import { usePortalStore } from "@/src/store/usePortalStore";
 import { formatPrice } from "@/src/data/products";
+import { siteContainer } from "@/src/lib/brandLayout";
+
+const ACCOUNT_MENU_ID = "navbar-account-menu";
 
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCartDropdownOpen, setIsCartDropdownOpen] = useState(false);
   const [isCustomMenuOpen, setIsCustomMenuOpen] = useState(false);
+  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
   const { toggleCart, cart, openCheckout } = useStore(
     useShallow((state) => ({
       toggleCart: state.toggleCart,
@@ -23,9 +27,11 @@ export function Navbar() {
     })),
   );
   const currentUser = usePortalStore((state) => state.currentUser);
+  const logout = usePortalStore((state) => state.logout);
   const navigate = useNavigate();
   const location = useLocation();
-  const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const cartDropdownRef = useRef<HTMLDivElement | null>(null);
+  const accountDropdownRef = useRef<HTMLDivElement | null>(null);
 
   const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const cartSubtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -44,29 +50,50 @@ export function Navbar() {
     location.pathname !== "/" ||
     isMobileMenuOpen ||
     isCartDropdownOpen ||
-    isCustomMenuOpen;
+    isCustomMenuOpen ||
+    isAccountMenuOpen;
   const navSolid = isScrolled || forceSolidOnTop;
 
-  // Close mobile menu on route change
   useEffect(() => {
     setIsMobileMenuOpen(false);
     setIsCartDropdownOpen(false);
     setIsCustomMenuOpen(false);
+    setIsAccountMenuOpen(false);
     setIsScrolled(window.scrollY > 50);
   }, [location]);
 
   useEffect(() => {
     const onClick = (event: MouseEvent) => {
-      if (!dropdownRef.current) return;
-      if (dropdownRef.current.contains(event.target as Node)) return;
+      const target = event.target as Node;
+      if (cartDropdownRef.current?.contains(target)) return;
       setIsCartDropdownOpen(false);
+      if (accountDropdownRef.current?.contains(target)) return;
+      setIsAccountMenuOpen(false);
     };
     window.addEventListener("mousedown", onClick);
     return () => window.removeEventListener("mousedown", onClick);
   }, []);
 
+  useEffect(() => {
+    if (!isAccountMenuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsAccountMenuOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isAccountMenuOpen]);
+
   const handleNavigate = (path: string) => {
     navigate(path);
+    setIsAccountMenuOpen(false);
+    setIsMobileMenuOpen(false);
+  };
+
+  const handleSignOut = () => {
+    logout();
+    setIsAccountMenuOpen(false);
+    setIsMobileMenuOpen(false);
+    navigate("/login");
   };
 
   const handleScrollToSection = (sectionId: string) => {
@@ -90,32 +117,85 @@ export function Navbar() {
     { name: "Collections", action: () => handleScrollToSection("collections") },
     { name: "Shop", action: () => handleNavigate("/shop") },
     { name: "Events", action: () => handleNavigate("/events") },
-    ...(currentUser?.role === "customer"
-      ? [{ name: "My Orders", action: () => handleNavigate("/account/orders") }]
-      : []),
+    { name: "Testimonials", action: () => handleNavigate("/testimonials") },
   ];
+
+  type AccountMenuItem = { label: string; onSelect: () => void; tone?: "danger" };
+
+  const buildAccountMenuItems = (): AccountMenuItem[] => {
+    if (!currentUser) {
+      return [
+        { label: "Sign In", onSelect: () => handleNavigate("/login") },
+        { label: "Create Custom Order", onSelect: () => handleNavigate("/custom/order") },
+      ];
+    }
+    if (currentUser.role === "customer") {
+      return [
+        { label: "My Orders", onSelect: () => handleNavigate("/account/orders") },
+        { label: "Profile", onSelect: () => handleNavigate("/account/profile") },
+        { label: "Custom Order", onSelect: () => handleNavigate("/custom") },
+        { label: "Sign out", onSelect: handleSignOut, tone: "danger" },
+      ];
+    }
+    const portalBase = currentUser.role === "admin" ? "/portal/admin" : "/portal/staff";
+    return [
+      { label: "Portal Dashboard", onSelect: () => handleNavigate(portalBase) },
+      { label: "Operations Orders", onSelect: () => handleNavigate(`${portalBase}/orders`) },
+      { label: "Sign out", onSelect: handleSignOut, tone: "danger" },
+    ];
+  };
+
+  const accountPanelClass =
+    "absolute right-0 mt-2 w-64 rounded-2xl border border-offgrid-green/15 bg-offgrid-cream p-2 shadow-2xl text-left z-[60]";
+
+  const renderDesktopAccountItems = () =>
+    buildAccountMenuItems().map((item) => (
+      <button
+        key={item.label}
+        type="button"
+        role="menuitem"
+        onClick={() => item.onSelect()}
+        className={cn(
+          "w-full rounded-xl px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-[0.12em] transition-colors",
+          item.tone === "danger"
+            ? "text-red-700 hover:bg-red-50"
+            : "text-offgrid-green hover:bg-offgrid-green/5",
+        )}
+      >
+        {item.label}
+      </button>
+    ));
+
+  const renderMobileAccountItems = () =>
+    buildAccountMenuItems().map((item) => (
+      <button
+        key={item.label}
+        type="button"
+        onClick={() => item.onSelect()}
+        className={cn(
+          "w-full rounded-xl border px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] transition-colors",
+          item.tone === "danger"
+            ? "border-red-400/35 text-red-200 hover:bg-red-950/35"
+            : "border-offgrid-cream/15 bg-offgrid-cream/10 text-offgrid-cream hover:bg-offgrid-cream/20",
+        )}
+      >
+        {item.label}
+      </button>
+    ));
 
   return (
     <>
       <header
         className={cn(
           "fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out",
-          navSolid
-            ? "bg-offgrid-green/95 backdrop-blur-md py-3 shadow-sm"
-            : "bg-transparent py-5",
+          navSolid ? "bg-offgrid-green/95 backdrop-blur-md py-3 shadow-sm" : "bg-transparent py-5",
         )}
       >
-        <div className="container mx-auto px-6 md:px-12 flex items-center justify-between">
-          {/* Logo */}
-          <Link to="/" className="flex items-center z-50">
-            <img
-              src={LOGO_WORDMARK_WHITE}
-              alt="OFF GRID® — OffGrid Lifestyle"
-              className="h-10 w-auto"
-            />
+        <div className={cn(siteContainer, "flex min-w-0 items-center justify-between gap-3")}>
+          <Link to="/" className="flex shrink-0 items-center z-50">
+            <img src={LOGO_WORDMARK_WHITE} alt="OFF GRID® — OffGrid Lifestyle" className="h-8 w-auto sm:h-10" />
           </Link>
 
-          {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-8">
             <div
               className="relative"
@@ -175,37 +255,63 @@ export function Navbar() {
             ))}
           </nav>
 
-          {/* Actions */}
-          <div className="flex items-center gap-4 z-50">
+          <div className="flex min-w-0 shrink-0 items-center gap-2 sm:gap-3 md:gap-4 z-50">
             <Button variant="secondary" size="sm" className="hidden md:inline-flex" onClick={() => handleNavigate("/shop")}>
               Shop Now
             </Button>
-            <button
-              onClick={() =>
-                handleNavigate(
-                  currentUser
-                    ? currentUser.role === "customer"
-                      ? "/account/orders"
-                      : "/portal"
-                    : "/login",
-                )
-              }
-              className={cn(
-                "hidden sm:inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] transition-colors",
-                "border-offgrid-cream/35 text-offgrid-cream hover:border-offgrid-lime hover:text-offgrid-lime",
-              )}
-              title={currentUser ? "Open account" : "Sign in"}
-            >
-              <UserRound className="w-3.5 h-3.5" />
-              {currentUser ? "Account" : "Sign In"}
-            </button>
-            <div className="relative" ref={dropdownRef}>
+
+            <div className="relative" ref={accountDropdownRef}>
               <button
-                onClick={() => setIsCartDropdownOpen((prev) => !prev)}
+                type="button"
+                id="navbar-account-trigger"
+                aria-expanded={isAccountMenuOpen}
+                aria-controls={ACCOUNT_MENU_ID}
+                aria-haspopup="menu"
+                onClick={() => {
+                  setIsCartDropdownOpen(false);
+                  setIsAccountMenuOpen((prev) => !prev);
+                }}
                 className={cn(
-                  "p-2 transition-colors hover:text-offgrid-lime relative",
-                  "text-offgrid-cream"
+                  "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] transition-colors",
+                  "border-offgrid-cream/35 text-offgrid-cream hover:border-offgrid-lime hover:text-offgrid-lime",
                 )}
+                title={currentUser ? "Account menu" : "Sign in"}
+              >
+                <UserRound className="w-3.5 h-3.5" />
+                {currentUser ? "Account" : "Sign In"}
+              </button>
+              <AnimatePresence>
+                {isAccountMenuOpen && (
+                  <motion.div
+                    id={ACCOUNT_MENU_ID}
+                    role="menu"
+                    aria-labelledby="navbar-account-trigger"
+                    initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                    transition={{ duration: 0.16 }}
+                    className={accountPanelClass}
+                  >
+                    {currentUser ? (
+                      <p className="border-b border-offgrid-green/10 px-3 py-2 text-[11px] text-offgrid-green/55">
+                        Signed in as{" "}
+                        <span className="font-semibold text-offgrid-green">{currentUser.email}</span>
+                      </p>
+                    ) : null}
+                    <div className="flex flex-col p-1">{renderDesktopAccountItems()}</div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            <div className="relative" ref={cartDropdownRef}>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsAccountMenuOpen(false);
+                  setIsCartDropdownOpen((prev) => !prev);
+                }}
+                className={cn("p-2 transition-colors hover:text-offgrid-lime relative", "text-offgrid-cream")}
               >
                 <ShoppingBag className="w-5 h-5" />
                 <AnimatePresence>
@@ -241,7 +347,10 @@ export function Navbar() {
                     ) : (
                       <div className="space-y-2">
                         {cart.slice(0, 3).map((item) => (
-                          <div key={`${item.productId}-${item.size}-${item.color}`} className="flex items-center justify-between rounded-xl bg-white px-3 py-2.5 text-xs">
+                          <div
+                            key={`${item.productId}-${item.size}-${item.color}`}
+                            className="flex items-center justify-between rounded-xl bg-white px-3 py-2.5 text-xs"
+                          >
                             <p className="max-w-[170px] truncate font-semibold">{item.name}</p>
                             <span>x{item.quantity}</span>
                           </div>
@@ -257,6 +366,7 @@ export function Navbar() {
                     )}
                     <div className="mt-4 grid grid-cols-2 gap-2">
                       <button
+                        type="button"
                         onClick={() => {
                           setIsCartDropdownOpen(false);
                           toggleCart(true);
@@ -266,6 +376,7 @@ export function Navbar() {
                         View Cart
                       </button>
                       <button
+                        type="button"
                         onClick={() => {
                           setIsCartDropdownOpen(false);
                           if (cart.length > 0) {
@@ -283,7 +394,8 @@ export function Navbar() {
                 )}
               </AnimatePresence>
             </div>
-            <button 
+            <button
+              type="button"
               className={cn("md:hidden p-2 transition-colors", "text-offgrid-cream")}
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
@@ -293,16 +405,15 @@ export function Navbar() {
         </div>
       </header>
 
-      {/* Mobile Menu */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="fixed inset-0 z-40 bg-offgrid-green pt-24 px-6 pb-6 flex flex-col"
+            className="fixed inset-0 z-40 flex flex-col overflow-y-auto bg-offgrid-green px-4 pb-6 pt-24 sm:px-6"
           >
-            <nav className="flex flex-col gap-6 text-center mt-12">
+            <nav className="flex flex-col gap-6 text-center mt-12 overflow-y-auto">
               <button
                 onClick={() => handleNavigate("/custom")}
                 className="text-3xl font-display font-bold text-offgrid-cream hover:text-offgrid-lime transition-colors cursor-pointer"
@@ -324,12 +435,20 @@ export function Navbar() {
               {navLinks.map((link) => (
                 <button
                   key={link.name}
-                  onClick={link.action}
+                  onClick={() => {
+                    link.action();
+                    setIsMobileMenuOpen(false);
+                  }}
                   className="text-3xl font-display font-bold text-offgrid-cream hover:text-offgrid-lime transition-colors cursor-pointer"
                 >
                   {link.name}
                 </button>
               ))}
+
+              <div className="mx-auto mt-4 w-full max-w-xs border-t border-offgrid-cream/15 pt-6">
+                <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-cream/45">Account</p>
+                <div className="flex flex-col gap-2">{renderMobileAccountItems()}</div>
+              </div>
             </nav>
             <div className="mt-auto pb-8 flex justify-center">
               <Button variant="secondary" size="lg" className="w-full max-w-xs" onClick={() => handleNavigate("/shop")}>

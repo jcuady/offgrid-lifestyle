@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { ArrowLeft, Send, Check, AlertCircle, RotateCcw } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { useCustomOrderStore } from "@/src/store/useCustomOrderStore";
+import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { CUT_OPTIONS, MATERIAL_OPTIONS, PRINT_OPTIONS, estimateUnitPrice } from "@/src/data/customOptions";
 import { localOrderService } from "@/src/services";
 import { cn } from "@/src/lib/utils";
@@ -16,6 +17,7 @@ function SummaryRow({ label, value }: { label: string; value: React.ReactNode })
 }
 
 export function StepSummary() {
+  const copy = useSiteContentStore((s) => s.customPageContent.wizard.step3);
   const { draft, updateDraft, prevStep, resetDraft } = useCustomOrderStore();
   const [submitted, setSubmitted] = useState(false);
 
@@ -53,28 +55,23 @@ export function StepSummary() {
         <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto rounded-full bg-offgrid-lime flex items-center justify-center">
           <Check className="w-10 h-10 sm:w-12 sm:h-12 text-offgrid-dark" strokeWidth={3} />
         </div>
-        <h2 className="text-2xl sm:text-3xl font-display font-black text-offgrid-green">
-          Request Submitted
-        </h2>
-        <p className="text-sm text-offgrid-green/60 max-w-md mx-auto">
-          Our team will review your custom order and reach out within 1–2 business days
-          with a finalized quote and next steps.
-        </p>
+        <h2 className="text-2xl sm:text-3xl font-display font-black text-offgrid-green">{copy.successTitle}</h2>
+        <p className="text-sm text-offgrid-green/60 max-w-md mx-auto">{copy.successBody}</p>
         <div className="bg-offgrid-green/5 rounded-xl p-4 sm:p-6 text-left max-w-sm mx-auto space-y-2">
           <div className="flex items-start gap-3">
             <AlertCircle className="w-4 h-4 text-offgrid-lime flex-shrink-0 mt-0.5" />
             <div>
-              <p className="font-bold text-offgrid-green text-sm">60% Deposit Required</p>
+              <p className="font-bold text-offgrid-green text-sm">{copy.depositTitle}</p>
               <p className="text-xs text-offgrid-green/60 mt-0.5">
-                Estimated deposit: ₱{depositEstimate.toLocaleString("en-PH")}.
-                Production begins after deposit confirmation.
+                {copy.depositBody} ₱{depositEstimate.toLocaleString("en-PH")}.
               </p>
             </div>
           </div>
         </div>
+        <p className="text-xs text-offgrid-green/55 max-w-md mx-auto leading-relaxed">{copy.accountHint}</p>
         <Button variant="outline" size="lg" className="mt-4" onClick={() => { resetDraft(); setSubmitted(false); }}>
           <RotateCcw className="mr-2 w-4 h-4" />
-          Start New Order
+          {copy.newOrderButton}
         </Button>
       </div>
     );
@@ -83,18 +80,14 @@ export function StepSummary() {
   return (
     <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
       <div>
-        <h2 className="text-xl sm:text-2xl font-display font-bold text-offgrid-green mb-2">
-          Review & Submit
-        </h2>
-        <p className="text-sm text-offgrid-green/60">
-          Confirm your selections and provide contact details to get your quote.
-        </p>
+        <h2 className="text-xl sm:text-2xl font-display font-bold text-offgrid-green mb-2">{copy.title}</h2>
+        <p className="text-sm text-offgrid-green/60">{copy.description}</p>
       </div>
 
       {/* Order summary */}
       <div className="bg-white rounded-xl p-4 sm:p-6 border border-offgrid-green/10">
         <h3 className="text-xs font-semibold tracking-[0.2em] uppercase text-offgrid-green/50 mb-3">
-          Order Details
+          {copy.orderDetailsHeading}
         </h3>
         <SummaryRow label="Design" value={draft.designFileName ?? "No file uploaded"} />
         <SummaryRow label="Cut / Style" value={cutLabel} />
@@ -117,7 +110,7 @@ export function StepSummary() {
       {/* Pricing estimate */}
       <div className="bg-offgrid-green rounded-xl p-4 sm:p-6 text-offgrid-cream">
         <h3 className="text-xs font-semibold tracking-[0.2em] uppercase text-offgrid-cream/50 mb-4">
-          Estimated Pricing
+          {copy.pricingHeading}
         </h3>
         <div className="flex justify-between items-center mb-2">
           <span className="text-sm text-offgrid-cream/70">Unit price (est.)</span>
@@ -133,15 +126,13 @@ export function StepSummary() {
             ₱{depositEstimate.toLocaleString("en-PH")}
           </span>
         </div>
-        <p className="text-[10px] text-offgrid-cream/40 mt-2">
-          * Final pricing confirmed after design review. Deposit required before production.
-        </p>
+        <p className="text-[10px] text-offgrid-cream/40 mt-2">{copy.pricingFootnote}</p>
       </div>
 
       {/* Contact info */}
       <div>
         <h3 className="text-xs font-semibold tracking-[0.2em] uppercase text-offgrid-green/50 mb-4">
-          Contact Details
+          {copy.contactHeading}
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="md:col-span-2">
@@ -201,7 +192,7 @@ export function StepSummary() {
       <div className="flex flex-col sm:flex-row gap-3">
         <Button variant="outline" size="lg" className="sm:flex-1" type="button" onClick={prevStep}>
           <ArrowLeft className="mr-2 w-4 h-4" />
-          Back
+          {copy.backButton}
         </Button>
         <Button
           variant="default"
@@ -210,7 +201,7 @@ export function StepSummary() {
           type="submit"
           disabled={!canSubmit}
         >
-          Submit Order Request
+          {copy.submitButton}
           <Send className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
         </Button>
       </div>

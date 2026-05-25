@@ -4,6 +4,16 @@ import type { Product } from "@/src/data/products";
 import { products as initialProducts } from "@/src/data/products";
 import type { SiteEvent } from "@/src/data/events";
 import { initialEvents } from "@/src/data/events";
+import type { LandingCollectionId, LandingContent } from "@/src/data/landingContent";
+import { initialLandingContent } from "@/src/data/landingContent";
+import type { CustomPageContent } from "@/src/data/customPageContent";
+import { initialCustomPageContent, normalizeCustomPageContent } from "@/src/data/customPageContent";
+import { FIXED_GUIDE_CTA_HREF, getCanonicalGuideSectionSeeds, resolveGuideSections } from "@/src/lib/customGuideSections";
+import {
+  isCanonicalTemplateId,
+  resolveCanonicalTemplates,
+  type EditableTemplatePatch,
+} from "@/src/lib/canonicalTemplates";
 
 export type CustomSectionSlug =
   | "how-to-order"
@@ -156,8 +166,50 @@ export function createCanonicalOgTemplates(updatedAt: string): CustomTemplateAss
 interface SiteContentState {
   products: Product[];
   events: SiteEvent[];
+  landingContent: LandingContent;
+  customPageContent: CustomPageContent;
   customSections: CustomContentSection[];
   customTemplates: CustomTemplateAsset[];
+
+  updateCustomHub: (patch: Partial<CustomPageContent["hub"]>) => void;
+  updateCustomOrderHero: (patch: Partial<CustomPageContent["orderHero"]>) => void;
+  updateCustomWizard: (patch: Partial<CustomPageContent["wizard"]>) => void;
+  updateCustomWizardStep1: (patch: Partial<CustomPageContent["wizard"]["step1"]>) => void;
+  updateCustomWizardStep2: (patch: Partial<CustomPageContent["wizard"]["step2"]>) => void;
+  updateCustomWizardStep3: (patch: Partial<CustomPageContent["wizard"]["step3"]>) => void;
+  updateCustomProcessStep: (index: 0 | 1 | 2, patch: Partial<CustomPageContent["hub"]["processSteps"][number]>) => void;
+  updateCustomTemplatesPage: (patch: Partial<CustomPageContent["templatesPage"]>) => void;
+  updateCanonicalTemplate: (id: string, patch: EditableTemplatePatch) => void;
+  applyCanonicalTemplateFileOverride: (
+    id: string,
+    file: { fileName: string; format: string },
+  ) => void;
+  resetCustomPageContent: () => void;
+  resetCustomGuideSections: () => void;
+  resetCanonicalTemplates: () => void;
+  resetCanonicalTemplateSlot: (id: string) => void;
+
+  setLandingContent: (next: LandingContent) => void;
+  updateLandingHero: (patch: Partial<LandingContent["hero"]>) => void;
+  updateLandingCollectionsHeader: (patch: Partial<LandingContent["collectionsHeader"]>) => void;
+  updateLandingCollectionCard: (
+    id: LandingCollectionId,
+    patch: Partial<Pick<LandingContent["collections"][number], "title" | "subtitle" | "tag" | "image">>,
+  ) => void;
+  updateLandingBestSellersHeader: (patch: Partial<LandingContent["bestSellersHeader"]>) => void;
+  updateLandingBestSellersShopLink: (label: string) => void;
+  updateLandingBrandStory: (patch: Partial<LandingContent["brandStory"]>) => void;
+  updateLandingEvent: (patch: Partial<LandingContent["event"]>) => void;
+  updateLandingSocialHeader: (patch: Partial<LandingContent["socialHeader"]>) => void;
+  updateLandingUgcTile: (index: 0 | 1 | 2 | 3 | 4, patch: Partial<LandingContent["ugcTiles"][number]>) => void;
+  updateLandingTestimonial: (
+    index: 0 | 1 | 2,
+    patch: Partial<LandingContent["testimonials"][number]>,
+  ) => void;
+  updateLandingTestimonialsViewAll: (label: string) => void;
+  updateLandingCta: (patch: Partial<LandingContent["cta"]>) => void;
+  updateLandingFooter: (patch: Partial<LandingContent["footer"]>) => void;
+  resetLandingContent: () => void;
 
   addProduct: (input: Product) => void;
   updateProduct: (id: string, patch: Partial<Product>) => void;
@@ -178,121 +230,17 @@ interface SiteContentState {
 
 const nowIso = () => new Date().toISOString();
 
-const initialCustomSections: CustomContentSection[] = [
-  {
-    id: "sec-how-to-order",
-    slug: "how-to-order",
-    title: "How To Order",
-    subtitle: "Simple Steps To Launch Your Team Kit",
-    summary: "Upload design, confirm fit/material, approve quote, then production starts after deposit.",
-    body:
-      "1) Share your design brief or artwork.\n2) Select cut, material, and print method.\n3) Review quote and sample mockup.\n4) Confirm quantities and settle deposit.\n5) Production + quality check + delivery.",
-    heroImage:
-      "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?q=80&w=1600&auto=format&fit=crop",
-    ctaLabel: "Start A Custom Order",
-    ctaHref: "/custom/order",
-    isPublished: true,
-    updatedAt: nowIso(),
-  },
-  {
-    id: "sec-product-catalog",
-    slug: "product-catalog",
-    title: "Product Catalog",
-    subtitle: "Cuts, Fabrics, And Finishes",
-    summary: "Explore available custom jersey and lifestyle silhouettes.",
-    body:
-      "Available lines include game jerseys, training tops, warm-up layers, and casual teamwear. Choose from dri-fit, cotton, running mesh, and poly blend options with multiple print methods.",
-    heroImage:
-      "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=1600&auto=format&fit=crop",
-    ctaLabel: "View Shop",
-    ctaHref: "/shop",
-    isPublished: true,
-    updatedAt: nowIso(),
-  },
-  {
-    id: "sec-team-deals",
-    slug: "team-deals",
-    title: "Team Deals",
-    subtitle: "Volume Packages For Clubs And Communities",
-    summary: "Get better pricing at higher quantities and bundled production runs.",
-    body:
-      "Starter package: 20-35 pcs.\nClub package: 36-80 pcs.\nLeague package: 81+ pcs.\nAsk for recurring season plans and rolling drop schedules.",
-    heroImage:
-      "https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1600&auto=format&fit=crop",
-    ctaLabel: "Request Team Quote",
-    ctaHref: "/custom/order",
-    isPublished: true,
-    updatedAt: nowIso(),
-  },
-  {
-    id: "sec-sizing-chart",
-    slug: "sizing-chart",
-    title: "Sizing Chart",
-    subtitle: "Fit Guide For Jerseys And Shorts",
-    summary: "Measure chest, length, and waist using our standard OffGrid fitting guide.",
-    body:
-      "Tops: measure chest side seam to side seam and body length from neck base.\nShorts: measure waist relaxed and stretched, then outseam length.\nFor team runs, collect full roster sizes in one sheet before checkout.",
-    heroImage:
-      "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?q=80&w=1600&auto=format&fit=crop",
-    ctaLabel: "Browse Templates",
-    ctaHref: "/custom/templates",
-    isPublished: true,
-    updatedAt: nowIso(),
-  },
-  {
-    id: "sec-free-jersey-promo",
-    slug: "free-jersey-promo",
-    title: "Get A Free Jersey Promo",
-    subtitle: "Limited Offers For Qualified Team Orders",
-    summary: "Seasonal promo mechanics for selected custom volume thresholds.",
-    body:
-      "Promo periods run on selected months. Minimum order quantity and design approval requirements apply. Promo availability and terms can be configured from the admin dashboard.",
-    heroImage:
-      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=1600&auto=format&fit=crop",
-    ctaLabel: "Check Eligibility",
-    ctaHref: "/custom/order",
-    isPublished: true,
-    updatedAt: nowIso(),
-  },
-  {
-    id: "sec-faqs",
-    slug: "faqs",
-    title: "FAQs",
-    subtitle: "Answers To Common Questions",
-    summary: "Lead times, payment setup, revisions, shipping, and reorders.",
-    body:
-      "Common FAQ topics include: minimum quantity, deposit requirements, revision limits, sample policy, shipping SLA, and post-delivery support.",
-    heroImage:
-      "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=1600&auto=format&fit=crop",
-    ctaLabel: "Start Inquiry",
-    ctaHref: "/custom/order",
-    isPublished: true,
-    updatedAt: nowIso(),
-  },
-  {
-    id: "sec-lead-times",
-    slug: "lead-times",
-    title: "Lead Times",
-    subtitle: "Production And Delivery Timeline",
-    summary: "Standard production starts after deposit confirmation.",
-    body:
-      "Design validation: 1-2 business days.\nProduction: 5-10 business days depending on order size.\nShipping: 2-5 business days nationwide.",
-    heroImage:
-      "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?q=80&w=1600&auto=format&fit=crop",
-    ctaLabel: "Place Custom Order",
-    ctaHref: "/custom/order",
-    isPublished: true,
-    updatedAt: nowIso(),
-  },
-];
+const initialCustomSections: CustomContentSection[] = getCanonicalGuideSectionSeeds();
 
 const initialTemplates: CustomTemplateAsset[] = createCanonicalOgTemplates(nowIso());
 
-const SITE_CONTENT_PERSIST_VERSION = 2;
+const SITE_CONTENT_PERSIST_VERSION = 6;
 
 type PersistedSiteContentSlice = {
   products?: Product[];
   events?: SiteEvent[];
+  landingContent?: LandingContent;
+  customPageContent?: CustomPageContent;
   customSections?: CustomContentSection[];
   customTemplates?: CustomTemplateAsset[];
 };
@@ -302,8 +250,191 @@ export const useSiteContentStore = create<SiteContentState>()(
     (set) => ({
       products: initialProducts,
       events: initialEvents,
+      landingContent: initialLandingContent,
+      customPageContent: normalizeCustomPageContent(initialCustomPageContent),
       customSections: initialCustomSections,
       customTemplates: initialTemplates,
+
+      updateCustomHub: (patch) =>
+        set((state) => ({
+          customPageContent: { ...state.customPageContent, hub: { ...state.customPageContent.hub, ...patch } },
+        })),
+      updateCustomOrderHero: (patch) =>
+        set((state) => ({
+          customPageContent: {
+            ...state.customPageContent,
+            orderHero: { ...state.customPageContent.orderHero, ...patch },
+          },
+        })),
+      updateCustomWizard: (patch) =>
+        set((state) => ({
+          customPageContent: {
+            ...state.customPageContent,
+            wizard: { ...state.customPageContent.wizard, ...patch },
+          },
+        })),
+      updateCustomWizardStep1: (patch) =>
+        set((state) => ({
+          customPageContent: {
+            ...state.customPageContent,
+            wizard: { ...state.customPageContent.wizard, step1: { ...state.customPageContent.wizard.step1, ...patch } },
+          },
+        })),
+      updateCustomWizardStep2: (patch) =>
+        set((state) => ({
+          customPageContent: {
+            ...state.customPageContent,
+            wizard: { ...state.customPageContent.wizard, step2: { ...state.customPageContent.wizard.step2, ...patch } },
+          },
+        })),
+      updateCustomWizardStep3: (patch) =>
+        set((state) => ({
+          customPageContent: {
+            ...state.customPageContent,
+            wizard: { ...state.customPageContent.wizard, step3: { ...state.customPageContent.wizard.step3, ...patch } },
+          },
+        })),
+      updateCustomProcessStep: (index, patch) =>
+        set((state) => ({
+          customPageContent: {
+            ...state.customPageContent,
+            hub: {
+              ...state.customPageContent.hub,
+              processSteps: state.customPageContent.hub.processSteps.map((step, i) =>
+                i === index ? { ...step, ...patch } : step,
+              ),
+            },
+          },
+        })),
+      updateCustomTemplatesPage: (patch) =>
+        set((state) => ({
+          customPageContent: {
+            ...state.customPageContent,
+            templatesPage: { ...state.customPageContent.templatesPage, ...patch },
+          },
+        })),
+      updateCanonicalTemplate: (id, patch) => {
+        if (!isCanonicalTemplateId(id)) return;
+        set((state) => ({
+          customTemplates: resolveCanonicalTemplates(
+            state.customTemplates.map((entry) =>
+              entry.id === id ? { ...entry, ...patch, updatedAt: nowIso() } : entry,
+            ),
+          ),
+        }));
+      },
+      applyCanonicalTemplateFileOverride: (id, file) => {
+        if (!isCanonicalTemplateId(id)) return;
+        set((state) => ({
+          customTemplates: resolveCanonicalTemplates(
+            state.customTemplates.map((entry) =>
+              entry.id === id
+                ? {
+                    ...entry,
+                    storageKind: "idb",
+                    fileName: file.fileName,
+                    format: file.format,
+                    fileUrl: "",
+                    updatedAt: nowIso(),
+                  }
+                : entry,
+            ),
+          ),
+        }));
+      },
+      resetCustomPageContent: () =>
+        set({
+          customPageContent: normalizeCustomPageContent(initialCustomPageContent),
+          customTemplates: createCanonicalOgTemplates(nowIso()),
+        }),
+      resetCustomGuideSections: () => set({ customSections: getCanonicalGuideSectionSeeds() }),
+      resetCanonicalTemplates: () => set({ customTemplates: createCanonicalOgTemplates(nowIso()) }),
+      resetCanonicalTemplateSlot: (id) => {
+        if (!isCanonicalTemplateId(id)) return;
+        const seed = createCanonicalOgTemplates(nowIso()).find((t) => t.id === id);
+        if (!seed) return;
+        set((state) => ({
+          customTemplates: resolveCanonicalTemplates(
+            state.customTemplates.map((entry) => (entry.id === id ? seed : entry)),
+          ),
+        }));
+      },
+
+      setLandingContent: (next) => set({ landingContent: next }),
+      updateLandingHero: (patch) =>
+        set((state) => ({ landingContent: { ...state.landingContent, hero: { ...state.landingContent.hero, ...patch } } })),
+      updateLandingCollectionsHeader: (patch) =>
+        set((state) => ({
+          landingContent: {
+            ...state.landingContent,
+            collectionsHeader: { ...state.landingContent.collectionsHeader, ...patch },
+          },
+        })),
+      updateLandingCollectionCard: (id, patch) =>
+        set((state) => ({
+          landingContent: {
+            ...state.landingContent,
+            collections: state.landingContent.collections.map((card) =>
+              card.id === id ? { ...card, ...patch } : card,
+            ),
+          },
+        })),
+      updateLandingBestSellersHeader: (patch) =>
+        set((state) => ({
+          landingContent: {
+            ...state.landingContent,
+            bestSellersHeader: { ...state.landingContent.bestSellersHeader, ...patch },
+          },
+        })),
+      updateLandingBestSellersShopLink: (label) =>
+        set((state) => ({ landingContent: { ...state.landingContent, bestSellersShopLink: label } })),
+      updateLandingBrandStory: (patch) =>
+        set((state) => ({
+          landingContent: {
+            ...state.landingContent,
+            brandStory: { ...state.landingContent.brandStory, ...patch },
+          },
+        })),
+      updateLandingEvent: (patch) =>
+        set((state) => ({
+          landingContent: { ...state.landingContent, event: { ...state.landingContent.event, ...patch } },
+        })),
+      updateLandingSocialHeader: (patch) =>
+        set((state) => ({
+          landingContent: {
+            ...state.landingContent,
+            socialHeader: { ...state.landingContent.socialHeader, ...patch },
+          },
+        })),
+      updateLandingUgcTile: (index, patch) =>
+        set((state) => ({
+          landingContent: {
+            ...state.landingContent,
+            ugcTiles: state.landingContent.ugcTiles.map((tile, i) =>
+              i === index ? { ...tile, ...patch } : tile,
+            ),
+          },
+        })),
+      updateLandingTestimonial: (index, patch) =>
+        set((state) => ({
+          landingContent: {
+            ...state.landingContent,
+            testimonials: state.landingContent.testimonials.map((entry, i) =>
+              i === index ? { ...entry, ...patch } : entry,
+            ),
+          },
+        })),
+      updateLandingTestimonialsViewAll: (label) =>
+        set((state) => ({ landingContent: { ...state.landingContent, testimonialsViewAll: label } })),
+      updateLandingCta: (patch) =>
+        set((state) => ({
+          landingContent: { ...state.landingContent, cta: { ...state.landingContent.cta, ...patch } },
+        })),
+      updateLandingFooter: (patch) =>
+        set((state) => ({
+          landingContent: { ...state.landingContent, footer: { ...state.landingContent.footer, ...patch } },
+        })),
+      resetLandingContent: () => set({ landingContent: initialLandingContent }),
 
       addProduct: (input) => set((state) => ({ products: [input, ...state.products] })),
       updateProduct: (id, patch) =>
@@ -327,50 +458,139 @@ export const useSiteContentStore = create<SiteContentState>()(
         set((state) => ({ customSections: [input, ...state.customSections] })),
       updateCustomSection: (id, patch) =>
         set((state) => ({
-          customSections: state.customSections.map((entry) =>
-            entry.id === id ? { ...entry, ...patch, updatedAt: nowIso() } : entry,
-          ),
+          customSections: state.customSections.map((entry) => {
+            if (entry.id !== id) return entry;
+            const { ctaHref: _cta, slug: _slug, id: _id, ...editable } = patch;
+            return {
+              ...entry,
+              ...editable,
+              ctaHref: FIXED_GUIDE_CTA_HREF[entry.slug],
+              updatedAt: nowIso(),
+            };
+          }),
         })),
       removeCustomSection: (id) =>
         set((state) => ({ customSections: state.customSections.filter((entry) => entry.id !== id) })),
 
-      addTemplate: (input) => set((state) => ({ customTemplates: [input, ...state.customTemplates] })),
-      updateTemplate: (id, patch) =>
+      /** MVP: no new template slots — only canonical IDs can be updated. */
+      addTemplate: (input) => {
+        if (!isCanonicalTemplateId(input.id)) return;
         set((state) => ({
-          customTemplates: state.customTemplates.map((entry) =>
-            entry.id === id ? { ...entry, ...patch, updatedAt: nowIso() } : entry,
+          customTemplates: resolveCanonicalTemplates(
+            state.customTemplates.map((entry) =>
+              entry.id === input.id ? { ...entry, ...input, updatedAt: nowIso() } : entry,
+            ),
           ),
-        })),
-      removeTemplate: (id) =>
-        set((state) => ({ customTemplates: state.customTemplates.filter((entry) => entry.id !== id) })),
+        }));
+      },
+      updateTemplate: (id, patch) => {
+        if (!isCanonicalTemplateId(id)) {
+          set((state) => ({
+            customTemplates: state.customTemplates.map((entry) =>
+              entry.id === id ? { ...entry, ...patch, updatedAt: nowIso() } : entry,
+            ),
+          }));
+          return;
+        }
+        set((state) => ({
+          customTemplates: resolveCanonicalTemplates(
+            state.customTemplates.map((entry) =>
+              entry.id === id ? { ...entry, ...patch, updatedAt: nowIso() } : entry,
+            ),
+          ),
+        }));
+      },
+      removeTemplate: (id) => {
+        if (isCanonicalTemplateId(id)) return;
+        set((state) => ({
+          customTemplates: resolveCanonicalTemplates(
+            state.customTemplates.filter((entry) => entry.id !== id),
+          ),
+        }));
+      },
     }),
     {
       name: "og-site-content",
       version: SITE_CONTENT_PERSIST_VERSION,
       migrate: (persistedState, version): PersistedSiteContentSlice => {
         const p = persistedState as PersistedSiteContentSlice;
+        let next: PersistedSiteContentSlice = { ...p };
+
         if (version < 2) {
-          return {
-            ...p,
+          next = {
+            ...next,
             customTemplates: createCanonicalOgTemplates(nowIso()),
           };
-        }
-        if (p.customTemplates?.length) {
-          return {
-            ...p,
-            customTemplates: p.customTemplates.map((t) => ({
+        } else if (next.customTemplates?.length) {
+          next = {
+            ...next,
+            customTemplates: next.customTemplates.map((t) => ({
               ...t,
               storageKind: t.storageKind ?? "static",
             })),
           };
         }
-        return p;
+
+        if (version < 3) {
+          const seedById = new Map(initialProducts.map((x) => [x.id, x]));
+          const mergedProducts = (next.products ?? initialProducts).map((prod) => {
+            const seed = seedById.get(prod.id);
+            if (!seed) return prod;
+            if (prod.homeBestSellerRank != null) return prod;
+            if (seed.homeBestSellerRank == null) return prod;
+            return { ...prod, homeBestSellerRank: seed.homeBestSellerRank };
+          });
+          next = { ...next, products: mergedProducts };
+        }
+
+        if (version < 4) {
+          next = { ...next, landingContent: next.landingContent ?? initialLandingContent };
+        }
+
+        if (version < 5) {
+          next = {
+            ...next,
+            customPageContent: normalizeCustomPageContent(
+              next.customPageContent ?? initialCustomPageContent,
+            ),
+            customSections: resolveGuideSections(next.customSections ?? initialCustomSections),
+          };
+        }
+
+        if (version < 6) {
+          const page = normalizeCustomPageContent({
+            ...initialCustomPageContent,
+            ...next.customPageContent,
+            templatesPage: {
+              ...initialCustomPageContent.templatesPage,
+              ...next.customPageContent?.templatesPage,
+            },
+          });
+          next = {
+            ...next,
+            customPageContent: page,
+            customTemplates: resolveCanonicalTemplates(next.customTemplates ?? initialTemplates),
+          };
+        }
+
+        next = {
+          ...next,
+          customPageContent: normalizeCustomPageContent(
+            next.customPageContent ?? initialCustomPageContent,
+          ),
+          customSections: resolveGuideSections(next.customSections ?? initialCustomSections),
+          customTemplates: resolveCanonicalTemplates(next.customTemplates ?? initialTemplates),
+        };
+
+        return next;
       },
       partialize: (state) => ({
         products: state.products,
         events: state.events,
-        customSections: state.customSections,
-        customTemplates: state.customTemplates,
+        landingContent: state.landingContent,
+        customPageContent: normalizeCustomPageContent(state.customPageContent),
+        customSections: resolveGuideSections(state.customSections),
+        customTemplates: resolveCanonicalTemplates(state.customTemplates),
       }),
     },
   ),

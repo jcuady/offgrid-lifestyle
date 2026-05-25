@@ -7,6 +7,8 @@ import {
   CalendarDays,
   Palette,
   BarChart3,
+  Home,
+
 } from "lucide-react";
 import { LOGO_WORDMARK_WHITE } from "@/src/lib/brandAssets";
 import { cn } from "@/src/lib/utils";
@@ -25,10 +27,11 @@ const labelsByRole: Record<Exclude<UserRole, "customer">, string> = {
 const navByRole: Record<Exclude<UserRole, "customer">, { name: string; to: string; icon: typeof LayoutDashboard }[]> = {
   admin: [
     { name: "Dashboard", to: "/portal/admin", icon: LayoutDashboard },
+    { name: "Homepage", to: "/portal/admin/homepage", icon: Home },
+    { name: "Custom pages", to: "/portal/admin/custom-pages", icon: Palette },
     { name: "Orders", to: "/portal/admin/orders", icon: ClipboardList },
     { name: "Products", to: "/portal/admin/products", icon: Package },
     { name: "Events", to: "/portal/admin/events", icon: CalendarDays },
-    { name: "Custom Content", to: "/portal/admin/custom-content", icon: Palette },
     { name: "Analytics", to: "/portal/admin/analytics", icon: BarChart3 },
   ],
   staff: [

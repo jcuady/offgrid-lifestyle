@@ -4,23 +4,23 @@ import { StepDesign } from "@/src/components/custom-order/StepDesign";
 import { StepSpecs } from "@/src/components/custom-order/StepSpecs";
 import { StepSummary } from "@/src/components/custom-order/StepSummary";
 import { useCustomOrderStore } from "@/src/store/useCustomOrderStore";
+import { useSiteContentStore } from "@/src/store/useSiteContentStore";
+import { siteContainer } from "@/src/lib/brandLayout";
+import { cn } from "@/src/lib/utils";
 
 export function CustomOrderWizard() {
   const currentStep = useCustomOrderStore((s) => s.currentStep);
+  const intro = useSiteContentStore((s) => s.customPageContent.wizard);
 
   return (
     <section id="order-flow" className="bg-offgrid-cream py-12 sm:py-20 scroll-mt-28">
-      <div className="container mx-auto px-6 md:px-12 max-w-3xl">
+      <div className={cn(siteContainer, "max-w-3xl")}>
         <div className="mb-8 text-center sm:text-left">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-green/45">
-            Custom quote
-          </p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-green/45">{intro.eyebrow}</p>
           <h2 className="mt-2 text-3xl sm:text-4xl font-display font-black text-offgrid-green leading-tight">
-            Build your order
+            {intro.title}
           </h2>
-          <p className="mt-2 text-sm text-offgrid-green/60 max-w-lg">
-            Three quick steps — upload your design, lock in garment specs, then review and submit for pricing.
-          </p>
+          <p className="mt-2 text-sm text-offgrid-green/60 max-w-lg">{intro.description}</p>
         </div>
 
         <div className="mb-8 sm:mb-12">

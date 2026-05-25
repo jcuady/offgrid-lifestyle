@@ -100,6 +100,10 @@ export function AdminProductsPage() {
       cut: draft.cut || "short_sleeve",
       fabricType: draft.fabricType || "dri_fit",
       status: draft.status ?? "draft",
+      homeBestSellerRank:
+        typeof draft.homeBestSellerRank === "number" && draft.homeBestSellerRank > 0
+          ? Math.min(20, Math.floor(draft.homeBestSellerRank))
+          : undefined,
       createdAt: editingId ? draft.createdAt : now,
       updatedAt: now,
     };
@@ -186,6 +190,27 @@ export function AdminProductsPage() {
               <option value="active">Active</option>
               <option value="archived">Archived</option>
             </select>
+            <div>
+              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-offgrid-green/50">
+                Crowd Favorites rank (0 = off)
+              </label>
+              <input
+                type="number"
+                min={0}
+                max={20}
+                value={draft.homeBestSellerRank ?? ""}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  setDraft((prev) => ({
+                    ...prev,
+                    homeBestSellerRank:
+                      raw === "" ? undefined : Math.max(0, Math.min(20, Math.floor(Number(raw)) || 0)),
+                  }));
+                }}
+                placeholder="0"
+                className="w-full rounded-xl border border-offgrid-green/20 px-3 py-2 text-sm"
+              />
+            </div>
             <input
               value={draft.image}
               onChange={(e) => setDraft((prev) => ({ ...prev, image: e.target.value }))}
@@ -282,7 +307,12 @@ export function AdminProductsPage() {
                   <div>
                     <p className="text-xs uppercase tracking-[0.12em] text-offgrid-green/45">{product.category}</p>
                     <h3 className="text-xl font-display font-bold text-offgrid-green">{product.name}</h3>
-                    <p className="text-sm text-offgrid-green/65">{formatPrice(product.price)} · Stock {product.stock}</p>
+                    <p className="text-sm text-offgrid-green/65">
+                      {formatPrice(product.price)} · Stock {product.stock}
+                      {product.homeBestSellerRank ? (
+                        <span className="ml-2 text-offgrid-green/45">· Crowd Favorites #{product.homeBestSellerRank}</span>
+                      ) : null}
+                    </p>
                   </div>
                   <div className="flex gap-2">
                     <button

@@ -1,6 +1,11 @@
+/**
+ * Portal orders (`retailOrders`, `customOrders`) persist in localStorage (`og-portal`).
+ * All admins share the same queue only on this browser profile. For multi-device staff,
+ * replace with a shared API (e.g. Supabase) and optional email (e.g. Resend) on submit.
+ */
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { CustomOrderDraft, Order, OrderStatus, PaymentStatus } from "@/src/types/commerce";
+import type { CustomOrderDraft, Money, Order, OrderStatus, PaymentStatus } from "@/src/types/commerce";
 
 export type UserRole = "customer" | "admin" | "staff";
 
@@ -39,8 +44,60 @@ export interface ManagedCustomOrder {
   designNotes: string;
   estimatedTotal: CustomOrderDraft["estimatedTotal"];
   depositRequired: CustomOrderDraft["depositRequired"];
+  /** Admin-set binding total; null until quoted in portal. */
+  officialTotal: Money | null;
+  officialDeposit: Money | null;
+  quoteCustomerNotes: string;
+  quoteInternalNotes: string;
+  quotedAt: string | null;
+  quotedBy: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface CustomOrderQuoteUpdate {
+  officialTotal: Money | null;
+  officialDeposit: Money | null;
+  quoteCustomerNotes: string;
+  quoteInternalNotes: string;
+}
+
+type PersistedPortalSlice = {
+  currentUser: PortalUser | null;
+  retailOrders: ManagedRetailOrder[];
+  customOrders: ManagedCustomOrder[];
+};
+
+function defaultQuoteFields(): Pick<
+  ManagedCustomOrder,
+  | "officialTotal"
+  | "officialDeposit"
+  | "quoteCustomerNotes"
+  | "quoteInternalNotes"
+  | "quotedAt"
+  | "quotedBy"
+> {
+  return {
+    officialTotal: null,
+    officialDeposit: null,
+    quoteCustomerNotes: "",
+    quoteInternalNotes: "",
+    quotedAt: null,
+    quotedBy: null,
+  };
+}
+
+function migrateManagedCustomOrderRecord(raw: unknown): ManagedCustomOrder {
+  const c = raw as Partial<ManagedCustomOrder> & { id: string };
+  return {
+    ...c,
+    officialTotal: c.officialTotal ?? null,
+    officialDeposit: c.officialDeposit ?? null,
+    quoteCustomerNotes: c.quoteCustomerNotes ?? "",
+    quoteInternalNotes: c.quoteInternalNotes ?? "",
+    quotedAt: c.quotedAt ?? null,
+    quotedBy: c.quotedBy ?? null,
+  } as ManagedCustomOrder;
 }
 
 interface PortalState {
@@ -57,6 +114,8 @@ interface PortalState {
   updateRetailPaymentStatus: (orderId: string, paymentStatus: PaymentStatus) => void;
   updateCustomOrderStatus: (orderId: string, status: OrderStatus) => void;
   updateCustomPaymentStatus: (orderId: string, paymentStatus: PaymentStatus) => void;
+  /** Admin only — sets official quote fields and audit timestamps. */
+  updateCustomOrderQuote: (orderId: string, update: CustomOrderQuoteUpdate) => void;
 }
 
 const DEMO_ACCOUNTS: DemoAccount[] = [
@@ -141,6 +200,7 @@ export const usePortalStore = create<PortalState>()(
           draft.id ?? `CO-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
         set((state) => {
           const currentUser = state.currentUser;
+          const now = new Date().toISOString();
           const customOrder: ManagedCustomOrder = {
             id: customOrderId,
             type: "custom",
@@ -159,8 +219,9 @@ export const usePortalStore = create<PortalState>()(
             designNotes: draft.designNotes,
             estimatedTotal: draft.estimatedTotal,
             depositRequired: draft.depositRequired,
-            createdAt: draft.createdAt ?? new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
+            ...defaultQuoteFields(),
+            createdAt: draft.createdAt ?? now,
+            updatedAt: now,
           };
           return { customOrders: [customOrder, ...state.customOrders] };
         });
@@ -198,15 +259,63 @@ export const usePortalStore = create<PortalState>()(
               : entry,
           ),
         })),
+
+      updateCustomOrderQuote: (orderId, update) => {
+        if (get().currentUser?.role !== "admin") return;
+        const now = new Date().toISOString();
+        const actor = get().currentUser!;
+        const hasOfficial =
+          update.officialTotal !== null &&
+          update.officialTotal !== undefined &&
+          update.officialTotal.amount > 0;
+
+        let officialDeposit: Money | null = null;
+        if (hasOfficial && update.officialTotal) {
+          if (update.officialDeposit && update.officialDeposit.amount > 0) {
+            officialDeposit = update.officialDeposit;
+          } else {
+            officialDeposit = {
+              amount: Math.round(update.officialTotal.amount * 0.6),
+              currency: update.officialTotal.currency,
+            };
+          }
+        }
+
+        set((state) => ({
+          customOrders: state.customOrders.map((entry) => {
+            if (entry.id !== orderId) return entry;
+            return {
+              ...entry,
+              officialTotal: hasOfficial ? update.officialTotal : null,
+              officialDeposit: hasOfficial ? officialDeposit : null,
+              quoteCustomerNotes: hasOfficial ? update.quoteCustomerNotes : "",
+              quoteInternalNotes: hasOfficial ? update.quoteInternalNotes : "",
+              quotedAt: hasOfficial ? now : null,
+              quotedBy: hasOfficial ? actor.id : null,
+              updatedAt: now,
+            };
+          }),
+        }));
+      },
     }),
     {
       name: "og-portal",
-      version: 1,
-      partialize: (state) => ({
+      version: 2,
+      partialize: (state): PersistedPortalSlice => ({
         currentUser: state.currentUser,
         retailOrders: state.retailOrders,
         customOrders: state.customOrders,
       }),
+      migrate: (persistedState, _fromVersion): PersistedPortalSlice => {
+        const p = (persistedState ?? {}) as Partial<PersistedPortalSlice>;
+        return {
+          currentUser: p.currentUser ?? null,
+          retailOrders: Array.isArray(p.retailOrders) ? p.retailOrders : [],
+          customOrders: Array.isArray(p.customOrders)
+            ? p.customOrders.map((row) => migrateManagedCustomOrderRecord(row))
+            : [],
+        };
+      },
     },
   ),
 );

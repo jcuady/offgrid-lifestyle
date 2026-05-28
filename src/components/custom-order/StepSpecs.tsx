@@ -1,15 +1,20 @@
-import { ArrowRight, ArrowLeft, Shirt, Layers, Printer } from "lucide-react";
+import type { ChangeEvent } from "react";
+import { ArrowRight, ArrowLeft, Download, Upload, ClipboardList } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
-import { OptionCard } from "./OptionCard";
-import { CUT_OPTIONS, MATERIAL_OPTIONS, PRINT_OPTIONS } from "@/src/data/customOptions";
 import { useCustomOrderStore } from "@/src/store/useCustomOrderStore";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
+import { downloadTeamOrderKitSheet } from "@/src/lib/teamOrderKitSheet";
 
 export function StepSpecs() {
   const copy = useSiteContentStore((s) => s.customPageContent.wizard.step2);
-  const { draft, setCut, setMaterial, setPrintMethod, nextStep, prevStep } = useCustomOrderStore();
+  const { draft, updateDraft, nextStep, prevStep } = useCustomOrderStore();
 
-  const specsComplete = Boolean(draft.cut && draft.material && draft.printMethod);
+  const specsComplete = Boolean(draft.orderSheetFileName);
+
+  const onOrderSheetSelect = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) updateDraft({ orderSheetFileName: file.name });
+  };
 
   return (
     <div className="space-y-10 sm:space-y-12">
@@ -20,71 +25,60 @@ export function StepSpecs() {
 
       <div className="space-y-8">
         <div>
-          <h3 className="text-xs font-semibold tracking-[0.2em] uppercase text-offgrid-green/50 mb-3">{copy.cutHeading}</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {CUT_OPTIONS.map((opt) => (
-              <div key={opt.id}>
-                <OptionCard
-                  label={opt.label}
-                  description={opt.description}
-                  selected={draft.cut === opt.id}
-                  onClick={() => setCut(opt.id)}
-                  icon={Shirt}
-                />
-              </div>
-            ))}
+          <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-offgrid-green/50">{copy.cutHeading}</h3>
+          <div className="rounded-2xl border border-offgrid-green/10 bg-white p-5 shadow-sm">
+            <p className="text-sm text-offgrid-green/70">
+              Download the OffGrid roster sheet so names, numbers, sizes, quantities, and product types are complete before submission.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-4 gap-2"
+              type="button"
+              onClick={() => void downloadTeamOrderKitSheet()}
+            >
+              <Download className="h-4 w-4" />
+              Download order kit (.xlsx)
+            </Button>
           </div>
         </div>
 
         <div>
-          <h3 className="text-xs font-semibold tracking-[0.2em] uppercase text-offgrid-green/50 mb-3">{copy.fabricHeading}</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {MATERIAL_OPTIONS.map((opt) => (
-              <div key={opt.id}>
-                <OptionCard
-                  label={opt.label}
-                  description={opt.description}
-                  selected={draft.material === opt.id}
-                  onClick={() => setMaterial(opt.id)}
-                  icon={Layers}
-                />
-              </div>
-            ))}
-          </div>
+          <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-offgrid-green/50">{copy.fabricHeading}</h3>
+          <label className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-offgrid-green/20 p-8 transition-all hover:border-offgrid-green/40 hover:bg-offgrid-green/[0.02] sm:p-12">
+            <Upload className="h-8 w-8 text-offgrid-green/40" />
+            {draft.orderSheetFileName ? (
+              <p className="text-sm font-semibold text-offgrid-green">{draft.orderSheetFileName}</p>
+            ) : (
+              <p className="text-sm text-offgrid-green/50">Upload completed team order sheet</p>
+            )}
+            <input type="file" accept=".xlsx,.xls,.csv" onChange={onOrderSheetSelect} className="hidden" />
+          </label>
         </div>
 
         <div>
-          <h3 className="text-xs font-semibold tracking-[0.2em] uppercase text-offgrid-green/50 mb-3">{copy.printHeading}</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {PRINT_OPTIONS.map((opt) => (
-              <div key={opt.id}>
-                <OptionCard
-                  label={opt.label}
-                  description={opt.description}
-                  selected={draft.printMethod === opt.id}
-                  onClick={() => setPrintMethod(opt.id)}
-                  icon={Printer}
-                />
-              </div>
-            ))}
+          <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-offgrid-green/50">{copy.printHeading}</h3>
+          <div className="rounded-2xl border border-offgrid-green/10 bg-white p-5 shadow-sm">
+            <div className="flex items-start gap-3">
+              <ClipboardList className="mt-0.5 h-4 w-4 text-offgrid-green/60" />
+              <ul className="space-y-1.5 text-sm text-offgrid-green/70">
+                <li>- Include player names and jersey numbers (if needed)</li>
+                <li>- Confirm sizes and quantities per product type</li>
+                <li>- Add notes for captain sets, alternates, and special placements</li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row">
         <Button variant="outline" size="lg" className="sm:flex-1" onClick={prevStep}>
-          <ArrowLeft className="mr-2 w-4 h-4" />
+          <ArrowLeft className="mr-2 h-4 w-4" />
           {copy.backButton}
         </Button>
-        <Button
-          variant="default"
-          size="lg"
-          className="sm:flex-1 group"
-          disabled={!specsComplete}
-          onClick={nextStep}
-        >
+        <Button variant="default" size="lg" className="group sm:flex-1" disabled={!specsComplete} onClick={nextStep}>
           {copy.nextButton}
-          <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
         </Button>
       </div>
     </div>

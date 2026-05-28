@@ -1,10 +1,20 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { CustomOrderDraft, GarmentCut, FabricType, PrintMethod } from "@/src/types/commerce";
+import type {
+  CustomCategory,
+  CustomOrderDraft,
+  FabricType,
+  GarmentCut,
+  HeadwearType,
+  PrintMethod,
+} from "@/src/types/commerce";
 
 const EMPTY_DRAFT: CustomOrderDraft = {
   id: null,
+  category: "apparel",
+  headwearType: null,
   designFileName: null,
+  orderSheetFileName: null,
   designNotes: "",
   cut: null,
   material: null,
@@ -29,6 +39,8 @@ interface CustomOrderState {
   nextStep: () => void;
   prevStep: () => void;
   setCut: (cut: GarmentCut) => void;
+  setCategory: (category: CustomCategory) => void;
+  setHeadwearType: (headwearType: HeadwearType) => void;
   setMaterial: (material: FabricType) => void;
   setPrintMethod: (method: PrintMethod) => void;
   updateDraft: (partial: Partial<CustomOrderDraft>) => void;
@@ -49,6 +61,21 @@ export const useCustomOrderStore = create<CustomOrderState>()(
 
       setCut: (cut) =>
         set((s) => ({ draft: { ...s.draft, cut, updatedAt: new Date().toISOString() } })),
+      setCategory: (category) =>
+        set((s) => ({
+          draft: {
+            ...s.draft,
+            category,
+            headwearType: category === "headwear_towels" ? s.draft.headwearType : null,
+            cut: category === "headwear_towels" ? null : s.draft.cut,
+            material: category === "headwear_towels" ? null : s.draft.material,
+            updatedAt: new Date().toISOString(),
+          },
+        })),
+      setHeadwearType: (headwearType) =>
+        set((s) => ({
+          draft: { ...s.draft, headwearType, cut: null, material: null, updatedAt: new Date().toISOString() },
+        })),
       setMaterial: (material) =>
         set((s) => ({ draft: { ...s.draft, material, updatedAt: new Date().toISOString() } })),
       setPrintMethod: (method) =>
@@ -63,9 +90,18 @@ export const useCustomOrderStore = create<CustomOrderState>()(
     }),
     {
       name: "og-custom-order",
-      version: 2,
+      version: 3,
       migrate: (persisted, fromVersion) => {
         const next = { ...(persisted as Record<string, unknown>) };
+        if (fromVersion < 3) {
+          const draft = (next.draft as Partial<CustomOrderDraft> | undefined) ?? {};
+          next.draft = {
+            ...draft,
+            category: draft.category ?? "apparel",
+            headwearType: draft.headwearType ?? null,
+            orderSheetFileName: draft.orderSheetFileName ?? null,
+          };
+        }
         const step = next.currentStep;
         if (fromVersion < 2 && typeof step === "number") {
           const legacyToNew: Record<number, number> = {

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { NavigateFunction } from "react-router-dom";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
-import { ArrowRight, ChevronDown } from "lucide-react";
+import { ArrowRight, ChevronDown, Paintbrush2, FileCheck2 } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { Footer } from "@/src/components/Footer";
@@ -27,6 +27,54 @@ function followCta(navigate: NavigateFunction, href: string) {
     return;
   }
   navigate(href);
+}
+
+function OffgridDesignAssistBlock({ onTemplatesClick }: { onTemplatesClick: () => void }) {
+  return (
+    <div className="mt-10 max-w-4xl overflow-hidden rounded-2xl border border-offgrid-green/10 bg-white shadow-sm">
+      <div className="grid gap-0 md:grid-cols-2">
+        <article className="border-b border-offgrid-green/10 p-6 md:border-b-0 md:border-r">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-green/45">Artwork format</p>
+          <div className="mt-3 flex items-center gap-2">
+            <FileCheck2 className="h-5 w-5 text-offgrid-green/70" aria-hidden />
+            <h3 className="font-display text-2xl font-black tracking-tight text-offgrid-green">Your Own Design</h3>
+          </div>
+          <p className="mt-3 font-sans text-sm leading-relaxed text-offgrid-green/75">
+            Use OffGrid templates and submit final artwork as Adobe Illustrator (<strong>.AI</strong>) in{" "}
+            <strong>CMYK</strong> color mode for reliable print output. Not using Illustrator? Send any format and we
+            will help convert it for production.
+          </p>
+          <Button size="sm" variant="outline" className="mt-4 gap-2" onClick={onTemplatesClick}>
+            Get design templates
+            <ArrowRight className="h-4 w-4" />
+          </Button>
+        </article>
+
+        <article className="p-6">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-green/45">Free support</p>
+          <div className="mt-3 flex items-center gap-2">
+            <Paintbrush2 className="h-5 w-5 text-offgrid-green/70" aria-hidden />
+            <h3 className="font-display text-2xl font-black tracking-tight text-offgrid-green">No Designer? No Problem.</h3>
+          </div>
+          <p className="mt-3 font-sans text-sm leading-relaxed text-offgrid-green/75">
+            Design fees are on us. Share your concept, rough sketch, or reference pegs and our team will turn it into a
+            production-ready OffGrid layout.
+          </p>
+          <div className="mt-4 rounded-xl border border-offgrid-green/10 bg-offgrid-cream/55 p-3">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-offgrid-green/55">Quick brief checklist</p>
+            <ul className="mt-2 space-y-1.5 text-xs text-offgrid-green/70">
+              <li>- Fonts: team name, player text, and preferred font style</li>
+              <li>- Colors: primary palette plus accent colors</li>
+              <li>- Elements: high-res logos, icons, and pattern references</li>
+            </ul>
+          </div>
+          <p className="mt-3 text-xs text-offgrid-green/60">
+            Still deciding? Browse our social pages for inspiration and share the looks you want us to adapt.
+          </p>
+        </article>
+      </div>
+    </div>
+  );
 }
 
 export function CustomHubPage() {
@@ -227,6 +275,10 @@ export function CustomHubPage() {
                           />
                           <div className="pl-4 sm:pl-5">
                             <GuideSectionProse body={section.body} />
+
+                            {section.slug === "faqs" && (
+                              <OffgridDesignAssistBlock onTemplatesClick={() => navigate("/custom/templates")} />
+                            )}
 
                             {section.slug === "sizing-chart" && (
                               <div className="mt-10 max-w-3xl overflow-hidden rounded-2xl border border-offgrid-green/10 bg-white shadow-sm">

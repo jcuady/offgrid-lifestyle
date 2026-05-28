@@ -6,6 +6,13 @@ import { triggerTemplateDownload } from "@/src/lib/resolveTemplateDownload";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { cn } from "@/src/lib/utils";
 
+const CATEGORY_LABELS = {
+  jerseys: "Jerseys",
+  headwear: "Headwear",
+  towels: "Towels",
+  shorts: "Shorts",
+} as const;
+
 function formatFromFileName(fileName: string): string {
   const part = fileName.includes(".") ? fileName.split(".").pop() : "";
   const ext = part?.toUpperCase() ?? "FILE";
@@ -20,10 +27,16 @@ export function TemplateSlotsEditor() {
   const resetCanonicalTemplateSlot = useSiteContentStore((s) => s.resetCanonicalTemplateSlot);
 
   const [selectedId, setSelectedId] = useState(templates[0]?.id ?? "");
+  const [selectedCategory, setSelectedCategory] = useState<keyof typeof CATEGORY_LABELS>("jerseys");
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const selected = templates.find((t) => t.id === selectedId) ?? templates[0];
+  const filteredTemplates = templates.filter((t) => t.category === selectedCategory);
+  const selected =
+    filteredTemplates.find((t) => t.id === selectedId) ??
+    filteredTemplates[0] ??
+    templates.find((t) => t.id === selectedId) ??
+    templates[0];
   const isIdb = (selected?.storageKind ?? "static") === "idb";
 
   const onPickFile = (e: ChangeEvent<HTMLInputElement>) => {
@@ -77,10 +90,32 @@ export function TemplateSlotsEditor() {
     <>
       <CmsSectionPanel
         title="Template library"
-        description="Ten fixed download slots. Edit labels and preview images; optionally replace the downloadable file for this browser (IndexedDB). Bundled paths under public/templates/og-client/ stay fixed unless you upload a replacement."
+        description="Fixed template slots grouped by category (jerseys, headwear, towels, shorts). Edit labels and preview images; optionally replace the downloadable file for this browser (IndexedDB)."
       >
         <div className="sm:col-span-2 flex flex-wrap gap-2">
-          {templates.map((template) => (
+          {(Object.keys(CATEGORY_LABELS) as (keyof typeof CATEGORY_LABELS)[]).map((category) => (
+            <button
+              key={category}
+              type="button"
+              onClick={() => {
+                setSelectedCategory(category);
+                const first = templates.find((t) => t.category === category);
+                if (first) setSelectedId(first.id);
+                setPendingFile(null);
+              }}
+              className={cn(
+                "rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors",
+                selectedCategory === category
+                  ? "border-offgrid-green bg-offgrid-green text-offgrid-cream"
+                  : "border-offgrid-green/20 text-offgrid-green/70 hover:border-offgrid-green/40",
+              )}
+            >
+              {CATEGORY_LABELS[category]}
+            </button>
+          ))}
+        </div>
+        <div className="sm:col-span-2 flex flex-wrap gap-2">
+          {filteredTemplates.map((template) => (
             <button
               key={template.id}
               type="button"
@@ -103,7 +138,9 @@ export function TemplateSlotsEditor() {
 
       <CmsSectionPanel
         title={selected.name}
-        description={`Slot ID: ${selected.id} · ${isIdb ? "Custom file (this browser)" : `Bundled: ${selected.fileUrl}`}`}
+        description={`${CATEGORY_LABELS[selected.category]} · Slot ID: ${selected.id} · ${
+          isIdb ? "Custom file (this browser)" : `Bundled: ${selected.fileUrl}`
+        }`}
       >
         <CmsField label="Display name" className="sm:col-span-2">
           <CmsTextInput

@@ -3,7 +3,6 @@ import { ArrowLeft, Send, Check, AlertCircle, RotateCcw } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { useCustomOrderStore } from "@/src/store/useCustomOrderStore";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
-import { CUT_OPTIONS, MATERIAL_OPTIONS, PRINT_OPTIONS, estimateUnitPrice } from "@/src/data/customOptions";
 import { localOrderService } from "@/src/services";
 import { cn } from "@/src/lib/utils";
 
@@ -21,26 +20,19 @@ export function StepSummary() {
   const { draft, updateDraft, prevStep, resetDraft } = useCustomOrderStore();
   const [submitted, setSubmitted] = useState(false);
 
-  const cutLabel = CUT_OPTIONS.find((o) => o.id === draft.cut)?.label ?? "—";
-  const matLabel = MATERIAL_OPTIONS.find((o) => o.id === draft.material)?.label ?? "—";
-  const printLabel = PRINT_OPTIONS.find((o) => o.id === draft.printMethod)?.label ?? "—";
-
-  const unitPrice = estimateUnitPrice(draft.cut, draft.material, draft.printMethod);
-  const totalEstimate = unitPrice * draft.quantity;
-  const depositEstimate = Math.round(totalEstimate * 0.6);
-
   const canSubmit =
     draft.contactName.trim() !== "" &&
     draft.contactEmail.trim() !== "" &&
-    draft.contactPhone.trim() !== "";
+    draft.contactPhone.trim() !== "" &&
+    Boolean(draft.orderSheetFileName);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
     const submittedDraft = {
       ...draft,
-      estimatedTotal: { amount: totalEstimate, currency: "PHP" },
-      depositRequired: { amount: depositEstimate, currency: "PHP" },
+      estimatedTotal: null,
+      depositRequired: null,
       status: "pending_deposit",
       createdAt: draft.createdAt ?? new Date().toISOString(),
     } as const;
@@ -63,7 +55,7 @@ export function StepSummary() {
             <div>
               <p className="font-bold text-offgrid-green text-sm">{copy.depositTitle}</p>
               <p className="text-xs text-offgrid-green/60 mt-0.5">
-                {copy.depositBody} ₱{depositEstimate.toLocaleString("en-PH")}.
+                {copy.depositBody}
               </p>
             </div>
           </div>
@@ -90,9 +82,7 @@ export function StepSummary() {
           {copy.orderDetailsHeading}
         </h3>
         <SummaryRow label="Design" value={draft.designFileName ?? "No file uploaded"} />
-        <SummaryRow label="Cut / Style" value={cutLabel} />
-        <SummaryRow label="Material" value={matLabel} />
-        <SummaryRow label="Print Method" value={printLabel} />
+        <SummaryRow label="Order sheet" value={draft.orderSheetFileName ?? "No file uploaded"} />
         <SummaryRow
           label="Quantity"
           value={
@@ -112,21 +102,11 @@ export function StepSummary() {
         <h3 className="text-xs font-semibold tracking-[0.2em] uppercase text-offgrid-cream/50 mb-4">
           {copy.pricingHeading}
         </h3>
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-sm text-offgrid-cream/70">Unit price (est.)</span>
-          <span className="font-bold">₱{unitPrice.toLocaleString("en-PH")}</span>
-        </div>
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-sm text-offgrid-cream/70">× {draft.quantity} units</span>
-          <span className="font-bold">₱{totalEstimate.toLocaleString("en-PH")}</span>
-        </div>
-        <div className="border-t border-offgrid-cream/15 mt-3 pt-3 flex justify-between items-center">
-          <span className="text-sm font-semibold text-offgrid-lime">60% Deposit</span>
-          <span className="text-lg font-display font-black text-offgrid-lime">
-            ₱{depositEstimate.toLocaleString("en-PH")}
-          </span>
-        </div>
-        <p className="text-[10px] text-offgrid-cream/40 mt-2">{copy.pricingFootnote}</p>
+        <p className="text-sm leading-relaxed text-offgrid-cream/80">
+          We verify your design and team sheet first, then send an official quote, deposit schedule, and production
+          start confirmation.
+        </p>
+        <p className="text-[10px] text-offgrid-cream/40 mt-3">{copy.pricingFootnote}</p>
       </div>
 
       {/* Contact info */}

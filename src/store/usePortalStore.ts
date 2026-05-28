@@ -37,10 +37,13 @@ export interface ManagedCustomOrder {
   customerPhone: string;
   teamOrOrg: string;
   quantity: number;
+  category: CustomOrderDraft["category"];
+  headwearType: CustomOrderDraft["headwearType"];
   cut: CustomOrderDraft["cut"];
   material: CustomOrderDraft["material"];
   printMethod: CustomOrderDraft["printMethod"];
   designFileName: string | null;
+  orderSheetFileName: string | null;
   designNotes: string;
   estimatedTotal: CustomOrderDraft["estimatedTotal"];
   depositRequired: CustomOrderDraft["depositRequired"];
@@ -91,6 +94,9 @@ function migrateManagedCustomOrderRecord(raw: unknown): ManagedCustomOrder {
   const c = raw as Partial<ManagedCustomOrder> & { id: string };
   return {
     ...c,
+    category: c.category ?? "apparel",
+    headwearType: c.headwearType ?? null,
+    orderSheetFileName: c.orderSheetFileName ?? null,
     officialTotal: c.officialTotal ?? null,
     officialDeposit: c.officialDeposit ?? null,
     quoteCustomerNotes: c.quoteCustomerNotes ?? "",
@@ -212,10 +218,13 @@ export const usePortalStore = create<PortalState>()(
             customerPhone: draft.contactPhone,
             teamOrOrg: draft.teamOrOrg,
             quantity: draft.quantity,
+            category: draft.category,
+            headwearType: draft.headwearType,
             cut: draft.cut,
             material: draft.material,
             printMethod: draft.printMethod,
             designFileName: draft.designFileName,
+            orderSheetFileName: draft.orderSheetFileName,
             designNotes: draft.designNotes,
             estimatedTotal: draft.estimatedTotal,
             depositRequired: draft.depositRequired,

@@ -318,13 +318,13 @@ export function AdminCustomPagesPage() {
           <CmsField label="Description" className="sm:col-span-2">
             <CmsTextInput value={wizard.step2.description} onChange={(v) => updateStep2({ description: v })} multiline />
           </CmsField>
-          <CmsField label="Cut heading">
+          <CmsField label="Section heading: Download sheet">
             <CmsTextInput value={wizard.step2.cutHeading} onChange={(v) => updateStep2({ cutHeading: v })} />
           </CmsField>
-          <CmsField label="Fabric heading">
+          <CmsField label="Section heading: Upload completed sheet">
             <CmsTextInput value={wizard.step2.fabricHeading} onChange={(v) => updateStep2({ fabricHeading: v })} />
           </CmsField>
-          <CmsField label="Print heading">
+          <CmsField label="Section heading: Checklist">
             <CmsTextInput value={wizard.step2.printHeading} onChange={(v) => updateStep2({ printHeading: v })} />
           </CmsField>
           <CmsField label="Back button">

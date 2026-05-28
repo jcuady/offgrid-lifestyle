@@ -16,9 +16,9 @@ export const LEGACY_FAQS_SUMMARY =
 export const LEGACY_FAQS_BODY =
   "Common FAQ topics include: minimum quantity, deposit requirements, revision limits, sample policy, shipping SLA, and post-delivery support.";
 export const OFFGRID_FAQS_SUMMARY =
-  "Minimums for tops, bottoms, and towels, plus payment and production answers.";
+  "File submission rules, order minimums, and free OffGrid design support.";
 export const OFFGRID_FAQS_BODY =
-  "1) Tops and bottoms minimum: 10 pieces per design.\n2) You can mix shirt types within those 10 pieces (tank tops, short sleeves, long sleeves, and sun hoodies).\n3) Towels are handled as a separate design run — ask support for current minimums and lead-time based on size and print coverage.\n4) Final production starts once your official quote is approved and deposit is confirmed.";
+  "1) Tops and bottoms minimum: 10 pieces per design. You can mix shirt types within that 10-piece run (tank tops, short sleeves, long sleeves, and sun hoodies).\n2) Artwork submission: Place your design in OffGrid templates, then send the final file as Adobe Illustrator (.AI) in CMYK color mode for clean production output.\n3) Not using Illustrator? You can still send any file format and an OffGrid rep will guide you through preparation.\n4) Create with OffGrid: Design assistance is free. Share your concept, colors, logos, references, and team style so we can build a production-ready layout faster.\n5) Need inspiration first? Review sample team looks from our channels and include pegs in your brief so we can match your direction.";
 
 /** Ensures exactly seven panels in canonical order; preserves admin text/images. */
 export function resolveGuideSections(sections: CustomContentSection[]): CustomContentSection[] {
@@ -123,7 +123,7 @@ export function getCanonicalGuideSectionSeeds(): CustomContentSection[] {
       id: "sec-faqs",
       slug: "faqs",
       title: "FAQs",
-      subtitle: "Answers To Common Questions",
+      subtitle: "File Prep And Design Support",
       summary: OFFGRID_FAQS_SUMMARY,
       body: OFFGRID_FAQS_BODY,
       heroImage:

@@ -10,12 +10,29 @@ import { resolveCanonicalTemplates } from "@/src/lib/canonicalTemplates";
 import { triggerTemplateDownload } from "@/src/lib/resolveTemplateDownload";
 import { cn } from "@/src/lib/utils";
 
+const TEMPLATE_CATEGORY_ORDER = ["jerseys", "headwear", "towels", "shorts"] as const;
+const TEMPLATE_CATEGORY_LABELS: Record<(typeof TEMPLATE_CATEGORY_ORDER)[number], string> = {
+  jerseys: "Jerseys",
+  headwear: "Headwear",
+  towels: "Towels",
+  shorts: "Shorts",
+};
+
 export function CustomTemplatesPage() {
   const page = useSiteContentStore((state) => state.customPageContent.templatesPage);
   const customTemplatesRaw = useSiteContentStore((state) => state.customTemplates);
   const templates = useMemo(
     () => resolveCanonicalTemplates(customTemplatesRaw).filter((entry) => entry.isPublished),
     [customTemplatesRaw],
+  );
+  const groupedTemplates = useMemo(
+    () =>
+      TEMPLATE_CATEGORY_ORDER.map((category) => ({
+        category,
+        label: TEMPLATE_CATEGORY_LABELS[category],
+        items: templates.filter((template) => template.category === category),
+      })).filter((group) => group.items.length > 0),
+    [templates],
   );
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
@@ -73,8 +90,14 @@ export function CustomTemplatesPage() {
               </Button>
             </div>
           ) : (
-            <div className="mt-10 grid gap-5 md:grid-cols-2">
-              {templates.map((template) => {
+            <div className="mt-10 space-y-10">
+              {groupedTemplates.map((group) => (
+                <section key={group.category}>
+                  <h3 className="text-[10px] font-semibold uppercase tracking-[0.16em] text-offgrid-green/45">
+                    {group.label}
+                  </h3>
+                  <div className="mt-3 grid gap-5 md:grid-cols-2">
+                    {group.items.map((template) => {
                 const busy = downloadingId === template.id;
                 const canTry =
                   template.storageKind === "idb" || (template.fileUrl && template.fileUrl !== "#");
@@ -127,7 +150,10 @@ export function CustomTemplatesPage() {
                     </div>
                   </article>
                 );
-              })}
+                    })}
+                  </div>
+                </section>
+              ))}
             </div>
           )}
         </div>

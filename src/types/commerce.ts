@@ -27,6 +27,17 @@ export type PrintMethod =
   | "heat_transfer"
   | "digital_print";
 
+export type CustomCategory = "apparel" | "headwear_towels";
+export type HeadwearType =
+  | "cap-trucker"
+  | "cap-snapback"
+  | "cap-dad"
+  | "bucket-hat"
+  | "visor"
+  | "headband"
+  | "towel-face"
+  | "towel-hand";
+
 export interface Money {
   amount: number;
   currency: string;
@@ -44,7 +55,10 @@ export interface ShippingInfo {
 
 export interface CustomOrderDraft {
   id: string | null;
+  category: CustomCategory;
+  headwearType: HeadwearType | null;
   designFileName: string | null;
+  orderSheetFileName: string | null;
   designNotes: string;
   cut: GarmentCut | null;
   material: FabricType | null;

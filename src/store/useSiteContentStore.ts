@@ -47,9 +47,11 @@ export interface CustomContentSection {
 }
 
 export type TemplateStorageKind = "static" | "idb";
+export type TemplateCategory = "jerseys" | "headwear" | "towels" | "shorts";
 
 export interface CustomTemplateAsset {
   id: string;
+  category: TemplateCategory;
   name: string;
   description: string;
   fileName: string;
@@ -67,17 +69,19 @@ export interface CustomTemplateAsset {
 /** Filenames match `public/templates/og-client/` (kebab-case). Shirt first for wizard default. */
 export function createCanonicalOgTemplates(updatedAt: string): CustomTemplateAsset[] {
   const row = (
-    partial: Omit<CustomTemplateAsset, "updatedAt" | "isPublished" | "storageKind">,
+    partial: Omit<CustomTemplateAsset, "updatedAt" | "isPublished" | "storageKind"> &
+      Partial<Pick<CustomTemplateAsset, "isPublished">>,
   ): CustomTemplateAsset => ({
     ...partial,
     updatedAt,
-    isPublished: true,
+    isPublished: partial.isPublished ?? true,
     storageKind: "static",
   });
 
   return [
     row({
       id: "tpl-ogl-shirt",
+      category: "jerseys",
       name: "Shirt template",
       description: "Short sleeve layout — safe zones and bleed for production.",
       fileName: "oglifestyle-template-shirt.ai",
@@ -86,6 +90,7 @@ export function createCanonicalOgTemplates(updatedAt: string): CustomTemplateAss
     }),
     row({
       id: "tpl-ogl-banner",
+      category: "jerseys",
       name: "Banner template",
       description: "Wide banner artwork guides.",
       fileName: "oglifestyle-template-banner.ai",
@@ -94,6 +99,7 @@ export function createCanonicalOgTemplates(updatedAt: string): CustomTemplateAss
     }),
     row({
       id: "tpl-og-roundneck",
+      category: "jerseys",
       name: "Round neck shirt template",
       description: "Round neck silhouette — placement and margins.",
       fileName: "og-roundneck-shirt-template.ai",
@@ -102,6 +108,7 @@ export function createCanonicalOgTemplates(updatedAt: string): CustomTemplateAss
     }),
     row({
       id: "tpl-ogl-singlet",
+      category: "jerseys",
       name: "Singlet template",
       description: "Singlet panels and print zones.",
       fileName: "oglifestyle-template-singlet.ai",
@@ -110,6 +117,7 @@ export function createCanonicalOgTemplates(updatedAt: string): CustomTemplateAss
     }),
     row({
       id: "tpl-ogl-longsleeves",
+      category: "jerseys",
       name: "Long sleeves template",
       description: "Long sleeve layout — sleeves and torso guides.",
       fileName: "oglifestyle-template-longsleeves.ai",
@@ -118,6 +126,7 @@ export function createCanonicalOgTemplates(updatedAt: string): CustomTemplateAss
     }),
     row({
       id: "tpl-ogl-longsleeves-hoodie",
+      category: "jerseys",
       name: "Long sleeves hoodie template",
       description: "Hoodie silhouette — hood, body, and sleeve zones.",
       fileName: "oglifestyle-template-longsleeves-hoodie.ai",
@@ -126,6 +135,7 @@ export function createCanonicalOgTemplates(updatedAt: string): CustomTemplateAss
     }),
     row({
       id: "tpl-ogl-shorts",
+      category: "shorts",
       name: "Shorts template",
       description: "Shorts panels — waist, legs, and trim.",
       fileName: "oglifestyle-template-shorts.ai",
@@ -133,7 +143,28 @@ export function createCanonicalOgTemplates(updatedAt: string): CustomTemplateAss
       format: "AI",
     }),
     row({
+      id: "tpl-headwear-cap",
+      category: "headwear",
+      name: "Cap template (upload required)",
+      description: "Placeholder slot for custom cap layout file.",
+      fileName: "offgrid-cap-template.ai",
+      fileUrl: "#",
+      format: "AI",
+      isPublished: false,
+    }),
+    row({
+      id: "tpl-headwear-bucket",
+      category: "headwear",
+      name: "Bucket hat template (upload required)",
+      description: "Placeholder slot for bucket hat panel guide.",
+      fileName: "offgrid-bucket-hat-template.ai",
+      fileUrl: "#",
+      format: "AI",
+      isPublished: false,
+    }),
+    row({
       id: "tpl-facetowel-ai",
+      category: "towels",
       name: "Face towel template (Illustrator)",
       description: "Vector towel layout — use with JPG reference if needed.",
       fileName: "facetowel-template.ai",
@@ -143,6 +174,7 @@ export function createCanonicalOgTemplates(updatedAt: string): CustomTemplateAss
     }),
     row({
       id: "tpl-facetowel-jpg",
+      category: "towels",
       name: "Face towel reference (JPG)",
       description: "Raster reference for face towel artwork.",
       fileName: "facetowel-template.jpg",
@@ -152,6 +184,7 @@ export function createCanonicalOgTemplates(updatedAt: string): CustomTemplateAss
     }),
     row({
       id: "tpl-handtowel-ai",
+      category: "towels",
       name: "Hand towel template (Illustrator)",
       description: "Vector towel layout — pair with JPG reference.",
       fileName: "handtowel-template.ai",
@@ -161,6 +194,7 @@ export function createCanonicalOgTemplates(updatedAt: string): CustomTemplateAss
     }),
     row({
       id: "tpl-handtowel-jpg",
+      category: "towels",
       name: "Hand towel reference (JPG)",
       description: "Raster reference for hand towel artwork.",
       fileName: "handtowel-template.jpg",

@@ -171,6 +171,9 @@ export function OperationsOrderDetailPage() {
   const [feedback, setFeedback] = useState<string | null>(null);
 
   const found = useMemo(() => !!(retail || custom), [retail, custom]);
+  const hasLegacyCustomSpecs = Boolean(
+    custom && (custom.cut || custom.material || custom.printMethod || custom.headwearType),
+  );
 
   if (!orderId || !found) {
     return (
@@ -547,21 +550,49 @@ export function OperationsOrderDetailPage() {
                 <p className="mt-1 text-sm font-semibold text-offgrid-green">{custom.designFileName ?? "No file uploaded"}</p>
               </div>
               <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/50">Order sheet</p>
+                <p className="mt-1 text-sm font-semibold text-offgrid-green">{custom.orderSheetFileName ?? "No file uploaded"}</p>
+              </div>
+              <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/50">Quantity</p>
                 <p className="mt-1 text-sm font-semibold text-offgrid-green">{custom.quantity}</p>
               </div>
-              <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/50">Cut</p>
-                <p className="mt-1 text-sm font-semibold text-offgrid-green">{formatEnumLabel(custom.cut ?? "")}</p>
-              </div>
-              <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/50">Material</p>
-                <p className="mt-1 text-sm font-semibold text-offgrid-green">{formatEnumLabel(custom.material ?? "")}</p>
-              </div>
-              <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3 sm:col-span-2">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/50">Print method</p>
-                <p className="mt-1 text-sm font-semibold text-offgrid-green">{formatEnumLabel(custom.printMethod ?? "")}</p>
-              </div>
+              {hasLegacyCustomSpecs ? (
+                <>
+                  <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/50">Category</p>
+                    <p className="mt-1 text-sm font-semibold text-offgrid-green">
+                      {custom.category === "headwear_towels" ? "Headwear & towels" : "Tops & bottoms"}
+                    </p>
+                  </div>
+                  {custom.category === "headwear_towels" ? (
+                    <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/50">Headwear type</p>
+                      <p className="mt-1 text-sm font-semibold text-offgrid-green">{formatEnumLabel(custom.headwearType ?? "")}</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/50">Cut</p>
+                        <p className="mt-1 text-sm font-semibold text-offgrid-green">{formatEnumLabel(custom.cut ?? "")}</p>
+                      </div>
+                      <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/50">Material</p>
+                        <p className="mt-1 text-sm font-semibold text-offgrid-green">{formatEnumLabel(custom.material ?? "")}</p>
+                      </div>
+                    </>
+                  )}
+                  <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3 sm:col-span-2">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/50">Print method</p>
+                    <p className="mt-1 text-sm font-semibold text-offgrid-green">{formatEnumLabel(custom.printMethod ?? "")}</p>
+                  </div>
+                </>
+              ) : (
+                <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3 sm:col-span-2">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/50">Order format</p>
+                  <p className="mt-1 text-sm font-semibold text-offgrid-green">Team order kit workflow</p>
+                </div>
+              )}
               <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3 sm:col-span-2">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/50">Design notes</p>
                 <p className="mt-1 whitespace-pre-wrap text-sm text-offgrid-green/85">{custom.designNotes?.trim() ? custom.designNotes : "—"}</p>

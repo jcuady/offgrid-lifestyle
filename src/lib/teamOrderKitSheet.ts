@@ -9,16 +9,18 @@ const TEAM_ORDER_COLUMNS = [
 ] as const;
 
 /** Generates a starter XLSX for roster-based team orders. */
-export async function downloadTeamOrderKitSheet() {
+export async function downloadTeamOrderKitSheet(defaultProductType = "jersey") {
   const XLSX = await import("xlsx");
   const rows = [
-    Object.fromEntries(TEAM_ORDER_COLUMNS.map((key) => [key, ""])),
+    Object.fromEntries(
+      TEAM_ORDER_COLUMNS.map((key) => [key, key === "product_type" ? defaultProductType : ""]),
+    ),
     {
       player_name: "Sample Player",
       jersey_number: "7",
       size: "M",
       quantity: 1,
-      product_type: "jersey",
+      product_type: defaultProductType,
       colorway: "Green / Black",
       notes: "Captain set",
     },

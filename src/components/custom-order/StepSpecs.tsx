@@ -8,6 +8,16 @@ import { downloadTeamOrderKitSheet } from "@/src/lib/teamOrderKitSheet";
 export function StepSpecs() {
   const copy = useSiteContentStore((s) => s.customPageContent.wizard.step2);
   const { draft, updateDraft, nextStep, prevStep } = useCustomOrderStore();
+  const selectedType =
+    draft.category === "apparel"
+      ? "jersey_shorts"
+      : draft.headwearType === "towel-face"
+        ? "face_towel"
+        : draft.headwearType === "towel-hand"
+          ? "hand_towel"
+          : draft.headwearType
+            ? draft.headwearType.replace("cap-", "cap_")
+            : "headwear";
 
   const specsComplete = Boolean(draft.orderSheetFileName);
 
@@ -35,11 +45,21 @@ export function StepSpecs() {
               size="sm"
               className="mt-4 gap-2"
               type="button"
-              onClick={() => void downloadTeamOrderKitSheet()}
+              onClick={() => void downloadTeamOrderKitSheet(selectedType)}
             >
               <Download className="h-4 w-4" />
               Download order kit (.xlsx)
             </Button>
+            <p className="mt-2 text-[10px] text-offgrid-green/55">
+              Current selection:{" "}
+              <span className="font-semibold text-offgrid-green">
+                {draft.category === "apparel"
+                  ? "Jerseys & shorts"
+                  : draft.headwearType
+                    ? draft.headwearType.replace(/-/g, " ")
+                    : "Headwear"}
+              </span>
+            </p>
           </div>
         </div>
 

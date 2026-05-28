@@ -6,6 +6,7 @@ import { useCustomOrderStore } from "@/src/store/useCustomOrderStore";
 import { resolveCanonicalTemplates } from "@/src/lib/canonicalTemplates";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { PRIMARY_DESIGN_TEMPLATE_ID, triggerTemplateDownload } from "@/src/lib/resolveTemplateDownload";
+import { HEADWEAR_TYPE_OPTIONS } from "@/src/data/customHeadwearOptions";
 
 export function StepDesign() {
   const copy = useSiteContentStore((s) => s.customPageContent.wizard.step1);
@@ -45,6 +46,76 @@ export function StepDesign() {
       <div>
         <h2 className="text-xl sm:text-2xl font-display font-bold text-offgrid-green mb-2">{copy.title}</h2>
         <p className="text-sm text-offgrid-green/60">{copy.description}</p>
+      </div>
+
+      <div>
+        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.15em] text-offgrid-green">
+          Team order type
+        </p>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <button
+            type="button"
+            onClick={() => updateDraft({ category: "apparel", headwearType: null })}
+            className={`rounded-xl border p-4 text-left transition-all ${
+              draft.category === "apparel"
+                ? "border-offgrid-green bg-offgrid-green/5"
+                : "border-offgrid-green/15 bg-white hover:border-offgrid-green/35"
+            }`}
+          >
+            <p className="font-display text-base font-bold text-offgrid-green">Jerseys & shorts</p>
+            <p className="mt-1 text-xs text-offgrid-green/60">Best for full roster uniforms and sets.</p>
+          </button>
+          <button
+            type="button"
+            onClick={() => updateDraft({ category: "headwear_towels", headwearType: "cap-trucker" })}
+            className={`rounded-xl border p-4 text-left transition-all ${
+              draft.category === "headwear_towels" &&
+              draft.headwearType !== "towel-face" &&
+              draft.headwearType !== "towel-hand"
+                ? "border-offgrid-green bg-offgrid-green/5"
+                : "border-offgrid-green/15 bg-white hover:border-offgrid-green/35"
+            }`}
+          >
+            <p className="font-display text-base font-bold text-offgrid-green">Headwear</p>
+            <p className="mt-1 text-xs text-offgrid-green/60">Caps, visors, and headwear logo runs.</p>
+          </button>
+          <button
+            type="button"
+            onClick={() => updateDraft({ category: "headwear_towels", headwearType: "towel-hand" })}
+            className={`rounded-xl border p-4 text-left transition-all ${
+              draft.category === "headwear_towels" &&
+              (draft.headwearType === "towel-face" || draft.headwearType === "towel-hand")
+                ? "border-offgrid-green bg-offgrid-green/5"
+                : "border-offgrid-green/15 bg-white hover:border-offgrid-green/35"
+            }`}
+          >
+            <p className="font-display text-base font-bold text-offgrid-green">Towels</p>
+            <p className="mt-1 text-xs text-offgrid-green/60">Face and hand towel custom orders.</p>
+          </button>
+        </div>
+        {draft.category === "headwear_towels" ? (
+          <div className="mt-3">
+            <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-offgrid-green/55">
+              Select headwear/towel type
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {HEADWEAR_TYPE_OPTIONS.map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => updateDraft({ headwearType: opt.id })}
+                  className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                    draft.headwearType === opt.id
+                      ? "border-offgrid-green bg-offgrid-green text-offgrid-cream"
+                      : "border-offgrid-green/20 text-offgrid-green/70 hover:border-offgrid-green/40"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
       </div>
 
       <div className="bg-offgrid-green/5 rounded-xl p-4 sm:p-6 space-y-3">

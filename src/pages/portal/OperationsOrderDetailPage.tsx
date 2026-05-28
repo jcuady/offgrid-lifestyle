@@ -172,8 +172,15 @@ export function OperationsOrderDetailPage() {
 
   const found = useMemo(() => !!(retail || custom), [retail, custom]);
   const hasLegacyCustomSpecs = Boolean(
-    custom && (custom.cut || custom.material || custom.printMethod || custom.headwearType),
+    custom && (custom.cut || custom.material || custom.printMethod),
   );
+  const teamOrderType = custom
+    ? custom.category === "apparel"
+      ? "Jerseys & shorts"
+      : custom.headwearType === "towel-face" || custom.headwearType === "towel-hand"
+        ? "Towels"
+        : "Headwear"
+    : "—";
 
   if (!orderId || !found) {
     return (
@@ -556,6 +563,10 @@ export function OperationsOrderDetailPage() {
               <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/50">Quantity</p>
                 <p className="mt-1 text-sm font-semibold text-offgrid-green">{custom.quantity}</p>
+              </div>
+              <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/50">Team order type</p>
+                <p className="mt-1 text-sm font-semibold text-offgrid-green">{teamOrderType}</p>
               </div>
               {hasLegacyCustomSpecs ? (
                 <>

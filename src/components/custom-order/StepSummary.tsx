@@ -19,6 +19,12 @@ export function StepSummary() {
   const copy = useSiteContentStore((s) => s.customPageContent.wizard.step3);
   const { draft, updateDraft, prevStep, resetDraft } = useCustomOrderStore();
   const [submitted, setSubmitted] = useState(false);
+  const teamOrderType =
+    draft.category === "apparel"
+      ? "Jerseys & shorts"
+      : draft.headwearType === "towel-face" || draft.headwearType === "towel-hand"
+        ? "Towels"
+        : "Headwear";
 
   const canSubmit =
     draft.contactName.trim() !== "" &&
@@ -81,6 +87,7 @@ export function StepSummary() {
         <h3 className="text-xs font-semibold tracking-[0.2em] uppercase text-offgrid-green/50 mb-3">
           {copy.orderDetailsHeading}
         </h3>
+        <SummaryRow label="Team order type" value={teamOrderType} />
         <SummaryRow label="Design" value={draft.designFileName ?? "No file uploaded"} />
         <SummaryRow label="Order sheet" value={draft.orderSheetFileName ?? "No file uploaded"} />
         <SummaryRow

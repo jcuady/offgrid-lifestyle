@@ -65,10 +65,22 @@ export interface CustomOrderQuoteUpdate {
   quoteInternalNotes: string;
 }
 
+export interface PaymentSettings {
+  gcashQrImageUrl: string;
+  gcashInstructions: string;
+}
+
 type PersistedPortalSlice = {
   currentUser: PortalUser | null;
   retailOrders: ManagedRetailOrder[];
   customOrders: ManagedCustomOrder[];
+  paymentSettings: PaymentSettings;
+};
+
+const DEFAULT_PAYMENT_SETTINGS: PaymentSettings = {
+  gcashQrImageUrl: "https://placehold.co/640x640/png?text=Upload+GCash+QR",
+  gcashInstructions:
+    "Scan the QR with GCash, complete the payment, then keep your receipt for verification. Orders move once payment is confirmed.",
 };
 
 function defaultQuoteFields(): Pick<
@@ -111,6 +123,7 @@ interface PortalState {
   currentUser: PortalUser | null;
   retailOrders: ManagedRetailOrder[];
   customOrders: ManagedCustomOrder[];
+  paymentSettings: PaymentSettings;
   login: (email: string, password: string) => { ok: boolean; message?: string };
   loginAsRole: (role: UserRole) => void;
   logout: () => void;
@@ -122,6 +135,7 @@ interface PortalState {
   updateCustomPaymentStatus: (orderId: string, paymentStatus: PaymentStatus) => void;
   /** Admin only — sets official quote fields and audit timestamps. */
   updateCustomOrderQuote: (orderId: string, update: CustomOrderQuoteUpdate) => void;
+  updatePaymentSettings: (patch: Partial<PaymentSettings>) => void;
 }
 
 const DEMO_ACCOUNTS: DemoAccount[] = [
@@ -161,6 +175,7 @@ export const usePortalStore = create<PortalState>()(
       currentUser: null,
       retailOrders: [],
       customOrders: [],
+      paymentSettings: { ...DEFAULT_PAYMENT_SETTINGS },
 
       login: (email, password) => {
         const normalizedEmail = email.trim().toLowerCase();
@@ -306,6 +321,11 @@ export const usePortalStore = create<PortalState>()(
           }),
         }));
       },
+
+      updatePaymentSettings: (patch) =>
+        set((state) => ({
+          paymentSettings: { ...state.paymentSettings, ...patch },
+        })),
     }),
     {
       name: "og-portal",
@@ -314,6 +334,7 @@ export const usePortalStore = create<PortalState>()(
         currentUser: state.currentUser,
         retailOrders: state.retailOrders,
         customOrders: state.customOrders,
+        paymentSettings: state.paymentSettings,
       }),
       migrate: (persistedState, _fromVersion): PersistedPortalSlice => {
         const p = (persistedState ?? {}) as Partial<PersistedPortalSlice>;
@@ -323,6 +344,10 @@ export const usePortalStore = create<PortalState>()(
           customOrders: Array.isArray(p.customOrders)
             ? p.customOrders.map((row) => migrateManagedCustomOrderRecord(row))
             : [],
+          paymentSettings: {
+            ...DEFAULT_PAYMENT_SETTINGS,
+            ...p.paymentSettings,
+          },
         };
       },
     },

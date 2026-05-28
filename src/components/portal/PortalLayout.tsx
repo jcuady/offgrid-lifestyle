@@ -8,6 +8,7 @@ import {
   Palette,
   BarChart3,
   Home,
+  QrCode,
 
 } from "lucide-react";
 import { LOGO_WORDMARK_WHITE } from "@/src/lib/brandAssets";
@@ -31,6 +32,7 @@ const navByRole: Record<Exclude<UserRole, "customer">, { name: string; to: strin
     { name: "Custom pages", to: "/portal/admin/custom-pages", icon: Palette },
     { name: "Orders", to: "/portal/admin/orders", icon: ClipboardList },
     { name: "Products", to: "/portal/admin/products", icon: Package },
+    { name: "Payments", to: "/portal/admin/payments", icon: QrCode },
     { name: "Events", to: "/portal/admin/events", icon: CalendarDays },
     { name: "Analytics", to: "/portal/admin/analytics", icon: BarChart3 },
   ],

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { X, Check, CreditCard, Wallet, Banknote, Package, ChevronRight, MapPin, Truck } from "lucide-react";
 import { useShallow } from "zustand/react/shallow";
 import { useStore } from "@/src/store/store";
+import { usePortalStore } from "@/src/store/usePortalStore";
 import { Button } from "./ui/Button";
 import { formatPrice } from "@/src/data/products";
 import { cn } from "@/src/lib/utils";
@@ -40,6 +41,7 @@ export function CheckoutModal() {
 
   const [formData, setFormData] = useState(shippingInfo);
   const [cardDetails, setCardDetails] = useState({ number: "", expiry: "", cvv: "" });
+  const paymentSettings = usePortalStore((s) => s.paymentSettings);
 
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const shipping = subtotal >= 2000 ? 0 : 150;
@@ -330,6 +332,29 @@ export function CheckoutModal() {
                           </div>
                         </button>
                       </div>
+
+                      {/* Card Details (if card selected) */}
+                      {paymentMethod === "gcash" && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          className="mb-8 rounded-xl border border-offgrid-green/10 bg-white p-6"
+                        >
+                          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-offgrid-green/55">
+                            Scan to pay via GCash
+                          </p>
+                          <div className="mt-3 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+                            <img
+                              src={paymentSettings.gcashQrImageUrl}
+                              alt="GCash QR code"
+                              className="h-48 w-48 rounded-xl border border-offgrid-green/10 bg-offgrid-cream object-contain"
+                            />
+                            <p className="max-w-md text-sm leading-relaxed text-offgrid-green/70">
+                              {paymentSettings.gcashInstructions}
+                            </p>
+                          </div>
+                        </motion.div>
+                      )}
 
                       {/* Card Details (if card selected) */}
                       {paymentMethod === "card" && (

@@ -8,7 +8,15 @@ import type { LandingCollectionId, LandingContent } from "@/src/data/landingCont
 import { initialLandingContent } from "@/src/data/landingContent";
 import type { CustomPageContent } from "@/src/data/customPageContent";
 import { initialCustomPageContent, normalizeCustomPageContent } from "@/src/data/customPageContent";
-import { FIXED_GUIDE_CTA_HREF, getCanonicalGuideSectionSeeds, resolveGuideSections } from "@/src/lib/customGuideSections";
+import {
+  FIXED_GUIDE_CTA_HREF,
+  getCanonicalGuideSectionSeeds,
+  LEGACY_FAQS_BODY,
+  LEGACY_FAQS_SUMMARY,
+  OFFGRID_FAQS_BODY,
+  OFFGRID_FAQS_SUMMARY,
+  resolveGuideSections,
+} from "@/src/lib/customGuideSections";
 import {
   isCanonicalTemplateId,
   resolveCanonicalTemplates,
@@ -234,7 +242,7 @@ const initialCustomSections: CustomContentSection[] = getCanonicalGuideSectionSe
 
 const initialTemplates: CustomTemplateAsset[] = createCanonicalOgTemplates(nowIso());
 
-const SITE_CONTENT_PERSIST_VERSION = 6;
+const SITE_CONTENT_PERSIST_VERSION = 7;
 
 type PersistedSiteContentSlice = {
   products?: Product[];
@@ -570,6 +578,25 @@ export const useSiteContentStore = create<SiteContentState>()(
             ...next,
             customPageContent: page,
             customTemplates: resolveCanonicalTemplates(next.customTemplates ?? initialTemplates),
+          };
+        }
+
+        if (version < 7) {
+          const migratedSections = (next.customSections ?? initialCustomSections).map((section) => {
+            if (section.slug !== "faqs") return section;
+            const nextSummary =
+              section.summary === LEGACY_FAQS_SUMMARY ? OFFGRID_FAQS_SUMMARY : section.summary;
+            const nextBody = section.body === LEGACY_FAQS_BODY ? OFFGRID_FAQS_BODY : section.body;
+            if (nextSummary === section.summary && nextBody === section.body) return section;
+            return {
+              ...section,
+              summary: nextSummary,
+              body: nextBody,
+            };
+          });
+          next = {
+            ...next,
+            customSections: migratedSections,
           };
         }
 

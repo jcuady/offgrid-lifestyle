@@ -11,6 +11,15 @@ export const FIXED_GUIDE_CTA_HREF: Record<CustomSectionSlug, string> = {
   "lead-times": "/custom/order",
 };
 
+export const LEGACY_FAQS_SUMMARY =
+  "Lead times, payment setup, revisions, shipping, and reorders.";
+export const LEGACY_FAQS_BODY =
+  "Common FAQ topics include: minimum quantity, deposit requirements, revision limits, sample policy, shipping SLA, and post-delivery support.";
+export const OFFGRID_FAQS_SUMMARY =
+  "Minimums for tops, bottoms, and towels, plus payment and production answers.";
+export const OFFGRID_FAQS_BODY =
+  "1) Tops and bottoms minimum: 10 pieces per design.\n2) You can mix shirt types within those 10 pieces (tank tops, short sleeves, long sleeves, and sun hoodies).\n3) Towels are handled as a separate design run — ask support for current minimums and lead-time based on size and print coverage.\n4) Final production starts once your official quote is approved and deposit is confirmed.";
+
 /** Ensures exactly seven panels in canonical order; preserves admin text/images. */
 export function resolveGuideSections(sections: CustomContentSection[]): CustomContentSection[] {
   const bySlug = new Map(sections.map((s) => [s.slug, s]));
@@ -115,9 +124,8 @@ export function getCanonicalGuideSectionSeeds(): CustomContentSection[] {
       slug: "faqs",
       title: "FAQs",
       subtitle: "Answers To Common Questions",
-      summary: "Lead times, payment setup, revisions, shipping, and reorders.",
-      body:
-        "Common FAQ topics include: minimum quantity, deposit requirements, revision limits, sample policy, shipping SLA, and post-delivery support.",
+      summary: OFFGRID_FAQS_SUMMARY,
+      body: OFFGRID_FAQS_BODY,
       heroImage:
         "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=1600&auto=format&fit=crop",
       ctaLabel: "Start Inquiry",

@@ -167,6 +167,7 @@ export function OperationsOrderDetailPage() {
   const updateCustomOrderStatus = usePortalStore((s) => s.updateCustomOrderStatus);
   const updateCustomPaymentStatus = usePortalStore((s) => s.updateCustomPaymentStatus);
   const updateCustomOrderQuote = usePortalStore((s) => s.updateCustomOrderQuote);
+  const paymentSettings = usePortalStore((s) => s.paymentSettings);
 
   const [feedback, setFeedback] = useState<string | null>(null);
 
@@ -221,10 +222,10 @@ export function OperationsOrderDetailPage() {
             <h1 className="mt-2 text-4xl font-display font-black text-offgrid-green">{retail.id}</h1>
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <span className={cn("inline-flex rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em]", orderStatusClass(retail.status))}>
-                {formatOrderStatus(retail.status)}
+                Fulfillment: {formatOrderStatus(retail.status)}
               </span>
               <span className={cn("inline-flex rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em]", paymentStatusClass(retail.paymentStatus))}>
-                {formatPaymentStatus(retail.paymentStatus)}
+                Payment: {formatPaymentStatus(retail.paymentStatus)}
               </span>
             </div>
             <p className="mt-3 text-xs text-offgrid-green/55">
@@ -279,6 +280,9 @@ export function OperationsOrderDetailPage() {
               <p className="self-end text-xs text-offgrid-green/50">Payment updates: admin only</p>
             )}
           </div>
+          <p className="text-xs text-offgrid-green/55">
+            Fulfillment status and payment status are tracked separately.
+          </p>
 
           <div className="grid gap-6 lg:grid-cols-2">
             <div className="rounded-2xl border border-offgrid-green/10 bg-white p-5 shadow-sm">
@@ -315,8 +319,27 @@ export function OperationsOrderDetailPage() {
               <dl className="mt-4 space-y-2 text-sm text-offgrid-green/80">
                 <div>
                   <dt className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/45">Method</dt>
-                  <dd>{formatPaymentMethodLabel(retail.paymentMethod)}</dd>
+                  <dd className="font-medium text-offgrid-green">{formatPaymentMethodLabel(retail.paymentMethod)}</dd>
                 </div>
+                <div>
+                  <dt className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/45">Payment status</dt>
+                  <dd>
+                    <span
+                      className={cn(
+                        "inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em]",
+                        paymentStatusClass(retail.paymentStatus),
+                      )}
+                    >
+                      {formatPaymentStatus(retail.paymentStatus)}
+                    </span>
+                  </dd>
+                </div>
+                {retail.paymentProviderRef ? (
+                  <div>
+                    <dt className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/45">Reference</dt>
+                    <dd className="font-mono text-xs">{retail.paymentProviderRef}</dd>
+                  </div>
+                ) : null}
                 <div>
                   <dt className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/45">Customer</dt>
                   <dd>
@@ -324,6 +347,19 @@ export function OperationsOrderDetailPage() {
                   </dd>
                 </div>
               </dl>
+              {retail.paymentMethod?.toLowerCase() === "gcash" ? (
+                <div className="mt-4 rounded-xl border border-offgrid-green/10 bg-offgrid-cream/45 p-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/45">
+                    GCash QR (global)
+                  </p>
+                  <img
+                    src={paymentSettings.gcashQrImageUrl}
+                    alt="Configured GCash QR"
+                    className="mt-2 h-28 w-28 rounded-lg border border-offgrid-green/10 bg-white object-contain"
+                  />
+                  <p className="mt-2 text-xs text-offgrid-green/60">{paymentSettings.gcashInstructions}</p>
+                </div>
+              ) : null}
             </div>
           </div>
 
@@ -444,6 +480,9 @@ export function OperationsOrderDetailPage() {
               <p className="self-end text-xs text-offgrid-green/50">Payment updates: admin only</p>
             )}
           </div>
+          <p className="text-xs text-offgrid-green/55">
+            Fulfillment status and payment status are tracked separately.
+          </p>
 
           {isAdmin ? (
             <AdminQuoteEditor

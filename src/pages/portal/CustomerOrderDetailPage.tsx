@@ -12,6 +12,7 @@ import {
   formatOrderTimestamp,
   formatPaymentMethodLabel,
   formatPaymentStatus,
+  paymentStatusClassCustomer,
   hasOfficialCustomQuote,
   orderStatusClassOnHero,
   paymentStatusClassOnHero,
@@ -58,6 +59,7 @@ export function CustomerOrderDetailPage() {
 
   const activeOrder = retail ?? custom!;
   const orderKind = retail ? "Retail order" : "Custom order";
+  const paymentSettings = usePortalStore((s) => s.paymentSettings);
   const hasLegacyCustomSpecs = Boolean(
     custom && (custom.cut || custom.material || custom.printMethod),
   );
@@ -149,8 +151,22 @@ export function CustomerOrderDetailPage() {
                   <dt className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/45">
                     Payment status
                   </dt>
-                  <dd>{formatPaymentStatus(retail.paymentStatus)}</dd>
+                  <dd>
+                    <span className={cn("inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em]", paymentStatusClassCustomer(retail.paymentStatus))}>
+                      {formatPaymentStatus(retail.paymentStatus)}
+                    </span>
+                  </dd>
                 </div>
+                {retail.paymentMethod?.toLowerCase() === "gcash" ? (
+                  <div className="mt-4 rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/45">GCash QR used at checkout</p>
+                    <img
+                      src={paymentSettings.gcashQrImageUrl}
+                      alt="GCash QR"
+                      className="mt-2 h-24 w-24 rounded-lg border border-offgrid-green/10 bg-white object-contain"
+                    />
+                  </div>
+                ) : null}
                 {retail.paymentProviderRef ? (
                   <div>
                     <dt className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/45">

@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 import {
+  formatPaymentMethodLabel,
   formatOrderStatus,
   formatOrderTimestamp,
   formatPaymentStatus,
@@ -185,25 +186,26 @@ export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
     );
   };
 
-  const statusBadges = (row: Row) => (
-    <>
-      <span
-        className={cn(
-          "inline-flex rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em]",
-          orderStatusClass(row.entry.status),
-        )}
-      >
-        {formatOrderStatus(row.entry.status)}
-      </span>
-      <span
-        className={cn(
-          "inline-flex rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em]",
-          paymentStatusClass(row.entry.paymentStatus),
-        )}
-      >
-        {formatPaymentStatus(row.entry.paymentStatus)}
-      </span>
-    </>
+  const fulfillmentBadge = (row: Row) => (
+    <span
+      className={cn(
+        "inline-flex rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em]",
+        orderStatusClass(row.entry.status),
+      )}
+    >
+      {formatOrderStatus(row.entry.status)}
+    </span>
+  );
+
+  const paymentBadge = (row: Row) => (
+    <span
+      className={cn(
+        "inline-flex rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em]",
+        paymentStatusClass(row.entry.paymentStatus),
+      )}
+    >
+      {formatPaymentStatus(row.entry.paymentStatus)}
+    </span>
   );
 
   const quoteBadge = (row: Row) => {
@@ -425,7 +427,9 @@ export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
                     <th className="px-4 py-3.5 font-semibold sm:px-5">Order</th>
                     <th className="px-4 py-3.5 font-semibold sm:px-5">Customer</th>
                     <th className="px-4 py-3.5 font-semibold sm:px-5">Type</th>
-                    <th className="px-4 py-3.5 font-semibold sm:px-5">Status</th>
+                    <th className="px-4 py-3.5 font-semibold sm:px-5">Fulfillment</th>
+                    <th className="px-4 py-3.5 font-semibold sm:px-5">Payment</th>
+                    <th className="px-4 py-3.5 font-semibold sm:px-5">Method</th>
                     <th className="px-4 py-3.5 font-semibold sm:px-5">Quote</th>
                     <th className="px-4 py-3.5 font-semibold sm:px-5">Placed</th>
                     <th className="px-4 py-3.5 font-semibold sm:px-5">Actions</th>
@@ -457,8 +461,10 @@ export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
                           <p className="mt-0.5 text-xs text-offgrid-green/55">{row.entry.customerEmail}</p>
                         </td>
                         <td className="px-4 py-3.5 align-top sm:px-5">{typeBadge(row.kind)}</td>
-                        <td className="px-4 py-3.5 align-top sm:px-5">
-                          <div className="flex flex-col gap-1.5">{statusBadges(row)}</div>
+                        <td className="px-4 py-3.5 align-top sm:px-5">{fulfillmentBadge(row)}</td>
+                        <td className="px-4 py-3.5 align-top sm:px-5">{paymentBadge(row)}</td>
+                        <td className="px-4 py-3.5 align-top text-xs text-offgrid-green/75 sm:px-5">
+                          {row.kind === "retail" ? formatPaymentMethodLabel(row.entry.paymentMethod) : "Custom flow"}
                         </td>
                         <td className="px-4 py-3.5 align-top sm:px-5">{quoteBadge(row)}</td>
                         <td className="px-4 py-3.5 align-top text-xs text-offgrid-green/65 sm:px-5">
@@ -504,7 +510,19 @@ export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
                     </div>
                     {typeBadge(row.kind)}
                   </div>
-                  <div className="mt-4 flex flex-wrap gap-1.5">{statusBadges(row)}</div>
+                  <div className="mt-4 space-y-2">
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/45">Fulfillment</p>
+                      {fulfillmentBadge(row)}
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/45">Payment</p>
+                      {paymentBadge(row)}
+                    </div>
+                    {row.kind === "retail" ? (
+                      <p className="text-xs text-offgrid-green/60">{formatPaymentMethodLabel(row.entry.paymentMethod)}</p>
+                    ) : null}
+                  </div>
                   <div className="mt-3 flex items-center justify-between gap-2 border-t border-offgrid-green/[0.07] pt-4">
                     <div>{quoteBadge(row)}</div>
                     <span className="text-[10px] font-medium uppercase tracking-[0.12em] text-offgrid-green/45">

@@ -48,8 +48,12 @@ export function BrandStory() {
             <h2 className={cn(sectionTitleOnDark, "mb-8 leading-tight")}>
               {story.titleLine1} <br />
               <span className="text-offgrid-lime italic font-normal">{story.titleLine2Italic}</span>
-              <br />
-              {story.titleLine3}
+              {story.titleLine3 ? (
+                <>
+                  <br />
+                  {story.titleLine3}
+                </>
+              ) : null}
             </h2>
             
             <div className="space-y-5 text-base md:text-lg text-offgrid-cream/75 leading-relaxed">

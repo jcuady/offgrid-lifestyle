@@ -29,13 +29,13 @@ export function TestimonialsPage() {
             Testimonials
           </p>
           <h1 className="mt-3 text-5xl md:text-7xl font-display font-black leading-[0.9] text-offgrid-cream">
-            Built for teams.
+            Crafted with
             <br />
-            <span className="italic font-normal text-offgrid-lime">Trusted by real players.</span>
+            <span className="italic font-normal text-offgrid-lime">Intention.</span>
           </h1>
           <p className="mt-5 max-w-2xl text-sm md:text-base text-offgrid-cream/70">
-            Customer feedback focused on fit, performance, ordering clarity, and reliability.
-            Every order is crafted to match Off Grid&apos;s premium performance/lifestyle identity.
+            Off Grid Lifestyle is built on consistency and care. From custom pieces to everyday essentials,
+            each experience reflects quality, clarity, and craftsmanship.
           </p>
         </div>
       </section>

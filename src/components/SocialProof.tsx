@@ -29,6 +29,11 @@ export function SocialProof() {
             {header.titleLine1} <br />
             <span className="italic font-normal">{header.titleLine2Italic}</span>
           </h2>
+          {header.caption ? (
+            <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-offgrid-green/70 md:text-base">
+              {header.caption}
+            </p>
+          ) : null}
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-16">

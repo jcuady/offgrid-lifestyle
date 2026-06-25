@@ -119,11 +119,11 @@ export function normalizeCustomPageContent(page: CustomPageContent): CustomPageC
 
 export const initialCustomPageContent: CustomPageContent = {
   hub: {
-    heroEyebrow: "Custom orders",
-    heroTitleLine1: "Build Your Teamwear",
-    heroTitleLine2Italic: "The OffGrid Way",
+    heroEyebrow: "Custom Orders",
+    heroTitleLine1: "Made for Your Team.",
+    heroTitleLine2Italic: "Crafted Your Way.",
     heroDescription:
-      "Explore how to order, catalogs, sizing, and timelines below. Download templates from the nav, then place your quote on the dedicated order page.",
+      "Create custom apparel designed around your identity. From clubs and communities to businesses and events, every piece is made with the same commitment to comfort, movement, and craftsmanship. Browse catalogs, explore sizing, and review production timelines below. When you're ready, submit your request through our order page.",
     ctaPlaceOrder: "Place custom order",
     ctaOrderingGuide: "Ordering guide",
     ctaTemplates: "Templates",

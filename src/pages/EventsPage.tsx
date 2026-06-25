@@ -86,12 +86,12 @@ export function EventsPage() {
             </span>
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-black leading-[0.85] mb-6">
               More Than<br />
-              <span className="italic font-normal text-offgrid-lime">A Brand.</span><br />
-              A Movement.
+              <span className="italic font-normal text-offgrid-lime">A Brand.</span>
             </h1>
             <p className="text-base md:text-lg text-offgrid-cream/70 leading-relaxed max-w-2xl">
-              From pickleball tournaments to golf clinics, we bring the community together. 
-              Every event is a chance to play, connect, and live Off Grid.
+              A shared space for connection. Off Grid Lifestyle exists beyond clothing — through curated
+              gatherings and experiences, we create moments where people come together, connect, and share in
+              something real. Because what we build is not just worn. It&apos;s experienced.
             </p>
           </motion.div>
         </div>

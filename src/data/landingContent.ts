@@ -183,10 +183,11 @@ export const initialLandingContent: LandingContent = {
     },
   ],
   bestSellersHeader: {
-    eyebrow: "Best Sellers",
-    titleLine1: "The Crowd",
-    titleLine2Italic: "Favorites.",
-    caption: "",
+    eyebrow: "The Full Collection",
+    titleLine1: "A complete expression of",
+    titleLine2Italic: "Off Grid Lifestyle.",
+    caption:
+      "Thoughtfully designed pieces inspired by sport, shaped by culture, and made for everyday movement.",
   },
   bestSellersShopLink: "Shop full catalog",
   brandStory: {
@@ -195,12 +196,12 @@ export const initialLandingContent: LandingContent = {
     titleLine2Italic: "Meets Movement.",
     titleLine3: "",
     paragraph1:
-      "Off Grid Lifestyle was founded on the belief that the things we wear should move with us — through everyday routines, quiet moments, and everything in between.",
+      "Off Grid Lifestyle was founded on the belief that the things we wear should move with us. Through everyday routines, quiet moments, and everything in between.",
     paragraph2:
       "From thoughtfully curated collections to pieces made uniquely yours, we create apparel designed with comfort, versatility, and craftsmanship at its core.",
     paragraph3Prefix: "Because style isn't reserved for special occasions.",
     paragraph3Highlight: "It's found in the way we live, move, and make things our own.",
-    closingQuote: "Play Different. Live Off Grid.",
+    closingQuote: "",
     image: "/images/brand-story.jpg",
     badgeEst: "EST.",
     badgeLocality: "MANILA, PH",
@@ -210,10 +211,10 @@ export const initialLandingContent: LandingContent = {
   },
   event: {
     badge: "Community & Events",
-    titleLine1: "Figaro Barako",
-    titleLine2Italic: "Cup Pickleball",
+    titleLine1: "More Than a Brand.",
+    titleLine2Italic: "A shared space for connection.",
     description:
-      "Off Grid Lifestyle exists beyond clothing. Through curated gatherings and experiences, we create moments where people come together, connect, and share in something real. Because what we build is not just worn — it's experienced.",
+      "Off Grid Lifestyle exists beyond clothing. Through curated gatherings and experiences, we create moments where people come together, connect, and share in something real.\n\nBecause what we build is not just worn.\n\nIt's experienced.",
     backgroundImage: "/images/event-community.png",
     date: "15 Jun",
     countdownTime: "09:00:00",

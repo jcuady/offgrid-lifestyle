@@ -123,7 +123,7 @@ export const initialCustomPageContent: CustomPageContent = {
     heroTitleLine1: "Made for Your Team.",
     heroTitleLine2Italic: "Crafted Your Way.",
     heroDescription:
-      "Create custom apparel designed around your identity. From clubs and communities to businesses and events, every piece is made with the same commitment to comfort, movement, and craftsmanship. Browse catalogs, explore sizing, and review production timelines below. When you're ready, submit your request through our order page.",
+      "Create custom apparel designed around your identity. From clubs and communities to businesses and events, every piece is made with the same commitment to comfort, movement, and craftsmanship.\n\nBrowse catalogs, explore sizing, and review production timelines below. When you're ready, submit your request through our order page.",
     ctaPlaceOrder: "Place custom order",
     ctaOrderingGuide: "Ordering guide",
     ctaTemplates: "Templates",

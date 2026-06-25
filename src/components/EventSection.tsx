@@ -66,7 +66,7 @@ export function EventSection() {
             <span className="italic font-normal text-offgrid-lime">{event.titleLine2Italic}</span>
           </h2>
 
-          <p className="text-base md:text-lg text-offgrid-cream/70 mb-12 max-w-2xl mx-auto leading-relaxed">
+          <p className="mb-12 max-w-2xl mx-auto whitespace-pre-line text-base leading-relaxed text-offgrid-cream/70 md:text-lg">
             {event.description}
           </p>
 

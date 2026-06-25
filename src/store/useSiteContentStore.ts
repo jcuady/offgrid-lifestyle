@@ -276,7 +276,7 @@ const initialCustomSections: CustomContentSection[] = getCanonicalGuideSectionSe
 
 const initialTemplates: CustomTemplateAsset[] = createCanonicalOgTemplates(nowIso());
 
-const SITE_CONTENT_PERSIST_VERSION = 8;
+const SITE_CONTENT_PERSIST_VERSION = 9;
 
 type PersistedSiteContentSlice = {
   products?: Product[];
@@ -634,7 +634,7 @@ export const useSiteContentStore = create<SiteContentState>()(
           };
         }
 
-        if (version < 8) {
+        if (version < 9) {
           next = {
             ...next,
             landingContent: initialLandingContent,

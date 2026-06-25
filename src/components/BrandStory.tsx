@@ -59,15 +59,15 @@ export function BrandStory() {
             <div className="space-y-5 text-base md:text-lg text-offgrid-cream/75 leading-relaxed">
               <p>{story.paragraph1}</p>
               <p>{story.paragraph2}</p>
-              <p className="font-medium text-offgrid-cream">
-                {story.paragraph3Prefix}{" "}
-                <span className="text-offgrid-lime">{story.paragraph3Highlight}</span>
-              </p>
+              <p>{story.paragraph3Prefix}</p>
+              <p>{story.paragraph3Highlight}</p>
             </div>
 
-            <div className="mt-10 pt-10 border-t border-offgrid-cream/10">
-              <p className="font-display text-xl italic text-offgrid-cream/40">{story.closingQuote}</p>
-            </div>
+            {story.closingQuote ? (
+              <div className="mt-10 pt-10 border-t border-offgrid-cream/10">
+                <p className="font-display text-xl italic text-offgrid-cream/40">{story.closingQuote}</p>
+              </div>
+            ) : null}
 
             {/* Badges */}
             <div className="mt-10 flex flex-wrap gap-8">

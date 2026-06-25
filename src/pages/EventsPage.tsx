@@ -84,15 +84,20 @@ export function EventsPage() {
             <span className="inline-block text-[10px] font-semibold tracking-[0.2em] uppercase text-offgrid-lime mb-4">
               Community & Events
             </span>
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-black leading-[0.85] mb-6">
-              More Than<br />
-              <span className="italic font-normal text-offgrid-lime">A Brand.</span>
+            <h1 className="mb-3 text-5xl font-display font-black leading-[0.85] md:text-7xl lg:text-8xl">
+              More Than a Brand.
             </h1>
-            <p className="text-base md:text-lg text-offgrid-cream/70 leading-relaxed max-w-2xl">
-              A shared space for connection. Off Grid Lifestyle exists beyond clothing — through curated
-              gatherings and experiences, we create moments where people come together, connect, and share in
-              something real. Because what we build is not just worn. It&apos;s experienced.
+            <p className="mb-6 text-2xl font-display italic text-offgrid-lime md:text-3xl">
+              A shared space for connection.
             </p>
+            <div className="max-w-2xl space-y-4 text-base leading-relaxed text-offgrid-cream/70 md:text-lg">
+              <p>
+                Off Grid Lifestyle exists beyond clothing. Through curated gatherings and experiences, we create
+                moments where people come together, connect, and share in something real.
+              </p>
+              <p>Because what we build is not just worn.</p>
+              <p>It&apos;s experienced.</p>
+            </div>
           </motion.div>
         </div>
       </section>

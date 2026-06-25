@@ -138,7 +138,9 @@ export function CustomHubPage() {
             {hub.heroTitleLine1} <br />
             <span className="italic font-normal text-offgrid-lime">{hub.heroTitleLine2Italic}</span>
           </h1>
-          <p className="mt-5 max-w-2xl text-sm md:text-base text-offgrid-cream/70">{hub.heroDescription}</p>
+          <p className="mt-5 max-w-2xl whitespace-pre-line text-sm leading-relaxed text-offgrid-cream/70 md:text-base">
+            {hub.heroDescription}
+          </p>
           <div className="mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 flex-wrap">
             <Button className="group" variant="secondary" size="lg" onClick={() => navigate("/custom/order")}>
               {hub.ctaPlaceOrder}

@@ -1,12 +1,15 @@
 # OFF GRID® — Brand Book
 
-> **Version 1.0 · October 2024**
-> Authored from: Offgrid Branding Guide (Oct 2024), Company Profile, Logo Assets, Sample Product Data, and live storefront codebase (`src/`).
+> **Version 1.2 · June 2026**  
+> **Primary source:** `Offgrid - Branding Guide/` (6 pages, Oct 2024) — audited image-by-image against this document.  
+> **Secondary sources:** `OG Lifestyle Company Profile.pdf`, logo assets in `public/OG logo/`, live storefront (`src/`).  
+> **v1.2 change:** Storefront retheme to the guide palette (White/Black/Electric Blue) and guide-matched fonts (Archivo display, Space Mono labels, Inter UI). Legacy green/cream/lime/gold retired; token names retained but remapped. See §5.2, §5.4, §6.2.
 
 ---
 
 ## Table of Contents
 
+0. [Branding Guide Source Audit](#0-branding-guide-source-audit-oct-2024)
 1. [Brand Architecture & Naming](#1-brand-architecture--naming)
 2. [Purpose, Vision & Audience](#2-purpose-vision--audience)
 3. [Voice & Messaging System](#3-voice--messaging-system)
@@ -22,6 +25,23 @@
 
 ---
 
+## 0. Branding Guide Source Audit (Oct 2024)
+
+Authoritative reference files:
+
+| Page | File | What the guide defines |
+|------|------|------------------------|
+| **1 — Cover** | `Offgrid - Branding Guide-1.png` | Full-bleed **Electric Blue** field `#000AFF`; centered white **OFF GRID®** wordmark; cover metadata **OCT. 2024** (top-left) and **BRAND GUIDE** (bottom-left) in small monospaced caps. Wordmark letters show deliberate optical jitter (e.g. `F`/`G` sit on slightly different baselines) — this is authored character, not an error. |
+| **2 — Logos** | `Offgrid - Branding Guide-2.png` | **LOGOS** panel: wordmark `OFF GRID®` + logomark `OG` in **Black**, **White**, and **Blue** (`#000AFF`) ink on neutral gray preview fields. **LOGO APPLICATION SAMPLES** panel: in-motion running photography; overlays include `WHEN COMFORT MEETS MOVEMENT`, `EST. MANILA, PH`, `RUN.`, `MERCH DROP`, dates (e.g. `10.09.2024`); white wordmark centered on photos; **OG** logomark as bottom-right corner bug. |
+| **3 — Colors** | `Offgrid - Branding Guide-3.png` | **Primary:** `#FFFFFF`, `#000000`, `#000AFF` (labeled **Blue**). **Secondary (Shades):** grayscale ramp `#F1F1F1`, `#E4E4E4`, `#A1A1A1`, `#6A6A6A`, `#3A3939` plus blue ramp `#0008C3`, `#00068D`, `#000AFF`. **Field lockups:** white-on-black, black-on-white, white-on-blue bars (not transparent PNG treatments). |
+| **4 — Imagery** | `Offgrid - Branding Guide-4.png` | Directive headline: **GRITTY, IN MOTION, PRODUCT-FOCUSED**. Sample photo grid shows motion blur, tight athletic crops, product/fabric detail. **Legal:** *"DO NOT USE PHOTOS IN IMAGERY — THESE ARE STRICTLY FOR SAMPLE/GUIDELINE PURPOSES ONLY"* (repeated top and bottom). |
+| **5 — Applications** | `Offgrid - Branding Guide-5.png` | **BRAND APPLICATION SAMPLES** collage: ticker band `OFF GRID ® OFF GRID ® OFF GRID ®`; campaign type `RUN.`; philosophy `PROGRESS > PERFECTION`; merch card with date + `MERCH DROP` + **OG** corner mark; recurring `WHEN COMFORT MEETS MOVEMENT` + `EST. MANILA, PH`. |
+| **6 — OG mark** | `Offgrid - Branding Guide-6.png` | **Dynamic OG mark:** uppercase **OG** (both letters capital), white on pure black, rotated ~20–30° counter-clockwise. Canonical avatar / icon / favicon reference — not a lowercase `o` treatment. |
+
+**Rule:** When this brand book conflicts with the six guide pages above, **the guide pages win**. As of v1.2 the digital storefront (`src/`) also follows the guide's palette and type — see §5.2 and §6.2. The only digital-specific constraint is the Electric Blue accessibility rule (§5.4), which governs *how* the guide's blue is applied so it never falls below WCAG contrast.
+
+---
+
 ## 1. Brand Architecture & Naming
 
 ### 1.1 The Entity Hierarchy
@@ -32,7 +52,8 @@
 | **Legal / Business Name** | `Off Grid Lifestyle` | Appears on receipts, legal documents, team uniform ordering forms, and the company profile. Do not use as a design element. |
 | **Monogram** | `OG` | Compact logomark for apparel embroidery, watermarks, small-format print, social avatars, and favicon contexts. |
 | **Domain** | `offgridlifestyle.ph` | Web and email. Use `offgridlifestyle.ph` in lower-case in prose; never use `www.offgridlifestyle.ph` unless technically required. |
-| **Tagline** | `Play Different. Live Off Grid.` | Primary consumer-facing tagline. Lives on storefront hero, packaging, and marketing materials. |
+| **Tagline (guide applications)** | `WHEN COMFORT MEETS MOVEMENT` | Primary line on logo-application samples (Pages 2 & 5). Use all-caps in campaign overlays; sentence case acceptable in long-form web copy. |
+| **Tagline (digital extended)** | `Play Different. Live Off Grid.` | Storefront hero and SEO — not shown on guide pages 1–6; requires brand approval before print use. |
 
 ### 1.2 When to Use Each Form
 
@@ -55,9 +76,8 @@ The `®` symbol is part of the wordmark lockup. It must always follow `OFF GRID`
 
 ### 2.1 Brand Purpose
 
-> **"When comfort meets movement."**
-
-OFF GRID® exists at the intersection of athletic performance and Filipino cultural pride. The brand was established in Manila, PH, to equip athletes, teams, and individuals who refuse to conform — people who train differently, dress differently, and live differently.
+> **WHEN COMFORT MEETS MOVEMENT**  
+> *(Guide Pages 2 & 5 — primary application tagline; sentence case acceptable in long-form web copy per §1.1)*
 
 ### 2.2 Brand Pillars
 
@@ -101,11 +121,12 @@ These are approved and may not be altered without brand review.
 
 | Line | Use |
 |------|-----|
-| `Play Different. Live Off Grid.` | Primary tagline — site hero, packaging, social bios |
-| `When Comfort Meets Movement` | Secondary brand statement — campaign headers, about sections |
-| `Progress > Perfection` | Philosophy copy — editorial, about, brand story |
-| `EST. MANILA, PH` | Locality anchor — always lowercase `.ph`, appears on all brand templates |
-| `MERCH DROP` | Campaign-type label — use with a specific date, e.g., `10.09.2024 MERCH DROP` |
+| `WHEN COMFORT MEETS MOVEMENT` | **Guide-primary** — logo applications, campaign overlays, about/brand story (Pages 2 & 5) |
+| `Play Different. Live Off Grid.` | Digital storefront hero, packaging extensions, social bios (not on guide pages 1–6) |
+| `Progress > Perfection` | Philosophy copy — editorial, campaign posters (Page 5) |
+| `EST. MANILA, PH` | Locality anchor — appears on application samples; always uppercase |
+| `MERCH DROP` | Campaign-type label — pair with date, e.g. `10.09.2024 MERCH DROP` (Page 5) |
+| `RUN.` | Single-word campaign display type (Page 5) |
 
 ### 3.3 Product Naming Voice
 
@@ -145,44 +166,55 @@ Product names operate under a separate, more playful register:
 
 ### 4.1 Logo Variants (Official Lockups)
 
-The brand carries two official lockup types with three color treatments each — as specified in the Branding Guide (Page 2).
+The guide defines two lockup types in **three ink colors** (Page 2) and **three field treatments** (Page 3).
 
 #### Wordmark — `OFF GRID®`
 
-| Variant | File | Background Use |
-|---------|------|----------------|
-| **Wordmark – Black** | `public/OG logo/OG logo/Complete/Black No BG.png` | White, cream, light-colored backgrounds |
-| **Wordmark – White** | `public/OG logo/OG logo/Complete/White No BG.png` | Dark, photo, colored backgrounds |
-| **Wordmark – Blue** | *(not yet exported to repo — see Gap §11)* | Brand accent uses; Electric Blue `#000AFF` backgrounds |
+**Typography (guide):** Heavy **geometric sans-serif** — wide, blocky caps. The `O` reads as a near-perfect circle; the `G` has a sharp horizontal crossbar. On the cover (Page 1), individual letters may sit on slightly different baselines (authored jitter).
 
-#### Logomark (OG Monogram) — `OG`
+| Variant | Guide reference | Repo file | Background use |
+|---------|-----------------|-----------|----------------|
+| **Black ink** | Page 2 — black on gray preview | `public/OG logo/OG logo/Complete/Black No BG.png` | White, cream, light fields |
+| **White ink** | Page 2 — white on gray preview | `public/OG logo/OG logo/Complete/White No BG.png` | Dark, photo, colored fields |
+| **Blue ink** | Page 2 — `#000AFF` on gray preview | *(not exported to repo — Gap §11.6)* | Accent ink on light neutral fields |
+| **White on Blue field** | Page 3 — full bar lockup | *(not exported — use `#000AFF` field + white wordmark)* | Cover, campaign headers, merch cards |
+| **White on Black field** | Page 3 | Use white wordmark on `#000000` | High-contrast campaign frames |
+| **Black on White field** | Page 3 | Use black wordmark on `#FFFFFF` | Print / light collateral |
 
-The logomark uses a distinctive typographic treatment: lowercase `o` paired with uppercase `G` — creating a visual hierarchy and motion gesture unique to OFF GRID®.
+#### Logomark — `OG`
 
-| Variant | File | Background Use |
-|---------|------|----------------|
-| **Logomark – Black** | `public/OG logo/OG logo/Short/Black No BG.png` | White, cream, light-colored backgrounds |
-| **Logomark – White** | `public/OG logo/OG logo/Short/White No BG.png` | Dark, photo, colored backgrounds |
-| **Logomark – Blue** | *(not yet exported — see Gap §11)* | Brand accent contexts |
+**Both letters are uppercase** in all guide applications. Page 6 is the canonical **dynamic mark**: white **OG** on pure black, rotated ~20–30° counter-clockwise (avatar, favicon, app icon, embroidery at small scale).
 
-#### Dynamic OG Mark
+| Variant | Guide reference | Repo file | Background use |
+|---------|-----------------|-----------|----------------|
+| **Black** | Page 2 | `public/OG logo/OG logo/Short/Black No BG.png` | Light backgrounds |
+| **White** | Page 2 | `public/OG logo/OG logo/Short/White No BG.png` | Dark / photo backgrounds |
+| **Blue** | Page 2 | *(not exported — Gap §11.6)* | Blue accent contexts |
+| **White on Black (tilted)** | Page 6 | *(not exported — Gap §11.17)* | Favicon, social avatar, corner bug |
 
-Page 6 of the Branding Guide shows the monogram in a high-contrast **black field** treatment — this is the **icon/avatar canonical form** for dark-mode environments, app icons, and social avatars. The `o` is intentionally lowercase and slightly smaller than the `G`, creating a kinetic pairing.
+**Placement on photography (Page 2):** Full wordmark centered or lower-third in **white**; **OG** logomark as a **bottom-right corner bug** — never compete with the primary wordmark in the same corner.
+
+#### Dynamic OG Mark (Page 6)
+
+Page 6 is the **icon/avatar canonical form**: uppercase **OG**, white on `#000000`, tilted counter-clockwise. Do **not** substitute a lowercase `o` + uppercase `G` pairing — that treatment is not in the Oct 2024 guide.
 
 ### 4.2 Logo Selection Rules
 
 Use this decision tree when choosing which logo to apply:
 
 ```
-Is the background dark, a photo, or a colored field?
-├── YES → Use White variant
-│         └── Is it a small format (avatar, favicon, embroidery)?
-│               ├── YES → White Logomark (OG Short)
-│               └── NO  → White Wordmark (OFF GRID®) if width > 80px
-└── NO  (background is white/cream/light)
-          └── Is it a small format?
-                ├── YES → Black Logomark (OG Short)
-                └── NO  → Black Wordmark (OFF GRID®)
+Is the background #000AFF Electric Blue (cover / campaign field)?
+├── YES → White wordmark OR white OG corner bug only
+└── NO
+      Is the background dark, a photo, or black?
+      ├── YES → White variant
+      │         └── Small format (avatar, favicon, embroidery)?
+      │               ├── YES → White OG logomark (tilted per Page 6 for icons)
+      │               └── NO  → White wordmark if width > 80px
+      └── NO (white / cream / light gray)
+            └── Small format?
+                  ├── YES → Black OG logomark
+                  └── NO  → Black wordmark
 ```
 
 ### 4.3 Clearance & Minimum Size
@@ -202,6 +234,8 @@ Is the background dark, a photo, or a colored field?
 - Do not place the black wordmark on a dark background (use white variant instead)
 - Do not stretch or distort aspect ratio
 - Do not use the logo inside a container shape (e.g., circle, badge) without brand approval
+- Do not straighten the Page 6 OG mark — rotation is part of the lockup
+- Do not use lowercase `o` in the OG logomark (guide uses uppercase **OG**)
 - Do not recreate the wordmark using a different typeface
 
 ### 4.5 Current Implementation Note
@@ -216,7 +250,7 @@ The live site (`Navbar.tsx`, `Footer.tsx`) loads the canonical white wordmark vi
 | 96×96 PNG | `/favicon/favicon-96x96.png` | Must match SVG |
 | Apple touch icon | `/favicon/apple-touch-icon.png` | 180×180 — use OG monogram on dark field |
 | Site manifest | `/favicon/site.webmanifest` | Review `theme_color` value |
-| Browser `theme-color` | `#0F2F2F` (in `index.html`) | Diverges from guide palette; document as intentional or reconcile |
+| Browser `theme-color` | `#000000` (in `index.html`) | Guide-aligned (Black) ✓ |
 
 ---
 
@@ -232,85 +266,100 @@ These are the authoritative colors from the Branding Guide (Page 3). These gover
 |------|-----|-------------|
 | **White** | `#FFFFFF` | Background, reverse lockups |
 | **Black** | `#000000` | Default text, primary wordmark |
-| **Electric Blue** | `#000AFF` | Primary accent, campaign headers, logo on blue field |
+| **Electric Blue** | `#000AFF` | Guide labels this **Blue** on Page 3. Cover field, campaign headers, blue ink variant |
 
-#### Secondary Colors (Shades / Grayscale Ramp)
+#### Secondary Colors (Shades) — Page 3 grid
 
-| Hex | Description |
-|-----|-------------|
+**Grayscale ramp (light → dark):**
+
+| Hex | Role |
+|-----|------|
 | `#F1F1F1` | Near-white tint |
 | `#E4E4E4` | Light gray |
 | `#A1A1A1` | Mid gray |
 | `#6A6A6A` | Dark gray |
 | `#3A3939` | Near-black |
 
-#### Secondary Colors (Blue Scale)
+**Blue ramp (dark → primary):**
 
-| Hex | Description |
-|-----|-------------|
-| `#0008C3` | Deep blue (mid shade) |
-| `#00068D` | Navy blue (darkest shade) |
-| `#000AFF` | Electric Blue (repeated from primary) |
+| Hex | Role |
+|-----|------|
+| `#00068D` | Navy (darkest) |
+| `#0008C3` | Deep blue |
+| `#000AFF` | Primary Blue (repeated) |
+
+> **Photo accents (not official UI swatches):** Application samples (Pages 2, 4, 5) show **neon yellow/green**, **orange**, and **purple** in athletic photography. These are product/environment colors — **do not** add them to the official palette without brand review.
 
 ### 5.2 Digital / Storefront Token Palette (Implementation)
 
-These are the Tailwind v4 custom tokens used by the live storefront (`src/index.css`). They diverge from the brand guide's electric blue palette and represent an evolved sportswear/lifestyle direction for the digital product.
+As of v1.2 the storefront **strictly follows the brand guide palette** (White / Black / Electric Blue + the gray and blue ramps from Page 3). The legacy green/cream/lime/gold palette has been retired. Token **names** are retained so the retheme stayed surgical, but their **values now map to guide colors** (`src/index.css`).
 
-| Token Name | Class | Hex | Usage in Code |
-|------------|-------|-----|---------------|
-| `offgrid-green` | `bg-offgrid-green` | `#0F2F2F` | Primary actions, navbar scroll state, body text, default buttons |
-| `offgrid-cream` | `bg-offgrid-cream` | `#F5F5F0` | Page background, light cards, button secondary |
-| `offgrid-lime` | `bg-offgrid-lime` | `#C5D330` | Hover states, cart badge, accent text, nav hover, selection highlight |
-| `offgrid-dark` | `bg-offgrid-dark` | `#0A1F1F` | Footer background, deep overlays, scrollbar track |
-| `offgrid-gold` | `bg-offgrid-gold` | `#D4A853` | Events page only; premium/special-state accents |
+| Token Name | Class | Hex | Guide role | Usage in Code |
+|------------|-------|-----|------------|---------------|
+| `offgrid-green` | `bg-offgrid-green` | `#000000` | Black | Primary text, default buttons, navbar/dark surfaces |
+| `offgrid-cream` | `bg-offgrid-cream` | `#F1F1F1` | Gray 50 | Page background, light cards, light text on dark |
+| `offgrid-lime` | `bg-offgrid-lime` | `#000AFF` | Electric Blue | Brand accent — **fills with white text** or accent on light only |
+| `offgrid-dark` | `bg-offgrid-dark` | `#000000` | Black | Footer, deep overlays |
+| `offgrid-gold` | `bg-offgrid-gold` | `#00068D` | Navy | Premium/special accents (events) |
+
+Supplemental guide-ramp tokens are also exposed for borders, muted UI and dividers: `og-gray-50 #F1F1F1`, `og-gray-100 #E4E4E4`, `og-gray-300 #A1A1A1`, `og-gray-600 #6A6A6A`, `og-gray-800 #3A3939`, `og-blue-700 #0008C3`, `og-blue-900 #00068D`.
 
 ### 5.3 Token Usage Rules
 
 | Surface | Correct Token | Notes |
 |---------|--------------|-------|
-| Page background | `offgrid-cream` | Applied globally via `body` in `index.css` |
-| Primary CTAs / Buttons | `offgrid-green` | `Button variant="default"` |
-| Secondary CTAs | `offgrid-cream` on green, or white on dark | `Button variant="secondary"` |
-| Active / hover accent | `offgrid-lime` | Nav links, cart badge, text hover |
-| Footer / deep backgrounds | `offgrid-dark` | |
-| Events / premium highlight | `offgrid-gold` | Do not use on Shop or Home |
-| Body text on cream | `offgrid-green` | Set on `body` via `index.css` |
+| Page background | `offgrid-cream` (#F1F1F1) | Applied globally via `body` in `index.css` |
+| Primary CTAs / Buttons | `offgrid-green` (black) | `Button variant="default"`, white label |
+| Secondary CTAs | `offgrid-cream` on black, or white on dark | `Button variant="secondary"` |
+| Active / hover accent | `offgrid-lime` (blue) on light; **white on dark** | See a11y rule below |
+| Footer / deep backgrounds | `offgrid-dark` (black) | |
+| Events / premium highlight | `offgrid-gold` (navy) | |
+| Body text on background | `offgrid-green` (black) | Set on `body` via `index.css` |
 
-### 5.4 Palette Reconciliation Note
+### 5.4 Electric Blue Accessibility Rule (critical)
 
-The digital palette (`green/cream/lime`) does not directly map to the guide palette (`white/black/blue`). This is **intentional by implementation** — the electric blue brand guide governs campaign print materials, garment graphics, and brand guide applications; the digital storefront uses a distinct sportswear-inspired earth/lime palette. Both are valid within their respective contexts.
+Electric Blue `#000AFF` is dark and saturated. It has **strong** contrast on white/near-white but **fails** on black (≈2.2:1 both ways). Therefore in the UI:
 
-**Rule:** `#000AFF` Electric Blue must not be used as a background in the digital storefront without explicit brand review. It may appear in campaign imagery, brand collateral, and print.
+- **Use blue** as a fill with **white** text, or as text/icons on white/`#F1F1F1` surfaces.
+- **Never** put blue text/icons on black, and **never** put black text on a blue fill.
+- On dark surfaces, the accent/hover/highlight is **white** (matching the guide's white-on-photo treatment), not blue.
 
 ### 5.5 Accessibility
 
 | Combination | Ratio | WCAG AA |
 |-------------|-------|---------|
-| `#0F2F2F` (green) on `#F5F5F0` (cream) | ≈ 14:1 | Pass (AAA) |
-| `#C5D330` (lime) on `#0F2F2F` (green) | ≈ 7.5:1 | Pass (AA) |
-| `#0F2F2F` (green) on `#C5D330` (lime) | ≈ 7.5:1 | Pass (AA) |
-| `#FFFFFF` on `#000AFF` (electric blue) | ≈ 5.9:1 | Pass (AA) |
-| `#000000` on `#000AFF` (electric blue) | ≈ 3.5:1 | Fail — do not use |
-| `#F5F5F0` on `#0A1F1F` (dark) | ≈ 17:1 | Pass (AAA) |
+| `#000000` (black) on `#F1F1F1` (bg) | ≈ 19:1 | Pass (AAA) |
+| `#000AFF` (blue) on `#FFFFFF` / `#F1F1F1` | ≈ 8.6:1 | Pass (AAA) |
+| `#FFFFFF` (white) on `#000AFF` (blue fill) | ≈ 5.9:1 | Pass (AA) |
+| `#FFFFFF` (white) on `#000000` (black) | ≈ 21:1 | Pass (AAA) |
+| `#000AFF` (blue) on `#000000` (black) | ≈ 2.2:1 | **Fail — never use** |
+| `#000000` (black) on `#000AFF` (blue) | ≈ 2.2:1 | **Fail — never use** |
 
 ---
 
 ## 6. Typography System
 
-### 6.1 Brand Guide Typography
+### 6.1 Brand Guide Typography (Pages 1–6)
 
-The branding guide uses a **heavy grotesque / extended sans** for the wordmark (`OFF GRID®`) and all display headlines — characterized by ultra-bold weight, wide tracking, and strong optical contrast. Secondary captions in the guide use a **mono/typewriter** style (small, tracked, uppercase).
+| Role | Guide treatment | Examples on guide |
+|------|-----------------|-------------------|
+| **Wordmark / display** | Heavy **geometric sans-serif**, all caps, ultra-bold | `OFF GRID®`, `RUN.`, `PROGRESS > PERFECTION`, `GRITTY, IN MOTION, PRODUCT-FOCUSED` |
+| **Metadata / technical** | **Monospaced**, small, tracked, all caps | `BRAND GUIDE`, `OCT. 2024`, hex codes on Page 3 |
+| **Application captions** | Clean sans or mono, small, uppercase | `WHEN COMFORT MEETS MOVEMENT`, `EST. MANILA, PH`, `MERCH DROP`, dates |
+
+The guide uses a heavy geometric grotesque for display and a monospace for metadata. The digital implementation (§6.2) now mirrors this with **Archivo** + **Space Mono** (Inter remains for body/UI).
 
 ### 6.2 Digital Typography (Implementation)
 
-Two font families are loaded via Google Fonts in `src/index.css`:
+Three font families are loaded via Google Fonts in `src/index.css`, chosen to match the guide:
 
 | Role | Family | Token | Notes |
 |------|--------|-------|-------|
-| **Display / Headings** | Playfair Display | `font-display` | Variable weight 400–900 including italic. Used for hero `h1`, section headlines, product names, price displays, and mobile nav items. |
-| **Body / UI** | Inter | `font-sans` | Weights 400, 500, 600, 700. Used for nav links, buttons, body copy, product descriptions, labels. |
+| **Display / Headings** | Archivo | `font-display` | Heavy geometric grotesque, weights 400–900 + italic. The closest free match to the `OFF GRID®` wordmark. Used for hero `h1`, section headlines, product names, price displays, mobile nav. |
+| **Body / UI** | Inter | `font-sans` | Weights 400–700. Nav links, buttons, body copy, descriptions, labels. |
+| **Metadata / labels** | Space Mono | `font-mono` | Monospace for eyebrows/micro-labels (`EST. MANILA, PH`, section eyebrows, dates) — mirrors the guide's technical metadata type. |
 
-> **Design note:** Playfair Display is a high-contrast serif, stylistically distinct from the guide's grotesque wordmark. It positions the digital storefront as *premium Filipino sportswear* rather than a pure streetwear brand. This is an acceptable divergence for the digital product but should be documented as intentional.
+> **Alignment note:** Playfair Display (the previous high-contrast serif) has been retired. Archivo restores the guide's heavy-grotesque voice, and Space Mono restores the monospaced metadata treatment seen on guide Pages 1–5. Do **not** introduce a fourth font.
 
 ### 6.3 Type Scale & Patterns
 
@@ -327,8 +376,9 @@ Two font families are loaded via Google Fonts in `src/index.css`:
 
 | Do | Don't |
 |----|-------|
-| Use `font-display` (Playfair) for all headings and hero copy | Mix heading fonts between Playfair and Inter in the same hierarchy |
-| Use `font-sans` (Inter) for all UI controls, labels, and body | Use Playfair for body copy (legibility degrades at small sizes) |
+| Use `font-display` (Archivo) for all headings and hero copy | Mix heading fonts between Archivo and Inter in the same hierarchy |
+| Use `font-sans` (Inter) for all UI controls, labels, and body | Use Archivo for long body copy |
+| Use `font-mono` (Space Mono) for eyebrows, dates, and technical micro-labels | Use blue text on black, or black text on a blue fill (see §5.4) |
 | Apply `tracking-[0.2em] uppercase` only on micro labels | Apply extreme tracking to headlines (breaks display intent) |
 | Keep hero `h1` in all-caps with tight `leading-[0.85]` | Use sentence-case for the hero wordmark |
 
@@ -343,22 +393,22 @@ Two font families are loaded via Google Fonts in `src/index.css`:
 
 All OFF GRID® imagery must satisfy these three criteria simultaneously. Any image that is polished-studio, flat-lay-only, or person-absent fails the brand standard.
 
-### 7.2 Approved Image Characteristics
+### 7.2 Approved Image Characteristics (from Page 4 samples)
 
 | Criterion | Description |
 |-----------|-------------|
-| **Gritty** | High contrast, natural light, imperfect. Grain acceptable. |
-| **In Motion** | Active subjects — runners mid-stride, athletes mid-play, bodies in effort. Motion blur is a feature, not a flaw. |
-| **Product-Focused** | The garment must be identifiable in every shot. Close crops on fabric, silhouette, or print are encouraged. |
-| **People** | Diverse athletes, real bodies, real sweat. Not overly retouched. Filipino representation prioritized. |
-| **Cropping** | Tight crops are preferred — thighs, lower legs, torso, hands. Full-body shots feel editorial, not commercial. |
+| **Gritty** | High contrast, natural light, imperfect environments — tracks, asphalt, urban paths. Grain acceptable. |
+| **In Motion** | Motion blur on limbs; mid-stride runners; dynamic low angles. Blur is intentional. |
+| **Product-Focused** | Technical fabrics, shoes, socks, jacket textures visible. Tight crops on gear — not polished studio flat-lays. |
+| **Cropping** | Prefer legs, feet, torso fragments over posed full-body studio shots. |
+| **Tone** | Cool neutrals (charcoal, slate, asphalt) as base; high-vis **yellow/green** and **orange** appear in sample photos only. |
 
 ### 7.3 Approved Color Treatment
 
-- Natural color grading; avoid heavy filters
-- Slight warm-to-neutral color grade preferred for product clarity
-- Dark/moody overlays acceptable on hero contexts (`bg-offgrid-dark/30 mix-blend-multiply`)
-- Electric Blue (`#000AFF`) can appear as a background field for campaign cards, not as a color grade
+- Natural, high-contrast grading; avoid soft lifestyle filters
+- Dark/moody overlays acceptable on campaign layouts
+- `#000AFF` is a **layout field color** (cover, bars) — not a photo color grade
+- Neon accents in sample photography are **not** licensed UI tokens (see §5.1 note)
 
 ### 7.4 Image Types by Context
 
@@ -370,21 +420,24 @@ All OFF GRID® imagery must satisfy these three criteria simultaneously. Any ima
 | Events page | Dynamic event photography + electric blue or dark overlays |
 | Garment marketing | Detail crop: fabric close-up, collar, print, stitching |
 
-### 7.5 Legal Notice
+### 7.5 Legal Notice — Sample Photos (Non-Negotiable)
 
-> *"DO NOT USE PHOTOS IN IMAGERY — THESE ARE STRICTLY FOR SAMPLE/GUIDELINE PURPOSES ONLY"*  
-> *(Branding Guide, Pages 4 & 5)*
+> **"DO NOT USE PHOTOS IN IMAGERY — THESE ARE STRICTLY FOR SAMPLE/GUIDELINE PURPOSES ONLY"**  
+> *(Branding Guide, Page 4 — repeated at top and bottom of the sample grid)*
 
-All images on the guide pages are placeholder references only. Production imagery must be owned, licensed, or released. The live site currently uses an Unsplash URL (`images.unsplash.com`) in the hero — this requires replacement with owned or licensed assets before launch.
+The people, environments, and third-party marks visible in guide pages 2, 4, and 5 are **style references only**. Production must use **owned, licensed, or released** photography.
+
+**Storefront status (June 2026):** Homepage sections use client assets under `public/images/` (sourced from `og photos/`). Confirm licensing before public launch. Hero uses a **gradient field** (no photo) — aligned with avoiding unlicensed stock.
 
 ### 7.6 Brand Application Patterns (from Guide Page 5)
 
 | Pattern | Description |
 |---------|-------------|
-| **Ticker strip** | Repeating `OFF GRID ® OFF GRID ® OFF GRID ®` on a single horizontal band — used as a border/frame element |
-| **Merch drop card** | Date + `MERCH DROP` label + `og` logomark corner watermark on dark cropped photo |
-| **Campaign poster** | Large display type (`RUN.`, `PROGRESS > PERFECTION`) overlaid on full-bleed athletic photo |
-| **EST. MANILA, PH anchor** | Appears in small type on every brand layout — always present as locality proof |
+| **Ticker strip** | Repeating `OFF GRID ® OFF GRID ® OFF GRID ®` on horizontal black bands — frames portrait crops (Page 5) |
+| **Merch drop card** | Date (e.g. `10.09.2024`) + `MERCH DROP` + **OG** corner watermark on product/texture photo |
+| **Campaign poster** | Single-word display (`RUN.`) or philosophy line (`PROGRESS > PERFECTION`) in bold white type |
+| **Locality + tagline pair** | `WHEN COMFORT MEETS MOVEMENT` + `EST. MANILA, PH` on opposite corners of athletic crops |
+| **Blue cover** | Full `#000AFF` field + centered white wordmark (Page 1) |
 
 ---
 
@@ -407,35 +460,36 @@ All images on the guide pages are placeholder references only. Production imager
 
 | Route | Component | Description |
 |-------|-----------|-------------|
-| `/` | `HomePage` | Hero, Featured Collections, Best Sellers, Brand Story, Event Section, Social Proof, CTA |
+| `/` | `HomePage` | Hero, Featured Collections, Best Sellers (Full Collection), Brand Story, Community & Events, Social Proof, CTA |
 | `/shop` | `ShopPage` | Full catalog, filters (category/price/search), grid/list toggle |
-| `/events` | `EventsPage` | Event marketing — uses `offgrid-gold` accent |
+| `/custom` | `CustomHubPage` | Custom orders hub — team order guide |
+| `/events` | `EventsPage` | Community & events |
 
 ### 8.3 Brand Token Usage Map
 
 | Component | Tokens Used | Notes |
 |-----------|-------------|-------|
-| `index.css` body | `bg-offgrid-cream text-offgrid-green font-sans` | Global base |
-| `Navbar.tsx` | `bg-offgrid-green/95`, `text-offgrid-cream`, `hover:text-offgrid-lime`, `bg-offgrid-lime` (cart badge) | Scroll state transitions transparent → green |
-| `Hero.tsx` | `text-offgrid-cream`, `bg-offgrid-dark/30`, `bg-offgrid-cream/15` (badge) | Hero tagline in `font-display font-black` |
-| `Button.tsx` | `bg-offgrid-green`, `bg-offgrid-cream`, `border-offgrid-green`, `hover:bg-offgrid-dark` | `default`, `secondary`, `outline`, `ghost`, `link` variants |
-| `Footer.tsx` | `bg-offgrid-dark`, `text-offgrid-cream`, `hover:text-offgrid-lime`, `hover:bg-offgrid-cream` | Standard dark footer |
-| `EventsPage.tsx` | `offgrid-gold` | Isolated to events only — premium signal |
-| `ShopPage.tsx` | `bg-offgrid-green`, `text-offgrid-lime`, `bg-offgrid-cream` | Product grid, filters |
-| `ProductModal.tsx` | `bg-offgrid-cream`, `text-offgrid-green`, `bg-offgrid-lime` | PDP modal |
+| `index.css` body | `bg-offgrid-cream` (#F1F1F1) `text-offgrid-green` (black) `font-sans` | Global base; blue selection w/ white text |
+| `Navbar.tsx` | `bg-offgrid-green` (black), `text-offgrid-cream`, `hover:text-white`, blue cart badge w/ white count | Hover is white on the dark bar (§5.4) |
+| `Hero.tsx` | Black field with low-opacity blue glow accent | No photo — see §7.5 |
+| `Button.tsx` | `bg-offgrid-green` (black), `bg-offgrid-cream`, `border-offgrid-green`, `hover:bg-offgrid-dark` | `default`, `secondary`, `outline`, `ghost`, `link` variants |
+| `Footer.tsx` | `bg-offgrid-dark` (black), `text-offgrid-cream`, `hover:text-white` | White hover on dark footer (§5.4) |
+| `EventsPage.tsx` | `offgrid-gold` (navy), blue CTA w/ white text | Dark hero/cards use white accents (§5.4) |
+| `ShopPage.tsx` | `bg-offgrid-green` (black) hero, `text-offgrid-lime` (blue) on light, `bg-offgrid-cream` | Hero italic/eyebrow now white on black |
+| `ProductDetailPage.tsx` | `bg-offgrid-cream`, `text-offgrid-green`, blue price/accents on light | PDP — blue accents on light surfaces only |
 
 ### 8.4 Asset Pipeline Gaps
 
 | Asset | Referenced In | Actual File | Status |
 |-------|-------------|-------------|--------|
-| `LOGO_WORDMARK_WHITE` (`brandAssets.ts`) | `Navbar.tsx`, `Footer.tsx` | `public/OG logo/OG logo/Complete/White No BG.png` | **Wired — primary nav/footer** |
-| `/images/product_polo.png` | `products.ts` | Not found in tracked repo | **Missing** |
-| `/images/product_tee_white.png` | `products.ts` | Not found in tracked repo | **Missing** |
-| `/images/product_tee_graphic.png` | `products.ts` | Not found in tracked repo | **Missing** |
-| `/images/product_shorts.png` | `products.ts` | Not found in tracked repo | **Missing** |
-| `/images/hero_golf_course.png` | `index.html` (og:image) | Not found in tracked repo | **Missing** |
-| `Complete/White No BG.png` | This brand book | Exists at `public/OG logo/...` | Present but unwired |
-| `Short/White No BG.png` | This brand book | Exists at `public/OG logo/...` | Present but unwired |
+| `LOGO_WORDMARK_WHITE` | `Navbar.tsx`, `Footer.tsx` | `public/OG logo/OG logo/Complete/White No BG.png` | **Wired** |
+| `LOGO_WORDMARK_BLACK` | — | `public/OG logo/OG logo/Complete/Black No BG.png` | Present — not auto-swapped on light nav |
+| `LOGO_MARK_WHITE` / `BLACK` | — | `public/OG logo/OG logo/Short/*.png` | Present — unwired |
+| Blue ink wordmark + logomark | Guide Page 2 | — | **Missing export (§11.6)** |
+| Tilted OG on black (Page 6) | Favicon reference | — | **Missing export (§11.17)** |
+| `/images/*` (collections, story, UGC) | `landingContent.ts` | `public/images/` (from `og photos/`) | **Present** — confirm license |
+| Legacy `/images/product_*.png` | `products.ts` | `public/images/` | Present (underscore names) |
+| `/images/hero_golf_course.png` | `index.html` (og:image) | `public/images/hero_golf_course.png` | Present |
 
 ### 8.5 Logo Implementation
 
@@ -670,28 +724,27 @@ Prioritized by severity and customer/business impact.
 
 | # | Gap | Source Evidence | Fix |
 |---|-----|----------------|-----|
-| 11.1 | ~~`/logo.png` missing~~ | Resolved: `LOGO_WORDMARK_WHITE` → `public/OG logo/OG logo/Complete/White No BG.png` | Optional: add black wordmark swap for light navbar states |
-| 11.2 | Product images (`/images/*.png`) missing from repo | `products.ts:28,48,68,87` | Add product photography OR add placeholder images; unblock storefront rendering |
-| 11.3 | `og:image` meta points to `/images/hero_golf_course.png` which does not exist | `index.html:14` | Add image or update path |
-| 11.4 | Hero uses unlicensed Unsplash URL for background | `Hero.tsx:78` | Replace with owned/licensed asset before public launch |
+| 11.1 | ~~Nav/footer logo missing~~ | `brandAssets.ts` → white wordmark | Optional: black wordmark on light surfaces |
+| 11.2 | ~~Core `/images/*` missing~~ | `public/images/` populated Jun 2026 | Confirm client license for `og photos/` derivatives |
+| 11.3 | ~~`og:image` hero missing~~ | `public/images/hero_golf_course.png` exists | Verify image is on-brand before launch |
+| 11.4 | ~~Hero Unsplash URL~~ | `Hero.tsx` uses gradient field | Resolved — no third-party hero photo |
 
 ### High (Address in Sprint 1)
 
 | # | Gap | Fix |
 |---|-----|-----|
-| 11.5 | `sampledata.md` products are not in `products.ts` — catalog is entirely placeholder | Migrate sample data through canonical schema; populate `products.ts` with real products |
-| 11.6 | Blue logo variants (`#000AFF`) not exported as PNG/SVG assets | Export blue wordmark and logomark from source files; add to `public/OG logo/` |
-| 11.7 | `stock` field on `Product` is unused — silent inventory fiction | Either remove field or wire it to a low-stock UI indicator in `ProductModal.tsx` |
-| 11.8 | `package.json` `"name": "react-example"` | Update to `"offgrid-lifestyle"` |
+| 11.5 | `sampledata.md` products not fully in `products.ts` | Migrate through canonical schema |
+| 11.6 | Blue ink logo variants (Page 2) not in `public/OG logo/` | Export `#000AFF` wordmark + OG PNG/SVG |
+| 11.7 | `stock` field unused | Wire low-stock UI or remove |
+| 11.8 | `package.json` `"name": "react-example"` | Rename to `"offgrid-lifestyle"` |
+| 11.17 | Page 6 tilted OG mark not exported | Export for favicon / apple-touch-icon alignment |
 
 ### Medium (Address in Sprint 2)
 
 | # | Gap | Fix |
 |---|-----|-----|
-| 11.9 | Favicon `theme-color` is `#0F2F2F` — diverges from Electric Blue guide palette | Document as intentional in this brand book OR align to blue for brand consistency |
-| 11.10 | `getProductById()` exported but unused | Wire to `ProductModal` or remove the export until needed |
-| 11.11 | Digital font (Playfair Display) diverges from guide grotesque wordmark | Acceptable divergence — but must be documented; do not allow a third font to be introduced |
-| 11.12 | `offgrid-gold` barely used — defined as a token but scope is undefined | Restrict explicitly to Events page in a comment in `index.css` |
+| 11.10 | `getProductById()` exported but unused | Wire to `ProductDetailPage` or remove the export until needed |
+| 11.12 | `offgrid-gold` (now navy `#00068D`) used only on Events | Keep scoped; consider folding into `og-blue-900` |
 
 ### Low (Governance)
 
@@ -715,7 +768,7 @@ Prioritized by severity and customer/business impact.
 | ~~Wire main logo to canonical white wordmark~~ | Done via `src/lib/brandAssets.ts` | — |
 | Add all `/images/*.png` product photos or generate placeholder images | Design/Dev | Critical |
 | Add `/images/hero_golf_course.png` for OG meta image | Design | Critical |
-| Replace Unsplash hero URL with owned/licensed asset | Design | Critical |
+| Replace Unsplash hero URL with owned/licensed asset | Design | ~~Critical~~ Resolved (gradient hero) |
 | Update `package.json` name to `"offgrid-lifestyle"` | Dev | High |
 | Export blue logo variants and add to `public/OG logo/OG logo/` | Design | High |
 | Add `createdAt`, `updatedAt`, `slug`, `status` fields to `Product` interface | Dev | High |
@@ -740,6 +793,7 @@ Prioritized by severity and customer/business impact.
 
 | Task | Owner | Priority |
 |------|-------|----------|
+| ~~Retheme storefront to guide palette (White/Black/Blue) + Archivo/Space Mono fonts~~ | Done in `index.css` + components (v1.2) | — |
 | Update `Navbar.tsx` logo to use canonical path with conditional dark/light variant | Dev | High |
 | Wire `stock` field to low-stock indicator in `ProductModal` or remove it | Dev | Medium |
 | Add `slug`-based routing for individual product pages (PDP) | Dev | Medium |
@@ -775,7 +829,8 @@ Prioritized by severity and customer/business impact.
 | `Offgrid - Branding Guide/Offgrid - Branding Guide-3.png` | Color system — primary + secondary palette with hex |
 | `Offgrid - Branding Guide/Offgrid - Branding Guide-4.png` | Imagery directive — GRITTY, IN MOTION, PRODUCT-FOCUSED |
 | `Offgrid - Branding Guide/Offgrid - Branding Guide-5.png` | Brand application samples — ticker, campaign, merch drop |
-| `Offgrid - Branding Guide/Offgrid - Branding Guide-6.png` | OG monogram dark-field treatment — avatar/icon reference |
+| `Offgrid - Branding Guide/Offgrid - Branding Guide-6.png` | Dynamic OG mark — white uppercase **OG** on black, ~20–30° CCW rotation |
+| `Offgrid - Branding Guide/OG Lifestyle Company Profile.pdf` | Extended company profile (product lines, portfolio — not a substitute for the 6-page guide) |
 
 ### Source Documents
 
@@ -794,27 +849,30 @@ Prioritized by severity and customer/business impact.
 
 ```
 BRAND NAME     OFF GRID® (registered mark)
-TAGLINE        Play Different. Live Off Grid.
-PHILOSOPHY     Progress > Perfection
+TAGLINE (guide) WHEN COMFORT MEETS MOVEMENT
+TAGLINE (web)  Play Different. Live Off Grid.
+PHILOSOPHY     PROGRESS > PERFECTION
 ORIGIN         EST. MANILA, PH
 DOMAIN         offgridlifestyle.ph
 
-COLORS (Guide) White #FFFFFF · Black #000000 · Electric Blue #000AFF
-COLORS (Web)   Green #0F2F2F · Cream #F5F5F0 · Lime #C5D330 · Dark #0A1F1F · Gold #D4A853
+COLORS (Guide) White #FFFFFF · Black #000000 · Blue #000AFF
+               Grays #F1F1F1 → #3A3939 · Blues #00068D #0008C3
+COLORS (Web)   bg #F1F1F1 · text/buttons Black #000000 · accent Blue #000AFF
+               (token names offgrid-green/cream/lime now map to guide colors)
+A11Y RULE      Blue = fill w/ WHITE text or accent on light; never blue-on-black
 
-FONTS (Web)    Headings: Playfair Display · Body/UI: Inter
-LOGO FILES     Complete/White No BG.png (dark bg) · Complete/Black No BG.png (light bg)
-               Short/White No BG.png (icon dark) · Short/Black No BG.png (icon light)
+FONTS (Guide)  Heavy geometric sans (display) · Monospace (metadata)
+FONTS (Web)    Archivo (display) · Inter (UI) · Space Mono (labels) — see §6.2
+
+LOGO FILES     Complete/White + Black · Short/White + Black (transparent PNG)
+               Missing: blue ink variants, Page 6 tilted OG export
 
 IMAGERY        Gritty · In Motion · Product-Focused
-VOICE          Direct · Confident · Playful · Grounded
+               Sample photos in guide are NOT licensed for reuse
 
-PRODUCT RANGE  Pickleball · Running · Golf · Solar · Primal · Vibe · Custom/Team
-CURRENCY       PHP (Philippine Peso)
-PRICE RANGE    ₱650 – ₱1,200
-SIZE RANGE     2XS – 5XL (product-dependent)
+GUIDE PAGES    Offgrid - Branding Guide-1.png … -6.png (Oct 2024)
 ```
 
 ---
 
-*Brand Book v1.0 · OFF GRID® · offgridlifestyle.ph · Authored May 2026*
+*Brand Book v1.1 · OFF GRID® · offgridlifestyle.ph · Audited against `Offgrid - Branding Guide/` June 2026*

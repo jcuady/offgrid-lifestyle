@@ -49,7 +49,7 @@ export function CustomOrderPage() {
         <div className={cn(siteContainer, "relative z-10")}>
           <Link
             to="/custom"
-            className="mb-6 inline-flex items-center text-xs font-semibold uppercase tracking-[0.12em] text-offgrid-cream/70 hover:text-offgrid-lime"
+            className="mb-6 inline-flex items-center text-xs font-semibold uppercase tracking-[0.12em] text-offgrid-cream/70 hover:text-white"
           >
             <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
             {hero.backLink}

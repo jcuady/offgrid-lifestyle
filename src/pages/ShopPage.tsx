@@ -101,12 +101,12 @@ export function ShopPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <span className="inline-block text-[10px] font-semibold tracking-[0.2em] uppercase text-offgrid-lime mb-4">
+            <span className="inline-block font-mono text-[10px] font-semibold tracking-[0.2em] uppercase text-offgrid-cream/80 mb-4">
               Shop All
             </span>
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-display font-black leading-[0.9] mb-4">
               The Full<br />
-              <span className="italic font-normal text-offgrid-lime">Collection</span>
+              <span className="italic font-normal text-white">Collection</span>
             </h1>
             <p className="text-offgrid-cream/70 text-sm md:text-base max-w-lg">
               Premium Filipino sportswear for those who play different.

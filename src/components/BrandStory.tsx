@@ -30,7 +30,7 @@ export function BrandStory() {
               />
             </div>
             {/* Floating badge */}
-            <div className="absolute -bottom-4 right-2 max-w-[min(180px,45vw)] rounded-xl bg-offgrid-lime p-4 text-offgrid-dark shadow-xl sm:-bottom-6 sm:-right-6 sm:p-5 md:bottom-8 md:-right-10">
+            <div className="absolute -bottom-4 right-2 max-w-[min(180px,45vw)] rounded-xl bg-offgrid-lime p-4 text-white shadow-xl sm:-bottom-6 sm:-right-6 sm:p-5 md:bottom-8 md:-right-10">
               <p className="font-display font-black text-3xl mb-1">{story.badgeEst}</p>
               <p className="text-[10px] font-semibold tracking-[0.2em] uppercase">{story.badgeLocality}</p>
             </div>
@@ -47,7 +47,7 @@ export function BrandStory() {
             <span className={sectionEyebrowOnDark}>{story.eyebrow}</span>
             <h2 className={cn(sectionTitleOnDark, "mb-8 leading-tight")}>
               {story.titleLine1} <br />
-              <span className="text-offgrid-lime italic font-normal">{story.titleLine2Italic}</span>
+              <span className="text-white italic font-normal">{story.titleLine2Italic}</span>
               {story.titleLine3 ? (
                 <>
                   <br />

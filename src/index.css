@@ -1,15 +1,38 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400..900;1,400..900&family=Inter:wght@400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
 @import "tailwindcss";
 
+/*
+ * OFF GRID® brand tokens — strictly per Branding Guide (Oct 2024), pages 2–5.
+ * Palette: White #FFFFFF · Black #000000 · Electric Blue #000AFF + gray/blue ramps.
+ * Type: Archivo (heavy geometric grotesque, display) · Inter (UI/body) · Space Mono (metadata/labels).
+ * Token names are kept for surgical retheme; values now map to guide colors.
+ * a11y rule: Electric Blue is a FILL with white text or an accent on light only —
+ *            never blue-on-black or black-on-blue (both ≈2:1, fail WCAG).
+ */
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Playfair Display", Georgia, "Times New Roman", serif;
+  --font-display: "Archivo", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Space Mono", ui-monospace, "Cascadia Code", monospace;
 
-  --color-offgrid-green: #0F2F2F;
-  --color-offgrid-cream: #F5F5F0;
-  --color-offgrid-lime: #C5D330;
-  --color-offgrid-dark: #0A1F1F;
-  --color-offgrid-gold: #D4A853;
+  /* offgrid-green → Black: primary text, primary buttons, nav/dark surfaces */
+  --color-offgrid-green: #000000;
+  /* offgrid-cream → near-white: page background, light cards, light text on dark */
+  --color-offgrid-cream: #F1F1F1;
+  /* offgrid-lime → Electric Blue: brand accent (fills w/ white text, accents on light) */
+  --color-offgrid-lime: #000AFF;
+  /* offgrid-dark → Black: footer, deep overlays */
+  --color-offgrid-dark: #000000;
+  /* offgrid-gold → deep brand navy: premium/special accents (events) */
+  --color-offgrid-gold: #00068D;
+
+  /* Guide secondary ramp — available for borders, muted UI, dividers */
+  --color-og-gray-50: #F1F1F1;
+  --color-og-gray-100: #E4E4E4;
+  --color-og-gray-300: #A1A1A1;
+  --color-og-gray-600: #6A6A6A;
+  --color-og-gray-800: #3A3939;
+  --color-og-blue-700: #0008C3;
+  --color-og-blue-900: #00068D;
 }
 
 @layer base {
@@ -19,24 +42,24 @@
   }
 
   body {
-    @apply min-w-0 overflow-x-hidden bg-offgrid-cream text-offgrid-green font-sans antialiased selection:bg-offgrid-lime selection:text-offgrid-green;
+    @apply min-w-0 overflow-x-hidden bg-offgrid-cream text-offgrid-green font-sans antialiased selection:bg-offgrid-lime selection:text-white;
   }
 
-  /* Custom scrollbar */
+  /* Custom scrollbar — brand black track, electric blue thumb on hover */
   ::-webkit-scrollbar {
     width: 8px;
   }
 
   ::-webkit-scrollbar-track {
-    background: #0A1F1F;
+    background: #000000;
   }
 
   ::-webkit-scrollbar-thumb {
-    background: #1a4a4a;
+    background: #3A3939;
     border-radius: 4px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: #C5D330;
+    background: #000AFF;
   }
 }

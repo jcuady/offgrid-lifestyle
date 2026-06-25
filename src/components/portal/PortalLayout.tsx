@@ -76,7 +76,7 @@ export function PortalLayout({ role }: PortalLayoutProps) {
                   cn(
                     "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
                     isActive
-                      ? "bg-offgrid-lime text-offgrid-dark"
+                      ? "bg-offgrid-lime text-white"
                       : "text-offgrid-cream/70 hover:bg-offgrid-cream/10 hover:text-offgrid-cream",
                   )
                 }
@@ -96,7 +96,7 @@ export function PortalLayout({ role }: PortalLayoutProps) {
                   cn(
                     "flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] transition-colors",
                     isActive
-                      ? "bg-offgrid-lime text-offgrid-dark"
+                      ? "bg-offgrid-lime text-white"
                       : "text-offgrid-cream/70 border border-offgrid-cream/20",
                   )
                 }

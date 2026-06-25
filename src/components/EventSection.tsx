@@ -36,7 +36,7 @@ export function EventSection() {
 
             <h2 className={cn(sectionTitleOnDark, "mb-6")}>
               {event.titleLine1} <br />
-              <span className="italic font-normal text-offgrid-lime">{event.titleLine2Italic}</span>
+              <span className="italic font-normal text-white">{event.titleLine2Italic}</span>
             </h2>
 
             <p className="max-w-xl whitespace-pre-line text-base leading-relaxed text-offgrid-cream/75 md:text-lg">
@@ -78,7 +78,7 @@ export function EventSection() {
 
             {/* Floating community context — reuses CMS location + category. */}
             <div className="absolute -bottom-4 left-2 flex max-w-[min(320px,80vw)] flex-wrap gap-2 sm:-bottom-6 sm:left-6">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-offgrid-lime px-3.5 py-2 text-xs font-bold text-offgrid-dark shadow-xl">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-offgrid-lime px-3.5 py-2 text-xs font-bold text-white shadow-xl">
                 <MapPin className="h-3.5 w-3.5" />
                 {event.location}
               </span>

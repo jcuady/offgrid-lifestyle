@@ -35,7 +35,7 @@ export function OptionCard({ label, description, selected, onClick, icon: Icon }
       </div>
       {selected && (
         <div className="w-6 h-6 rounded-full bg-offgrid-lime flex items-center justify-center flex-shrink-0">
-          <Check className="w-4 h-4 text-offgrid-dark" strokeWidth={3} />
+          <Check className="w-4 h-4 text-white" strokeWidth={3} />
         </div>
       )}
     </button>

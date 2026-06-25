@@ -20,18 +20,18 @@ export function TestimonialsPage() {
         <div className="container mx-auto px-6 md:px-12">
           <Link
             to="/"
-            className="mb-6 inline-flex items-center text-xs font-semibold uppercase tracking-[0.12em] text-offgrid-cream/70 hover:text-offgrid-lime"
+            className="mb-6 inline-flex items-center text-xs font-semibold uppercase tracking-[0.12em] text-offgrid-cream/70 hover:text-white"
           >
             <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
             Back to home
           </Link>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-lime">
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-cream/80">
             Testimonials
           </p>
           <h1 className="mt-3 text-5xl md:text-7xl font-display font-black leading-[0.9] text-offgrid-cream">
             Crafted with
             <br />
-            <span className="italic font-normal text-offgrid-lime">Intention.</span>
+            <span className="italic font-normal text-white">Intention.</span>
           </h1>
           <p className="mt-5 max-w-2xl text-sm md:text-base text-offgrid-cream/70">
             Off Grid Lifestyle is built on consistency and care. From custom pieces to everyday essentials,

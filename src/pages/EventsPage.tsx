@@ -81,13 +81,13 @@ export function EventsPage() {
             transition={{ duration: 0.6 }}
             className="max-w-3xl"
           >
-            <span className="inline-block text-[10px] font-semibold tracking-[0.2em] uppercase text-offgrid-lime mb-4">
+            <span className="inline-block font-mono text-[10px] font-semibold tracking-[0.2em] uppercase text-offgrid-cream mb-4">
               Community & Events
             </span>
             <h1 className="mb-3 text-5xl font-display font-black leading-[0.85] md:text-7xl lg:text-8xl">
               More Than a Brand.
             </h1>
-            <p className="mb-6 text-2xl font-display italic text-offgrid-lime md:text-3xl">
+            <p className="mb-6 text-2xl font-display italic text-white md:text-3xl">
               A shared space for connection.
             </p>
             <div className="max-w-2xl space-y-4 text-base leading-relaxed text-offgrid-cream/70 md:text-lg">
@@ -141,7 +141,7 @@ export function EventsPage() {
                   
                   {/* Badge */}
                   <div className="absolute top-6 left-6 flex items-center gap-2">
-                    <span className="px-4 py-2 bg-offgrid-lime text-offgrid-dark text-xs font-bold tracking-[0.15em] uppercase rounded-full">
+                    <span className="px-4 py-2 bg-offgrid-lime text-white text-xs font-bold tracking-[0.15em] uppercase rounded-full">
                       Featured
                     </span>
                     <span className="px-4 py-2 bg-offgrid-cream/90 backdrop-blur-sm text-offgrid-green text-xs font-bold tracking-[0.15em] uppercase rounded-full">
@@ -164,20 +164,20 @@ export function EventsPage() {
                   <h3 className="text-3xl md:text-4xl lg:text-5xl font-display font-black text-offgrid-cream leading-tight mb-3">
                     {featuredEvent.title}
                   </h3>
-                  <p className="text-lg text-offgrid-lime italic mb-6">
+                  <p className="text-lg text-white italic mb-6">
                     {featuredEvent.subtitle}
                   </p>
 
                   <div className="space-y-4 mb-8">
                     <div className="flex items-start gap-3 text-offgrid-cream/80">
-                      <Calendar className="w-5 h-5 text-offgrid-lime flex-shrink-0 mt-0.5" />
+                      <Calendar className="w-5 h-5 text-offgrid-cream flex-shrink-0 mt-0.5" />
                       <div>
                         <p className="font-semibold text-offgrid-cream">{featuredEvent.date}</p>
                         <p className="text-sm">{featuredEvent.time}</p>
                       </div>
                     </div>
                     <div className="flex items-start gap-3 text-offgrid-cream/80">
-                      <MapPin className="w-5 h-5 text-offgrid-lime flex-shrink-0 mt-0.5" />
+                      <MapPin className="w-5 h-5 text-offgrid-cream flex-shrink-0 mt-0.5" />
                       <div>
                         <p className="font-semibold text-offgrid-cream">{featuredEvent.location}</p>
                         <p className="text-sm">{featuredEvent.address}</p>
@@ -318,11 +318,11 @@ export function EventsPage() {
             viewport={{ once: true }}
             className="mb-12"
           >
-            <span className="text-xs font-semibold tracking-[0.2em] uppercase text-offgrid-lime mb-3 block">
+            <span className="font-mono text-xs font-semibold tracking-[0.2em] uppercase text-offgrid-cream mb-3 block">
               Highlights
             </span>
             <h2 className="text-4xl md:text-5xl font-display font-black">
-              Past <span className="italic font-normal text-offgrid-lime">Events</span>
+              Past <span className="italic font-normal text-white">Events</span>
             </h2>
           </motion.div>
 
@@ -353,7 +353,7 @@ export function EventsPage() {
                       <span className="text-[10px] font-semibold tracking-[0.2em] uppercase text-offgrid-cream/50">
                         {event.category}
                       </span>
-                      <span className="ml-auto text-[10px] font-semibold tracking-[0.2em] uppercase text-offgrid-lime">
+                      <span className="ml-auto font-mono text-[10px] font-semibold tracking-[0.2em] uppercase text-offgrid-cream/80">
                         {event.date}
                       </span>
                     </div>
@@ -366,7 +366,7 @@ export function EventsPage() {
                     <p className="text-xs text-offgrid-cream/50 line-clamp-2 mb-4">
                       {event.description}
                     </p>
-                    <button className="inline-flex items-center text-xs font-bold text-offgrid-lime hover:text-offgrid-cream transition-colors group/btn">
+                    <button className="inline-flex items-center text-xs font-bold text-white hover:text-offgrid-cream/70 transition-colors group/btn">
                       View Recap
                       <ExternalLink className="ml-1.5 w-3.5 h-3.5 group-hover/btn:translate-x-1 transition-transform" />
                     </button>
@@ -379,7 +379,7 @@ export function EventsPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 md:py-28 bg-offgrid-lime text-offgrid-dark">
+      <section className="py-20 md:py-28 bg-offgrid-lime text-white">
         <div className="container mx-auto px-6 md:px-12 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -391,13 +391,13 @@ export function EventsPage() {
             <h2 className="text-4xl md:text-6xl font-display font-black mb-6">
               Want to Host an<br />OffGrid Event?
             </h2>
-            <p className="text-base md:text-lg text-offgrid-dark/70 mb-10 max-w-xl mx-auto">
+            <p className="text-base md:text-lg text-white/80 mb-10 max-w-xl mx-auto">
               Partner with us to bring OffGrid to your city. We provide the gear, you bring the community.
             </p>
             <Button
               variant="outline"
               size="lg"
-              className="border-offgrid-dark text-offgrid-dark hover:bg-offgrid-dark hover:text-offgrid-cream bg-transparent"
+              className="border-white text-white hover:bg-white hover:text-offgrid-lime bg-transparent"
               onClick={() => navigate("/")}
             >
               Get in Touch
@@ -631,7 +631,7 @@ export function EventsPage() {
                     transition={{ type: "spring", delay: 0.2, stiffness: 200 }}
                     className="w-20 h-20 mx-auto mb-6 rounded-full bg-offgrid-lime flex items-center justify-center"
                   >
-                    <Heart className="w-10 h-10 text-offgrid-dark" />
+                    <Heart className="w-10 h-10 text-white" />
                   </motion.div>
                   <h3 className="text-2xl font-display font-black text-offgrid-green mb-3">
                     You're In!

@@ -85,7 +85,7 @@ const heroChipBase =
 /** Status chips on account green hero band (cream/lime on dark). */
 export function orderStatusClassOnHero(status: OrderStatus): string {
   if (status === "delivered" || status === "confirmed") {
-    return `${heroChipBase} border-offgrid-lime/40 bg-offgrid-lime/20 text-offgrid-lime`;
+    return `${heroChipBase} border-offgrid-lime/50 bg-offgrid-lime/30 text-white`;
   }
   if (status === "cancelled") {
     return `${heroChipBase} border-red-300/40 bg-red-950/40 text-red-100`;
@@ -95,13 +95,13 @@ export function orderStatusClassOnHero(status: OrderStatus): string {
 
 export function paymentStatusClassOnHero(status: PaymentStatus): string {
   if (status === "fully_paid" || status === "deposit_paid") {
-    return `${heroChipBase} border-offgrid-lime/40 bg-offgrid-lime/20 text-offgrid-lime`;
+    return `${heroChipBase} border-offgrid-lime/50 bg-offgrid-lime/30 text-white`;
   }
   return `${heroChipBase} border-offgrid-cream/25 bg-offgrid-cream/10 text-offgrid-cream/90`;
 }
 
 export const quoteBadgeClassOnHero =
-  `${heroChipBase} border-offgrid-lime/40 bg-offgrid-lime/20 text-offgrid-lime`;
+  `${heroChipBase} border-offgrid-lime/50 bg-offgrid-lime/30 text-white`;
 
 export const quotePendingClassOnHero =
   `${heroChipBase} border-offgrid-cream/20 bg-offgrid-cream/10 text-offgrid-cream/80`;

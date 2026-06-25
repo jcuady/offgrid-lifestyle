@@ -131,12 +131,12 @@ export function CustomHubPage() {
     <>
       <section className="bg-offgrid-green pt-28 pb-16 sm:pt-36 sm:pb-20">
         <div className={siteContainer}>
-          <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-lime">
+          <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-cream/80">
             {hub.heroEyebrow}
           </span>
           <h1 className="mt-4 text-5xl md:text-7xl font-display font-black text-offgrid-cream leading-[0.9]">
             {hub.heroTitleLine1} <br />
-            <span className="italic font-normal text-offgrid-lime">{hub.heroTitleLine2Italic}</span>
+            <span className="italic font-normal text-white">{hub.heroTitleLine2Italic}</span>
           </h1>
           <p className="mt-5 max-w-2xl whitespace-pre-line text-sm leading-relaxed text-offgrid-cream/70 md:text-base">
             {hub.heroDescription}

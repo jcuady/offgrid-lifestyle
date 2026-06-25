@@ -39,19 +39,19 @@ export function Footer() {
           <div>
             <h4 className="font-bold text-sm mb-5 tracking-wide">Shop</h4>
             <ul className="space-y-3 text-sm text-offgrid-cream/50">
-              <li><Link to="/#collections" className="hover:text-offgrid-lime transition-colors">Collections</Link></li>
-              <li><Link to="/#shop" className="hover:text-offgrid-lime transition-colors">Best Sellers</Link></li>
-              <li><Link to="/custom" className="hover:text-offgrid-lime transition-colors">Custom Order</Link></li>
-              <li><Link to="/events" className="hover:text-offgrid-lime transition-colors">Events</Link></li>
+              <li><Link to="/#collections" className="hover:text-white transition-colors">Collections</Link></li>
+              <li><Link to="/#shop" className="hover:text-white transition-colors">Best Sellers</Link></li>
+              <li><Link to="/custom" className="hover:text-white transition-colors">Custom Order</Link></li>
+              <li><Link to="/events" className="hover:text-white transition-colors">Events</Link></li>
             </ul>
           </div>
 
           <div>
             <h4 className="font-bold text-sm mb-5 tracking-wide">Support</h4>
             <ul className="space-y-3 text-sm text-offgrid-cream/50">
-              <li><Link to="/#about" className="hover:text-offgrid-lime transition-colors">About</Link></li>
-              <li><a href="#" className="hover:text-offgrid-lime transition-colors">Contact</a></li>
-              <li><a href="#" className="hover:text-offgrid-lime transition-colors">Sizing Guide</a></li>
+              <li><Link to="/#about" className="hover:text-white transition-colors">About</Link></li>
+              <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
+              <li><a href="#" className="hover:text-white transition-colors">Sizing Guide</a></li>
             </ul>
           </div>
 

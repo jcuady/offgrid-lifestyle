@@ -104,7 +104,7 @@ export function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
           >
-            <span className="inline-block py-1.5 px-4 rounded-full bg-offgrid-cream/15 backdrop-blur-md border border-offgrid-cream/20 text-offgrid-cream text-[10px] font-semibold tracking-[0.2em] uppercase mb-8 shadow-lg">
+            <span className="inline-block py-1.5 px-4 rounded-full bg-offgrid-cream/15 backdrop-blur-md border border-offgrid-cream/20 text-offgrid-cream font-mono text-[10px] font-semibold tracking-[0.2em] uppercase mb-8 shadow-lg">
               {hero.badge}
             </span>
           </motion.div>
@@ -133,7 +133,7 @@ export function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.45 }}
-            className="text-[10px] md:text-xs text-offgrid-cream/70 font-semibold tracking-[0.2em] uppercase mb-10 max-w-md drop-shadow-lg"
+            className="text-[10px] md:text-xs text-offgrid-cream/70 font-mono font-semibold tracking-[0.2em] uppercase mb-10 max-w-md drop-shadow-lg"
           >
             {hero.locality}
           </motion.p>
@@ -155,19 +155,18 @@ export function Hero() {
         </motion.div>
       </div>
 
-      {/* Scroll Indicator */}
+      {/* Scroll Indicator — minimal animated line, brand-clean */}
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1, duration: 1 }}
-        className="absolute bottom-28 right-6 sm:right-12 hidden md:flex flex-col items-center gap-2 z-10 pointer-events-none"
+        className="absolute bottom-32 right-6 z-10 hidden md:block sm:right-12 pointer-events-none"
       >
-        <span className="text-offgrid-cream/60 text-xs font-medium tracking-widest uppercase rotate-90 origin-right translate-x-3 mb-8 drop-shadow-md">Scroll</span>
-        <div className="w-[1px] h-12 bg-offgrid-cream/30 overflow-hidden backdrop-blur-sm">
+        <div className="h-16 w-px overflow-hidden bg-offgrid-cream/20">
           <motion.div 
-            animate={{ y: [0, 48] }}
-            transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
-            className="w-full h-1/2 bg-offgrid-cream"
+            animate={{ y: [-32, 64] }}
+            transition={{ repeat: Infinity, duration: 1.6, ease: "easeInOut" }}
+            className="h-1/2 w-full bg-offgrid-cream"
           />
         </div>
       </motion.div>
@@ -179,17 +178,17 @@ export function Hero() {
             <p className="text-lg font-display font-bold text-offgrid-cream tracking-tight sm:text-2xl">
               {itemsSold.toLocaleString("en-PH")}+
             </p>
-            <p className="text-[10px] font-semibold tracking-[0.2em] text-offgrid-cream/50 uppercase mt-0.5">{hero.statItemsSoldLabel}</p>
+            <p className="font-mono text-[10px] font-semibold tracking-[0.2em] text-offgrid-cream/50 uppercase mt-0.5">{hero.statItemsSoldLabel}</p>
           </div>
           <div className="hidden h-10 w-px bg-offgrid-cream/15 sm:block" />
           <div className="min-w-0 shrink-0 text-right sm:text-left">
             <p className="text-lg font-display font-bold text-offgrid-cream tracking-tight sm:text-2xl">{collections} Sports</p>
-            <p className="text-[10px] font-semibold tracking-[0.2em] text-offgrid-cream/50 uppercase mt-0.5">{hero.statCollectionsLabel}</p>
+            <p className="font-mono text-[10px] font-semibold tracking-[0.2em] text-offgrid-cream/50 uppercase mt-0.5">{hero.statCollectionsLabel}</p>
           </div>
           <div className="hidden h-10 w-px bg-offgrid-cream/15 md:block" />
           <div className="hidden min-w-0 md:block">
-            <p className="text-sm font-semibold tracking-[0.2em] text-offgrid-cream uppercase">{hero.statLocalityLine}</p>
-            <p className="text-[10px] font-semibold tracking-[0.2em] text-offgrid-cream/50 uppercase mt-0.5">{hero.statLocalitySub}</p>
+            <p className="font-mono text-sm font-semibold tracking-[0.2em] text-offgrid-cream uppercase">{hero.statLocalityLine}</p>
+            <p className="font-mono text-[10px] font-semibold tracking-[0.2em] text-offgrid-cream/50 uppercase mt-0.5">{hero.statLocalitySub}</p>
           </div>
         </div>
       </div>

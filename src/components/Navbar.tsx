@@ -205,7 +205,7 @@ export function Navbar() {
               <button
                 onClick={() => handleNavigate("/custom")}
                 className={cn(
-                  "text-sm font-medium transition-colors hover:text-offgrid-lime cursor-pointer",
+                  "text-sm font-medium transition-colors hover:text-white cursor-pointer",
                   navSolid ? "text-offgrid-cream/80" : "text-offgrid-cream/90",
                 )}
               >
@@ -246,7 +246,7 @@ export function Navbar() {
                 key={link.name}
                 onClick={link.action}
                 className={cn(
-                  "text-sm font-medium transition-colors hover:text-offgrid-lime cursor-pointer",
+                  "text-sm font-medium transition-colors hover:text-white cursor-pointer",
                   navSolid ? "text-offgrid-cream/80" : "text-offgrid-cream/90",
                 )}
               >
@@ -273,7 +273,7 @@ export function Navbar() {
                 }}
                 className={cn(
                   "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] transition-colors",
-                  "border-offgrid-cream/35 text-offgrid-cream hover:border-offgrid-lime hover:text-offgrid-lime",
+                  "border-offgrid-cream/35 text-offgrid-cream hover:border-white hover:text-white",
                 )}
                 title={currentUser ? "Account menu" : "Sign in"}
               >
@@ -311,7 +311,7 @@ export function Navbar() {
                   setIsAccountMenuOpen(false);
                   setIsCartDropdownOpen((prev) => !prev);
                 }}
-                className={cn("p-2 transition-colors hover:text-offgrid-lime relative", "text-offgrid-cream")}
+                className={cn("p-2 transition-colors hover:text-white relative", "text-offgrid-cream")}
               >
                 <ShoppingBag className="w-5 h-5" />
                 <AnimatePresence>
@@ -320,7 +320,7 @@ export function Navbar() {
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       exit={{ scale: 0 }}
-                      className="absolute -top-1 -right-1 w-5 h-5 bg-offgrid-lime text-offgrid-dark rounded-full text-[10px] font-bold flex items-center justify-center shadow-md"
+                      className="absolute -top-1 -right-1 w-5 h-5 bg-offgrid-lime text-white rounded-full text-[10px] font-bold flex items-center justify-center shadow-md"
                     >
                       {itemCount}
                     </motion.div>
@@ -416,19 +416,19 @@ export function Navbar() {
             <nav className="flex flex-col gap-6 text-center mt-12 overflow-y-auto">
               <button
                 onClick={() => handleNavigate("/custom")}
-                className="text-3xl font-display font-bold text-offgrid-cream hover:text-offgrid-lime transition-colors cursor-pointer"
+                className="text-3xl font-display font-bold text-offgrid-cream hover:text-white transition-colors cursor-pointer"
               >
                 Ordering guide
               </button>
               <button
                 onClick={() => handleNavigate("/custom/templates")}
-                className="text-xl font-display font-semibold text-offgrid-cream/80 hover:text-offgrid-lime transition-colors cursor-pointer"
+                className="text-xl font-display font-semibold text-offgrid-cream/80 hover:text-white transition-colors cursor-pointer"
               >
                 Templates
               </button>
               <button
                 onClick={() => handleNavigate("/custom/order")}
-                className="text-xl font-display font-semibold text-offgrid-cream/80 hover:text-offgrid-lime transition-colors cursor-pointer"
+                className="text-xl font-display font-semibold text-offgrid-cream/80 hover:text-white transition-colors cursor-pointer"
               >
                 Place custom order
               </button>
@@ -439,7 +439,7 @@ export function Navbar() {
                     link.action();
                     setIsMobileMenuOpen(false);
                   }}
-                  className="text-3xl font-display font-bold text-offgrid-cream hover:text-offgrid-lime transition-colors cursor-pointer"
+                  className="text-3xl font-display font-bold text-offgrid-cream hover:text-white transition-colors cursor-pointer"
                 >
                   {link.name}
                 </button>

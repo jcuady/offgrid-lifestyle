@@ -53,12 +53,12 @@ export function CustomTemplatesPage() {
         <div className={siteContainer}>
           <Link
             to="/custom"
-            className="mb-6 inline-flex items-center text-xs font-semibold uppercase tracking-[0.12em] text-offgrid-cream/70 hover:text-offgrid-lime"
+            className="mb-6 inline-flex items-center text-xs font-semibold uppercase tracking-[0.12em] text-offgrid-cream/70 hover:text-white"
           >
             <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
             {page.backLink}
           </Link>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-lime">{page.eyebrow}</p>
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-cream/80">{page.eyebrow}</p>
           <h1 className="mt-3 text-5xl md:text-7xl font-display font-black text-offgrid-cream leading-[0.9]">
             {page.title}
           </h1>

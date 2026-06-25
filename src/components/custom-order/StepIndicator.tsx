@@ -23,7 +23,7 @@ export function StepIndicator() {
               disabled={stepNum > currentStep}
               className={cn(
                 "flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-semibold transition-all cursor-pointer",
-                isActive && "bg-offgrid-lime text-offgrid-dark",
+                isActive && "bg-offgrid-lime text-white",
                 isComplete && "bg-offgrid-green text-offgrid-cream",
                 !isActive && !isComplete && "bg-offgrid-green/10 text-offgrid-green/40",
                 stepNum > currentStep && "cursor-not-allowed",

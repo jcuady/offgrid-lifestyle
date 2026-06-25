@@ -111,7 +111,7 @@ export function CheckoutModal() {
                         className={cn(
                           "flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold transition-all",
                           checkoutStep >= item.step
-                            ? "bg-offgrid-lime text-offgrid-dark"
+                            ? "bg-offgrid-lime text-white"
                             : "bg-offgrid-cream/10 text-offgrid-cream/40"
                         )}
                       >
@@ -443,7 +443,7 @@ export function CheckoutModal() {
                         transition={{ type: "spring", delay: 0.2, stiffness: 200 }}
                         className="w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-4 sm:mb-6 rounded-full bg-offgrid-lime flex items-center justify-center"
                       >
-                        <Check className="w-10 h-10 sm:w-12 sm:h-12 text-offgrid-dark" strokeWidth={3} />
+                        <Check className="w-10 h-10 sm:w-12 sm:h-12 text-white" strokeWidth={3} />
                       </motion.div>
 
                       <h2 className="text-2xl sm:text-3xl font-display font-black text-offgrid-green mb-2 sm:mb-3">

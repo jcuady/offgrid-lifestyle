@@ -51,7 +51,7 @@ export function StepSummary() {
     return (
       <div className="text-center py-8 sm:py-12 space-y-6">
         <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto rounded-full bg-offgrid-lime flex items-center justify-center">
-          <Check className="w-10 h-10 sm:w-12 sm:h-12 text-offgrid-dark" strokeWidth={3} />
+          <Check className="w-10 h-10 sm:w-12 sm:h-12 text-white" strokeWidth={3} />
         </div>
         <h2 className="text-2xl sm:text-3xl font-display font-black text-offgrid-green">{copy.successTitle}</h2>
         <p className="text-sm text-offgrid-green/60 max-w-md mx-auto">{copy.successBody}</p>

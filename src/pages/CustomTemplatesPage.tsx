@@ -5,7 +5,7 @@ import { Button } from "@/src/components/ui/Button";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import type { CustomTemplateAsset } from "@/src/store/useSiteContentStore";
 import { Footer } from "@/src/components/Footer";
-import { siteContainer } from "@/src/lib/brandLayout";
+import { siteContainer, sectionEyebrow, sectionEyebrowOnDark } from "@/src/lib/brandLayout";
 import { resolveCanonicalTemplates } from "@/src/lib/canonicalTemplates";
 import { triggerTemplateDownload } from "@/src/lib/resolveTemplateDownload";
 import { cn } from "@/src/lib/utils";
@@ -49,17 +49,21 @@ export function CustomTemplatesPage() {
 
   return (
     <>
-      <section className="bg-offgrid-green pt-28 pb-12 sm:pt-36 sm:pb-16">
-        <div className={siteContainer}>
+      <section className="relative overflow-hidden bg-offgrid-green pt-28 pb-12 sm:pt-36 sm:pb-16">
+        <div
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(197,211,48,0.10),transparent_60%)]"
+          aria-hidden
+        />
+        <div className={cn(siteContainer, "relative z-10")}>
           <Link
             to="/custom"
-            className="mb-6 inline-flex items-center text-xs font-semibold uppercase tracking-[0.12em] text-offgrid-cream/70 hover:text-white"
+            className="mb-6 inline-flex items-center font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-offgrid-cream/70 transition-colors hover:text-white"
           >
             <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
             {page.backLink}
           </Link>
-          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-cream/80">{page.eyebrow}</p>
-          <h1 className="mt-3 text-5xl md:text-7xl font-display font-black text-offgrid-cream leading-[0.9]">
+          <p className={sectionEyebrowOnDark}>{page.eyebrow}</p>
+          <h1 className="text-5xl md:text-7xl font-display font-black text-offgrid-cream leading-[0.9]">
             {page.title}
           </h1>
           <p className="mt-5 max-w-2xl text-sm md:text-base text-offgrid-cream/70">{page.description}</p>
@@ -74,10 +78,8 @@ export function CustomTemplatesPage() {
 
       <section className="min-h-[40vh] bg-offgrid-cream py-14 md:py-20">
         <div className={siteContainer}>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-green/40">
-            {page.libraryEyebrow}
-          </p>
-          <h2 className="mt-2 max-w-2xl font-display text-2xl font-bold tracking-tight text-offgrid-green md:text-3xl">
+          <p className={sectionEyebrow}>{page.libraryEyebrow}</p>
+          <h2 className="max-w-2xl font-display text-2xl font-bold tracking-tight text-offgrid-green md:text-3xl">
             {page.libraryTitle}
           </h2>
           <p className="mt-2 max-w-2xl text-sm text-offgrid-green/60">{page.libraryDescription}</p>
@@ -93,10 +95,12 @@ export function CustomTemplatesPage() {
             <div className="mt-10 space-y-10">
               {groupedTemplates.map((group) => (
                 <section key={group.category}>
-                  <h3 className="text-[10px] font-semibold uppercase tracking-[0.16em] text-offgrid-green/45">
+                  <h3 className="flex items-center gap-2 font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-offgrid-green/55">
+                    <span className="inline-block h-1.5 w-1.5 rounded-full bg-offgrid-lime" />
                     {group.label}
+                    <span className="text-offgrid-green/30">({group.items.length})</span>
                   </h3>
-                  <div className="mt-3 grid gap-5 md:grid-cols-2">
+                  <div className="mt-4 grid gap-5 md:grid-cols-2">
                     {group.items.map((template) => {
                 const busy = downloadingId === template.id;
                 const canTry =
@@ -105,48 +109,50 @@ export function CustomTemplatesPage() {
                 return (
                   <article
                     key={template.id}
-                    className="flex flex-col overflow-hidden rounded-2xl border border-offgrid-green/[0.09] bg-white shadow-[0_2px_28px_-6px_rgba(15,47,47,0.08)] ring-1 ring-offgrid-green/[0.06]"
+                    className="group flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-offgrid-green/10 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md hover:ring-offgrid-lime/40"
                   >
                     <div className="relative aspect-[4/3] overflow-hidden border-b border-offgrid-green/[0.06] bg-offgrid-cream/50">
                       {template.previewImageUrl ? (
                         <img
                           src={template.previewImageUrl}
                           alt={`${template.name} preview`}
-                          className="h-full w-full object-cover"
+                          loading="lazy"
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                         />
                       ) : (
                         <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-offgrid-green/35">
                           <ImageIcon className="h-6 w-6" />
-                          <span className="text-xs font-semibold uppercase tracking-[0.12em]">{template.format}</span>
+                          <span className="font-mono text-xs font-semibold uppercase tracking-[0.12em]">{template.format}</span>
                         </div>
                       )}
+                      <span className="absolute right-3 top-3 rounded-full bg-offgrid-green/90 px-2.5 py-1 font-mono text-[9px] font-bold uppercase tracking-[0.12em] text-offgrid-cream backdrop-blur">
+                        {template.format}
+                      </span>
                       <div
                         className="pointer-events-none absolute inset-0 bg-gradient-to-t from-offgrid-dark/15 to-transparent"
                         aria-hidden
                       />
                     </div>
                     <div className="flex flex-1 flex-col gap-4 p-5 sm:p-6">
-                      <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                        <div className="min-w-0">
-                          <h3 className="text-xl font-display font-bold text-offgrid-green">{template.name}</h3>
-                          <p className="mt-1 text-sm leading-relaxed text-offgrid-green/65">{template.description}</p>
-                          <p className="mt-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/40">
-                            {template.fileName} · {template.format}
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          disabled={busy || !canTry}
-                          onClick={() => handleDownload(template)}
-                          className={cn(
-                            "inline-flex shrink-0 items-center justify-center rounded-full border-2 border-offgrid-green bg-offgrid-green px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-offgrid-cream",
-                            "hover:bg-offgrid-green/90 disabled:pointer-events-none disabled:opacity-40 sm:self-start",
-                          )}
-                        >
-                          <Download className="mr-1.5 h-3.5 w-3.5" />
-                          {busy ? "…" : "Download"}
-                        </button>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-display text-xl font-bold text-offgrid-green">{template.name}</h3>
+                        <p className="mt-1 text-sm leading-relaxed text-offgrid-green/65">{template.description}</p>
+                        <p className="mt-3 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/40">
+                          {template.fileName}
+                        </p>
                       </div>
+                      <button
+                        type="button"
+                        disabled={busy || !canTry}
+                        onClick={() => handleDownload(template)}
+                        className={cn(
+                          "inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-offgrid-green px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-offgrid-cream transition-colors",
+                          "hover:bg-offgrid-dark disabled:pointer-events-none disabled:opacity-40",
+                        )}
+                      >
+                        <Download className="h-3.5 w-3.5" />
+                        {busy ? "Preparing…" : "Download"}
+                      </button>
                     </div>
                   </article>
                 );

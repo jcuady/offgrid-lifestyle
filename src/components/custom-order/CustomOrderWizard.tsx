@@ -13,14 +13,16 @@ export function CustomOrderWizard() {
   const intro = useSiteContentStore((s) => s.customPageContent.wizard);
 
   return (
-    <section id="order-flow" className="bg-offgrid-cream py-12 sm:py-20 scroll-mt-28">
+    <section id="order-flow" className="border-t border-offgrid-green/8 bg-offgrid-cream py-12 sm:py-20 scroll-mt-28">
       <div className={cn(siteContainer, "max-w-3xl")}>
         <div className="mb-8 text-center sm:text-left">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-green/45">{intro.eyebrow}</p>
-          <h2 className="mt-2 text-3xl sm:text-4xl font-display font-black text-offgrid-green leading-tight">
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-green/45">
+            {intro.eyebrow}
+          </p>
+          <h2 className="mt-2 text-3xl sm:text-4xl font-display font-black leading-tight text-offgrid-green">
             {intro.title}
           </h2>
-          <p className="mt-2 text-sm text-offgrid-green/60 max-w-lg">{intro.description}</p>
+          <p className="mt-2 max-w-lg text-sm text-offgrid-green/60">{intro.description}</p>
         </div>
 
         <div className="mb-8 sm:mb-12">
@@ -34,7 +36,7 @@ export function CustomOrderWizard() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.25 }}
-            className="bg-offgrid-cream rounded-2xl"
+            className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-offgrid-green/10 sm:p-8"
           >
             {currentStep === 1 && <StepDesign />}
             {currentStep === 2 && <StepSpecs />}

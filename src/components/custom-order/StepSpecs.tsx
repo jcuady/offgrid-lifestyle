@@ -35,8 +35,8 @@ export function StepSpecs() {
 
       <div className="space-y-8">
         <div>
-          <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-offgrid-green/50">{copy.cutHeading}</h3>
-          <div className="rounded-2xl border border-offgrid-green/10 bg-white p-5 shadow-sm">
+          <h3 className="mb-3 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-offgrid-green/50">{copy.cutHeading}</h3>
+          <div className="rounded-2xl border border-offgrid-green/10 bg-offgrid-cream/40 p-5">
             <p className="text-sm text-offgrid-green/70">
               Download the OffGrid roster sheet so names, numbers, sizes, quantities, and product types are complete before submission.
             </p>
@@ -64,7 +64,7 @@ export function StepSpecs() {
         </div>
 
         <div>
-          <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-offgrid-green/50">{copy.fabricHeading}</h3>
+          <h3 className="mb-3 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-offgrid-green/50">{copy.fabricHeading}</h3>
           <label className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-offgrid-green/20 p-8 transition-all hover:border-offgrid-green/40 hover:bg-offgrid-green/[0.02] sm:p-12">
             <Upload className="h-8 w-8 text-offgrid-green/40" />
             {draft.orderSheetFileName ? (
@@ -77,8 +77,8 @@ export function StepSpecs() {
         </div>
 
         <div>
-          <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-offgrid-green/50">{copy.printHeading}</h3>
-          <div className="rounded-2xl border border-offgrid-green/10 bg-white p-5 shadow-sm">
+          <h3 className="mb-3 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-offgrid-green/50">{copy.printHeading}</h3>
+          <div className="rounded-2xl border border-offgrid-green/10 bg-offgrid-cream/40 p-5">
             <div className="flex items-start gap-3">
               <ClipboardList className="mt-0.5 h-4 w-4 text-offgrid-green/60" />
               <ul className="space-y-1.5 text-sm text-offgrid-green/70">

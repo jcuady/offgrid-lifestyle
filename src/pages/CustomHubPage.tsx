@@ -9,7 +9,7 @@ import { Footer } from "@/src/components/Footer";
 import { buildProcessSteps } from "@/src/components/custom-order/customOrderFlowMeta";
 import { GuideSectionProse } from "@/src/components/custom/GuideSectionProse";
 import { resolveGuideSections } from "@/src/lib/customGuideSections";
-import { siteContainer } from "@/src/lib/brandLayout";
+import { siteContainer, sectionEyebrow, sectionEyebrowOnDark } from "@/src/lib/brandLayout";
 import { cn } from "@/src/lib/utils";
 
 function followCta(navigate: NavigateFunction, href: string) {
@@ -34,7 +34,7 @@ function OffgridDesignAssistBlock({ onTemplatesClick }: { onTemplatesClick: () =
     <div className="mt-10 max-w-4xl overflow-hidden rounded-2xl border border-offgrid-green/10 bg-white shadow-sm">
       <div className="grid gap-0 md:grid-cols-2">
         <article className="border-b border-offgrid-green/10 p-6 md:border-b-0 md:border-r">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-green/45">Artwork format</p>
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-green/45">Artwork format</p>
           <div className="mt-3 flex items-center gap-2">
             <FileCheck2 className="h-5 w-5 text-offgrid-green/70" aria-hidden />
             <h3 className="font-display text-2xl font-black tracking-tight text-offgrid-green">Your Own Design</h3>
@@ -51,7 +51,7 @@ function OffgridDesignAssistBlock({ onTemplatesClick }: { onTemplatesClick: () =
         </article>
 
         <article className="p-6">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-green/45">Free support</p>
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-green/45">Free support</p>
           <div className="mt-3 flex items-center gap-2">
             <Paintbrush2 className="h-5 w-5 text-offgrid-green/70" aria-hidden />
             <h3 className="font-display text-2xl font-black tracking-tight text-offgrid-green">No Designer? No Problem.</h3>
@@ -61,7 +61,7 @@ function OffgridDesignAssistBlock({ onTemplatesClick }: { onTemplatesClick: () =
             production-ready OffGrid layout.
           </p>
           <div className="mt-4 rounded-xl border border-offgrid-green/10 bg-offgrid-cream/55 p-3">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-offgrid-green/55">Quick brief checklist</p>
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-offgrid-green/55">Quick brief checklist</p>
             <ul className="mt-2 space-y-1.5 text-xs text-offgrid-green/70">
               <li>- Fonts: team name, player text, and preferred font style</li>
               <li>- Colors: primary palette plus accent colors</li>
@@ -129,12 +129,14 @@ export function CustomHubPage() {
 
   return (
     <>
-      <section className="bg-offgrid-green pt-28 pb-16 sm:pt-36 sm:pb-20">
-        <div className={siteContainer}>
-          <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-cream/80">
-            {hub.heroEyebrow}
-          </span>
-          <h1 className="mt-4 text-5xl md:text-7xl font-display font-black text-offgrid-cream leading-[0.9]">
+      <section className="relative overflow-hidden bg-offgrid-green pt-28 pb-16 sm:pt-36 sm:pb-20">
+        <div
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(197,211,48,0.10),transparent_60%)]"
+          aria-hidden
+        />
+        <div className={cn(siteContainer, "relative z-10")}>
+          <span className={sectionEyebrowOnDark}>{hub.heroEyebrow}</span>
+          <h1 className="text-5xl md:text-7xl font-display font-black text-offgrid-cream leading-[0.9]">
             {hub.heroTitleLine1} <br />
             <span className="italic font-normal text-white">{hub.heroTitleLine2Italic}</span>
           </h1>
@@ -170,12 +172,10 @@ export function CustomHubPage() {
         </div>
       </section>
 
-      <section className="bg-offgrid-cream py-12 sm:py-16 border-b border-offgrid-green/8">
+      <section className="bg-offgrid-cream py-14 sm:py-16 border-b border-offgrid-green/8">
         <div className={siteContainer}>
-          <h2 className="text-center text-xs font-semibold tracking-[0.2em] uppercase text-offgrid-green/40 mb-8">
-            {hub.howItWorksTitle}
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 md:gap-6">
+          <p className={cn(sectionEyebrow, "text-center")}>{hub.howItWorksTitle}</p>
+          <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-3">
             {processSteps.map((step, i) => {
               const Icon = step.icon;
               return (
@@ -185,14 +185,17 @@ export function CustomHubPage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.08 }}
-                  className="flex flex-col items-center text-center gap-3"
+                  className="relative flex flex-col items-center gap-3 rounded-2xl bg-white p-6 text-center shadow-sm ring-1 ring-offgrid-green/10"
                 >
-                  <div className="w-12 h-12 rounded-full bg-offgrid-green/8 flex items-center justify-center">
-                    <Icon className="w-5 h-5 text-offgrid-green" />
+                  <span className="absolute right-4 top-3 font-mono text-sm font-bold tabular-nums text-offgrid-green/15">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-offgrid-lime/15 text-offgrid-green">
+                    <Icon className="h-5 w-5" />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-offgrid-green">{step.label}</p>
-                    <p className="text-[10px] text-offgrid-green/50 mt-0.5 max-w-[200px] mx-auto">{step.desc}</p>
+                    <p className="font-display text-base font-bold text-offgrid-green">{step.label}</p>
+                    <p className="mx-auto mt-1 max-w-[220px] text-xs leading-relaxed text-offgrid-green/55">{step.desc}</p>
                   </div>
                 </motion.div>
               );
@@ -204,10 +207,8 @@ export function CustomHubPage() {
       <section id="ordering-guide" className="scroll-mt-28 bg-offgrid-cream py-16 md:py-24">
         <div className={siteContainer}>
           <div className="mb-10 max-w-2xl">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-offgrid-green/45">
-              {hub.guideEyebrow}
-            </p>
-            <h2 className="mt-3 text-4xl font-display font-black tracking-tight text-offgrid-green md:text-5xl">
+            <p className={sectionEyebrow}>{hub.guideEyebrow}</p>
+            <h2 className="text-4xl font-display font-black tracking-tight text-offgrid-green md:text-5xl">
               {hub.guideTitle}
             </h2>
             <p className="mt-4 font-sans text-sm leading-relaxed text-offgrid-green/65 md:text-base">
@@ -285,7 +286,7 @@ export function CustomHubPage() {
                             {section.slug === "sizing-chart" && (
                               <div className="mt-10 max-w-3xl overflow-hidden rounded-2xl border border-offgrid-green/10 bg-white shadow-sm">
                                 <div className="border-b border-offgrid-green/8 bg-offgrid-green/[0.04] px-5 py-3 sm:px-6">
-                                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-green/50">
+                                  <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-green/50">
                                     {hub.sizingPreviewTitle}
                                   </p>
                                   <p className="mt-1 font-sans text-xs text-offgrid-green/55">

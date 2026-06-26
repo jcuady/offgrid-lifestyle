@@ -9,7 +9,7 @@ import { cn } from "@/src/lib/utils";
 function SummaryRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex justify-between items-start gap-4 py-2.5 border-b border-offgrid-green/8 last:border-0">
-      <span className="text-xs font-semibold tracking-[0.15em] uppercase text-offgrid-green/50 flex-shrink-0">{label}</span>
+      <span className="flex-shrink-0 font-mono text-xs font-semibold uppercase tracking-[0.15em] text-offgrid-green/50">{label}</span>
       <span className="text-sm font-medium text-offgrid-green text-right">{value}</span>
     </div>
   );
@@ -83,8 +83,8 @@ export function StepSummary() {
       </div>
 
       {/* Order summary */}
-      <div className="bg-white rounded-xl p-4 sm:p-6 border border-offgrid-green/10">
-        <h3 className="text-xs font-semibold tracking-[0.2em] uppercase text-offgrid-green/50 mb-3">
+      <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-4 sm:p-6">
+        <h3 className="mb-3 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-offgrid-green/50">
           {copy.orderDetailsHeading}
         </h3>
         <SummaryRow label="Team order type" value={teamOrderType} />
@@ -98,7 +98,7 @@ export function StepSummary() {
               min={1}
               value={draft.quantity}
               onChange={(e) => updateDraft({ quantity: Math.max(1, Number(e.target.value)) })}
-              className="w-20 text-right px-2 py-1 rounded-lg border border-offgrid-green/20 focus:border-offgrid-green outline-none text-sm text-offgrid-green bg-white"
+              className="w-20 rounded-lg border border-offgrid-green/20 bg-white px-2 py-1 text-right text-sm text-offgrid-green outline-none transition-all focus:border-offgrid-lime focus:ring-2 focus:ring-offgrid-lime/25"
             />
           }
         />
@@ -106,7 +106,7 @@ export function StepSummary() {
 
       {/* Pricing estimate */}
       <div className="bg-offgrid-green rounded-xl p-4 sm:p-6 text-offgrid-cream">
-        <h3 className="text-xs font-semibold tracking-[0.2em] uppercase text-offgrid-cream/50 mb-4">
+        <h3 className="mb-4 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-offgrid-cream/50">
           {copy.pricingHeading}
         </h3>
         <p className="text-sm leading-relaxed text-offgrid-cream/80">
@@ -118,12 +118,12 @@ export function StepSummary() {
 
       {/* Contact info */}
       <div>
-        <h3 className="text-xs font-semibold tracking-[0.2em] uppercase text-offgrid-green/50 mb-4">
+        <h3 className="mb-4 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-offgrid-green/50">
           {copy.contactHeading}
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="md:col-span-2">
-            <label className="block text-xs font-semibold tracking-[0.15em] uppercase text-offgrid-green mb-2">
+            <label className="mb-2 block font-mono text-xs font-semibold uppercase tracking-[0.15em] text-offgrid-green">
               Full Name *
             </label>
             <input
@@ -131,12 +131,12 @@ export function StepSummary() {
               required
               value={draft.contactName}
               onChange={(e) => updateDraft({ contactName: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-offgrid-green/20 focus:border-offgrid-green focus:ring-2 focus:ring-offgrid-green/20 outline-none transition-all text-sm text-offgrid-green bg-white"
+              className="w-full rounded-xl border border-offgrid-green/20 bg-white px-4 py-3 text-sm text-offgrid-green outline-none transition-all focus:border-offgrid-lime focus:ring-2 focus:ring-offgrid-lime/25"
               placeholder="Juan Dela Cruz"
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold tracking-[0.15em] uppercase text-offgrid-green mb-2">
+            <label className="mb-2 block font-mono text-xs font-semibold uppercase tracking-[0.15em] text-offgrid-green">
               Email *
             </label>
             <input
@@ -144,12 +144,12 @@ export function StepSummary() {
               required
               value={draft.contactEmail}
               onChange={(e) => updateDraft({ contactEmail: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-offgrid-green/20 focus:border-offgrid-green focus:ring-2 focus:ring-offgrid-green/20 outline-none transition-all text-sm text-offgrid-green bg-white"
+              className="w-full rounded-xl border border-offgrid-green/20 bg-white px-4 py-3 text-sm text-offgrid-green outline-none transition-all focus:border-offgrid-lime focus:ring-2 focus:ring-offgrid-lime/25"
               placeholder="juan@email.com"
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold tracking-[0.15em] uppercase text-offgrid-green mb-2">
+            <label className="mb-2 block font-mono text-xs font-semibold uppercase tracking-[0.15em] text-offgrid-green">
               Phone *
             </label>
             <input
@@ -157,19 +157,19 @@ export function StepSummary() {
               required
               value={draft.contactPhone}
               onChange={(e) => updateDraft({ contactPhone: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-offgrid-green/20 focus:border-offgrid-green focus:ring-2 focus:ring-offgrid-green/20 outline-none transition-all text-sm text-offgrid-green bg-white"
+              className="w-full rounded-xl border border-offgrid-green/20 bg-white px-4 py-3 text-sm text-offgrid-green outline-none transition-all focus:border-offgrid-lime focus:ring-2 focus:ring-offgrid-lime/25"
               placeholder="+63 917 123 4567"
             />
           </div>
           <div className="md:col-span-2">
-            <label className="block text-xs font-semibold tracking-[0.15em] uppercase text-offgrid-green mb-2">
+            <label className="mb-2 block font-mono text-xs font-semibold uppercase tracking-[0.15em] text-offgrid-green">
               Team / Organization (Optional)
             </label>
             <input
               type="text"
               value={draft.teamOrOrg}
               onChange={(e) => updateDraft({ teamOrOrg: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-offgrid-green/20 focus:border-offgrid-green focus:ring-2 focus:ring-offgrid-green/20 outline-none transition-all text-sm text-offgrid-green bg-white"
+              className="w-full rounded-xl border border-offgrid-green/20 bg-white px-4 py-3 text-sm text-offgrid-green outline-none transition-all focus:border-offgrid-lime focus:ring-2 focus:ring-offgrid-lime/25"
               placeholder="Boracay Dragons, Company XYZ…"
             />
           </div>

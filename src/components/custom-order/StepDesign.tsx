@@ -49,7 +49,7 @@ export function StepDesign() {
       </div>
 
       <div>
-        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.15em] text-offgrid-green">
+        <p className="mb-3 font-mono text-xs font-semibold uppercase tracking-[0.15em] text-offgrid-green">
           Team order type
         </p>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -59,7 +59,7 @@ export function StepDesign() {
             className={`rounded-xl border p-4 text-left transition-all ${
               draft.category === "apparel"
                 ? "border-offgrid-green bg-offgrid-green/5"
-                : "border-offgrid-green/15 bg-white hover:border-offgrid-green/35"
+                : "border-offgrid-green/12 bg-offgrid-cream/50 hover:border-offgrid-green/35"
             }`}
           >
             <p className="font-display text-base font-bold text-offgrid-green">Jerseys & shorts</p>
@@ -73,7 +73,7 @@ export function StepDesign() {
               draft.headwearType !== "towel-face" &&
               draft.headwearType !== "towel-hand"
                 ? "border-offgrid-green bg-offgrid-green/5"
-                : "border-offgrid-green/15 bg-white hover:border-offgrid-green/35"
+                : "border-offgrid-green/12 bg-offgrid-cream/50 hover:border-offgrid-green/35"
             }`}
           >
             <p className="font-display text-base font-bold text-offgrid-green">Headwear</p>
@@ -86,7 +86,7 @@ export function StepDesign() {
               draft.category === "headwear_towels" &&
               (draft.headwearType === "towel-face" || draft.headwearType === "towel-hand")
                 ? "border-offgrid-green bg-offgrid-green/5"
-                : "border-offgrid-green/15 bg-white hover:border-offgrid-green/35"
+                : "border-offgrid-green/12 bg-offgrid-cream/50 hover:border-offgrid-green/35"
             }`}
           >
             <p className="font-display text-base font-bold text-offgrid-green">Towels</p>
@@ -95,7 +95,7 @@ export function StepDesign() {
         </div>
         {draft.category === "headwear_towels" ? (
           <div className="mt-3">
-            <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-offgrid-green/55">
+            <p className="mb-2 font-mono text-[10px] font-semibold uppercase tracking-[0.15em] text-offgrid-green/55">
               Select headwear/towel type
             </p>
             <div className="flex flex-wrap gap-2">
@@ -142,7 +142,7 @@ export function StepDesign() {
       </div>
 
       <div>
-        <label className="block text-xs font-semibold tracking-[0.15em] uppercase text-offgrid-green mb-3">
+        <label className="mb-3 block font-mono text-xs font-semibold uppercase tracking-[0.15em] text-offgrid-green">
           {copy.uploadLabel}
         </label>
         <label className="flex flex-col items-center justify-center gap-3 border-2 border-dashed border-offgrid-green/20 rounded-xl p-8 sm:p-12 cursor-pointer hover:border-offgrid-green/40 hover:bg-offgrid-green/[0.02] transition-all">
@@ -162,14 +162,14 @@ export function StepDesign() {
       </div>
 
       <div>
-        <label className="block text-xs font-semibold tracking-[0.15em] uppercase text-offgrid-green mb-2">
+        <label className="mb-2 block font-mono text-xs font-semibold uppercase tracking-[0.15em] text-offgrid-green">
           {copy.designNotesLabel}
         </label>
         <textarea
           rows={3}
           value={draft.designNotes}
           onChange={(e) => updateDraft({ designNotes: e.target.value })}
-          className="w-full px-4 py-3 rounded-xl border border-offgrid-green/20 focus:border-offgrid-green focus:ring-2 focus:ring-offgrid-green/20 outline-none transition-all text-sm text-offgrid-green bg-white resize-none"
+          className="w-full resize-none rounded-xl border border-offgrid-green/20 bg-white px-4 py-3 text-sm text-offgrid-green outline-none transition-all focus:border-offgrid-lime focus:ring-2 focus:ring-offgrid-lime/25"
           placeholder={copy.designNotesPlaceholder}
         />
       </div>

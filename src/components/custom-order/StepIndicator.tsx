@@ -1,3 +1,4 @@
+import { Check } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 import { buildWizardStepIndicator } from "@/src/components/custom-order/customOrderFlowMeta";
 import { useCustomOrderStore, TOTAL_STEPS } from "@/src/store/useCustomOrderStore";
@@ -9,34 +10,58 @@ export function StepIndicator() {
   const steps = buildWizardStepIndicator(stepLabels);
 
   return (
-    <div className="flex items-center justify-center gap-1 sm:gap-2 md:gap-3">
+    <div className="flex items-start justify-center">
       {steps.map((step, i) => {
         const stepNum = i + 1;
         const isActive = stepNum === currentStep;
         const isComplete = stepNum < currentStep;
+        const reachable = stepNum <= currentStep;
         const Icon = step.icon;
 
         return (
-          <div key={step.label} className="flex items-center gap-1 sm:gap-2 md:gap-3">
-            <button
-              onClick={() => stepNum <= currentStep && setStep(stepNum)}
-              disabled={stepNum > currentStep}
+          <div key={step.label} className="flex flex-1 flex-col items-center">
+            <div className="flex w-full items-center">
+              {/* left connector */}
+              <span
+                className={cn(
+                  "h-0.5 flex-1 rounded-full transition-colors",
+                  i === 0 ? "opacity-0" : isComplete || isActive ? "bg-offgrid-green" : "bg-offgrid-green/15",
+                )}
+                aria-hidden
+              />
+              <button
+                type="button"
+                onClick={() => reachable && setStep(stepNum)}
+                disabled={!reachable}
+                aria-current={isActive ? "step" : undefined}
+                aria-label={`Step ${stepNum}: ${step.label}`}
+                className={cn(
+                  "flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 transition-all sm:h-11 sm:w-11",
+                  isActive && "border-offgrid-lime bg-offgrid-lime text-white shadow-md",
+                  isComplete && "border-offgrid-green bg-offgrid-green text-offgrid-cream",
+                  !isActive && !isComplete && "border-offgrid-green/15 bg-white text-offgrid-green/35",
+                  reachable ? "cursor-pointer" : "cursor-not-allowed",
+                )}
+              >
+                {isComplete ? <Check className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={3} /> : <Icon className="h-4 w-4 sm:h-5 sm:w-5" />}
+              </button>
+              {/* right connector */}
+              <span
+                className={cn(
+                  "h-0.5 flex-1 rounded-full transition-colors",
+                  i === TOTAL_STEPS - 1 ? "opacity-0" : isComplete ? "bg-offgrid-green" : "bg-offgrid-green/15",
+                )}
+                aria-hidden
+              />
+            </div>
+            <span
               className={cn(
-                "flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-semibold transition-all cursor-pointer",
-                isActive && "bg-offgrid-lime text-white",
-                isComplete && "bg-offgrid-green text-offgrid-cream",
-                !isActive && !isComplete && "bg-offgrid-green/10 text-offgrid-green/40",
-                stepNum > currentStep && "cursor-not-allowed",
+                "mt-2 text-center font-mono text-[9px] font-semibold uppercase tracking-[0.12em] sm:text-[10px]",
+                isActive ? "text-offgrid-green" : "text-offgrid-green/45",
               )}
             >
-              <Icon className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-              <span className="hidden md:inline">{step.label}</span>
-            </button>
-            {i < TOTAL_STEPS - 1 && (
-              <div
-                className={cn("w-4 sm:w-8 h-px", stepNum < currentStep ? "bg-offgrid-green" : "bg-offgrid-green/15")}
-              />
-            )}
+              {step.label}
+            </span>
           </div>
         );
       })}

@@ -26,7 +26,7 @@ export function AccountPageShell({
 }: AccountPageShellProps) {
   return (
     <div className={cn("portal-surface min-h-screen w-full min-w-0 overflow-x-hidden bg-offgrid-cream pb-16 sm:pb-20", className)}>
-      <div className="bg-offgrid-green pb-12 pt-24 text-offgrid-cream sm:pb-14 sm:pt-28">
+      <div className="bg-offgrid-green pb-12 pt-10 text-offgrid-cream sm:pb-14 sm:pt-14">
         <div className={accountContainer}>
           <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-offgrid-cream/80">{eyebrow}</p>
           <h1

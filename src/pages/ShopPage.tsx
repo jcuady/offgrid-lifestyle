@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { motion } from "motion/react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { SlidersHorizontal, Search, ChevronDown, ChevronLeft, ChevronRight, Star } from "lucide-react";
@@ -21,11 +21,17 @@ export function ShopPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 12;
+  const gridTopRef = useRef<HTMLDivElement | null>(null);
 
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [selectedCategory, sortBy, searchQuery]);
+
+  const goToPage = (page: number) => {
+    setCurrentPage(page);
+    gridTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   const categories = useMemo(() => {
     const unique = [...new Set(products.map((p) => p.category))].sort((a, b) =>
@@ -81,11 +87,26 @@ export function ShopPage() {
     });
   }, [products, selectedCategory, sortBy, searchQuery]);
 
-  const totalPages = Math.ceil(filteredAndSortedProducts.length / ITEMS_PER_PAGE);
-  const paginatedProducts = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredAndSortedProducts.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [filteredAndSortedProducts, currentPage]);
+  const totalPages = Math.max(1, Math.ceil(filteredAndSortedProducts.length / ITEMS_PER_PAGE));
+  const pageStart = (currentPage - 1) * ITEMS_PER_PAGE;
+  const pageEnd = Math.min(pageStart + ITEMS_PER_PAGE, filteredAndSortedProducts.length);
+  const paginatedProducts = useMemo(
+    () => filteredAndSortedProducts.slice(pageStart, pageStart + ITEMS_PER_PAGE),
+    [filteredAndSortedProducts, pageStart],
+  );
+
+  // Windowed page list with ellipsis: 1 … (cur-1) cur (cur+1) … last
+  const pageNumbers = useMemo<(number | "ellipsis")[]>(() => {
+    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
+    const pages: (number | "ellipsis")[] = [1];
+    const start = Math.max(2, currentPage - 1);
+    const end = Math.min(totalPages - 1, currentPage + 1);
+    if (start > 2) pages.push("ellipsis");
+    for (let p = start; p <= end; p++) pages.push(p);
+    if (end < totalPages - 1) pages.push("ellipsis");
+    pages.push(totalPages);
+    return pages;
+  }, [totalPages, currentPage]);
 
   const handleProductClick = (product: Product) => {
     navigate(`/shop/${product.slug}`);
@@ -212,11 +233,15 @@ export function ShopPage() {
       </div>
 
       {/* Products Grid */}
-      <div className="container mx-auto px-6 md:px-12 py-12 md:py-16">
+      <div ref={gridTopRef} className="container mx-auto scroll-mt-40 px-4 sm:px-6 md:px-12 py-10 sm:py-12 md:py-16">
         {/* Results Count */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8 flex flex-wrap items-baseline justify-between gap-2">
           <p className="text-sm text-offgrid-green/60">
-            Showing <span className="font-bold text-offgrid-green">{filteredAndSortedProducts.length}</span> products
+            Showing{" "}
+            <span className="font-bold text-offgrid-green">
+              {filteredAndSortedProducts.length === 0 ? 0 : pageStart + 1}–{pageEnd}
+            </span>{" "}
+            of <span className="font-bold text-offgrid-green">{filteredAndSortedProducts.length}</span> products
             {selectedCategory !== "all" && (
               <span> in <span className="font-bold text-offgrid-green">{selectedCategory}</span></span>
             )}
@@ -224,6 +249,11 @@ export function ShopPage() {
               <span> for "<span className="font-bold text-offgrid-green">{searchQuery}</span>"</span>
             )}
           </p>
+          {totalPages > 1 && (
+            <p className="font-mono text-xs text-offgrid-green/45">
+              Page {currentPage} / {totalPages}
+            </p>
+          )}
         </div>
 
         {filteredAndSortedProducts.length === 0 ? (
@@ -250,7 +280,7 @@ export function ShopPage() {
           </motion.div>
         ) : (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-10 md:gap-x-8">
+            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-3 gap-y-7 sm:gap-x-6 sm:gap-y-10 md:gap-x-8">
               {paginatedProducts.map((product, index) => (
                 <motion.div
                   key={product.id}
@@ -269,9 +299,9 @@ export function ShopPage() {
                     }
                   }}
                 >
-                  <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-white ring-1 ring-offgrid-green/[0.08] shadow-sm transition-all duration-500 group-hover:-translate-y-1 group-hover:shadow-xl group-hover:ring-offgrid-lime/40 group-focus-visible:ring-2 group-focus-visible:ring-offgrid-lime">
+                  <div className="relative aspect-[4/5] overflow-hidden rounded-xl sm:rounded-2xl bg-white ring-1 ring-offgrid-green/[0.08] shadow-sm transition-all duration-500 group-hover:-translate-y-1 group-hover:shadow-xl group-hover:ring-offgrid-lime/40 group-focus-visible:ring-2 group-focus-visible:ring-offgrid-lime">
                     {product.tag && (
-                      <span className="absolute top-3 left-3 z-10 rounded-full bg-offgrid-lime px-2.5 py-1 font-mono text-[9px] font-bold uppercase tracking-[0.15em] text-white shadow-sm">
+                      <span className="absolute top-2.5 left-2.5 sm:top-3 sm:left-3 z-10 rounded-full bg-offgrid-lime px-2 py-0.5 sm:px-2.5 sm:py-1 font-mono text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.15em] text-white shadow-sm">
                         {product.tag}
                       </span>
                     )}
@@ -280,6 +310,7 @@ export function ShopPage() {
                       src={product.image}
                       alt={product.name}
                       loading="lazy"
+                      decoding="async"
                       className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-[1.04]"
                     />
 
@@ -292,29 +323,32 @@ export function ShopPage() {
                   </div>
 
                   {/* Product Info */}
-                  <div className="mt-4 px-0.5">
-                    <div className="mb-1.5 flex items-baseline justify-between gap-3">
-                      <p className="min-w-0 truncate font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-offgrid-green/45">
+                  <div className="mt-3 sm:mt-4 px-0.5">
+                    <div className="mb-1 sm:mb-1.5 flex items-baseline justify-between gap-2">
+                      <p className="min-w-0 truncate font-mono text-[9px] sm:text-[10px] font-semibold uppercase tracking-[0.16em] sm:tracking-[0.18em] text-offgrid-green/45">
                         {product.category}
                       </p>
-                      <p className="shrink-0 font-display text-sm font-black tabular-nums tracking-tight text-offgrid-green">
+                      <p className="shrink-0 font-display text-xs sm:text-sm font-black tabular-nums tracking-tight text-offgrid-green">
                         {formatPrice(product.price)}
                       </p>
                     </div>
-                    <h3 className="mb-3 font-display text-base font-bold leading-tight text-offgrid-green transition-colors group-hover:text-offgrid-lime">
+                    <h3 className="mb-2.5 sm:mb-3 line-clamp-2 font-display text-sm sm:text-base font-bold leading-tight text-offgrid-green transition-colors group-hover:text-offgrid-lime">
                       {product.name}
                     </h3>
 
-                    <div className="flex items-center justify-between border-t border-offgrid-green/10 pt-3">
-                      <div className="flex gap-1.5">
-                        {product.colors.map((color, i) => (
+                    <div className="flex items-center justify-between gap-2 border-t border-offgrid-green/10 pt-2.5 sm:pt-3">
+                      <div className="flex gap-1 sm:gap-1.5">
+                        {product.colors.slice(0, 4).map((color, i) => (
                           <span
                             key={i}
-                            className={`h-3.5 w-3.5 rounded-full border border-offgrid-green/20 ${color.value}`}
+                            className={`h-3 w-3 sm:h-3.5 sm:w-3.5 rounded-full border border-offgrid-green/20 ${color.value}`}
                           />
                         ))}
+                        {product.colors.length > 4 && (
+                          <span className="font-mono text-[10px] text-offgrid-green/45">+{product.colors.length - 4}</span>
+                        )}
                       </div>
-                      <div className="flex items-center gap-1 font-mono text-[11px] text-offgrid-green/55">
+                      <div className="flex shrink-0 items-center gap-1 font-mono text-[10px] sm:text-[11px] text-offgrid-green/55">
                         <Star className="h-3 w-3 fill-offgrid-green text-offgrid-green" />
                         <span className="font-bold text-offgrid-green">{product.sold}</span> sold
                       </div>
@@ -325,53 +359,57 @@ export function ShopPage() {
             </div>
 
             {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-3 mt-16 pt-8 border-t border-offgrid-green/10">
+              <nav
+                aria-label="Pagination"
+                className="mt-12 sm:mt-16 flex items-center justify-center gap-2 sm:gap-3 border-t border-offgrid-green/10 pt-8"
+              >
                 <button
-                  onClick={() => {
-                    setCurrentPage(p => Math.max(1, p - 1));
-                    window.scrollTo({ top: 400, behavior: 'smooth' });
-                  }}
+                  onClick={() => goToPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
-                  className="w-10 h-10 rounded-xl flex items-center justify-center border border-offgrid-green/20 bg-white text-offgrid-green hover:border-offgrid-green/50 hover:bg-offgrid-green/5 disabled:opacity-40 disabled:hover:border-offgrid-green/20 disabled:hover:bg-white disabled:cursor-not-allowed transition-all outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offgrid-lime"
+                  aria-label="Previous page"
+                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-offgrid-green/20 bg-white text-offgrid-green transition-all hover:border-offgrid-green/50 hover:bg-offgrid-green/5 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-offgrid-green/20 disabled:hover:bg-white outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offgrid-lime"
                 >
-                  <ChevronLeft className="w-5 h-5" />
+                  <ChevronLeft className="h-5 w-5" />
                 </button>
-                
-                <div className="hidden sm:flex items-center gap-2">
-                  {Array.from({ length: totalPages }).map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => {
-                        setCurrentPage(i + 1);
-                        window.scrollTo({ top: 400, behavior: 'smooth' });
-                      }}
-                      className={cn(
-                        "min-w-[2.5rem] h-10 px-3 rounded-xl flex items-center justify-center font-mono text-sm font-bold tabular-nums transition-all outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offgrid-lime",
-                        currentPage === i + 1
-                          ? "bg-offgrid-green text-offgrid-cream border border-transparent shadow-md"
-                          : "bg-white border border-offgrid-green/20 text-offgrid-green hover:border-offgrid-green/50 hover:bg-offgrid-green/5"
-                      )}
-                    >
-                      {i + 1}
-                    </button>
-                  ))}
-                </div>
-                
-                <div className="sm:hidden text-sm font-bold text-offgrid-green px-5 py-2.5 border border-offgrid-green/20 rounded-xl bg-white">
-                  {currentPage} <span className="text-offgrid-green/50 font-semibold mx-1">/</span> {totalPages}
+
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  {pageNumbers.map((page, i) =>
+                    page === "ellipsis" ? (
+                      <span
+                        key={`gap-${i}`}
+                        className="px-1 font-mono text-sm text-offgrid-green/40 select-none"
+                        aria-hidden
+                      >
+                        …
+                      </span>
+                    ) : (
+                      <button
+                        key={page}
+                        onClick={() => goToPage(page)}
+                        aria-label={`Page ${page}`}
+                        aria-current={currentPage === page ? "page" : undefined}
+                        className={cn(
+                          "flex h-10 min-w-[2.5rem] items-center justify-center rounded-xl px-3 font-mono text-sm font-bold tabular-nums transition-all outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offgrid-lime",
+                          currentPage === page
+                            ? "border border-transparent bg-offgrid-green text-offgrid-cream shadow-md"
+                            : "border border-offgrid-green/20 bg-white text-offgrid-green hover:border-offgrid-green/50 hover:bg-offgrid-green/5",
+                        )}
+                      >
+                        {page}
+                      </button>
+                    ),
+                  )}
                 </div>
 
                 <button
-                  onClick={() => {
-                    setCurrentPage(p => Math.min(totalPages, p + 1));
-                    window.scrollTo({ top: 400, behavior: 'smooth' });
-                  }}
+                  onClick={() => goToPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
-                  className="w-10 h-10 rounded-xl flex items-center justify-center border border-offgrid-green/20 bg-white text-offgrid-green hover:border-offgrid-green/50 hover:bg-offgrid-green/5 disabled:opacity-40 disabled:hover:border-offgrid-green/20 disabled:hover:bg-white disabled:cursor-not-allowed transition-all outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offgrid-lime"
+                  aria-label="Next page"
+                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-offgrid-green/20 bg-white text-offgrid-green transition-all hover:border-offgrid-green/50 hover:bg-offgrid-green/5 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-offgrid-green/20 disabled:hover:bg-white outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offgrid-lime"
                 >
-                  <ChevronRight className="w-5 h-5" />
+                  <ChevronRight className="h-5 w-5" />
                 </button>
-              </div>
+              </nav>
             )}
           </>
         )}

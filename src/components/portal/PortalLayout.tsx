@@ -13,6 +13,9 @@ import {
   Menu,
   X,
   ExternalLink,
+  Users,
+  ScrollText,
+  Settings,
 } from "lucide-react";
 import { LOGO_WORDMARK_WHITE } from "@/src/lib/brandAssets";
 import { cn } from "@/src/lib/utils";
@@ -28,21 +31,63 @@ const labelsByRole: Record<Exclude<UserRole, "customer">, string> = {
   staff: "Staff Workspace",
 };
 
-const navByRole: Record<Exclude<UserRole, "customer">, { name: string; to: string; icon: typeof LayoutDashboard }[]> = {
+interface NavItem {
+  name: string;
+  to: string;
+  icon: typeof LayoutDashboard;
+}
+
+interface NavSection {
+  label: string;
+  items: NavItem[];
+}
+
+const navByRole: Record<Exclude<UserRole, "customer">, NavSection[]> = {
   admin: [
-    { name: "Dashboard", to: "/portal/admin", icon: LayoutDashboard },
-    { name: "Homepage", to: "/portal/admin/homepage", icon: Home },
-    { name: "Custom pages", to: "/portal/admin/custom-pages", icon: Palette },
-    { name: "Orders", to: "/portal/admin/orders", icon: ClipboardList },
-    { name: "Products", to: "/portal/admin/products", icon: Package },
-    { name: "Payments", to: "/portal/admin/payments", icon: QrCode },
-    { name: "Events", to: "/portal/admin/events", icon: CalendarDays },
-    { name: "Analytics", to: "/portal/admin/analytics", icon: BarChart3 },
+    {
+      label: "Overview",
+      items: [
+        { name: "Dashboard", to: "/portal/admin", icon: LayoutDashboard },
+        { name: "Analytics", to: "/portal/admin/analytics", icon: BarChart3 },
+      ],
+    },
+    {
+      label: "Commerce",
+      items: [
+        { name: "Orders", to: "/portal/admin/orders", icon: ClipboardList },
+        { name: "Products", to: "/portal/admin/products", icon: Package },
+        { name: "Payments", to: "/portal/admin/payments", icon: QrCode },
+        { name: "Events", to: "/portal/admin/events", icon: CalendarDays },
+      ],
+    },
+    {
+      label: "Content",
+      items: [
+        { name: "Homepage", to: "/portal/admin/homepage", icon: Home },
+        { name: "Custom pages", to: "/portal/admin/custom-pages", icon: Palette },
+      ],
+    },
+    {
+      label: "Administration",
+      items: [
+        { name: "Staff", to: "/portal/admin/staff", icon: Users },
+        { name: "Audit log", to: "/portal/admin/audit-logs", icon: ScrollText },
+        { name: "Settings", to: "/portal/admin/settings", icon: Settings },
+      ],
+    },
   ],
   staff: [
-    { name: "Dashboard", to: "/portal/staff", icon: LayoutDashboard },
-    { name: "Orders", to: "/portal/staff/orders", icon: ClipboardList },
-    { name: "Analytics", to: "/portal/staff/analytics", icon: BarChart3 },
+    {
+      label: "Overview",
+      items: [
+        { name: "Dashboard", to: "/portal/staff", icon: LayoutDashboard },
+        { name: "Analytics", to: "/portal/staff/analytics", icon: BarChart3 },
+      ],
+    },
+    {
+      label: "Commerce",
+      items: [{ name: "Orders", to: "/portal/staff/orders", icon: ClipboardList }],
+    },
   ],
 };
 
@@ -60,7 +105,7 @@ function initialsFrom(name: string | undefined): string {
 export function PortalLayout({ role }: PortalLayoutProps) {
   const navigate = useNavigate();
   const user = usePortalStore((state) => state.currentUser);
-  const navItems = navByRole[role];
+  const navSections = navByRole[role];
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const logout = () => {
@@ -97,18 +142,27 @@ export function PortalLayout({ role }: PortalLayoutProps) {
         </div>
       </div>
 
-      <nav className="mt-6 flex-1 space-y-1 overflow-y-auto">
-        {navItems.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.to === `/portal/${role}`}
-            onClick={onNavigate}
-            className={navItemClass}
-          >
-            <item.icon className="h-4 w-4 shrink-0" />
-            {item.name}
-          </NavLink>
+      <nav className="mt-6 flex-1 space-y-6 overflow-y-auto">
+        {navSections.map((section) => (
+          <div key={section.label}>
+            <p className="px-3 pb-2 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-offgrid-cream/40">
+              {section.label}
+            </p>
+            <div className="space-y-1">
+              {section.items.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={item.to === `/portal/${role}`}
+                  onClick={onNavigate}
+                  className={navItemClass}
+                >
+                  <item.icon className="h-4 w-4 shrink-0" />
+                  {item.name}
+                </NavLink>
+              ))}
+            </div>
+          </div>
         ))}
       </nav>
 

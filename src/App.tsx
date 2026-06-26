@@ -16,6 +16,9 @@ const ProductDetailPage = lazy(() =>
   import("./pages/ProductDetailPage").then((m) => ({ default: m.ProductDetailPage })),
 );
 const ShopPage = lazy(() => import("./pages/ShopPage").then((m) => ({ default: m.ShopPage })));
+const CollectionsPage = lazy(() =>
+  import("./pages/CollectionsPage").then((m) => ({ default: m.CollectionsPage })),
+);
 const EventsPage = lazy(() => import("./pages/EventsPage").then((m) => ({ default: m.EventsPage })));
 const TestimonialsPage = lazy(() =>
   import("./pages/TestimonialsPage").then((m) => ({ default: m.TestimonialsPage })),
@@ -85,6 +88,15 @@ const AdminLandingPage = lazy(() =>
 const AdminCustomPagesPage = lazy(() =>
   import("./pages/portal/AdminCustomPagesPage").then((m) => ({ default: m.AdminCustomPagesPage })),
 );
+const AdminStaffPage = lazy(() =>
+  import("./pages/portal/AdminStaffPage").then((m) => ({ default: m.AdminStaffPage })),
+);
+const AdminAuditLogsPage = lazy(() =>
+  import("./pages/portal/AdminAuditLogsPage").then((m) => ({ default: m.AdminAuditLogsPage })),
+);
+const AdminSettingsPage = lazy(() =>
+  import("./pages/portal/AdminSettingsPage").then((m) => ({ default: m.AdminSettingsPage })),
+);
 
 function PortalIndexRedirect() {
   const user = usePortalStore((state) => state.currentUser);
@@ -117,6 +129,7 @@ function AppFrame() {
       >
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/collections" element={<CollectionsPage />} />
         <Route path="/shop" element={<ShopPage />} />
         <Route path="/shop/:slug" element={<ProductDetailPage />} />
         <Route path="/events" element={<EventsPage />} />
@@ -173,6 +186,9 @@ function AppFrame() {
           <Route path="products" element={<AdminProductsPage />} />
           <Route path="payments" element={<AdminPaymentsPage />} />
           <Route path="events" element={<AdminEventsPage />} />
+          <Route path="staff" element={<AdminStaffPage />} />
+          <Route path="audit-logs" element={<AdminAuditLogsPage />} />
+          <Route path="settings" element={<AdminSettingsPage />} />
           <Route path="custom-content" element={<AdminCustomContentPage />} />
         </Route>
 

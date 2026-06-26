@@ -28,9 +28,18 @@ export function FeaturedCollections() {
               <span className="italic font-normal">{header.titleLine2Italic}</span>
             </h2>
           </div>
-          {header.caption ? (
-            <p className="max-w-xs text-sm leading-relaxed text-offgrid-green/70 md:text-right">{header.caption}</p>
-          ) : null}
+          <div className="flex flex-col gap-3 md:items-end">
+            {header.caption ? (
+              <p className="max-w-xs text-sm leading-relaxed text-offgrid-green/70 md:text-right">{header.caption}</p>
+            ) : null}
+            <Link
+              to="/collections"
+              className="group inline-flex items-center gap-1.5 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/60 transition-colors hover:text-offgrid-green"
+            >
+              View all collections
+              <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+            </Link>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-5">

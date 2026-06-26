@@ -13,6 +13,16 @@ import { siteContainer } from "@/src/lib/brandLayout";
 
 const ACCOUNT_MENU_ID = "navbar-account-menu";
 
+/** Mirrors DH Ultimate custom-order IA — deep-links into `/custom#:slug` guide panels. */
+const CUSTOM_NAV_LINKS = [
+  { label: "How to order", to: "/custom#how-to-order" },
+  { label: "Product catalog", to: "/shop" },
+  { label: "Team deals", to: "/custom#team-deals" },
+  { label: "Sizing chart", to: "/custom#sizing-chart" },
+  { label: "Free jersey promo", to: "/custom#free-jersey-promo" },
+  { label: "FAQ", to: "/custom#faqs" },
+] as const;
+
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -96,25 +106,8 @@ export function Navbar() {
     navigate("/login");
   };
 
-  const handleScrollToSection = (sectionId: string) => {
-    if (location.pathname !== "/") {
-      navigate("/");
-      setTimeout(() => {
-        const element = document.getElementById(sectionId);
-        if (element) {
-          element.scrollIntoView({ behavior: "smooth" });
-        }
-      }, 100);
-    } else {
-      const element = document.getElementById(sectionId);
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth" });
-      }
-    }
-  };
-
   const navLinks = [
-    { name: "Collections", action: () => handleScrollToSection("collections") },
+    { name: "Collections", action: () => handleNavigate("/collections") },
     { name: "Shop", action: () => handleNavigate("/shop") },
     { name: "Events", action: () => handleNavigate("/events") },
     { name: "Testimonials", action: () => handleNavigate("/testimonials") },
@@ -219,25 +212,36 @@ export function Navbar() {
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 8 }}
-                    className="absolute left-0 top-full mt-3 w-64 rounded-2xl border border-offgrid-green/15 bg-offgrid-cream p-3 shadow-2xl"
+                    className="absolute left-0 top-full mt-3 w-72 rounded-2xl border border-offgrid-green/15 bg-offgrid-cream p-3 shadow-2xl"
                   >
                     <button
-                      onClick={() => handleNavigate("/custom")}
-                      className="mb-1 block w-full rounded-xl px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.12em] text-offgrid-green hover:bg-offgrid-green/5"
+                      onClick={() => handleNavigate("/custom/order")}
+                      className="mb-2 block w-full rounded-xl bg-offgrid-green px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-[0.12em] text-offgrid-cream hover:bg-offgrid-green/90"
                     >
-                      Ordering guide
+                      Place custom order
                     </button>
                     <button
                       onClick={() => handleNavigate("/custom/templates")}
-                      className="mb-1 block w-full rounded-xl px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.12em] text-offgrid-green hover:bg-offgrid-green/5"
+                      className="mb-2 block w-full rounded-xl px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.12em] text-offgrid-green hover:bg-offgrid-green/5"
                     >
                       Templates
                     </button>
+                    <div className="my-2 border-t border-offgrid-green/10" />
+                    {CUSTOM_NAV_LINKS.map((link) => (
+                      <button
+                        key={link.to}
+                        onClick={() => handleNavigate(link.to)}
+                        className="block w-full rounded-xl px-3 py-2 text-left text-xs font-medium text-offgrid-green/80 hover:bg-offgrid-green/5 hover:text-offgrid-green"
+                      >
+                        {link.label}
+                      </button>
+                    ))}
+                    <div className="my-2 border-t border-offgrid-green/10" />
                     <button
-                      onClick={() => handleNavigate("/custom/order")}
-                      className="block w-full rounded-xl px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.12em] text-offgrid-green hover:bg-offgrid-green/5"
+                      onClick={() => handleNavigate("/custom")}
+                      className="block w-full rounded-xl px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.12em] text-offgrid-green/60 hover:bg-offgrid-green/5"
                     >
-                      Place custom order
+                      Full ordering guide
                     </button>
                   </motion.div>
                 )}
@@ -419,10 +423,10 @@ export function Navbar() {
           >
             <nav className="flex flex-col gap-6 text-center mt-12 overflow-y-auto">
               <button
-                onClick={() => handleNavigate("/custom")}
+                onClick={() => handleNavigate("/custom/order")}
                 className="text-3xl font-display font-bold text-offgrid-cream hover:text-white transition-colors cursor-pointer"
               >
-                Ordering guide
+                Place custom order
               </button>
               <button
                 onClick={() => handleNavigate("/custom/templates")}
@@ -430,11 +434,20 @@ export function Navbar() {
               >
                 Templates
               </button>
+              {CUSTOM_NAV_LINKS.map((link) => (
+                <button
+                  key={link.to}
+                  onClick={() => handleNavigate(link.to)}
+                  className="text-lg font-display font-semibold text-offgrid-cream/75 hover:text-white transition-colors cursor-pointer"
+                >
+                  {link.label}
+                </button>
+              ))}
               <button
-                onClick={() => handleNavigate("/custom/order")}
-                className="text-xl font-display font-semibold text-offgrid-cream/80 hover:text-white transition-colors cursor-pointer"
+                onClick={() => handleNavigate("/custom")}
+                className="text-lg font-display font-semibold text-offgrid-cream/60 hover:text-white transition-colors cursor-pointer"
               >
-                Place custom order
+                Full ordering guide
               </button>
               {navLinks.map((link) => (
                 <button

@@ -5,6 +5,8 @@ import { formatMoney, php } from "@/src/types/commerce";
 import { cn } from "@/src/lib/utils";
 import { accountHeroMonoTitle } from "@/src/lib/brandLayout";
 import { AccountPageShell } from "@/src/components/account/AccountPageShell";
+import { CustomOrderFileButton } from "@/src/components/custom-order/CustomOrderFileButton";
+import { CustomOrderTimeline } from "@/src/components/custom-order/CustomOrderTimeline";
 import {
   formatCityProvinceZipLine,
   formatEnumLabel,
@@ -61,7 +63,7 @@ export function CustomerOrderDetailPage() {
   const orderKind = retail ? "Retail order" : "Custom order";
   const paymentSettings = usePortalStore((s) => s.paymentSettings);
   const hasLegacyCustomSpecs = Boolean(
-    custom && (custom.cut || custom.material || custom.printMethod),
+    custom && (custom.cut || custom.material || custom.printMethod || custom.category),
   );
   const teamOrderType = custom
     ? custom.category === "apparel"
@@ -244,6 +246,17 @@ export function CustomerOrderDetailPage() {
             {custom.updatedAt !== custom.createdAt ? ` · Updated ${formatOrderTimestamp(custom.updatedAt)}` : ""}
           </p>
 
+          <div className="mt-6 min-w-0 rounded-2xl border border-offgrid-green/10 bg-white p-5 shadow-sm sm:mt-8 sm:p-6">
+            <h2 className="text-lg font-display font-bold text-offgrid-green">Order progress</h2>
+            <div className="mt-5">
+              <CustomOrderTimeline
+                status={custom.status}
+                hasOfficialQuote={hasOfficialCustomQuote(custom.officialTotal)}
+                paymentStatus={custom.paymentStatus}
+              />
+            </div>
+          </div>
+
           <div className="mt-6 grid gap-5 sm:mt-8 sm:gap-6 lg:grid-cols-2">
             <div className="min-w-0 rounded-2xl border border-offgrid-green/10 bg-white p-5 shadow-sm sm:p-6">
               <h2 className="text-lg font-display font-bold text-offgrid-green">Contact</h2>
@@ -337,11 +350,15 @@ export function CustomerOrderDetailPage() {
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/50">Design file</p>
-                <p className="mt-1 text-sm font-semibold text-offgrid-green">{custom.designFileName ?? "No file uploaded"}</p>
+                <div className="mt-2">
+                  <CustomOrderFileButton fileKey={custom.designFileKey} fileName={custom.designFileName} />
+                </div>
               </div>
               <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/50">Order sheet</p>
-                <p className="mt-1 text-sm font-semibold text-offgrid-green">{custom.orderSheetFileName ?? "No file uploaded"}</p>
+                <div className="mt-2">
+                  <CustomOrderFileButton fileKey={custom.orderSheetFileKey} fileName={custom.orderSheetFileName} />
+                </div>
               </div>
               <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/50">Quantity</p>
@@ -405,7 +422,7 @@ export function CustomerOrderDetailPage() {
           </div>
 
           <div className="mt-6 min-w-0 rounded-2xl border border-offgrid-green/10 bg-white p-5 shadow-sm sm:mt-8 sm:p-6">
-            <h2 className="text-xl font-display font-bold text-offgrid-green">Timeline</h2>
+            <h2 className="text-xl font-display font-bold text-offgrid-green">Key dates</h2>
             <ul className="mt-4 space-y-3 text-sm text-offgrid-green/80">
               <li className="flex flex-col gap-1 border-b border-offgrid-green/8 pb-2 sm:flex-row sm:justify-between sm:gap-4">
                 <span className="text-offgrid-green/55">Submitted</span>

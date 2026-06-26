@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { LockKeyhole, UserRound, Sparkles } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { LOGO_WORDMARK_WHITE } from "@/src/lib/brandAssets";
@@ -16,9 +16,10 @@ const roleButtons: { role: UserRole; label: string; helper: string }[] = [
 export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const currentUser = usePortalStore((state) => state.currentUser);
 
-  const [email, setEmail] = useState("customer@offgrid.test");
+  const [email, setEmail] = useState(() => searchParams.get("email") ?? "customer@offgrid.test");
   const [password, setPassword] = useState("offgrid123");
   const [error, setError] = useState<string | null>(null);
 

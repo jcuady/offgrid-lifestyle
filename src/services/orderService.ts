@@ -1,5 +1,6 @@
 import { toRetailOrderPayload, type CustomOrderDraft, type ShippingInfo } from "@/src/types/commerce";
 import { usePortalStore } from "@/src/store/usePortalStore";
+import { finalizeCustomOrderFiles } from "@/src/lib/customOrderFiles";
 
 export interface RetailCartLineInput {
   productId: string;
@@ -20,7 +21,7 @@ export interface SubmitRetailOrderInput {
 
 export interface OrderService {
   submitRetailOrder: (input: SubmitRetailOrderInput) => string;
-  submitCustomOrder: (draft: CustomOrderDraft) => string;
+  submitCustomOrder: (draft: CustomOrderDraft) => Promise<string>;
 }
 
 /** Persists via `usePortalStore` (localStorage). Production: POST to an API and email admins (e.g. Resend). */
@@ -38,5 +39,16 @@ export const localOrderService: OrderService = {
     usePortalStore.getState().recordRetailOrder(retailOrderPayload, fallbackName, fallbackEmail);
     return orderId;
   },
-  submitCustomOrder: (draft) => usePortalStore.getState().recordCustomOrder(draft),
+  submitCustomOrder: async (draft) => {
+    const orderId =
+      draft.id ?? `CO-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const fileKeys = await finalizeCustomOrderFiles(orderId, draft.designFileKey, draft.orderSheetFileKey);
+    const finalDraft: CustomOrderDraft = {
+      ...draft,
+      id: orderId,
+      designFileKey: fileKeys.designFileKey ?? draft.designFileKey,
+      orderSheetFileKey: fileKeys.orderSheetFileKey ?? draft.orderSheetFileKey,
+    };
+    return usePortalStore.getState().recordCustomOrder(finalDraft);
+  },
 };

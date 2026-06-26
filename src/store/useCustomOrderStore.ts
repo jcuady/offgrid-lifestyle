@@ -14,7 +14,9 @@ const EMPTY_DRAFT: CustomOrderDraft = {
   category: "apparel",
   headwearType: null,
   designFileName: null,
+  designFileKey: null,
   orderSheetFileName: null,
+  orderSheetFileKey: null,
   designNotes: "",
   cut: null,
   material: null,
@@ -100,6 +102,8 @@ export const useCustomOrderStore = create<CustomOrderState>()(
             category: draft.category ?? "apparel",
             headwearType: draft.headwearType ?? null,
             orderSheetFileName: draft.orderSheetFileName ?? null,
+            orderSheetFileKey: draft.orderSheetFileKey ?? null,
+            designFileKey: draft.designFileKey ?? null,
           };
         }
         const step = next.currentStep;

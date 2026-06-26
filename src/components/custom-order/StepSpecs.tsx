@@ -1,13 +1,21 @@
 import type { ChangeEvent } from "react";
-import { ArrowRight, ArrowLeft, Download, Upload, ClipboardList } from "lucide-react";
+import { useState } from "react";
+import { ArrowRight, ArrowLeft, Download, Upload, ClipboardList, Loader2 } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
+import { OptionCard } from "@/src/components/custom-order/OptionCard";
 import { useCustomOrderStore } from "@/src/store/useCustomOrderStore";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
+import { CUT_OPTIONS, MATERIAL_OPTIONS, PRINT_OPTIONS } from "@/src/data/customOptions";
 import { downloadTeamOrderKitSheet } from "@/src/lib/teamOrderKitSheet";
+import { PENDING_SHEET_KEY, saveCustomOrderFile } from "@/src/lib/customOrderFiles";
+import { cn } from "@/src/lib/utils";
 
 export function StepSpecs() {
   const copy = useSiteContentStore((s) => s.customPageContent.wizard.step2);
-  const { draft, updateDraft, nextStep, prevStep } = useCustomOrderStore();
+  const { draft, setCut, setMaterial, setPrintMethod, updateDraft, nextStep, prevStep } = useCustomOrderStore();
+  const [uploadBusy, setUploadBusy] = useState(false);
+  const isApparel = draft.category === "apparel";
+
   const selectedType =
     draft.category === "apparel"
       ? "jersey_shorts"
@@ -19,27 +27,102 @@ export function StepSpecs() {
             ? draft.headwearType.replace("cap-", "cap_")
             : "headwear";
 
-  const specsComplete = Boolean(draft.orderSheetFileName);
+  const productSpecsComplete = isApparel
+    ? Boolean(draft.cut && draft.material && draft.printMethod)
+    : Boolean(draft.printMethod);
 
-  const onOrderSheetSelect = (e: ChangeEvent<HTMLInputElement>) => {
+  const specsComplete = productSpecsComplete && Boolean(draft.orderSheetFileName);
+
+  const onOrderSheetSelect = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) updateDraft({ orderSheetFileName: file.name });
+    if (!file) return;
+    try {
+      setUploadBusy(true);
+      await saveCustomOrderFile(PENDING_SHEET_KEY, file);
+      updateDraft({ orderSheetFileName: file.name, orderSheetFileKey: PENDING_SHEET_KEY });
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : "Upload failed.");
+    } finally {
+      setUploadBusy(false);
+    }
   };
 
   return (
     <div className="space-y-10 sm:space-y-12">
       <div>
-        <h2 className="text-xl sm:text-2xl font-display font-bold text-offgrid-green mb-2">{copy.title}</h2>
+        <h2 className="mb-2 text-xl font-display font-bold text-offgrid-green sm:text-2xl">{copy.title}</h2>
         <p className="text-sm text-offgrid-green/60">{copy.description}</p>
       </div>
 
+      {/* Product specifications — DH Ultimate parity: cut, fabric, print */}
       <div className="space-y-8">
+        {isApparel ? (
+          <>
+            <div>
+              <h3 className="mb-3 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-offgrid-green/50">
+                {copy.cutHeading}
+              </h3>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {CUT_OPTIONS.map((opt) => (
+                  <div key={opt.id}>
+                    <OptionCard
+                      label={opt.label}
+                      description={opt.description}
+                      selected={draft.cut === opt.id}
+                      onClick={() => setCut(opt.id)}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h3 className="mb-3 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-offgrid-green/50">
+                {copy.fabricHeading}
+              </h3>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {MATERIAL_OPTIONS.map((opt) => (
+                  <div key={opt.id}>
+                    <OptionCard
+                      label={opt.label}
+                      description={opt.description}
+                      selected={draft.material === opt.id}
+                      onClick={() => setMaterial(opt.id)}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        ) : null}
+
         <div>
-          <h3 className="mb-3 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-offgrid-green/50">{copy.cutHeading}</h3>
+          <h3 className="mb-3 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-offgrid-green/50">
+            {copy.printHeading}
+          </h3>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {PRINT_OPTIONS.map((opt) => (
+              <div key={opt.id}>
+                <OptionCard
+                  label={opt.label}
+                  description={opt.description}
+                  selected={draft.printMethod === opt.id}
+                  onClick={() => setPrintMethod(opt.id)}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Team order kit — roster sheet */}
+      <div className="space-y-8 border-t border-offgrid-green/10 pt-8">
+        <div>
+          <h3 className="mb-3 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-offgrid-green/50">
+            {copy.orderKitDownloadHeading}
+          </h3>
           <div className="rounded-2xl border border-offgrid-green/10 bg-offgrid-cream/40 p-5">
-            <p className="text-sm text-offgrid-green/70">
-              Download the OffGrid roster sheet so names, numbers, sizes, quantities, and product types are complete before submission.
-            </p>
+            <p className="text-sm text-offgrid-green/70">{copy.orderKitDownloadDescription}</p>
             <Button
               variant="outline"
               size="sm"
@@ -48,7 +131,7 @@ export function StepSpecs() {
               onClick={() => void downloadTeamOrderKitSheet(selectedType)}
             >
               <Download className="h-4 w-4" />
-              Download order kit (.xlsx)
+              {copy.orderKitDownloadButton}
             </Button>
             <p className="mt-2 text-[10px] text-offgrid-green/55">
               Current selection:{" "}
@@ -64,20 +147,33 @@ export function StepSpecs() {
         </div>
 
         <div>
-          <h3 className="mb-3 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-offgrid-green/50">{copy.fabricHeading}</h3>
-          <label className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-offgrid-green/20 p-8 transition-all hover:border-offgrid-green/40 hover:bg-offgrid-green/[0.02] sm:p-12">
-            <Upload className="h-8 w-8 text-offgrid-green/40" />
+          <h3 className="mb-3 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-offgrid-green/50">
+            {copy.orderKitUploadHeading}
+          </h3>
+          <label
+            className={cn(
+              "flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-offgrid-green/20 p-8 transition-all sm:p-12",
+              uploadBusy ? "pointer-events-none opacity-60" : "hover:border-offgrid-green/40 hover:bg-offgrid-green/[0.02]",
+            )}
+          >
+            {uploadBusy ? (
+              <Loader2 className="h-8 w-8 animate-spin text-offgrid-green/50" />
+            ) : (
+              <Upload className="h-8 w-8 text-offgrid-green/40" />
+            )}
             {draft.orderSheetFileName ? (
               <p className="text-sm font-semibold text-offgrid-green">{draft.orderSheetFileName}</p>
             ) : (
-              <p className="text-sm text-offgrid-green/50">Upload completed team order sheet</p>
+              <p className="text-sm text-offgrid-green/50">{copy.orderKitUploadPlaceholder}</p>
             )}
-            <input type="file" accept=".xlsx,.xls,.csv" onChange={onOrderSheetSelect} className="hidden" />
+            <input type="file" accept=".xlsx,.xls,.csv" onChange={(e) => void onOrderSheetSelect(e)} className="hidden" />
           </label>
         </div>
 
         <div>
-          <h3 className="mb-3 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-offgrid-green/50">{copy.printHeading}</h3>
+          <h3 className="mb-3 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-offgrid-green/50">
+            {copy.orderKitChecklistHeading}
+          </h3>
           <div className="rounded-2xl border border-offgrid-green/10 bg-offgrid-cream/40 p-5">
             <div className="flex items-start gap-3">
               <ClipboardList className="mt-0.5 h-4 w-4 text-offgrid-green/60" />

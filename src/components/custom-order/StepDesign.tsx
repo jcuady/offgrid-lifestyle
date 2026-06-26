@@ -1,12 +1,14 @@
 import { useMemo, useState, type ChangeEvent } from "react";
 import { Link } from "react-router-dom";
-import { Upload, Download, ArrowRight } from "lucide-react";
+import { Upload, Download, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { useCustomOrderStore } from "@/src/store/useCustomOrderStore";
 import { resolveCanonicalTemplates } from "@/src/lib/canonicalTemplates";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { PRIMARY_DESIGN_TEMPLATE_ID, triggerTemplateDownload } from "@/src/lib/resolveTemplateDownload";
 import { HEADWEAR_TYPE_OPTIONS } from "@/src/data/customHeadwearOptions";
+import { PENDING_DESIGN_KEY, saveCustomOrderFile } from "@/src/lib/customOrderFiles";
+import { cn } from "@/src/lib/utils";
 
 export function StepDesign() {
   const copy = useSiteContentStore((s) => s.customPageContent.wizard.step1);
@@ -21,6 +23,11 @@ export function StepDesign() {
     [templates],
   );
   const [primaryDlBusy, setPrimaryDlBusy] = useState(false);
+  const [uploadBusy, setUploadBusy] = useState(false);
+
+  const headwearReady = draft.category === "apparel" || Boolean(draft.headwearType);
+  const designReady = Boolean(draft.designFileName) || draft.designNotes.trim().length > 0;
+  const canContinue = headwearReady && designReady;
 
   const handlePrimaryDownload = async () => {
     if (!primaryTemplate) return;
@@ -34,10 +41,17 @@ export function StepDesign() {
     }
   };
 
-  const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      updateDraft({ designFileName: file.name });
+    if (!file) return;
+    try {
+      setUploadBusy(true);
+      await saveCustomOrderFile(PENDING_DESIGN_KEY, file);
+      updateDraft({ designFileName: file.name, designFileKey: PENDING_DESIGN_KEY });
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : "Upload failed.");
+    } finally {
+      setUploadBusy(false);
     }
   };
 
@@ -145,8 +159,17 @@ export function StepDesign() {
         <label className="mb-3 block font-mono text-xs font-semibold uppercase tracking-[0.15em] text-offgrid-green">
           {copy.uploadLabel}
         </label>
-        <label className="flex flex-col items-center justify-center gap-3 border-2 border-dashed border-offgrid-green/20 rounded-xl p-8 sm:p-12 cursor-pointer hover:border-offgrid-green/40 hover:bg-offgrid-green/[0.02] transition-all">
-          <Upload className="w-8 h-8 text-offgrid-green/40" />
+        <label
+          className={cn(
+            "flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-offgrid-green/20 p-8 transition-all sm:p-12",
+            uploadBusy ? "pointer-events-none opacity-60" : "hover:border-offgrid-green/40 hover:bg-offgrid-green/[0.02]",
+          )}
+        >
+          {uploadBusy ? (
+            <Loader2 className="h-8 w-8 animate-spin text-offgrid-green/50" />
+          ) : (
+            <Upload className="h-8 w-8 text-offgrid-green/40" />
+          )}
           {draft.designFileName ? (
             <p className="text-sm font-semibold text-offgrid-green">{draft.designFileName}</p>
           ) : (
@@ -155,10 +178,13 @@ export function StepDesign() {
           <input
             type="file"
             accept=".png,.jpg,.jpeg,.pdf,.ai,.svg"
-            onChange={handleFileSelect}
+            onChange={(e) => void handleFileSelect(e)}
             className="hidden"
           />
         </label>
+        <p className="mt-2 text-[10px] text-offgrid-green/50">
+          Upload artwork (.AI preferred) or add design notes below if you need free OffGrid design support.
+        </p>
       </div>
 
       <div>
@@ -174,7 +200,13 @@ export function StepDesign() {
         />
       </div>
 
-      <Button variant="default" size="lg" className="w-full group" onClick={nextStep}>
+      {!canContinue ? (
+        <p className="text-center text-xs text-offgrid-green/55">
+          Select order type, then upload a design file or describe your brief to continue.
+        </p>
+      ) : null}
+
+      <Button variant="default" size="lg" className="w-full group" disabled={!canContinue} onClick={nextStep}>
         {copy.nextButton}
         <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
       </Button>

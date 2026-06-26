@@ -58,7 +58,9 @@ export interface CustomOrderDraft {
   category: CustomCategory;
   headwearType: HeadwearType | null;
   designFileName: string | null;
+  designFileKey: string | null;
   orderSheetFileName: string | null;
+  orderSheetFileKey: string | null;
   designNotes: string;
   cut: GarmentCut | null;
   material: FabricType | null;

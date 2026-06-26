@@ -57,6 +57,12 @@ export interface CustomWizardPageContent {
     cutHeading: string;
     fabricHeading: string;
     printHeading: string;
+    orderKitDownloadHeading: string;
+    orderKitDownloadDescription: string;
+    orderKitDownloadButton: string;
+    orderKitUploadHeading: string;
+    orderKitUploadPlaceholder: string;
+    orderKitChecklistHeading: string;
     backButton: string;
     nextButton: string;
   };
@@ -112,7 +118,11 @@ export function normalizeCustomPageContent(page: CustomPageContent): CustomPageC
   return {
     ...page,
     hub: { ...page.hub, processSteps: processSteps.slice(0, CUSTOM_PROCESS_STEP_COUNT) },
-    wizard: { ...page.wizard, stepLabels: stepLabels.slice(0, CUSTOM_WIZARD_STEP_COUNT) },
+    wizard: {
+      ...page.wizard,
+      stepLabels: stepLabels.slice(0, CUSTOM_WIZARD_STEP_COUNT),
+      step2: { ...initialCustomPageContent.wizard.step2, ...page.wizard.step2 },
+    },
     templatesPage: { ...initialCustomPageContent.templatesPage, ...page.templatesPage },
   };
 }
@@ -152,7 +162,7 @@ export const initialCustomPageContent: CustomPageContent = {
     eyebrow: "Team order workflow",
     title: "Build your team order",
     description: "Three quick steps: customize design, complete the order sheet, and submit your request for review.",
-    stepLabels: ["Customize", "Order kit", "Submit"],
+    stepLabels: ["Design", "Specs & roster", "Review & submit"],
     step1: {
       title: "Customize Your Gear",
       description:
@@ -165,11 +175,19 @@ export const initialCustomPageContent: CustomPageContent = {
       nextButton: "Next: Team order kit",
     },
     step2: {
-      title: "Collect Order Details",
-      description: "Download the team order sheet and complete names, numbers, sizes, quantities, and product types.",
-      cutHeading: "Download team order sheet",
-      fabricHeading: "Upload completed sheet",
-      printHeading: "Required checklist",
+      title: "Product specs & order kit",
+      description:
+        "Choose cut, fabric, and print method (like a standard custom apparel flow), then download and upload your completed team order sheet.",
+      cutHeading: "Select cut & style",
+      fabricHeading: "Select fabric",
+      printHeading: "Select print method",
+      orderKitDownloadHeading: "Download team order sheet",
+      orderKitDownloadDescription:
+        "Download the OffGrid roster sheet so names, numbers, sizes, quantities, and product types are complete before submission.",
+      orderKitDownloadButton: "Download order kit (.xlsx)",
+      orderKitUploadHeading: "Upload completed sheet",
+      orderKitUploadPlaceholder: "Upload completed team order sheet",
+      orderKitChecklistHeading: "Required checklist",
       backButton: "Back",
       nextButton: "Next: Review & submit",
     },

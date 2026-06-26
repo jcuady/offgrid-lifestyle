@@ -1,9 +1,14 @@
-import React, { useState } from "react";
-import { ArrowLeft, Send, Check, AlertCircle, RotateCcw } from "lucide-react";
+import React, { useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { ArrowLeft, Send, Check, AlertCircle, RotateCcw, Loader2 } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { useCustomOrderStore } from "@/src/store/useCustomOrderStore";
+import { usePortalStore } from "@/src/store/usePortalStore";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { localOrderService } from "@/src/services";
+import { CUT_OPTIONS, MATERIAL_OPTIONS, PRINT_OPTIONS, estimateUnitPrice } from "@/src/data/customOptions";
+import { estimateHeadwearUnitPrice } from "@/src/data/customHeadwearOptions";
+import { formatMoney, php } from "@/src/types/commerce";
 import { cn } from "@/src/lib/utils";
 
 function SummaryRow({ label, value }: { label: string; value: React.ReactNode }) {
@@ -16,9 +21,13 @@ function SummaryRow({ label, value }: { label: string; value: React.ReactNode })
 }
 
 export function StepSummary() {
+  const navigate = useNavigate();
   const copy = useSiteContentStore((s) => s.customPageContent.wizard.step3);
   const { draft, updateDraft, prevStep, resetDraft } = useCustomOrderStore();
-  const [submitted, setSubmitted] = useState(false);
+  const currentUser = usePortalStore((s) => s.currentUser);
+  const [submittedOrderId, setSubmittedOrderId] = useState<string | null>(null);
+  const [submittedEmail, setSubmittedEmail] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const teamOrderType =
     draft.category === "apparel"
       ? "Jerseys & shorts"
@@ -26,34 +35,68 @@ export function StepSummary() {
         ? "Towels"
         : "Headwear";
 
+  const unitPrice = useMemo(() => {
+    if (draft.category === "apparel") {
+      return estimateUnitPrice(draft.cut, draft.material, draft.printMethod);
+    }
+    return estimateHeadwearUnitPrice(draft.headwearType, draft.printMethod);
+  }, [draft.category, draft.cut, draft.material, draft.printMethod, draft.headwearType]);
+
+  const estimatedTotal = useMemo(() => php(unitPrice * draft.quantity), [unitPrice, draft.quantity]);
+  const estimatedDeposit = useMemo(
+    () => php(Math.round(estimatedTotal.amount * 0.6)),
+    [estimatedTotal.amount],
+  );
+
+  const labelFor = (options: { id: string; label: string }[], id: string | null) =>
+    options.find((o) => o.id === id)?.label ?? "—";
+
+  const minQuantity = draft.category === "apparel" ? 10 : 1;
+
   const canSubmit =
     draft.contactName.trim() !== "" &&
     draft.contactEmail.trim() !== "" &&
     draft.contactPhone.trim() !== "" &&
-    Boolean(draft.orderSheetFileName);
+    Boolean(draft.orderSheetFileName) &&
+    draft.quantity >= minQuantity;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!canSubmit) return;
-    const submittedDraft = {
-      ...draft,
-      estimatedTotal: null,
-      depositRequired: null,
-      status: "pending_deposit",
-      createdAt: draft.createdAt ?? new Date().toISOString(),
-    } as const;
-    updateDraft(submittedDraft);
-    localOrderService.submitCustomOrder(submittedDraft);
-    setSubmitted(true);
+    if (!canSubmit || submitting) return;
+    setSubmitting(true);
+    try {
+      const submittedDraft = {
+        ...draft,
+        estimatedTotal,
+        depositRequired: estimatedDeposit,
+        status: "pending_deposit" as const,
+        createdAt: draft.createdAt ?? new Date().toISOString(),
+      };
+      const orderId = await localOrderService.submitCustomOrder(submittedDraft);
+      setSubmittedEmail(submittedDraft.contactEmail);
+      resetDraft();
+
+      if (currentUser?.role === "customer") {
+        navigate(`/account/orders/${orderId}`);
+        return;
+      }
+
+      setSubmittedOrderId(orderId);
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : "Submission failed. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  if (submitted) {
+  if (submittedOrderId) {
     return (
       <div className="text-center py-8 sm:py-12 space-y-6">
         <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto rounded-full bg-offgrid-lime flex items-center justify-center">
           <Check className="w-10 h-10 sm:w-12 sm:h-12 text-white" strokeWidth={3} />
         </div>
         <h2 className="text-2xl sm:text-3xl font-display font-black text-offgrid-green">{copy.successTitle}</h2>
+        <p className="font-mono text-sm font-bold text-offgrid-green">{submittedOrderId}</p>
         <p className="text-sm text-offgrid-green/60 max-w-md mx-auto">{copy.successBody}</p>
         <div className="bg-offgrid-green/5 rounded-xl p-4 sm:p-6 text-left max-w-sm mx-auto space-y-2">
           <div className="flex items-start gap-3">
@@ -67,7 +110,22 @@ export function StepSummary() {
           </div>
         </div>
         <p className="text-xs text-offgrid-green/55 max-w-md mx-auto leading-relaxed">{copy.accountHint}</p>
-        <Button variant="outline" size="lg" className="mt-4" onClick={() => { resetDraft(); setSubmitted(false); }}>
+        <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+          <Button variant="default" size="lg" asChild>
+            <Link to={`/login?email=${encodeURIComponent(submittedEmail)}`}>Sign in to track</Link>
+          </Button>
+          <Button variant="outline" size="lg" asChild>
+            <Link to="/custom">Back to ordering guide</Link>
+          </Button>
+        </div>
+        <Button
+          variant="outline"
+          size="lg"
+          className="mt-2"
+          onClick={() => {
+            setSubmittedOrderId(null);
+          }}
+        >
           <RotateCcw className="mr-2 w-4 h-4" />
           {copy.newOrderButton}
         </Button>
@@ -88,20 +146,30 @@ export function StepSummary() {
           {copy.orderDetailsHeading}
         </h3>
         <SummaryRow label="Team order type" value={teamOrderType} />
-        <SummaryRow label="Design" value={draft.designFileName ?? "No file uploaded"} />
+        {draft.category === "apparel" ? (
+          <>
+            <SummaryRow label="Cut" value={labelFor(CUT_OPTIONS, draft.cut)} />
+            <SummaryRow label="Fabric" value={labelFor(MATERIAL_OPTIONS, draft.material)} />
+          </>
+        ) : null}
+        <SummaryRow label="Print" value={labelFor(PRINT_OPTIONS, draft.printMethod)} />
+        <SummaryRow label="Design" value={draft.designFileName ?? "Brief only — design support requested"} />
         <SummaryRow label="Order sheet" value={draft.orderSheetFileName ?? "No file uploaded"} />
         <SummaryRow
           label="Quantity"
           value={
             <input
               type="number"
-              min={1}
+              min={minQuantity}
               value={draft.quantity}
-              onChange={(e) => updateDraft({ quantity: Math.max(1, Number(e.target.value)) })}
+              onChange={(e) => updateDraft({ quantity: Math.max(minQuantity, Number(e.target.value)) })}
               className="w-20 rounded-lg border border-offgrid-green/20 bg-white px-2 py-1 text-right text-sm text-offgrid-green outline-none transition-all focus:border-offgrid-lime focus:ring-2 focus:ring-offgrid-lime/25"
             />
           }
         />
+        {draft.category === "apparel" ? (
+          <p className="mt-2 text-[10px] text-offgrid-green/50">Minimum 10 pieces per design (mix cuts within the run).</p>
+        ) : null}
       </div>
 
       {/* Pricing estimate */}
@@ -109,9 +177,23 @@ export function StepSummary() {
         <h3 className="mb-4 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-offgrid-cream/50">
           {copy.pricingHeading}
         </h3>
-        <p className="text-sm leading-relaxed text-offgrid-cream/80">
-          We verify your design and team sheet first, then send an official quote, deposit schedule, and production
-          start confirmation.
+        <div className="space-y-2 text-sm">
+          <div className="flex justify-between gap-4">
+            <span className="text-offgrid-cream/70">Est. unit price</span>
+            <span className="font-semibold">{formatMoney(php(unitPrice))}</span>
+          </div>
+          <div className="flex justify-between gap-4">
+            <span className="text-offgrid-cream/70">Est. order total ({draft.quantity} pcs)</span>
+            <span className="font-semibold">{formatMoney(estimatedTotal)}</span>
+          </div>
+          <div className="flex justify-between gap-4 border-t border-offgrid-cream/15 pt-2">
+            <span className="text-offgrid-cream/70">Est. 60% deposit</span>
+            <span className="font-display text-lg font-black text-offgrid-lime">{formatMoney(estimatedDeposit)}</span>
+          </div>
+        </div>
+        <p className="mt-4 text-sm leading-relaxed text-offgrid-cream/80">
+          Official quote and deposit are confirmed after design and roster review — same standard as industry custom
+          apparel flows.
         </p>
         <p className="text-[10px] text-offgrid-cream/40 mt-3">{copy.pricingFootnote}</p>
       </div>
@@ -184,12 +266,21 @@ export function StepSummary() {
         <Button
           variant="default"
           size="lg"
-          className={cn("sm:flex-1 group", !canSubmit && "opacity-50 cursor-not-allowed")}
+          className={cn("sm:flex-1 group", (!canSubmit || submitting) && "opacity-50 cursor-not-allowed")}
           type="submit"
-          disabled={!canSubmit}
+          disabled={!canSubmit || submitting}
         >
-          {copy.submitButton}
-          <Send className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          {submitting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Submitting…
+            </>
+          ) : (
+            <>
+              {copy.submitButton}
+              <Send className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </>
+          )}
         </Button>
       </div>
     </form>

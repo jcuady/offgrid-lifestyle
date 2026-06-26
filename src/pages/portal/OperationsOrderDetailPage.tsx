@@ -21,6 +21,7 @@ import {
   canTransitionStatus,
 } from "@/src/lib/operationsOrderFlow";
 import { Button } from "@/src/components/ui/Button";
+import { CustomOrderFileButton } from "@/src/components/custom-order/CustomOrderFileButton";
 
 function AdminQuoteEditor({
   order,
@@ -173,7 +174,7 @@ export function OperationsOrderDetailPage() {
 
   const found = useMemo(() => !!(retail || custom), [retail, custom]);
   const hasLegacyCustomSpecs = Boolean(
-    custom && (custom.cut || custom.material || custom.printMethod),
+    custom && (custom.cut || custom.material || custom.printMethod || custom.category),
   );
   const teamOrderType = custom
     ? custom.category === "apparel"
@@ -593,11 +594,15 @@ export function OperationsOrderDetailPage() {
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/50">Design file</p>
-                <p className="mt-1 text-sm font-semibold text-offgrid-green">{custom.designFileName ?? "No file uploaded"}</p>
+                <div className="mt-2">
+                  <CustomOrderFileButton fileKey={custom.designFileKey} fileName={custom.designFileName} />
+                </div>
               </div>
               <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/50">Order sheet</p>
-                <p className="mt-1 text-sm font-semibold text-offgrid-green">{custom.orderSheetFileName ?? "No file uploaded"}</p>
+                <div className="mt-2">
+                  <CustomOrderFileButton fileKey={custom.orderSheetFileKey} fileName={custom.orderSheetFileName} />
+                </div>
               </div>
               <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/50">Quantity</p>

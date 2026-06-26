@@ -1,6 +1,6 @@
 import { Navigate, useLocation } from "react-router-dom";
 import type { ReactElement } from "react";
-import { usePortalStore, type UserRole } from "@/src/store/usePortalStore";
+import { getPortalLandingByRole, usePortalStore, type UserRole } from "@/src/store/usePortalStore";
 
 interface RequirePortalRoleProps {
   roles: UserRole[];
@@ -16,7 +16,7 @@ export function RequirePortalRole({ roles, children }: RequirePortalRoleProps) {
   }
 
   if (!roles.includes(currentUser.role)) {
-    return <Navigate to="/portal" replace />;
+    return <Navigate to={getPortalLandingByRole(currentUser.role)} replace />;
   }
 
   return children;

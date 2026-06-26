@@ -122,6 +122,8 @@ export function Navbar() {
 
   type AccountMenuItem = { label: string; onSelect: () => void; tone?: "danger" };
 
+  const onAccountRoute = location.pathname.startsWith("/account");
+
   const buildAccountMenuItems = (): AccountMenuItem[] => {
     if (!currentUser) {
       return [
@@ -273,7 +275,9 @@ export function Navbar() {
                 }}
                 className={cn(
                   "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] transition-colors",
-                  "border-offgrid-cream/35 text-offgrid-cream hover:border-white hover:text-white",
+                  onAccountRoute
+                    ? "border-offgrid-lime bg-offgrid-lime/20 text-white"
+                    : "border-offgrid-cream/35 text-offgrid-cream hover:border-white hover:text-white",
                 )}
                 title={currentUser ? "Account menu" : "Sign in"}
               >

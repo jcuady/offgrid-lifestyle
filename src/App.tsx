@@ -103,9 +103,7 @@ export default function App() {
 function AppFrame() {
   const location = useLocation();
   const isPortalScreen =
-    location.pathname.startsWith("/portal") ||
-    location.pathname.startsWith("/login") ||
-    location.pathname.startsWith("/account");
+    location.pathname.startsWith("/portal") || location.pathname.startsWith("/login");
 
   return (
     <div className="min-h-screen bg-offgrid-cream font-sans text-offgrid-green overflow-x-hidden">
@@ -130,18 +128,30 @@ function AppFrame() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/portal" element={<PortalIndexRedirect />} />
         <Route
-          path="/account"
+          path="/account/orders"
           element={
             <RequirePortalRole roles={["customer"]}>
-              <PortalLayout role="customer" />
+              <CustomerOrdersPage />
             </RequirePortalRole>
           }
-        >
-          <Route index element={<Navigate to="/account/orders" replace />} />
-          <Route path="orders" element={<CustomerOrdersPage />} />
-          <Route path="profile" element={<CustomerProfilePage />} />
-          <Route path="orders/:orderId" element={<CustomerOrderDetailPage />} />
-        </Route>
+        />
+        <Route
+          path="/account/profile"
+          element={
+            <RequirePortalRole roles={["customer"]}>
+              <CustomerProfilePage />
+            </RequirePortalRole>
+          }
+        />
+        <Route
+          path="/account/orders/:orderId"
+          element={
+            <RequirePortalRole roles={["customer"]}>
+              <CustomerOrderDetailPage />
+            </RequirePortalRole>
+          }
+        />
+        <Route path="/account" element={<Navigate to="/account/orders" replace />} />
         <Route path="/portal/customer" element={<Navigate to="/account/orders" replace />} />
         <Route path="/portal/customer/orders" element={<Navigate to="/account/orders" replace />} />
         <Route path="/portal/customer/profile" element={<Navigate to="/account/profile" replace />} />

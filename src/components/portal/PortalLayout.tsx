@@ -13,7 +13,6 @@ import {
   Menu,
   X,
   ExternalLink,
-  User,
 } from "lucide-react";
 import { LOGO_WORDMARK_WHITE } from "@/src/lib/brandAssets";
 import { cn } from "@/src/lib/utils";
@@ -21,22 +20,15 @@ import { usePortalStore, type UserRole } from "@/src/store/usePortalStore";
 import { localAuthService } from "@/src/services";
 
 interface PortalLayoutProps {
-  role: UserRole;
+  role: Exclude<UserRole, "customer">;
 }
 
-const labelsByRole: Record<UserRole, string> = {
+const labelsByRole: Record<Exclude<UserRole, "customer">, string> = {
   admin: "Admin Console",
   staff: "Staff Workspace",
-  customer: "My Account",
 };
 
-const homeByRole: Record<UserRole, string> = {
-  admin: "/portal/admin",
-  staff: "/portal/staff",
-  customer: "/account/orders",
-};
-
-const navByRole: Record<UserRole, { name: string; to: string; icon: typeof LayoutDashboard }[]> = {
+const navByRole: Record<Exclude<UserRole, "customer">, { name: string; to: string; icon: typeof LayoutDashboard }[]> = {
   admin: [
     { name: "Dashboard", to: "/portal/admin", icon: LayoutDashboard },
     { name: "Homepage", to: "/portal/admin/homepage", icon: Home },
@@ -51,10 +43,6 @@ const navByRole: Record<UserRole, { name: string; to: string; icon: typeof Layou
     { name: "Dashboard", to: "/portal/staff", icon: LayoutDashboard },
     { name: "Orders", to: "/portal/staff/orders", icon: ClipboardList },
     { name: "Analytics", to: "/portal/staff/analytics", icon: BarChart3 },
-  ],
-  customer: [
-    { name: "My orders", to: "/account/orders", icon: ClipboardList },
-    { name: "Account details", to: "/account/profile", icon: User },
   ],
 };
 
@@ -114,7 +102,7 @@ export function PortalLayout({ role }: PortalLayoutProps) {
           <NavLink
             key={item.to}
             to={item.to}
-            end={role !== "customer" && item.to === homeByRole[role]}
+            end={item.to === `/portal/${role}`}
             onClick={onNavigate}
             className={navItemClass}
           >

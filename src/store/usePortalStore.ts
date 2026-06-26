@@ -168,6 +168,20 @@ export function getPortalLandingByRole(role: UserRole): string {
   return "/portal/staff";
 }
 
+/** Whether a signed-in user may access a protected portal/account path. */
+export function isPathAllowedForRole(pathname: string, role: UserRole): boolean {
+  if (pathname.startsWith("/portal/admin")) return role === "admin";
+  if (pathname.startsWith("/portal/staff")) return role === "staff";
+  if (pathname.startsWith("/account")) return role === "customer";
+  return false;
+}
+
+/** Post-login destination: honor `from` only when the role is allowed on that path. */
+export function resolvePostLoginPath(role: UserRole, from?: string | null): string {
+  if (from && isPathAllowedForRole(from, role)) return from;
+  return getPortalLandingByRole(role);
+}
+
 export const usePortalStore = create<PortalState>()(
   persist(
     (set, get) => ({

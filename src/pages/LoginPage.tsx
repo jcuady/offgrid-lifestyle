@@ -4,7 +4,7 @@ import { LockKeyhole, UserRound, Sparkles } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { LOGO_WORDMARK_WHITE } from "@/src/lib/brandAssets";
 import { cn } from "@/src/lib/utils";
-import { getPortalLandingByRole, usePortalStore, type UserRole } from "@/src/store/usePortalStore";
+import { getPortalLandingByRole, resolvePostLoginPath, usePortalStore, type UserRole } from "@/src/store/usePortalStore";
 import { localAuthService } from "@/src/services";
 
 const roleButtons: { role: UserRole; label: string; helper: string }[] = [
@@ -26,8 +26,8 @@ export function LoginPage() {
 
   useEffect(() => {
     if (!currentUser) return;
-    navigate(getPortalLandingByRole(currentUser.role), { replace: true });
-  }, [currentUser, navigate]);
+    navigate(resolvePostLoginPath(currentUser.role, redirectedFrom), { replace: true });
+  }, [currentUser, navigate, redirectedFrom]);
 
   return (
     <div className="flex min-h-screen min-w-0 items-center overflow-x-hidden bg-offgrid-dark px-4 py-8 sm:px-6 sm:py-10">
@@ -114,7 +114,7 @@ export function LoginPage() {
                 const freshUser = localAuthService.currentUser();
                 if (!freshUser) return;
                 if (redirectedFrom) {
-                  navigate(redirectedFrom, { replace: true });
+                  navigate(resolvePostLoginPath(freshUser.role, redirectedFrom), { replace: true });
                   return;
                 }
                 navigate(getPortalLandingByRole(freshUser.role), { replace: true });

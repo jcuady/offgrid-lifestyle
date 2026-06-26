@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { motion } from "motion/react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { SlidersHorizontal, Search, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { SlidersHorizontal, Search, ChevronDown, ChevronLeft, ChevronRight, Star } from "lucide-react";
 import { formatPrice, Product } from "@/src/data/products";
 import { Button } from "@/src/components/ui/Button";
 import { cn } from "@/src/lib/utils";
@@ -127,7 +127,7 @@ export function ShopPage() {
                 placeholder="Search products..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-offgrid-green/20 focus:border-offgrid-green focus:ring-2 focus:ring-offgrid-green/20 outline-none transition-all text-sm text-offgrid-green bg-white placeholder:text-offgrid-green/40"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-offgrid-green/20 focus:border-offgrid-lime focus:ring-2 focus:ring-offgrid-lime/25 outline-none transition-all text-sm text-offgrid-green bg-white placeholder:text-offgrid-green/40"
               />
             </div>
 
@@ -156,7 +156,7 @@ export function ShopPage() {
                     )}
                   >
                     {cat.label}
-                    <span className="ml-1.5 opacity-60">({cat.count})</span>
+                    <span className="ml-1.5 font-mono opacity-60">({cat.count})</span>
                   </button>
                 ))}
               </div>
@@ -166,7 +166,7 @@ export function ShopPage() {
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as SortOption)}
-                  className="appearance-none pl-4 pr-10 py-2.5 rounded-xl border border-offgrid-green/20 text-sm font-medium text-offgrid-green bg-white cursor-pointer hover:bg-offgrid-green/5 transition-colors outline-none focus:border-offgrid-green"
+                  className="appearance-none pl-4 pr-10 py-2.5 rounded-xl border border-offgrid-green/20 text-sm font-medium text-offgrid-green bg-white cursor-pointer hover:bg-offgrid-green/5 transition-colors outline-none focus:border-offgrid-lime focus:ring-2 focus:ring-offgrid-lime/25"
                 >
                   <option value="newest">Newest</option>
                   <option value="price-asc">Price: Low to High</option>
@@ -202,7 +202,7 @@ export function ShopPage() {
                     )}
                   >
                     {cat.label}
-                    <span className="ml-1.5 opacity-60">({cat.count})</span>
+                    <span className="ml-1.5 font-mono opacity-60">({cat.count})</span>
                   </button>
                 ))}
               </div>
@@ -250,49 +250,74 @@ export function ShopPage() {
           </motion.div>
         ) : (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-10 md:gap-x-8">
               {paginatedProducts.map((product, index) => (
                 <motion.div
                   key={product.id}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 24 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: index * 0.05 }}
-                  className="group cursor-pointer"
+                  transition={{ duration: 0.4, delay: Math.min(index, 8) * 0.04 }}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`View ${product.name}`}
+                  className="group flex w-full cursor-pointer flex-col text-left outline-none"
                   onClick={() => handleProductClick(product)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      handleProductClick(product);
+                    }
+                  }}
                 >
-                  <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-white mb-4">
+                  <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-white ring-1 ring-offgrid-green/[0.08] shadow-sm transition-all duration-500 group-hover:-translate-y-1 group-hover:shadow-xl group-hover:ring-offgrid-lime/40 group-focus-visible:ring-2 group-focus-visible:ring-offgrid-lime">
                     {product.tag && (
-                      <span className="absolute top-4 left-4 z-10 px-3 py-1 bg-offgrid-cream/90 backdrop-blur-sm text-offgrid-green text-[10px] font-bold tracking-[0.15em] uppercase rounded-full">
+                      <span className="absolute top-3 left-3 z-10 rounded-full bg-offgrid-lime px-2.5 py-1 font-mono text-[9px] font-bold uppercase tracking-[0.15em] text-white shadow-sm">
                         {product.tag}
                       </span>
                     )}
-                    
+
                     <img
                       src={product.image}
                       alt={product.name}
-                      className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
+                      loading="lazy"
+                      className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-[1.04]"
                     />
+
+                    <div className="absolute inset-x-0 bottom-0 z-10 translate-y-full bg-offgrid-green/95 px-4 py-3 text-center backdrop-blur-sm transition-transform duration-300 ease-out group-hover:translate-y-0 group-focus-visible:translate-y-0">
+                      <span className="inline-flex items-center font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-white">
+                        View product
+                        <span className="ml-2 transition-transform group-hover:translate-x-1">→</span>
+                      </span>
+                    </div>
                   </div>
 
                   {/* Product Info */}
-                  <div className="px-1">
-                    <div className="flex justify-between items-start mb-1">
-                      <p className="text-[10px] font-semibold tracking-[0.2em] uppercase text-offgrid-green/50">
+                  <div className="mt-4 px-0.5">
+                    <div className="mb-1.5 flex items-baseline justify-between gap-3">
+                      <p className="min-w-0 truncate font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-offgrid-green/45">
                         {product.category}
                       </p>
-                      <p className="font-bold text-offgrid-green text-sm">{formatPrice(product.price)}</p>
+                      <p className="shrink-0 font-display text-sm font-black tabular-nums tracking-tight text-offgrid-green">
+                        {formatPrice(product.price)}
+                      </p>
                     </div>
-                    <h3 className="text-base font-display font-bold text-offgrid-green mb-2">
+                    <h3 className="mb-3 font-display text-base font-bold leading-tight text-offgrid-green transition-colors group-hover:text-offgrid-lime">
                       {product.name}
                     </h3>
-                    
-                    <div className="flex gap-1.5">
-                      {product.colors.map((color, i) => (
-                        <div 
-                          key={i} 
-                          className={`w-3.5 h-3.5 rounded-full border border-offgrid-green/20 ${color.value}`}
-                        />
-                      ))}
+
+                    <div className="flex items-center justify-between border-t border-offgrid-green/10 pt-3">
+                      <div className="flex gap-1.5">
+                        {product.colors.map((color, i) => (
+                          <span
+                            key={i}
+                            className={`h-3.5 w-3.5 rounded-full border border-offgrid-green/20 ${color.value}`}
+                          />
+                        ))}
+                      </div>
+                      <div className="flex items-center gap-1 font-mono text-[11px] text-offgrid-green/55">
+                        <Star className="h-3 w-3 fill-offgrid-green text-offgrid-green" />
+                        <span className="font-bold text-offgrid-green">{product.sold}</span> sold
+                      </div>
                     </div>
                   </div>
                 </motion.div>
@@ -307,7 +332,7 @@ export function ShopPage() {
                     window.scrollTo({ top: 400, behavior: 'smooth' });
                   }}
                   disabled={currentPage === 1}
-                  className="w-10 h-10 rounded-xl flex items-center justify-center border border-offgrid-green/20 bg-white text-offgrid-green hover:border-offgrid-green/50 hover:bg-offgrid-green/5 disabled:opacity-40 disabled:hover:border-offgrid-green/20 disabled:hover:bg-white disabled:cursor-not-allowed transition-all outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offgrid-green"
+                  className="w-10 h-10 rounded-xl flex items-center justify-center border border-offgrid-green/20 bg-white text-offgrid-green hover:border-offgrid-green/50 hover:bg-offgrid-green/5 disabled:opacity-40 disabled:hover:border-offgrid-green/20 disabled:hover:bg-white disabled:cursor-not-allowed transition-all outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offgrid-lime"
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
@@ -321,7 +346,7 @@ export function ShopPage() {
                         window.scrollTo({ top: 400, behavior: 'smooth' });
                       }}
                       className={cn(
-                        "min-w-[2.5rem] h-10 px-3 rounded-xl flex items-center justify-center text-sm font-bold transition-all outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offgrid-green",
+                        "min-w-[2.5rem] h-10 px-3 rounded-xl flex items-center justify-center font-mono text-sm font-bold tabular-nums transition-all outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offgrid-lime",
                         currentPage === i + 1
                           ? "bg-offgrid-green text-offgrid-cream border border-transparent shadow-md"
                           : "bg-white border border-offgrid-green/20 text-offgrid-green hover:border-offgrid-green/50 hover:bg-offgrid-green/5"
@@ -342,7 +367,7 @@ export function ShopPage() {
                     window.scrollTo({ top: 400, behavior: 'smooth' });
                   }}
                   disabled={currentPage === totalPages}
-                  className="w-10 h-10 rounded-xl flex items-center justify-center border border-offgrid-green/20 bg-white text-offgrid-green hover:border-offgrid-green/50 hover:bg-offgrid-green/5 disabled:opacity-40 disabled:hover:border-offgrid-green/20 disabled:hover:bg-white disabled:cursor-not-allowed transition-all outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offgrid-green"
+                  className="w-10 h-10 rounded-xl flex items-center justify-center border border-offgrid-green/20 bg-white text-offgrid-green hover:border-offgrid-green/50 hover:bg-offgrid-green/5 disabled:opacity-40 disabled:hover:border-offgrid-green/20 disabled:hover:bg-white disabled:cursor-not-allowed transition-all outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offgrid-lime"
                 >
                   <ChevronRight className="w-5 h-5" />
                 </button>

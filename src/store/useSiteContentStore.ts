@@ -276,7 +276,7 @@ const initialCustomSections: CustomContentSection[] = getCanonicalGuideSectionSe
 
 const initialTemplates: CustomTemplateAsset[] = createCanonicalOgTemplates(nowIso());
 
-const SITE_CONTENT_PERSIST_VERSION = 9;
+const SITE_CONTENT_PERSIST_VERSION = 10;
 
 type PersistedSiteContentSlice = {
   products?: Product[];
@@ -640,6 +640,19 @@ export const useSiteContentStore = create<SiteContentState>()(
             landingContent: initialLandingContent,
             customPageContent: normalizeCustomPageContent(initialCustomPageContent),
           };
+        }
+
+        if (version < 10) {
+          // Refresh real product photography. Only replace legacy seed placeholders
+          // (`/images/product_*`), so admin-uploaded imagery is preserved.
+          const seedById = new Map(initialProducts.map((x) => [x.id, x]));
+          const migratedProducts = (next.products ?? initialProducts).map((prod) => {
+            const seed = seedById.get(prod.id);
+            if (!seed) return prod;
+            if (prod.image && !prod.image.startsWith("/images/product_")) return prod;
+            return { ...prod, image: seed.image };
+          });
+          next = { ...next, products: migratedProducts };
         }
 
         next = {

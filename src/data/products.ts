@@ -71,7 +71,7 @@ export const products: Product[] = [
     category: "Running",
     basePrice: 650,
     price: 650,
-    image: "/images/product_tee_graphic.png", // Using existing placeholder until real images arrive
+    image: "/images/product-motoline.jpg",
     colors: [
       { name: "FULL THROTTLE", value: "bg-offgrid-dark" },
       { name: "TAKBONG OG", value: "bg-offgrid-green" },
@@ -101,7 +101,7 @@ export const products: Product[] = [
     category: "Golf",
     basePrice: 1200,
     price: 1200,
-    image: "/images/product_polo.png",
+    image: "/images/product-og-golf.png",
     colors: [
       { name: "Pink", value: "bg-[#FFC0CB]" },
       { name: "Navy Blue", value: "bg-blue-900" },
@@ -133,7 +133,7 @@ export const products: Product[] = [
     category: "Pickleball",
     basePrice: 900,
     price: 900,
-    image: "/images/product_tee_white.png",
+    image: "/images/product-pickleball-2.png",
     colors: [
       { name: "Green", value: "bg-offgrid-green" },
       { name: "Blue", value: "bg-blue-600" },
@@ -162,7 +162,7 @@ export const products: Product[] = [
     category: "Running",
     basePrice: 1000,
     price: 1000,
-    image: "/images/product_tee_graphic.png",
+    image: "/images/product-running-line.png",
     colors: [
       { name: "White-Teal", value: "bg-white" },
       { name: "Black-Teal", value: "bg-black" },
@@ -190,7 +190,7 @@ export const products: Product[] = [
     category: "Lifestyle / OG Vibe",
     basePrice: 850,
     price: 850,
-    image: "/images/product_tee_graphic.png",
+    image: "/images/product-og-vibe.jpg",
     colors: [
       { name: "Black Steampunk", value: "bg-black" },
       { name: "Cream Steampunk", value: "bg-offgrid-cream" },
@@ -219,7 +219,7 @@ export const products: Product[] = [
     category: "Solar Collection",
     basePrice: 900,
     price: 900,
-    image: "/images/product_tee_graphic.png",
+    image: "/images/product-solar-sleeveless.jpg",
     colors: [
       { name: "White-Teal", value: "bg-white" },
     ],
@@ -242,7 +242,7 @@ export const products: Product[] = [
     category: "Primal Collection",
     basePrice: 990,
     price: 990,
-    image: "/images/product_tee_graphic.png",
+    image: "/images/product-primal-longsleeve.jpg",
     colors: [
       { name: "Green", value: "bg-offgrid-green" },
     ],
@@ -265,7 +265,7 @@ export const products: Product[] = [
     category: "Primal Collection",
     basePrice: 900,
     price: 900,
-    image: "/images/product_tee_graphic.png",
+    image: "/images/product-primal-sleeveless.jpg",
     colors: [
       { name: "Black-Neon Green", value: "bg-black" },
     ],
@@ -288,7 +288,7 @@ export const products: Product[] = [
     category: "Solar Collection",
     basePrice: 900,
     price: 900,
-    image: "/images/product_tee_graphic.png",
+    image: "/images/product-solar-longsleeve.jpg",
     colors: [
       { name: "White-Teal", value: "bg-white" },
     ],
@@ -311,7 +311,7 @@ export const products: Product[] = [
     category: "Primal Collection",
     basePrice: 900,
     price: 900,
-    image: "/images/product_tee_white.png",
+    image: "/images/product-primal-shortsleeve.jpg",
     colors: [
       { name: "Teal-White", value: "bg-teal-500" },
     ],
@@ -334,7 +334,7 @@ export const products: Product[] = [
     category: "Solar Collection",
     basePrice: 700,
     price: 700,
-    image: "/images/product_tee_white.png",
+    image: "/images/product-solar-shortsleeve.jpg",
     colors: [
       { name: "White-Teal", value: "bg-white" },
     ],
@@ -357,7 +357,7 @@ export const products: Product[] = [
     category: "Pickleball",
     basePrice: 1100,
     price: 1100,
-    image: "/images/product_tee_white.png",
+    image: "/images/product-everyday-pickle.png",
     colors: [
       { name: "White-Pink", value: "bg-white" },
     ],
@@ -384,7 +384,7 @@ export const products: Product[] = [
     category: "Pickleball",
     basePrice: 1100,
     price: 1100,
-    image: "/images/product_tee_graphic.png",
+    image: "/images/product-get-your-dink.jpg",
     colors: [
       { name: "Green", value: "bg-offgrid-green" },
     ],
@@ -407,7 +407,7 @@ export const products: Product[] = [
     category: "Pickleball",
     basePrice: 1100,
     price: 1100,
-    image: "/images/product_tee_white.png",
+    image: "/images/product-pickleball-lifestyle.png",
     colors: [
       { name: "White", value: "bg-white" },
     ],
@@ -431,7 +431,7 @@ export const products: Product[] = [
     category: "Pickleball",
     basePrice: 1100,
     price: 1100,
-    image: "/images/product_tee_graphic.png",
+    image: "/images/product-salmon-smasher.png",
     colors: [
       { name: "Salmon", value: "bg-[#FA8072]" },
     ],
@@ -454,7 +454,7 @@ export const products: Product[] = [
     category: "Pickleball",
     basePrice: 1100,
     price: 1100,
-    image: "/images/product_tee_graphic.png",
+    image: "/images/product-dink-different.png",
     colors: [
       { name: "Black", value: "bg-black" },
     ],
@@ -477,7 +477,7 @@ export const products: Product[] = [
     category: "Pickleball",
     basePrice: 1100,
     price: 1100,
-    image: "/images/product_tee_white.png",
+    image: "/images/product-pickle-club.png",
     colors: [
       { name: "White", value: "bg-white" },
     ],

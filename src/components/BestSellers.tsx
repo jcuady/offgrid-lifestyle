@@ -68,53 +68,76 @@ export function BestSellers() {
             items you want here.
           </p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-10 md:gap-x-8">
             {crowdFavorites.map((product, index) => (
               <motion.div
                 key={product.id}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="group cursor-pointer"
+                transition={{ duration: 0.5, delay: index * 0.08 }}
+                role="button"
+                tabIndex={0}
+                aria-label={`View ${product.name}`}
+                className="group flex w-full cursor-pointer flex-col text-left outline-none"
                 onClick={() => handleProductClick(product.slug)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleProductClick(product.slug);
+                  }
+                }}
               >
-                <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-white mb-4 ring-1 ring-offgrid-green/[0.06] shadow-sm">
+                <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-white ring-1 ring-offgrid-green/[0.08] shadow-sm transition-all duration-500 group-hover:-translate-y-1 group-hover:shadow-xl group-hover:ring-offgrid-lime/40 group-focus-visible:ring-2 group-focus-visible:ring-offgrid-lime">
+                  <span className="absolute top-3 left-3 z-10 font-mono text-[11px] font-bold tabular-nums tracking-[0.1em] text-offgrid-green/35">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+
                   {product.tag && (
-                    <span className="absolute top-4 left-4 z-10 px-3 py-1 bg-offgrid-cream/90 backdrop-blur-sm text-offgrid-green text-[10px] font-bold tracking-[0.15em] uppercase rounded-full">
+                    <span className="absolute top-3 right-3 z-10 rounded-full bg-offgrid-lime px-2.5 py-1 font-mono text-[9px] font-bold uppercase tracking-[0.15em] text-white shadow-sm">
                       {product.tag}
                     </span>
                   )}
 
-                  <div className="absolute inset-0 flex items-center justify-center bg-white p-6 sm:p-8">
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="max-h-full max-w-full object-contain object-center transition-transform duration-700 group-hover:scale-[1.03]"
-                    />
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    loading="lazy"
+                    className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+                  />
+
+                  <div className="absolute inset-x-0 bottom-0 z-10 translate-y-full bg-offgrid-green/95 px-4 py-3 text-center backdrop-blur-sm transition-transform duration-300 ease-out group-hover:translate-y-0 group-focus-visible:translate-y-0">
+                    <span className="inline-flex items-center font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-white">
+                      View product
+                      <span className="ml-2 transition-transform group-hover:translate-x-1">→</span>
+                    </span>
                   </div>
                 </div>
 
-                <div className="px-1">
-                  <div className="flex justify-between items-start mb-1">
-                    <p className="text-[10px] font-semibold tracking-[0.2em] uppercase text-offgrid-green/50">
+                <div className="mt-4 px-0.5">
+                  <div className="mb-1.5 flex items-baseline justify-between gap-3">
+                    <p className="min-w-0 truncate font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-offgrid-green/45">
                       {product.category}
                     </p>
-                    <p className="font-bold text-offgrid-green text-sm">{formatPrice(product.price)}</p>
+                    <p className="shrink-0 font-display text-sm font-black tabular-nums tracking-tight text-offgrid-green">
+                      {formatPrice(product.price)}
+                    </p>
                   </div>
-                  <h3 className="text-base font-display font-bold text-offgrid-green mb-3">{product.name}</h3>
+                  <h3 className="mb-3 font-display text-base font-bold leading-tight text-offgrid-green transition-colors group-hover:text-offgrid-lime">
+                    {product.name}
+                  </h3>
 
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between border-t border-offgrid-green/10 pt-3">
                     <div className="flex gap-1.5">
                       {product.colors.map((color, i) => (
-                        <div
+                        <span
                           key={i}
-                          className={`w-3.5 h-3.5 rounded-full border border-offgrid-green/20 ${color.value}`}
+                          className={`h-3.5 w-3.5 rounded-full border border-offgrid-green/20 ${color.value}`}
                         />
                       ))}
                     </div>
-                    <div className="flex items-center gap-1 text-xs text-offgrid-green/60 font-medium">
-                      <Star className="w-3 h-3 fill-offgrid-green text-offgrid-green" />
+                    <div className="flex items-center gap-1 font-mono text-[11px] text-offgrid-green/55">
+                      <Star className="h-3 w-3 fill-offgrid-green text-offgrid-green" />
                       <span className="font-bold text-offgrid-green">{product.sold}</span> sold
                     </div>
                   </div>

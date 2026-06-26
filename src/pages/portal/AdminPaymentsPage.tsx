@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/src/components/ui/Button";
 import { CmsField, CmsImageInput, CmsSectionPanel, CmsTextInput } from "@/src/components/admin/landing/CmsField";
 import { usePortalStore } from "@/src/store/usePortalStore";
+import { PortalPageHeader } from "@/src/components/portal/PortalPageHeader";
 
 export function AdminPaymentsPage() {
   const paymentSettings = usePortalStore((s) => s.paymentSettings);
@@ -34,21 +35,19 @@ export function AdminPaymentsPage() {
 
   return (
     <div className="min-h-full px-4 py-8 sm:px-8 sm:py-10 lg:px-10">
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-green/45">Payments</p>
-          <h1 className="mt-1 font-display text-3xl font-black text-offgrid-green">GCash QR</h1>
-          <p className="mt-2 max-w-xl text-sm text-offgrid-green/60">
-            Manage one global GCash QR code used across checkout for all regular orders.
-          </p>
-        </div>
-        <Button variant="outline" size="sm" className="gap-2" asChild>
-          <Link to="/shop" target="_blank" rel="noreferrer">
-            <ExternalLink className="h-3.5 w-3.5" />
-            Preview checkout
-          </Link>
-        </Button>
-      </div>
+      <PortalPageHeader
+        eyebrow="Payments"
+        title="GCash QR"
+        description="Manage one global GCash QR code used across checkout for all regular orders."
+        actions={
+          <Button variant="outline" size="sm" className="gap-2" asChild>
+            <Link to="/shop" target="_blank" rel="noreferrer">
+              <ExternalLink className="h-3.5 w-3.5" />
+              Preview checkout
+            </Link>
+          </Button>
+        }
+      />
 
       <CmsSectionPanel title="Global GCash settings" description="Applies to every retail checkout in this environment.">
         <CmsField label="QR image URL" className="sm:col-span-2">

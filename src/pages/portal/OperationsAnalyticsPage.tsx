@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import type { UserRole } from "@/src/store/usePortalStore";
 import { usePortalStore } from "@/src/store/usePortalStore";
 import { useStore } from "@/src/store/store";
+import { PortalPageHeader } from "@/src/components/portal/PortalPageHeader";
 
 interface OperationsAnalyticsPageProps {
   role: UserRole;
@@ -62,15 +63,13 @@ export function OperationsAnalyticsPage({ role }: OperationsAnalyticsPageProps) 
 
   return (
     <div className="p-6 sm:p-8 lg:p-10">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-green/45">
-        {role === "admin" ? "Admin Analytics" : "Staff Analytics"}
-      </p>
-      <h1 className="mt-2 text-4xl font-display font-black text-offgrid-green">Sales Overview</h1>
-      <p className="mt-2 text-sm text-offgrid-green/60">
-        KPI cards and monthly trend charts from live portal/storefront data.
-      </p>
+      <PortalPageHeader
+        eyebrow={role === "admin" ? "Admin Analytics" : "Staff Analytics"}
+        title="Sales Overview"
+        description="KPI cards and monthly trend charts from live portal/storefront data."
+      />
 
-      <div className="mt-6 grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-4">
         <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-offgrid-green/10">
           <p className="text-xs uppercase tracking-[0.12em] text-offgrid-green/45">6-Month Sales</p>
           <p className="mt-2 text-2xl font-display font-black text-offgrid-green">₱{totalSales.toLocaleString("en-PH")}</p>

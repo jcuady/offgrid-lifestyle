@@ -218,7 +218,7 @@ export function OperationsOrderDetailPage() {
       {retail ? (
         <div className="mt-6 space-y-8">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-green/45">Retail order</p>
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-green/45">Retail order</p>
             <h1 className="mt-2 text-4xl font-display font-black text-offgrid-green">{retail.id}</h1>
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <span className={cn("inline-flex rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em]", orderStatusClass(retail.status))}>
@@ -408,7 +408,7 @@ export function OperationsOrderDetailPage() {
       {custom ? (
         <div className="mt-6 space-y-8">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-green/45">Custom order</p>
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-green/45">Custom order</p>
             <h1 className="mt-2 text-4xl font-display font-black text-offgrid-green">{custom.id}</h1>
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <span className={cn("inline-flex rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em]", orderStatusClass(custom.status))}>

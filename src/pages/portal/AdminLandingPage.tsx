@@ -4,6 +4,7 @@ import { CmsField, CmsImageInput, CmsSectionPanel, CmsTextInput } from "@/src/co
 import { LANDING_COLLECTION_IDS } from "@/src/data/landingContent";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { Button } from "@/src/components/ui/Button";
+import { PortalPageHeader } from "@/src/components/portal/PortalPageHeader";
 
 const COLLECTION_LABELS: Record<(typeof LANDING_COLLECTION_IDS)[number], string> = {
   pickleball: "Collection 1 — Pickleball (wide)",
@@ -37,32 +38,34 @@ export function AdminLandingPage() {
 
   return (
     <div className="min-h-full px-4 py-8 sm:px-8 sm:py-10 lg:px-10">
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-green/45">Content</p>
-          <h1 className="mt-1 font-display text-3xl font-black text-offgrid-green">Homepage</h1>
-          <p className="mt-2 max-w-xl text-sm text-offgrid-green/60">
+      <PortalPageHeader
+        eyebrow="Content"
+        title="Homepage"
+        description={
+          <>
             Edit text and image URLs for each fixed section on the landing page. Product cards in Best Sellers still
             come from{" "}
             <Link to="/portal/admin/products" className="font-semibold text-offgrid-green underline-offset-2 hover:underline">
               Products
             </Link>{" "}
             (Crowd Favorites rank 1–4).
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" size="sm" className="gap-2" asChild>
-            <Link to="/" target="_blank" rel="noreferrer">
-              <ExternalLink className="h-3.5 w-3.5" />
-              Preview site
-            </Link>
-          </Button>
-          <Button variant="outline" size="sm" className="gap-2" type="button" onClick={confirmReset}>
-            <RotateCcw className="h-3.5 w-3.5" />
-            Reset defaults
-          </Button>
-        </div>
-      </div>
+          </>
+        }
+        actions={
+          <>
+            <Button variant="outline" size="sm" className="gap-2" asChild>
+              <Link to="/" target="_blank" rel="noreferrer">
+                <ExternalLink className="h-3.5 w-3.5" />
+                Preview site
+              </Link>
+            </Button>
+            <Button variant="outline" size="sm" className="gap-2" type="button" onClick={confirmReset}>
+              <RotateCcw className="h-3.5 w-3.5" />
+              Reset defaults
+            </Button>
+          </>
+        }
+      />
 
       <div className="space-y-8">
         <CmsSectionPanel title="Hero" description="Full-viewport intro, CTAs, and stats bar labels.">

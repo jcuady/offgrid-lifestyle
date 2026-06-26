@@ -63,3 +63,28 @@
     background: #000AFF;
   }
 }
+
+/* Portal / account form controls — consistent OG-branded fields with electric-blue focus.
+   Scoped to .portal-surface so the storefront is untouched. */
+.portal-surface input:where(:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"])),
+.portal-surface select,
+.portal-surface textarea {
+  border-radius: 0.75rem;
+  border: 1px solid color-mix(in srgb, #000000 16%, transparent);
+  background-color: #ffffff;
+  color: #000000;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.portal-surface input::placeholder,
+.portal-surface textarea::placeholder {
+  color: color-mix(in srgb, #000000 40%, transparent);
+}
+
+.portal-surface input:where(:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"])):focus,
+.portal-surface select:focus,
+.portal-surface textarea:focus {
+  outline: none;
+  border-color: #000aff;
+  box-shadow: 0 0 0 3px color-mix(in srgb, #000aff 22%, transparent);
+}

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -9,7 +10,9 @@ import {
   BarChart3,
   Home,
   QrCode,
-
+  Menu,
+  X,
+  ExternalLink,
 } from "lucide-react";
 import { LOGO_WORDMARK_WHITE } from "@/src/lib/brandAssets";
 import { cn } from "@/src/lib/utils";
@@ -43,85 +46,136 @@ const navByRole: Record<Exclude<UserRole, "customer">, { name: string; to: strin
   ],
 };
 
+function initialsFrom(name: string | undefined): string {
+  if (!name) return "OG";
+  return name
+    .trim()
+    .split(/\s+/)
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
+
 export function PortalLayout({ role }: PortalLayoutProps) {
   const navigate = useNavigate();
   const user = usePortalStore((state) => state.currentUser);
   const navItems = navByRole[role];
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const logout = () => {
+    localAuthService.logout();
+    navigate("/login");
+  };
+
+  const navItemClass = ({ isActive }: { isActive: boolean }) =>
+    cn(
+      "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+      isActive
+        ? "bg-offgrid-lime text-white shadow-sm"
+        : "text-offgrid-cream/65 hover:bg-offgrid-cream/10 hover:text-offgrid-cream",
+    );
+
+  const sidebarBody = (onNavigate?: () => void) => (
+    <>
+      <button onClick={() => navigate("/")} className="inline-flex" aria-label="Go to storefront">
+        <img src={LOGO_WORDMARK_WHITE} alt="OffGrid" className="h-8 w-auto" />
+      </button>
+
+      <div className="mt-8 rounded-2xl border border-offgrid-cream/10 bg-offgrid-cream/[0.04] p-4">
+        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-lime">
+          {labelsByRole[role]}
+        </p>
+        <div className="mt-3 flex items-center gap-3">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-offgrid-lime font-display text-sm font-black text-white">
+            {initialsFrom(user?.name)}
+          </span>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-bold text-offgrid-cream">{user?.name ?? "Portal User"}</p>
+            <p className="truncate text-xs text-offgrid-cream/55">{user?.email}</p>
+          </div>
+        </div>
+      </div>
+
+      <nav className="mt-6 flex-1 space-y-1 overflow-y-auto">
+        {navItems.map((item) => (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            end={item.to === `/portal/${role}`}
+            onClick={onNavigate}
+            className={navItemClass}
+          >
+            <item.icon className="h-4 w-4 shrink-0" />
+            {item.name}
+          </NavLink>
+        ))}
+      </nav>
+
+      <div className="mt-6 space-y-1 border-t border-offgrid-cream/10 pt-4">
+        <button
+          onClick={() => navigate("/")}
+          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-offgrid-cream/65 transition-colors hover:bg-offgrid-cream/10 hover:text-offgrid-cream"
+        >
+          <ExternalLink className="h-4 w-4" />
+          View storefront
+        </button>
+        <button
+          onClick={logout}
+          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-offgrid-cream/65 transition-colors hover:bg-offgrid-cream/10 hover:text-offgrid-cream"
+        >
+          <LogOut className="h-4 w-4" />
+          Logout
+        </button>
+      </div>
+    </>
+  );
 
   return (
-    <div className="min-h-screen bg-offgrid-dark">
-      <div className="grid min-h-screen grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)]">
-        <aside className="border-r border-offgrid-cream/10 bg-offgrid-green px-5 py-6 lg:sticky lg:top-0 lg:h-screen">
-          <button onClick={() => navigate("/")} className="mb-10 inline-flex">
-            <img src={LOGO_WORDMARK_WHITE} alt="OffGrid" className="h-8 w-auto" />
+    <div className="min-h-screen bg-offgrid-cream">
+      {/* Desktop sidebar — truly fixed, never scrolls with the page.
+          Uses position:fixed (not sticky) because the app sets overflow-x:hidden
+          on html/body, which breaks position:sticky for descendants. */}
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[264px] flex-col overflow-y-auto border-r border-offgrid-cream/10 bg-offgrid-green px-5 py-6 lg:flex">
+        {sidebarBody()}
+      </aside>
+
+      <div className="lg:pl-[264px]">
+        {/* Mobile top bar */}
+        <header className="sticky top-0 z-40 flex items-center justify-between gap-3 border-b border-offgrid-cream/10 bg-offgrid-green px-4 py-3 lg:hidden">
+          <button onClick={() => navigate("/")} aria-label="Go to storefront">
+            <img src={LOGO_WORDMARK_WHITE} alt="OffGrid" className="h-7 w-auto" />
           </button>
-
-          <div className="mb-8">
-            <p className="text-[10px] uppercase tracking-[0.2em] text-offgrid-cream/50">
+          <div className="flex items-center gap-3">
+            <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-offgrid-cream/60">
               {labelsByRole[role]}
-            </p>
-            <p className="mt-2 text-lg font-display font-bold text-offgrid-cream">
-              {user?.name ?? "Portal User"}
-            </p>
-            <p className="text-xs text-offgrid-cream/60">{user?.email}</p>
-          </div>
-
-          <nav className="space-y-2 hidden lg:block">
-            {navItems.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.to === `/portal/${role}`}
-                className={({ isActive }) =>
-                  cn(
-                    "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
-                    isActive
-                      ? "bg-offgrid-lime text-white"
-                      : "text-offgrid-cream/70 hover:bg-offgrid-cream/10 hover:text-offgrid-cream",
-                  )
-                }
-              >
-                <item.icon className="h-4 w-4" />
-                {item.name}
-              </NavLink>
-            ))}
-          </nav>
-          <nav className="mb-6 grid grid-cols-2 gap-2 lg:hidden">
-            {navItems.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.to === `/portal/${role}`}
-                className={({ isActive }) =>
-                  cn(
-                    "flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] transition-colors",
-                    isActive
-                      ? "bg-offgrid-lime text-white"
-                      : "text-offgrid-cream/70 border border-offgrid-cream/20",
-                  )
-                }
-              >
-                <item.icon className="h-3.5 w-3.5" />
-                {item.name}
-              </NavLink>
-            ))}
-          </nav>
-
-          <div className="mt-8 border-t border-offgrid-cream/10 pt-6">
+            </span>
             <button
-              onClick={() => {
-                localAuthService.logout();
-                navigate("/login");
-              }}
-              className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-offgrid-cream/70 transition-colors hover:bg-offgrid-cream/10 hover:text-offgrid-cream"
+              onClick={() => setMobileOpen((v) => !v)}
+              aria-label={mobileOpen ? "Close menu" : "Open menu"}
+              aria-expanded={mobileOpen}
+              className="grid h-9 w-9 place-items-center rounded-xl border border-offgrid-cream/20 text-offgrid-cream"
             >
-              <LogOut className="h-4 w-4" />
-              Logout
+              {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
           </div>
-        </aside>
+        </header>
 
-        <main className="bg-offgrid-cream">
+        {/* Mobile slide-down drawer */}
+        {mobileOpen && (
+          <div className="fixed inset-0 top-[57px] z-40 lg:hidden">
+            <button
+              aria-label="Close menu"
+              onClick={() => setMobileOpen(false)}
+              className="absolute inset-0 bg-offgrid-dark/60"
+            />
+            <div className="relative flex h-full max-h-[calc(100svh-57px)] w-[84%] max-w-xs flex-col overflow-y-auto border-r border-offgrid-cream/10 bg-offgrid-green px-5 py-6">
+              {sidebarBody(() => setMobileOpen(false))}
+            </div>
+          </div>
+        )}
+
+        <main className="portal-surface min-h-screen min-w-0 bg-offgrid-cream">
           <Outlet />
         </main>
       </div>

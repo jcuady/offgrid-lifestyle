@@ -4,6 +4,7 @@ import { ClipboardCheck, Factory, PackageCheck, ShoppingCart } from "lucide-reac
 import type { UserRole } from "@/src/store/usePortalStore";
 import { usePortalStore } from "@/src/store/usePortalStore";
 import { useStore } from "@/src/store/store";
+import { PortalPageHeader } from "@/src/components/portal/PortalPageHeader";
 
 interface OperationsDashboardPageProps {
   role: UserRole;
@@ -33,47 +34,45 @@ export function OperationsDashboardPage({ role }: OperationsDashboardPageProps) 
 
   return (
     <div className="p-6 sm:p-8 lg:p-10">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-green/45">
-        {role === "admin" ? "Admin Console" : "Staff Workspace"}
-      </p>
-      <h1 className="mt-2 text-4xl font-display font-black text-offgrid-green">{titleByRole[role]}</h1>
-      <p className="mt-3 max-w-2xl text-sm text-offgrid-green/60">
-        Monitor retail and custom orders from a single branded operations view.
-      </p>
+      <PortalPageHeader
+        eyebrow={role === "admin" ? "Admin Console" : "Staff Workspace"}
+        title={titleByRole[role]}
+        description="Monitor retail and custom orders from a single branded operations view."
+      />
 
-      <div className="mt-8 grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-4">
         <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-offgrid-green/10">
-          <div className="inline-flex rounded-xl bg-amber-100 p-2 text-amber-700">
+          <div className="inline-flex rounded-xl bg-offgrid-green/10 p-2 text-offgrid-green">
             <ClipboardCheck className="h-4 w-4" />
           </div>
-          <p className="mt-3 text-xs font-semibold uppercase tracking-[0.15em] text-offgrid-green/45">
+          <p className="mt-3 font-mono text-xs font-semibold uppercase tracking-[0.15em] text-offgrid-green/45">
             Pending
           </p>
           <p className="mt-1 text-3xl font-display font-black text-offgrid-green">{pendingCount}</p>
         </div>
         <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-offgrid-green/10">
-          <div className="inline-flex rounded-xl bg-blue-100 p-2 text-blue-700">
+          <div className="inline-flex rounded-xl bg-offgrid-gold/10 p-2 text-offgrid-gold">
             <Factory className="h-4 w-4" />
           </div>
-          <p className="mt-3 text-xs font-semibold uppercase tracking-[0.15em] text-offgrid-green/45">
+          <p className="mt-3 font-mono text-xs font-semibold uppercase tracking-[0.15em] text-offgrid-green/45">
             In Production
           </p>
           <p className="mt-1 text-3xl font-display font-black text-offgrid-green">{productionCount}</p>
         </div>
         <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-offgrid-green/10">
-          <div className="inline-flex rounded-xl bg-emerald-100 p-2 text-emerald-700">
+          <div className="inline-flex rounded-xl bg-offgrid-lime/20 p-2 text-offgrid-green">
             <PackageCheck className="h-4 w-4" />
           </div>
-          <p className="mt-3 text-xs font-semibold uppercase tracking-[0.15em] text-offgrid-green/45">
+          <p className="mt-3 font-mono text-xs font-semibold uppercase tracking-[0.15em] text-offgrid-green/45">
             Shipped / Delivered
           </p>
           <p className="mt-1 text-3xl font-display font-black text-offgrid-green">{shippedCount}</p>
         </div>
         <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-offgrid-green/10">
-          <div className="inline-flex rounded-xl bg-offgrid-green/10 p-2 text-offgrid-green">
+          <div className="inline-flex rounded-xl bg-offgrid-green p-2 text-offgrid-cream">
             <ShoppingCart className="h-4 w-4" />
           </div>
-          <p className="mt-3 text-xs font-semibold uppercase tracking-[0.15em] text-offgrid-green/45">
+          <p className="mt-3 font-mono text-xs font-semibold uppercase tracking-[0.15em] text-offgrid-green/45">
             Cart Units
           </p>
           <p className="mt-1 text-3xl font-display font-black text-offgrid-green">{cartUnits}</p>

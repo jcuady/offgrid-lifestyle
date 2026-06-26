@@ -243,10 +243,10 @@ export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
   return (
     <div className="min-h-full">
       <section className="border-b border-offgrid-green/10 bg-offgrid-green/[0.06] px-6 py-10 sm:px-8 lg:px-10">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-offgrid-green/45">
+        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-offgrid-green/45">
           {isAdmin ? "Admin · Order management" : "Staff · Operations"}
         </p>
-        <p className="mt-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-offgrid-lime">Est. Manila, PH</p>
+        <p className="mt-2 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-offgrid-lime">Est. Manila, PH</p>
         <h1 className="mt-3 font-display text-4xl font-black tracking-tight text-offgrid-green sm:text-5xl">Orders</h1>
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-offgrid-green/65">
           {isAdmin

@@ -1,4 +1,6 @@
 import type { FabricType as ProductFabricType, GarmentCut as ProductGarmentCut } from "@/src/data/products";
+import type { PaymentProvider, RetailPaymentMethod } from "@/src/types/payments";
+import { isRetailPaymentMethod, resolvePaymentProvider } from "@/src/types/payments";
 
 export type OrderType = "retail" | "custom";
 
@@ -28,15 +30,8 @@ export type PrintMethod =
   | "digital_print";
 
 export type CustomCategory = "apparel" | "headwear_towels";
-export type HeadwearType =
-  | "cap-trucker"
-  | "cap-snapback"
-  | "cap-dad"
-  | "bucket-hat"
-  | "visor"
-  | "headband"
-  | "towel-face"
-  | "towel-hand";
+/** Slug/id of a CMS-managed headwear or towel option. */
+export type HeadwearType = string;
 
 export interface Money {
   amount: number;
@@ -100,7 +95,8 @@ export interface Order {
   tax: Money;
   total: Money;
   shippingInfo: ShippingInfo | null;
-  paymentMethod: string | null;
+  paymentMethod: RetailPaymentMethod | string | null;
+  paymentProvider: PaymentProvider | null;
   paymentProviderRef: string | null;
   customerId: string | null;
   createdAt: string;
@@ -113,8 +109,6 @@ export interface CheckoutProfile {
   preferredPaymentMethod: string | null;
   savedAt: string | null;
 }
-
-// --- Payload mappers (MVP: identity-like, ready for API serialization) ---
 
 export function toCustomOrderPayload(draft: CustomOrderDraft) {
   return {
@@ -130,6 +124,9 @@ export function toRetailOrderPayload(
   paymentMethod: string,
   orderId: string,
 ): Order {
+  const provider: PaymentProvider =
+    isRetailPaymentMethod(paymentMethod) ? resolvePaymentProvider(paymentMethod) : "manual";
+
   const lines: RetailOrderLine[] = cart.map((item) => ({
     lineItemId: crypto.randomUUID(),
     productId: item.productId,
@@ -156,6 +153,7 @@ export function toRetailOrderPayload(
     total: { amount: subtotal + shippingCost, currency: "PHP" },
     shippingInfo: shipping,
     paymentMethod,
+    paymentProvider: provider,
     paymentProviderRef: null,
     customerId: null,
     createdAt: new Date().toISOString(),

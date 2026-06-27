@@ -1,5 +1,6 @@
 import type { SiteEvent } from "@/src/data/events";
 import type { CustomContentSection, CustomTemplateAsset } from "@/src/store/useSiteContentStore";
+import type { CustomHeadwearOption } from "@/src/data/customHeadwearOptions";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 
 export interface ContentService {
@@ -15,6 +16,10 @@ export interface ContentService {
   addTemplate: (input: CustomTemplateAsset) => void;
   updateTemplate: (id: string, patch: Partial<CustomTemplateAsset>) => void;
   removeTemplate: (id: string) => void;
+  listHeadwearOptions: () => CustomHeadwearOption[];
+  addHeadwearOption: (input: Omit<CustomHeadwearOption, "updatedAt">) => void;
+  updateHeadwearOption: (id: string, patch: Partial<Omit<CustomHeadwearOption, "id">>) => void;
+  removeHeadwearOption: (id: string) => void;
 }
 
 export const localContentService: ContentService = {
@@ -30,4 +35,8 @@ export const localContentService: ContentService = {
   addTemplate: (input) => useSiteContentStore.getState().addTemplate(input),
   updateTemplate: (id, patch) => useSiteContentStore.getState().updateTemplate(id, patch),
   removeTemplate: (id) => useSiteContentStore.getState().removeTemplate(id),
+  listHeadwearOptions: () => useSiteContentStore.getState().customHeadwearOptions,
+  addHeadwearOption: (input) => useSiteContentStore.getState().addHeadwearOption(input),
+  updateHeadwearOption: (id, patch) => useSiteContentStore.getState().updateHeadwearOption(id, patch),
+  removeHeadwearOption: (id) => useSiteContentStore.getState().removeHeadwearOption(id),
 };

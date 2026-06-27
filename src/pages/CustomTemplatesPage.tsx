@@ -4,7 +4,6 @@ import { ArrowLeft, ArrowRight, Download, ImageIcon } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import type { CustomTemplateAsset } from "@/src/store/useSiteContentStore";
-import { Footer } from "@/src/components/Footer";
 import { siteContainer, sectionEyebrow, sectionEyebrowOnDark } from "@/src/lib/brandLayout";
 import { resolveCanonicalTemplates } from "@/src/lib/canonicalTemplates";
 import { triggerTemplateDownload } from "@/src/lib/resolveTemplateDownload";
@@ -165,7 +164,6 @@ export function CustomTemplatesPage() {
         </div>
       </section>
 
-      <Footer />
     </>
   );
 }

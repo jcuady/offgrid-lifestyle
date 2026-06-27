@@ -10,6 +10,7 @@ import { useStore } from "@/src/store/store";
 import { usePortalStore } from "@/src/store/usePortalStore";
 import { formatPrice } from "@/src/data/products";
 import { siteContainer } from "@/src/lib/brandLayout";
+import { CUSTOMER_SIGN_IN_PATH, CUSTOMER_SIGN_UP_PATH, PORTAL_LOGIN_PATH } from "@/src/lib/authRoutes";
 
 const ACCOUNT_MENU_ID = "navbar-account-menu";
 
@@ -100,10 +101,15 @@ export function Navbar() {
   };
 
   const handleSignOut = () => {
+    const role = currentUser?.role;
     logout();
     setIsAccountMenuOpen(false);
     setIsMobileMenuOpen(false);
-    navigate("/login");
+    if (role === "admin" || role === "staff") {
+      navigate(PORTAL_LOGIN_PATH);
+      return;
+    }
+    navigate(CUSTOMER_SIGN_IN_PATH);
   };
 
   const navLinks = [
@@ -111,17 +117,23 @@ export function Navbar() {
     { name: "Shop", action: () => handleNavigate("/shop") },
     { name: "Events", action: () => handleNavigate("/events") },
     { name: "Testimonials", action: () => handleNavigate("/testimonials") },
+    { name: "Contact", action: () => handleNavigate("/contact") },
   ];
 
   type AccountMenuItem = { label: string; onSelect: () => void; tone?: "danger" };
 
   const onAccountRoute = location.pathname.startsWith("/account");
 
+  const accountLabel = currentUser
+    ? currentUser.name?.trim().split(/\s+/)[0] || currentUser.email.split("@")[0]
+    : "Sign In";
+
   const buildAccountMenuItems = (): AccountMenuItem[] => {
     if (!currentUser) {
       return [
-        { label: "Sign In", onSelect: () => handleNavigate("/login") },
-        { label: "Create Custom Order", onSelect: () => handleNavigate("/custom/order") },
+        { label: "Sign In", onSelect: () => handleNavigate(CUSTOMER_SIGN_IN_PATH) },
+        { label: "Create Account", onSelect: () => handleNavigate(CUSTOMER_SIGN_UP_PATH) },
+        { label: "Custom Order", onSelect: () => handleNavigate("/custom/order") },
       ];
     }
     if (currentUser.role === "customer") {
@@ -285,8 +297,8 @@ export function Navbar() {
                 )}
                 title={currentUser ? "Account menu" : "Sign in"}
               >
-                <UserRound className="w-3.5 h-3.5" />
-                {currentUser ? "Account" : "Sign In"}
+                <UserRound className="w-3.5 h-3.5 shrink-0" />
+                <span className="max-w-[7rem] truncate">{accountLabel}</span>
               </button>
               <AnimatePresence>
                 {isAccountMenuOpen && (

@@ -6,8 +6,10 @@
 import { lazy, Suspense } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Navbar } from "./components/Navbar";
+import { Footer } from "./components/Footer";
 import { CartDrawer } from "./components/CartDrawer";
 import { CheckoutModal } from "./components/CheckoutModal";
+import { isAuthScreen, PORTAL_LOGIN_PATH } from "@/src/lib/authRoutes";
 import { usePortalStore, getPortalLandingByRole } from "./store/usePortalStore";
 import { RequirePortalRole } from "./components/portal/RequirePortalRole";
 
@@ -23,6 +25,7 @@ const EventsPage = lazy(() => import("./pages/EventsPage").then((m) => ({ defaul
 const TestimonialsPage = lazy(() =>
   import("./pages/TestimonialsPage").then((m) => ({ default: m.TestimonialsPage })),
 );
+const ContactPage = lazy(() => import("./pages/ContactPage").then((m) => ({ default: m.ContactPage })));
 const CustomOrderPage = lazy(() =>
   import("./pages/CustomOrderPage").then((m) => ({ default: m.CustomOrderPage })),
 );
@@ -36,6 +39,15 @@ const CustomSectionPage = lazy(() =>
   import("./pages/CustomSectionPage").then((m) => ({ default: m.CustomSectionPage })),
 );
 const LoginPage = lazy(() => import("./pages/LoginPage").then((m) => ({ default: m.LoginPage })));
+const CustomerSignInPage = lazy(() =>
+  import("./pages/account/CustomerSignInPage").then((m) => ({ default: m.CustomerSignInPage })),
+);
+const CustomerSignUpPage = lazy(() =>
+  import("./pages/account/CustomerSignUpPage").then((m) => ({ default: m.CustomerSignUpPage })),
+);
+const PortalLoginPage = lazy(() =>
+  import("./pages/portal/PortalLoginPage").then((m) => ({ default: m.PortalLoginPage })),
+);
 const PortalLayout = lazy(() =>
   import("./components/portal/PortalLayout").then((m) => ({ default: m.PortalLayout })),
 );
@@ -100,7 +112,7 @@ const AdminSettingsPage = lazy(() =>
 
 function PortalIndexRedirect() {
   const user = usePortalStore((state) => state.currentUser);
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to={PORTAL_LOGIN_PATH} replace />;
   return <Navigate to={getPortalLandingByRole(user.role)} replace />;
 }
 
@@ -114,12 +126,12 @@ export default function App() {
 
 function AppFrame() {
   const location = useLocation();
-  const isPortalScreen =
-    location.pathname.startsWith("/portal") || location.pathname.startsWith("/login");
+  const hideStorefrontChrome =
+    location.pathname.startsWith("/portal") || isAuthScreen(location.pathname);
 
   return (
     <div className="min-h-screen bg-offgrid-cream font-sans text-offgrid-green overflow-x-hidden">
-      {!isPortalScreen && <Navbar />}
+      {!hideStorefrontChrome && <Navbar />}
       <Suspense
         fallback={
           <div className="mx-auto max-w-6xl px-6 pb-16 pt-28 sm:px-8 sm:pt-32 lg:px-10 text-sm text-offgrid-green/60">
@@ -134,11 +146,15 @@ function AppFrame() {
         <Route path="/shop/:slug" element={<ProductDetailPage />} />
         <Route path="/events" element={<EventsPage />} />
         <Route path="/testimonials" element={<TestimonialsPage />} />
+        <Route path="/contact" element={<ContactPage />} />
         <Route path="/custom/order" element={<CustomOrderPage />} />
         <Route path="/custom/templates" element={<CustomTemplatesPage />} />
         <Route path="/custom" element={<CustomHubPage />} />
         <Route path="/custom/:slug" element={<CustomSectionPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/account/sign-in" element={<CustomerSignInPage />} />
+        <Route path="/account/sign-up" element={<CustomerSignUpPage />} />
+        <Route path="/portal/login" element={<PortalLoginPage />} />
         <Route path="/portal" element={<PortalIndexRedirect />} />
         <Route
           path="/account/orders"
@@ -207,6 +223,8 @@ function AppFrame() {
         </Route>
       </Routes>
       </Suspense>
+
+      {!hideStorefrontChrome && <Footer />}
 
       <CartDrawer />
       <CheckoutModal />

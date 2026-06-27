@@ -84,17 +84,44 @@
   padding: 0 1.5rem;
 }
 
+/* Eyebrow — consistent mono kicker with an electric-blue lead dot */
+.horizon-hero__eyebrow {
+  margin: 0 0 clamp(0.9rem, 2.2vh, 1.4rem);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--font-mono, monospace);
+  font-size: clamp(0.625rem, 1vw, 0.75rem);
+  font-weight: 500;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--color-offgrid-cream, #f1f1f1) 72%, transparent);
+  will-change: transform, opacity;
+}
+
+.horizon-hero__eyebrow::before {
+  content: "";
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 9999px;
+  background: var(--color-offgrid-lime, #000aff);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--color-offgrid-lime, #000aff) 85%, transparent);
+}
+
 .horizon-hero__title {
   margin: 0;
   max-width: 100%;
   font-family: var(--font-display, sans-serif);
   font-weight: 900;
-  font-size: clamp(2rem, 11vw, 11rem);
-  line-height: 0.85;
-  letter-spacing: -0.02em;
+  font-size: clamp(2.75rem, 11vw, 11rem);
+  line-height: 0.9;
+  letter-spacing: -0.025em;
   text-transform: uppercase;
   color: var(--color-offgrid-cream, #f1f1f1);
   text-shadow: 0 2px 40px rgba(0, 0, 0, 0.5);
+  /* Clip the per-char rise so letters slide up cleanly from their own baseline. */
+  overflow: hidden;
+  padding-bottom: 0.08em;
 }
 
 .horizon-hero__title .title-char {
@@ -102,28 +129,43 @@
   will-change: transform, opacity;
 }
 
-.horizon-hero__subtitle {
-  margin-top: clamp(1rem, 2.5vh, 1.75rem);
-  max-width: 40rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.horizon-hero__subtitle .subtitle-line {
-  margin: 0;
-  font-family: var(--font-sans, sans-serif);
-  font-size: clamp(0.9rem, 1.6vw, 1.2rem);
-  font-weight: 300;
-  letter-spacing: 0.01em;
-  color: color-mix(in srgb, var(--color-offgrid-cream, #f1f1f1) 80%, transparent);
+/* Wordmark sized to the text titles' cap-height so scene 0 matches scenes 1–2. */
+.horizon-hero__logo {
+  display: block;
+  width: auto;
+  height: clamp(2.75rem, 9vw, 8.5rem);
+  max-width: 100%;
+  margin: 0 auto;
+  filter: drop-shadow(0 2px 40px rgba(0, 0, 0, 0.5));
   will-change: transform, opacity;
 }
 
-.horizon-hero__subtitle .subtitle-line:first-child {
-  font-family: var(--font-display, sans-serif);
-  font-style: italic;
-  font-weight: 400;
+/* Electric-blue divider — consistent structural beat between title and tagline */
+.horizon-hero__divider {
+  width: clamp(2.5rem, 6vw, 4.5rem);
+  height: 2px;
+  margin: clamp(1.1rem, 2.6vh, 1.6rem) auto 0;
+  border-radius: 9999px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--color-offgrid-lime, #000aff),
+    transparent
+  );
+  transform-origin: center;
+  will-change: transform, opacity;
+}
+
+.horizon-hero__subtitle {
+  margin: clamp(1rem, 2.5vh, 1.6rem) auto 0;
+  max-width: 36rem;
+  font-family: var(--font-sans, sans-serif);
+  font-size: clamp(0.95rem, 1.5vw, 1.2rem);
+  font-weight: 300;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+  color: color-mix(in srgb, var(--color-offgrid-cream, #f1f1f1) 82%, transparent);
+  will-change: transform, opacity;
 }
 
 /* CTAs */
@@ -217,8 +259,11 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .horizon-hero__eyebrow,
   .horizon-hero__title .title-char,
-  .horizon-hero__subtitle .subtitle-line {
+  .horizon-hero__title .title-logo,
+  .horizon-hero__divider,
+  .horizon-hero__subtitle {
     transform: none !important;
     opacity: 1 !important;
   }

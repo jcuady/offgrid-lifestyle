@@ -21,6 +21,7 @@ import { LOGO_WORDMARK_WHITE } from "@/src/lib/brandAssets";
 import { cn } from "@/src/lib/utils";
 import { usePortalStore, type UserRole } from "@/src/store/usePortalStore";
 import { localAuthService } from "@/src/services";
+import { PORTAL_LOGIN_PATH } from "@/src/lib/authRoutes";
 
 interface PortalLayoutProps {
   role: Exclude<UserRole, "customer">;
@@ -110,7 +111,7 @@ export function PortalLayout({ role }: PortalLayoutProps) {
 
   const logout = () => {
     localAuthService.logout();
-    navigate("/login");
+    navigate(PORTAL_LOGIN_PATH);
   };
 
   const navItemClass = ({ isActive }: { isActive: boolean }) =>

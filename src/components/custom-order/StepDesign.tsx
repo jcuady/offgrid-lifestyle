@@ -6,12 +6,28 @@ import { useCustomOrderStore } from "@/src/store/useCustomOrderStore";
 import { resolveCanonicalTemplates } from "@/src/lib/canonicalTemplates";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { PRIMARY_DESIGN_TEMPLATE_ID, triggerTemplateDownload } from "@/src/lib/resolveTemplateDownload";
-import { HEADWEAR_TYPE_OPTIONS } from "@/src/data/customHeadwearOptions";
+import {
+  isTowelHeadwearType,
+  resolveHeadwearOptions,
+  type HeadwearOptionGroup,
+} from "@/src/data/customHeadwearOptions";
 import { PENDING_DESIGN_KEY, saveCustomOrderFile } from "@/src/lib/customOrderFiles";
+import { fileAcceptAttribute, fileRuleHint, validateUploadedFile } from "@/src/lib/fileValidation";
 import { cn } from "@/src/lib/utils";
 
 export function StepDesign() {
   const copy = useSiteContentStore((s) => s.customPageContent.wizard.step1);
+  const headwearRaw = useSiteContentStore((s) => s.customHeadwearOptions);
+  const headwearOptions = useMemo(
+    () => resolveHeadwearOptions(headwearRaw).filter((o) => o.isPublished),
+    [headwearRaw],
+  );
+  const headwearOnly = useMemo(
+    () => headwearOptions.filter((o) => o.group === "headwear"),
+    [headwearOptions],
+  );
+  const towelOnly = useMemo(() => headwearOptions.filter((o) => o.group === "towel"), [headwearOptions]);
+
   const { draft, updateDraft, nextStep } = useCustomOrderStore();
   const customTemplatesRaw = useSiteContentStore((state) => state.customTemplates);
   const templates = useMemo(
@@ -24,10 +40,27 @@ export function StepDesign() {
   );
   const [primaryDlBusy, setPrimaryDlBusy] = useState(false);
   const [uploadBusy, setUploadBusy] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  const isTowelSelected = isTowelHeadwearType(draft.headwearType, headwearOptions);
+  const activeGroup: HeadwearOptionGroup | null =
+    draft.category === "headwear_towels" ? (isTowelSelected ? "towel" : "headwear") : null;
+  const visibleTypeOptions = activeGroup
+    ? headwearOptions.filter((o) => o.group === activeGroup)
+    : [];
 
   const headwearReady = draft.category === "apparel" || Boolean(draft.headwearType);
   const designReady = Boolean(draft.designFileName) || draft.designNotes.trim().length > 0;
   const canContinue = headwearReady && designReady;
+
+  const selectHeadwearGroup = (group: HeadwearOptionGroup) => {
+    const pool = group === "towel" ? towelOnly : headwearOnly;
+    const current = pool.find((o) => o.id === draft.headwearType);
+    updateDraft({
+      category: "headwear_towels",
+      headwearType: current?.id ?? pool[0]?.id ?? null,
+    });
+  };
 
   const handlePrimaryDownload = async () => {
     if (!primaryTemplate) return;
@@ -43,13 +76,22 @@ export function StepDesign() {
 
   const handleFileSelect = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = "";
     if (!file) return;
+
+    const check = validateUploadedFile(file, "customDesign");
+    if (check.ok === false) {
+      setUploadError(check.error);
+      return;
+    }
+
     try {
+      setUploadError(null);
       setUploadBusy(true);
       await saveCustomOrderFile(PENDING_DESIGN_KEY, file);
       updateDraft({ designFileName: file.name, designFileKey: PENDING_DESIGN_KEY });
     } catch (err) {
-      window.alert(err instanceof Error ? err.message : "Upload failed.");
+      setUploadError(err instanceof Error ? err.message : "Upload failed.");
     } finally {
       setUploadBusy(false);
     }
@@ -70,65 +112,73 @@ export function StepDesign() {
           <button
             type="button"
             onClick={() => updateDraft({ category: "apparel", headwearType: null })}
-            className={`rounded-xl border p-4 text-left transition-all ${
+            className={cn(
+              "rounded-xl border p-4 text-left transition-all",
               draft.category === "apparel"
                 ? "border-offgrid-green bg-offgrid-green/5"
-                : "border-offgrid-green/12 bg-offgrid-cream/50 hover:border-offgrid-green/35"
-            }`}
+                : "border-offgrid-green/12 bg-offgrid-cream/50 hover:border-offgrid-green/35",
+            )}
           >
             <p className="font-display text-base font-bold text-offgrid-green">Jerseys & shorts</p>
             <p className="mt-1 text-xs text-offgrid-green/60">Best for full roster uniforms and sets.</p>
           </button>
           <button
             type="button"
-            onClick={() => updateDraft({ category: "headwear_towels", headwearType: "cap-trucker" })}
-            className={`rounded-xl border p-4 text-left transition-all ${
-              draft.category === "headwear_towels" &&
-              draft.headwearType !== "towel-face" &&
-              draft.headwearType !== "towel-hand"
+            onClick={() => selectHeadwearGroup("headwear")}
+            disabled={headwearOnly.length === 0}
+            className={cn(
+              "rounded-xl border p-4 text-left transition-all disabled:cursor-not-allowed disabled:opacity-50",
+              draft.category === "headwear_towels" && activeGroup === "headwear"
                 ? "border-offgrid-green bg-offgrid-green/5"
-                : "border-offgrid-green/12 bg-offgrid-cream/50 hover:border-offgrid-green/35"
-            }`}
+                : "border-offgrid-green/12 bg-offgrid-cream/50 hover:border-offgrid-green/35",
+            )}
           >
             <p className="font-display text-base font-bold text-offgrid-green">Headwear</p>
             <p className="mt-1 text-xs text-offgrid-green/60">Caps, visors, and headwear logo runs.</p>
           </button>
           <button
             type="button"
-            onClick={() => updateDraft({ category: "headwear_towels", headwearType: "towel-hand" })}
-            className={`rounded-xl border p-4 text-left transition-all ${
-              draft.category === "headwear_towels" &&
-              (draft.headwearType === "towel-face" || draft.headwearType === "towel-hand")
+            onClick={() => selectHeadwearGroup("towel")}
+            disabled={towelOnly.length === 0}
+            className={cn(
+              "rounded-xl border p-4 text-left transition-all disabled:cursor-not-allowed disabled:opacity-50",
+              draft.category === "headwear_towels" && activeGroup === "towel"
                 ? "border-offgrid-green bg-offgrid-green/5"
-                : "border-offgrid-green/12 bg-offgrid-cream/50 hover:border-offgrid-green/35"
-            }`}
+                : "border-offgrid-green/12 bg-offgrid-cream/50 hover:border-offgrid-green/35",
+            )}
           >
             <p className="font-display text-base font-bold text-offgrid-green">Towels</p>
             <p className="mt-1 text-xs text-offgrid-green/60">Face and hand towel custom orders.</p>
           </button>
         </div>
-        {draft.category === "headwear_towels" ? (
+        {draft.category === "headwear_towels" && visibleTypeOptions.length > 0 ? (
           <div className="mt-3">
             <p className="mb-2 font-mono text-[10px] font-semibold uppercase tracking-[0.15em] text-offgrid-green/55">
-              Select headwear/towel type
+              Select {activeGroup === "towel" ? "towel" : "headwear"} type
             </p>
             <div className="flex flex-wrap gap-2">
-              {HEADWEAR_TYPE_OPTIONS.map((opt) => (
+              {visibleTypeOptions.map((opt) => (
                 <button
                   key={opt.id}
                   type="button"
                   onClick={() => updateDraft({ headwearType: opt.id })}
-                  className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  className={cn(
+                    "rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors",
                     draft.headwearType === opt.id
                       ? "border-offgrid-green bg-offgrid-green text-offgrid-cream"
-                      : "border-offgrid-green/20 text-offgrid-green/70 hover:border-offgrid-green/40"
-                  }`}
+                      : "border-offgrid-green/20 text-offgrid-green/70 hover:border-offgrid-green/40",
+                  )}
                 >
                   {opt.label}
                 </button>
               ))}
             </div>
           </div>
+        ) : draft.category === "headwear_towels" ? (
+          <p className="mt-3 text-xs text-amber-700">
+            No published {activeGroup === "towel" ? "towel" : "headwear"} types — ask an admin to publish options in
+            Custom pages.
+          </p>
         ) : null}
       </div>
 
@@ -161,8 +211,11 @@ export function StepDesign() {
         </label>
         <label
           className={cn(
-            "flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-offgrid-green/20 p-8 transition-all sm:p-12",
-            uploadBusy ? "pointer-events-none opacity-60" : "hover:border-offgrid-green/40 hover:bg-offgrid-green/[0.02]",
+            "flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed p-8 transition-all sm:p-12",
+            uploadError
+              ? "border-red-400/60 bg-red-50/40"
+              : "border-offgrid-green/20 hover:border-offgrid-green/40 hover:bg-offgrid-green/[0.02]",
+            uploadBusy && "pointer-events-none opacity-60",
           )}
         >
           {uploadBusy ? (
@@ -177,13 +230,19 @@ export function StepDesign() {
           )}
           <input
             type="file"
-            accept=".png,.jpg,.jpeg,.pdf,.ai,.svg"
+            accept={fileAcceptAttribute("customDesign")}
             onChange={(e) => void handleFileSelect(e)}
             className="hidden"
           />
         </label>
+        {uploadError ? (
+          <p className="mt-2 text-xs font-medium text-red-600" role="alert">
+            {uploadError}
+          </p>
+        ) : null}
         <p className="mt-2 text-[10px] text-offgrid-green/50">
-          Upload artwork (.AI preferred) or add design notes below if you need free OffGrid design support.
+          Accepted: {fileRuleHint("customDesign")}. Upload artwork (.AI preferred) or add design notes below if you need
+          free OffGrid design support.
         </p>
       </div>
 

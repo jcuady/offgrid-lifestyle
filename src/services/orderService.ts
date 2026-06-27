@@ -1,6 +1,8 @@
 import { toRetailOrderPayload, type CustomOrderDraft, type ShippingInfo } from "@/src/types/commerce";
 import { usePortalStore } from "@/src/store/usePortalStore";
 import { finalizeCustomOrderFiles } from "@/src/lib/customOrderFiles";
+import { validateCustomOrderDraft, validateShippingInfo } from "@/src/lib/formValidation";
+import { checkoutPaymentConfigFromSettings, validateRetailPaymentMethod } from "@/src/types/payments";
 
 export interface RetailCartLineInput {
   productId: string;
@@ -27,6 +29,20 @@ export interface OrderService {
 /** Persists via `usePortalStore` (localStorage). Production: POST to an API and email admins (e.g. Resend). */
 export const localOrderService: OrderService = {
   submitRetailOrder: ({ orderId, cart, shippingInfo, paymentMethod }) => {
+    if (!cart.length) {
+      throw new Error("Your cart is empty. Add items before checking out.");
+    }
+    const shippingError = validateShippingInfo(shippingInfo);
+    if (shippingError) {
+      throw new Error(shippingError);
+    }
+
+    const paymentConfig = checkoutPaymentConfigFromSettings(usePortalStore.getState().paymentSettings);
+    const paymentError = validateRetailPaymentMethod(paymentMethod, paymentConfig);
+    if (paymentError) {
+      throw new Error(paymentError);
+    }
+
     const retailOrderPayload = toRetailOrderPayload(cart, shippingInfo, paymentMethod, orderId);
     const currentUser = usePortalStore.getState().currentUser;
     const fallbackName = shippingInfo.fullName || currentUser?.name || "Guest Customer";
@@ -40,6 +56,11 @@ export const localOrderService: OrderService = {
     return orderId;
   },
   submitCustomOrder: async (draft) => {
+    const validationErrors = validateCustomOrderDraft(draft);
+    if (validationErrors.length > 0) {
+      throw new Error(validationErrors[0]);
+    }
+
     const orderId =
       draft.id ?? `CO-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
     const fileKeys = await finalizeCustomOrderFiles(orderId, draft.designFileKey, draft.orderSheetFileKey);

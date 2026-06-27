@@ -100,6 +100,33 @@ export interface LandingFooterContent {
   copyright: string;
 }
 
+/** Featured spotlight band on homepage and /shop. */
+export type FeaturedSpotlightLayout = "bento" | "hero";
+export type FeaturedSpotlightSource = "best_sellers" | "manual";
+
+export interface FeaturedSpotlightSlot {
+  /** Product id from catalog; empty = image-only tile (manual campaigns). */
+  productId: string;
+  /** When set, replaces the product image on the storefront tile. */
+  imageOverride: string;
+}
+
+export interface LandingFeaturedSpotlightContent {
+  eyebrow: string;
+  titleLine1: string;
+  titleLine2Italic: string;
+  subtitle: string;
+  ctaLabel: string;
+  ctaHref: string;
+  /** `hero` = one full-width banner (Linya-Linya style). `bento` = 1 large + 2 small tiles. */
+  layout: FeaturedSpotlightLayout;
+  /** `best_sellers` = Crowd Favorites rank from Products. `manual` = slots below. */
+  source: FeaturedSpotlightSource;
+  slots: [FeaturedSpotlightSlot, FeaturedSpotlightSlot, FeaturedSpotlightSlot];
+  showOnHome: boolean;
+  showOnShop: boolean;
+}
+
 /** Fixed-length arrays — length is enforced by CMS UI, not by add/remove controls. */
 export const LANDING_COLLECTION_COUNT = 4;
 export const LANDING_UGC_COUNT = 5;
@@ -119,7 +146,26 @@ export interface LandingContent {
   testimonialsViewAll: string;
   cta: LandingCtaContent;
   footer: LandingFooterContent;
+  featuredSpotlight: LandingFeaturedSpotlightContent;
 }
+
+export const FEATURED_SPOTLIGHT_SLOT_COUNT = 3;
+
+const emptyFeaturedSlot = (): FeaturedSpotlightSlot => ({ productId: "", imageOverride: "" });
+
+export const initialFeaturedSpotlightContent: LandingFeaturedSpotlightContent = {
+  eyebrow: "Featured",
+  titleLine1: "Crowd",
+  titleLine2Italic: "favorites.",
+  subtitle: "Hand-picked drops the community keeps coming back to. Shop the pieces defining the season.",
+  ctaLabel: "Shop all featured",
+  ctaHref: "/shop",
+  layout: "bento",
+  source: "best_sellers",
+  slots: [emptyFeaturedSlot(), emptyFeaturedSlot(), emptyFeaturedSlot()],
+  showOnHome: true,
+  showOnShop: true,
+};
 
 export const LANDING_COLLECTION_IDS: LandingCollectionId[] = [
   "pickleball",
@@ -220,7 +266,7 @@ export const initialLandingContent: LandingContent = {
     countdownTime: "09:00:00",
     location: "Manila",
     category: "Pickleball",
-    ctaPrimary: "Join the Movement →",
+    ctaPrimary: "Join the Movement",
     ctaSecondary: "Event Details",
   },
   socialHeader: {
@@ -280,4 +326,5 @@ export const initialLandingContent: LandingContent = {
     taglineLine2: "Proudly made for Filipino athletes.",
     copyright: "© 2026 OffGrid Lifestyle. All rights reserved.",
   },
+  featuredSpotlight: initialFeaturedSpotlightContent,
 };

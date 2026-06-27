@@ -1,10 +1,12 @@
 import { ExternalLink, RotateCcw } from "lucide-react";
 import { Link } from "react-router-dom";
 import { CmsField, CmsImageInput, CmsSectionPanel, CmsTextInput } from "@/src/components/admin/landing/CmsField";
+import { CmsRouteSelect } from "@/src/components/admin/CmsRouteSelect";
 import { LANDING_COLLECTION_IDS } from "@/src/data/landingContent";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { Button } from "@/src/components/ui/Button";
 import { PortalPageHeader } from "@/src/components/portal/PortalPageHeader";
+import { cn } from "@/src/lib/utils";
 
 const COLLECTION_LABELS: Record<(typeof LANDING_COLLECTION_IDS)[number], string> = {
   pickleball: "Collection 1 — Pickleball (wide)",
@@ -15,6 +17,7 @@ const COLLECTION_LABELS: Record<(typeof LANDING_COLLECTION_IDS)[number], string>
 
 export function AdminLandingPage() {
   const landing = useSiteContentStore((s) => s.landingContent);
+  const products = useSiteContentStore((s) => s.products);
   const updateHero = useSiteContentStore((s) => s.updateLandingHero);
   const updateCollectionsHeader = useSiteContentStore((s) => s.updateLandingCollectionsHeader);
   const updateCollectionCard = useSiteContentStore((s) => s.updateLandingCollectionCard);
@@ -28,7 +31,12 @@ export function AdminLandingPage() {
   const updateTestimonialsViewAll = useSiteContentStore((s) => s.updateLandingTestimonialsViewAll);
   const updateCta = useSiteContentStore((s) => s.updateLandingCta);
   const updateFooter = useSiteContentStore((s) => s.updateLandingFooter);
+  const updateFeaturedSpotlight = useSiteContentStore((s) => s.updateLandingFeaturedSpotlight);
+  const updateFeaturedSpotlightSlot = useSiteContentStore((s) => s.updateLandingFeaturedSpotlightSlot);
   const resetLandingContent = useSiteContentStore((s) => s.resetLandingContent);
+
+  const liveProducts = products.filter((p) => p.status !== "archived");
+  const featured = landing.featuredSpotlight;
 
   const confirmReset = () => {
     if (window.confirm("Reset all homepage text and images to defaults? This cannot be undone.")) {
@@ -43,7 +51,8 @@ export function AdminLandingPage() {
         title="Homepage"
         description={
           <>
-            Edit text and image URLs for each fixed section on the landing page. Product cards in Best Sellers still
+            Edit text and image URLs for each fixed section on the landing page. Featured spotlight layout and picks
+            are configured in the <strong>Featured spotlight</strong> panel below. Product cards in Best Sellers still
             come from{" "}
             <Link to="/portal/admin/products" className="font-semibold text-offgrid-green underline-offset-2 hover:underline">
               Products
@@ -160,6 +169,168 @@ export function AdminLandingPage() {
           </CmsSectionPanel>
           </div>
         ))}
+
+        <CmsSectionPanel
+          title="Featured spotlight"
+          description="Electric-blue band on homepage and /shop. Choose layout, product source, and optional image overrides."
+        >
+          <CmsField label="Show on homepage" className="sm:col-span-1">
+            <label className="inline-flex items-center gap-2 text-sm text-offgrid-green">
+              <input
+                type="checkbox"
+                checked={featured.showOnHome}
+                onChange={(e) => updateFeaturedSpotlight({ showOnHome: e.target.checked })}
+                className="h-4 w-4 rounded border-offgrid-green/30 text-offgrid-lime focus:ring-offgrid-lime"
+              />
+              Visible on home
+            </label>
+          </CmsField>
+          <CmsField label="Show on shop" className="sm:col-span-1">
+            <label className="inline-flex items-center gap-2 text-sm text-offgrid-green">
+              <input
+                type="checkbox"
+                checked={featured.showOnShop}
+                onChange={(e) => updateFeaturedSpotlight({ showOnShop: e.target.checked })}
+                className="h-4 w-4 rounded border-offgrid-green/30 text-offgrid-lime focus:ring-offgrid-lime"
+              />
+              Visible on /shop
+            </label>
+          </CmsField>
+
+          <CmsField label="Eyebrow" className="sm:col-span-2">
+            <CmsTextInput value={featured.eyebrow} onChange={(v) => updateFeaturedSpotlight({ eyebrow: v })} />
+          </CmsField>
+          <CmsField label="Title line 1">
+            <CmsTextInput value={featured.titleLine1} onChange={(v) => updateFeaturedSpotlight({ titleLine1: v })} />
+          </CmsField>
+          <CmsField label="Title line 2 (italic)">
+            <CmsTextInput
+              value={featured.titleLine2Italic}
+              onChange={(v) => updateFeaturedSpotlight({ titleLine2Italic: v })}
+            />
+          </CmsField>
+          <CmsField label="Subtitle" className="sm:col-span-2">
+            <CmsTextInput
+              value={featured.subtitle}
+              onChange={(v) => updateFeaturedSpotlight({ subtitle: v })}
+              multiline
+            />
+          </CmsField>
+          <CmsField label="CTA label">
+            <CmsTextInput value={featured.ctaLabel} onChange={(v) => updateFeaturedSpotlight({ ctaLabel: v })} />
+          </CmsField>
+          <CmsField label="CTA link">
+            <CmsRouteSelect value={featured.ctaHref} onChange={(v) => updateFeaturedSpotlight({ ctaHref: v })} />
+          </CmsField>
+
+          <CmsField label="Layout" className="sm:col-span-2">
+            <div className="flex flex-wrap gap-2">
+              {(
+                [
+                  { value: "bento", label: "Bento — 3 product tiles (1 large + 2 small)" },
+                  { value: "hero", label: "Hero — 1 full-width banner (Linya-Linya style)" },
+                ] as const
+              ).map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => updateFeaturedSpotlight({ layout: option.value })}
+                  className={cn(
+                    "rounded-lg border px-3 py-2 text-left text-xs font-medium transition-colors sm:text-sm",
+                    featured.layout === option.value
+                      ? "border-offgrid-lime bg-offgrid-lime/10 text-offgrid-green"
+                      : "border-offgrid-green/15 text-offgrid-green/70 hover:border-offgrid-green/30",
+                  )}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </CmsField>
+
+          <CmsField label="Product source" className="sm:col-span-2">
+            <div className="flex flex-wrap gap-2">
+              {(
+                [
+                  {
+                    value: "best_sellers",
+                    label: "Best sellers — Crowd Favorites rank from Products (top 3, or 1 for hero)",
+                  },
+                  { value: "manual", label: "Manual — pick products and override images below" },
+                ] as const
+              ).map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => updateFeaturedSpotlight({ source: option.value })}
+                  className={cn(
+                    "rounded-lg border px-3 py-2 text-left text-xs font-medium transition-colors sm:text-sm",
+                    featured.source === option.value
+                      ? "border-offgrid-lime bg-offgrid-lime/10 text-offgrid-green"
+                      : "border-offgrid-green/15 text-offgrid-green/70 hover:border-offgrid-green/30",
+                  )}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </CmsField>
+
+          {featured.source === "manual" ? (
+            <>
+              {(featured.layout === "hero" ? [0] : [0, 1, 2]).map((slotIndex) => {
+                const slot = featured.slots[slotIndex as 0 | 1 | 2];
+                const slotLabel =
+                  featured.layout === "hero"
+                    ? "Hero banner"
+                    : slotIndex === 0
+                      ? "Tile 1 — large (primary)"
+                      : `Tile ${slotIndex + 1}`;
+
+                return (
+                  <div key={slotIndex} className="contents">
+                    <CmsField label={`${slotLabel} — product`} className="sm:col-span-2">
+                      <select
+                        value={slot.productId}
+                        onChange={(e) =>
+                          updateFeaturedSpotlightSlot(slotIndex as 0 | 1 | 2, { productId: e.target.value })
+                        }
+                        className="w-full rounded-lg border border-offgrid-green/20 bg-white px-3 py-2 text-sm text-offgrid-green outline-none focus:border-offgrid-lime focus:ring-2 focus:ring-offgrid-lime/20"
+                      >
+                        <option value="">Image only (no product link)</option>
+                        {liveProducts.map((product) => (
+                          <option key={product.id} value={product.id}>
+                            {product.name} — {product.category}
+                          </option>
+                        ))}
+                      </select>
+                    </CmsField>
+                    <CmsField label={`${slotLabel} — image override`} className="sm:col-span-2">
+                      <CmsImageInput
+                        value={slot.imageOverride}
+                        onChange={(v) => updateFeaturedSpotlightSlot(slotIndex as 0 | 1 | 2, { imageOverride: v })}
+                        alt={slotLabel}
+                      />
+                      <p className="mt-1.5 text-xs text-offgrid-green/55">
+                        Leave empty to use the product photo. Set a custom URL to replace the tile image.
+                      </p>
+                    </CmsField>
+                  </div>
+                );
+              })}
+            </>
+          ) : (
+            <CmsField label="Best sellers note" className="sm:col-span-2">
+              <p className="text-sm text-offgrid-green/65">
+                Products are pulled from{" "}
+                <Link to="/portal/admin/products" className="font-semibold underline-offset-2 hover:underline">
+                  Products → Crowd Favorites rank
+                </Link>
+                . Hero layout uses rank #1; bento uses ranks #1–3. If ranks are empty, tagged top sellers backfill.
+              </p>
+            </CmsField>
+          )}
+        </CmsSectionPanel>
 
         <CmsSectionPanel
           title="Best sellers"

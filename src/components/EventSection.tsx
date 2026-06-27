@@ -13,11 +13,11 @@ export function EventSection() {
   return (
     <section
       id="events"
-      className={cn("relative overflow-hidden bg-offgrid-dark text-offgrid-cream", sectionPaddingDark)}
+      className={cn("relative overflow-hidden bg-offgrid-lime text-offgrid-cream", sectionPaddingDark)}
     >
-      {/* Brand-consistent ambient accents (matches BrandStory). */}
-      <div className="absolute top-0 left-0 h-full w-1/2 -skew-x-12 -translate-x-1/4 bg-offgrid-green/20" />
-      <div className="absolute bottom-0 right-0 h-64 w-64 rounded-full bg-offgrid-lime/5 blur-3xl" />
+      {/* Electric-blue brand band — distinct from the dark BrandStory section. */}
+      <div className="absolute top-0 left-0 h-full w-1/2 -skew-x-12 -translate-x-1/4 bg-offgrid-dark/15" />
+      <div className="absolute bottom-0 right-0 h-64 w-64 rounded-full bg-offgrid-cream/10 blur-3xl" />
 
       <div className={cn(siteContainer, "relative z-10")}>
         <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2 lg:gap-16">
@@ -29,8 +29,8 @@ export function EventSection() {
             transition={{ duration: 0.7 }}
             className="min-w-0 max-w-xl"
           >
-            <div className="mb-8 inline-flex items-center rounded-full border border-offgrid-cream/20 bg-offgrid-cream/10 px-4 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-cream/80 backdrop-blur-sm">
-              <span className="mr-2 h-2 w-2 animate-pulse rounded-full bg-offgrid-lime" />
+            <div className="mb-8 inline-flex items-center rounded-full border border-offgrid-cream/25 bg-offgrid-cream/10 px-4 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-cream/90 backdrop-blur-sm">
+              <span className="mr-2 h-2 w-2 animate-pulse rounded-full bg-offgrid-cream" />
               {event.badge}
             </div>
 
@@ -78,7 +78,7 @@ export function EventSection() {
 
             {/* Floating community context — reuses CMS location + category. */}
             <div className="absolute -bottom-4 left-2 flex max-w-[min(320px,80vw)] flex-wrap gap-2 sm:-bottom-6 sm:left-6">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-offgrid-lime px-3.5 py-2 text-xs font-bold text-white shadow-xl">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-offgrid-dark px-3.5 py-2 text-xs font-bold text-offgrid-cream shadow-xl">
                 <MapPin className="h-3.5 w-3.5" />
                 {event.location}
               </span>

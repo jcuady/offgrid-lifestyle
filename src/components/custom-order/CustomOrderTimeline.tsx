@@ -3,20 +3,21 @@ import { cn } from "@/src/lib/utils";
 import { Check } from "lucide-react";
 
 const FLOW_STEPS: { key: string; label: string; statuses: OrderStatus[] }[] = [
-  { key: "submitted", label: "Submitted", statuses: ["pending_deposit", "draft"] },
-  { key: "quote", label: "Quote review", statuses: ["pending_deposit"] },
-  { key: "confirmed", label: "Deposit paid", statuses: ["confirmed"] },
-  { key: "production", label: "In production", statuses: ["in_production"] },
-  { key: "shipped", label: "Shipped", statuses: ["shipped", "delivered"] },
+  { key: "details", label: "Details checked", statuses: ["draft", "pending_deposit"] },
+  { key: "design", label: "Design reviewed", statuses: ["pending_deposit"] },
+  { key: "order-kit", label: "Roster confirmed", statuses: ["pending_deposit"] },
+  { key: "submitted", label: "Quote confirmed", statuses: ["confirmed"] },
+  { key: "production", label: "First unit + production", statuses: ["in_production"] },
+  { key: "shipping", label: "Shipping + warranty", statuses: ["shipped", "delivered"] },
 ];
 
 function stepIndex(status: OrderStatus): number {
   if (status === "cancelled") return -1;
-  if (status === "delivered") return 4;
-  if (status === "shipped") return 4;
-  if (status === "in_production") return 3;
-  if (status === "confirmed") return 2;
-  return 1; // pending_deposit = submitted + awaiting quote/deposit
+  if (status === "delivered") return 5;
+  if (status === "shipped") return 5;
+  if (status === "in_production") return 4;
+  if (status === "confirmed") return 3;
+  return 2; // pending_deposit = details/design/roster submitted, awaiting quote confirmation
 }
 
 interface CustomOrderTimelineProps {
@@ -34,23 +35,24 @@ export function CustomOrderTimeline({ status, hasOfficialQuote, paymentStatus, c
   }
 
   const active = stepIndex(status);
-  const quoteDone = hasOfficialQuote || paymentStatus === "deposit_paid" || paymentStatus === "fully_paid";
+  const quoteDone = hasOfficialQuote || paymentStatus === "deposit_paid" || paymentStatus === "fully_paid" || status === "confirmed";
   const depositDone = paymentStatus === "deposit_paid" || paymentStatus === "fully_paid" || status === "confirmed" || active >= 3;
 
   return (
     <ol className={cn("flex flex-col gap-0 sm:flex-row sm:items-start sm:justify-between", compact ? "gap-2" : "gap-4")}>
       {FLOW_STEPS.map((step, i) => {
         let done = i < active;
-        if (step.key === "quote") done = quoteDone || i < active;
-        if (step.key === "confirmed") done = depositDone;
-        if (step.key === "submitted") done = true;
+        if (step.key === "submitted") done = quoteDone;
+        if (step.key === "production") done = active > i;
+        if (step.key === "shipping") done = status === "delivered";
+        if (step.key === "details" || step.key === "design" || step.key === "order-kit") done = true;
 
         const isCurrent =
-          (step.key === "submitted" && active <= 1 && !quoteDone) ||
-          (step.key === "quote" && !quoteDone && active <= 1) ||
-          (step.key === "confirmed" && quoteDone && !depositDone) ||
+          (step.key === "submitted" && !quoteDone) ||
+          (step.key === "submitted" && quoteDone && !depositDone) ||
           (step.key === "production" && depositDone && active === 3) ||
-          (step.key === "shipped" && active >= 4);
+          (step.key === "production" && active === 4) ||
+          (step.key === "shipping" && active >= 5);
 
         return (
           <li key={step.key} className="flex flex-1 items-start gap-3 sm:flex-col sm:items-center sm:text-center">

@@ -1,7 +1,8 @@
 import type { CustomContentSection, CustomSectionSlug } from "@/src/store/useSiteContentStore";
+import { sanitizeCmsHref } from "@/src/lib/cmsNavigation";
 
-/** Fixed CTA destinations per guide panel — not editable in CMS. */
-export const FIXED_GUIDE_CTA_HREF: Record<CustomSectionSlug, string> = {
+/** Default CTA destinations per guide panel — used when CMS href is missing or invalid. */
+export const DEFAULT_GUIDE_CTA_HREF: Record<CustomSectionSlug, string> = {
   "how-to-order": "/custom/order",
   "product-catalog": "/shop",
   "team-deals": "/custom/order",
@@ -20,6 +21,9 @@ export const OFFGRID_FAQS_SUMMARY =
 export const OFFGRID_FAQS_BODY =
   "1) Tops and bottoms minimum: 10 pieces per design. You can mix shirt types within that 10-piece run (tank tops, short sleeves, long sleeves, and sun hoodies).\n2) Artwork submission: Place your design in OffGrid templates, then send the final file as Adobe Illustrator (.AI) in CMYK color mode for clean production output.\n3) Not using Illustrator? You can still send any file format and an OffGrid rep will guide you through preparation.\n4) Create with OffGrid: Design assistance is free. Share your concept, colors, logos, references, and team style so we can build a production-ready layout faster.\n5) Need inspiration first? Review sample team looks from our channels and include pegs in your brief so we can match your direction.";
 
+/** @deprecated Use DEFAULT_GUIDE_CTA_HREF */
+export const FIXED_GUIDE_CTA_HREF = DEFAULT_GUIDE_CTA_HREF;
+
 /** Ensures exactly seven panels in canonical order; preserves admin text/images. */
 export function resolveGuideSections(sections: CustomContentSection[]): CustomContentSection[] {
   const bySlug = new Map(sections.map((s) => [s.slug, s]));
@@ -35,7 +39,7 @@ export function resolveGuideSections(sections: CustomContentSection[]): CustomCo
       body: found.body,
       heroImage: found.heroImage,
       ctaLabel: found.ctaLabel,
-      ctaHref: FIXED_GUIDE_CTA_HREF[seed.slug],
+      ctaHref: sanitizeCmsHref(found.ctaHref, DEFAULT_GUIDE_CTA_HREF[seed.slug]),
       isPublished: found.isPublished,
       updatedAt: found.updatedAt,
     };
@@ -49,7 +53,7 @@ export function getCanonicalGuideSectionSeeds(): CustomContentSection[] {
     partial: Omit<CustomContentSection, "updatedAt" | "ctaHref"> & { slug: CustomSectionSlug },
   ): CustomContentSection => ({
     ...partial,
-    ctaHref: FIXED_GUIDE_CTA_HREF[partial.slug],
+    ctaHref: DEFAULT_GUIDE_CTA_HREF[partial.slug],
     updatedAt: now,
   });
 

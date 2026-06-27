@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { CustomOrderWizard } from "@/src/components/custom-order/CustomOrderWizard";
-import { Footer } from "@/src/components/Footer";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { siteContainer, sectionEyebrow } from "@/src/lib/brandLayout";
 import { cn } from "@/src/lib/utils";
@@ -13,28 +12,28 @@ export function CustomOrderPage() {
   const teamOrderSteps = [
     {
       title: "Know the details",
-      detail: "Review catalog options, size chart, lead times, and minimum order requirements before collecting your roster.",
+      detail: "Check the product catalog, size chart, lead time, and minimum order quantity.",
     },
     {
       title: "Customize your gear",
       detail:
-        "Use your own artwork or collaborate with OffGrid design support to shape your final look.",
+        "Use your own design file or work with OffGrid to create your team design.",
     },
     {
       title: "Collect order details",
-      detail: "Complete the team order sheet with names, numbers, sizes, quantities, and product types.",
+      detail: "Gather names, numbers, sizes, quantities, and product types using the order kit.",
     },
     {
       title: "Submit your order",
-      detail: "Upload your completed files so our team can review and confirm next steps.",
+      detail: "Send the completed order form so OffGrid can review and confirm the next steps.",
     },
     {
       title: "Production starts",
-      detail: "After design and order details are confirmed, production begins for your full run.",
+      detail: "OffGrid creates the first unit, confirms details, then proceeds to mass production.",
     },
     {
       title: "Shipping",
-      detail: "Tracking details and after-sales support notes are shared once your order is dispatched.",
+      detail: "Tracking details and warranty information are sent once the order ships.",
     },
   ];
 
@@ -76,7 +75,7 @@ export function CustomOrderPage() {
               Team order system
             </h2>
             <p className="mt-3 text-sm text-offgrid-green/65 sm:text-base">
-              OffGrid custom orders run on a roster-first workflow so production details stay accurate from brief to dispatch.
+              OffGrid custom orders follow a clear six-step workflow so both customers and operations know what happens from quote prep to shipping.
             </p>
           </div>
 
@@ -151,7 +150,6 @@ export function CustomOrderPage() {
 
       <CustomOrderWizard />
 
-      <Footer />
     </>
   );
 }

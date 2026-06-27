@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { localOrderService } from "@/src/services";
+import type { RetailPaymentMethod } from "@/src/types/payments";
 
 // Types
 export interface CartItem {
@@ -23,7 +24,7 @@ export interface ShippingInfo {
   zip: string;
 }
 
-export type PaymentMethod = "cod" | "gcash" | "card";
+export type PaymentMethod = RetailPaymentMethod;
 export type CheckoutStep = 1 | 2 | 3;
 
 interface StoreState {
@@ -77,7 +78,7 @@ export const useStore = create<StoreState>()(
     province: "",
     zip: "",
   },
-  paymentMethod: "cod",
+  paymentMethod: "gcash",
   orderId: null,
 
   // Cart Actions
@@ -144,8 +145,11 @@ export const useStore = create<StoreState>()(
   setPaymentMethod: (method) => set({ paymentMethod: method }),
 
   placeOrder: () => {
-    const orderId = generateOrderId();
     const state = get();
+    if (!state.cart.length) {
+      throw new Error("Your cart is empty.");
+    }
+    const orderId = generateOrderId();
     localOrderService.submitRetailOrder({
       orderId,
       cart: state.cart,
@@ -173,7 +177,7 @@ export const useStore = create<StoreState>()(
         province: "",
         zip: "",
       },
-      paymentMethod: "cod",
+      paymentMethod: "gcash",
       orderId: null,
       cart: [],
     }),

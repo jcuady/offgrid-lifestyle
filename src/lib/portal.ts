@@ -11,6 +11,8 @@ export function formatPaymentMethodLabel(method: string | null | undefined): str
   const m = method.toLowerCase();
   if (m === "gcash") return "GCash";
   if (m === "cod") return "Cash on delivery (COD)";
+  if (m === "paymongo") return "PayMongo";
+  if (m === "card") return "Credit / debit card";
   return formatEnumLabel(method);
 }
 

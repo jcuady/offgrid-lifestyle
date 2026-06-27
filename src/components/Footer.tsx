@@ -1,67 +1,123 @@
 import { Link } from "react-router-dom";
-import { Instagram, Facebook } from "lucide-react";
+import { ArrowUpRight, ArrowUp } from "lucide-react";
 import { siteContainer } from "@/src/lib/brandLayout";
 import { LOGO_WORDMARK_WHITE } from "@/src/lib/brandAssets";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 
+type FooterLink = { label: string; to: string; external?: boolean };
+
+const FOOTER_COLUMNS: { heading: string; links: FooterLink[] }[] = [
+  {
+    heading: "Shop",
+    links: [
+      { label: "All Products", to: "/shop" },
+      { label: "Collections", to: "/collections" },
+      { label: "Events", to: "/events" },
+      { label: "Testimonials", to: "/testimonials" },
+    ],
+  },
+  {
+    heading: "Custom",
+    links: [
+      { label: "Custom Hub", to: "/custom" },
+      { label: "Start an Order", to: "/custom/order" },
+      { label: "Templates", to: "/custom/templates" },
+    ],
+  },
+  {
+    heading: "Company",
+    links: [
+      { label: "Our Story", to: "/#about" },
+      { label: "My Account", to: "/account/orders" },
+      { label: "Contact", to: "/contact" },
+      { label: "Sizing Guide", to: "/custom#sizing" },
+    ],
+  },
+];
+
 export function Footer() {
   const footer = useSiteContentStore((s) => s.landingContent.footer);
+
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
   return (
-    <footer className="bg-offgrid-dark text-offgrid-cream pt-16 pb-8 border-t border-offgrid-cream/8">
+    <footer className="bg-offgrid-lime text-offgrid-cream">
       <div className={siteContainer}>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-14">
-          
-          <div className="md:col-span-2">
-            <Link to="/" className="mb-5 flex items-center">
-              <img
-                src={LOGO_WORDMARK_WHITE}
-                alt="OFF GRID® — OffGrid Lifestyle"
-                className="h-10 w-auto"
-              />
+        {/* Main */}
+        <div className="grid gap-x-8 gap-y-12 border-b border-offgrid-cream/15 pb-12 pt-16 md:grid-cols-12">
+          {/* Brand */}
+          <div className="md:col-span-4">
+            <Link to="/" className="inline-flex items-center">
+              <img src={LOGO_WORDMARK_WHITE} alt="OFF GRID® — OffGrid Lifestyle" className="h-9 w-auto" />
             </Link>
-            <p className="text-offgrid-cream/50 text-sm max-w-xs mb-7 leading-relaxed">
-              Play Different. Live Off Grid.<br />
-              Proudly made for Filipino athletes.
+            <p className="mt-5 max-w-xs text-sm leading-relaxed text-offgrid-cream/80">
+              {footer.taglineLine1}
+              <br />
+              {footer.taglineLine2}
             </p>
-            <div className="flex gap-3">
-              <a href="#" className="w-9 h-9 rounded-full border border-offgrid-cream/15 flex items-center justify-center hover:bg-offgrid-cream hover:text-offgrid-green transition-colors">
-                <Instagram className="w-4 h-4" />
-              </a>
-              <a href="#" className="w-9 h-9 rounded-full border border-offgrid-cream/15 flex items-center justify-center hover:bg-offgrid-cream hover:text-offgrid-green transition-colors">
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg>
-              </a>
-              <a href="#" className="w-9 h-9 rounded-full border border-offgrid-cream/15 flex items-center justify-center hover:bg-offgrid-cream hover:text-offgrid-green transition-colors">
-                <Facebook className="w-4 h-4" />
-              </a>
-            </div>
           </div>
 
-          <div>
-            <h4 className="font-bold text-sm mb-5 tracking-wide">Shop</h4>
-            <ul className="space-y-3 text-sm text-offgrid-cream/50">
-              <li><Link to="/#collections" className="hover:text-white transition-colors">Collections</Link></li>
-              <li><Link to="/#shop" className="hover:text-white transition-colors">Best Sellers</Link></li>
-              <li><Link to="/custom" className="hover:text-white transition-colors">Custom Order</Link></li>
-              <li><Link to="/events" className="hover:text-white transition-colors">Events</Link></li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-bold text-sm mb-5 tracking-wide">Support</h4>
-            <ul className="space-y-3 text-sm text-offgrid-cream/50">
-              <li><Link to="/#about" className="hover:text-white transition-colors">About</Link></li>
-              <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Sizing Guide</a></li>
-            </ul>
-          </div>
-
+          {/* Nav columns */}
+          <nav
+            aria-label="Footer"
+            className="grid grid-cols-2 gap-x-8 gap-y-10 sm:grid-cols-3 md:col-span-7 md:col-start-6"
+          >
+            {FOOTER_COLUMNS.map((column) => (
+              <div key={column.heading}>
+                <h4 className="mb-4 font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-offgrid-cream/55">
+                  {column.heading}
+                </h4>
+                <ul className="space-y-3 text-sm">
+                  {column.links.map((link) => (
+                    <li key={link.label}>
+                      {link.external ? (
+                        <a
+                          href={link.to}
+                          className="group inline-flex items-center gap-1 text-offgrid-cream/75 transition-colors hover:text-white"
+                        >
+                          {link.label}
+                          <ArrowUpRight className="h-3 w-3 opacity-0 transition-opacity group-hover:opacity-100" />
+                        </a>
+                      ) : (
+                        <Link to={link.to} className="text-offgrid-cream/75 transition-colors hover:text-white">
+                          {link.label}
+                        </Link>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </nav>
         </div>
 
-        <div className="flex flex-col md:flex-row justify-between items-center pt-7 border-t border-offgrid-cream/8 text-xs text-offgrid-cream/35">
-          <p>{footer.copyright}</p>
-          <div className="flex gap-6 mt-4 md:mt-0">
-            <a href="#" className="hover:text-offgrid-cream transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-offgrid-cream transition-colors">Terms of Service</a>
+        {/* Bottom bar */}
+        <div className="flex flex-col gap-5 py-7 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col gap-2 text-xs text-offgrid-cream/65 sm:flex-row sm:items-center sm:gap-5">
+            <p>{footer.copyright}</p>
+            <span aria-hidden className="hidden h-3 w-px bg-offgrid-cream/25 sm:block" />
+            <span className="font-mono uppercase tracking-[0.16em] text-offgrid-cream/55">
+              14.5995° N, 120.9842° E · Manila, PH
+            </span>
+          </div>
+
+          <div className="flex items-center gap-6 text-xs text-offgrid-cream/65">
+            <a href="#" className="transition-colors hover:text-white">
+              Privacy
+            </a>
+            <a href="#" className="transition-colors hover:text-white">
+              Terms
+            </a>
+            <button
+              type="button"
+              onClick={scrollToTop}
+              className="group inline-flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-offgrid-cream transition-colors hover:text-white"
+            >
+              Back to top
+              <span className="flex h-7 w-7 items-center justify-center rounded-full border border-offgrid-cream/30 transition-colors group-hover:border-offgrid-cream group-hover:bg-offgrid-cream group-hover:text-offgrid-lime">
+                <ArrowUp className="h-3.5 w-3.5" />
+              </span>
+            </button>
           </div>
         </div>
       </div>

@@ -5,6 +5,7 @@ import { deleteTemplateBlob, putTemplateBlob } from "@/src/lib/templateBlobStora
 import { triggerTemplateDownload } from "@/src/lib/resolveTemplateDownload";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { cn } from "@/src/lib/utils";
+import { fileAcceptAttribute, fileRuleHint, validateUploadedFile } from "@/src/lib/fileValidation";
 
 const CATEGORY_LABELS = {
   jerseys: "Jerseys",
@@ -30,6 +31,7 @@ export function TemplateSlotsEditor() {
   const [selectedCategory, setSelectedCategory] = useState<keyof typeof CATEGORY_LABELS>("jerseys");
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
+  const [fileError, setFileError] = useState<string | null>(null);
 
   const filteredTemplates = templates.filter((t) => t.category === selectedCategory);
   const selected =
@@ -40,8 +42,20 @@ export function TemplateSlotsEditor() {
   const isIdb = (selected?.storageKind ?? "static") === "idb";
 
   const onPickFile = (e: ChangeEvent<HTMLInputElement>) => {
-    setPendingFile(e.target.files?.[0] ?? null);
+    const file = e.target.files?.[0] ?? null;
     e.target.value = "";
+    if (!file) {
+      setPendingFile(null);
+      return;
+    }
+    const check = validateUploadedFile(file, "templateAsset");
+    if (check.ok === false) {
+      setFileError(check.error);
+      setPendingFile(null);
+      return;
+    }
+    setFileError(null);
+    setPendingFile(file);
   };
 
   const saveFileOverride = async () => {
@@ -184,11 +198,17 @@ export function TemplateSlotsEditor() {
             <span className="text-xs">{pendingFile ? pendingFile.name : "No new file selected"}</span>
             <input
               type="file"
-              accept=".ai,.pdf,.svg,.jpg,.jpeg,.png,.eps,.zip"
+              accept={fileAcceptAttribute("templateAsset")}
               className="hidden"
               onChange={onPickFile}
             />
           </label>
+          {fileError ? (
+            <p className="mt-2 text-xs font-medium text-red-600" role="alert">
+              {fileError}
+            </p>
+          ) : null}
+          <p className="mt-1 text-[10px] text-offgrid-green/50">{fileRuleHint("templateAsset")}</p>
           <div className="mt-3 flex flex-wrap gap-2">
             <button
               type="button"

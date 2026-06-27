@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "motion/react";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
-import { Footer } from "@/src/components/Footer";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import {
   siteContainer,
@@ -32,24 +31,18 @@ export function CollectionsPage() {
         transition: { duration: 0.5, ease: "easeOut" as const },
       };
 
-  const countByCategory = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const p of products) map.set(p.category, (map.get(p.category) ?? 0) + 1);
-    return map;
-  }, [products]);
-
   // Categories not already represented by a signature collection → "more lines".
   const moreLines = useMemo(() => {
     const curated = new Set(collections.map((c) => c.shopCategory));
     const seen = new Set<string>();
-    const extra: { category: string; image: string; count: number }[] = [];
+    const extra: { category: string; image: string }[] = [];
     for (const p of products) {
       if (curated.has(p.category) || seen.has(p.category)) continue;
       seen.add(p.category);
-      extra.push({ category: p.category, image: p.image, count: countByCategory.get(p.category) ?? 0 });
+      extra.push({ category: p.category, image: p.image });
     }
     return extra;
-  }, [products, collections, countByCategory]);
+  }, [products, collections]);
 
   return (
     <>
@@ -68,32 +61,20 @@ export function CollectionsPage() {
             {header.caption} One lifestyle, built for every court, fairway, run, and rest day.
           </p>
 
-          <dl className="mt-10 flex flex-wrap gap-x-10 gap-y-4">
-            <div>
-              <dt className="font-display text-3xl font-black tabular-nums text-offgrid-lime sm:text-4xl">
-                {collections.length}
-              </dt>
-              <dd className="mt-1 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-cream/65">
-                Signature collections
-              </dd>
-            </div>
-            <div>
-              <dt className="font-display text-3xl font-black tabular-nums text-offgrid-lime sm:text-4xl">
-                {products.length}
-              </dt>
-              <dd className="mt-1 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-cream/65">
-                Pieces in catalog
-              </dd>
-            </div>
-            <div>
-              <dt className="font-display text-3xl font-black tabular-nums text-offgrid-lime sm:text-4xl">
-                {countByCategory.size}
-              </dt>
-              <dd className="mt-1 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-cream/65">
-                Lines to explore
-              </dd>
-            </div>
-          </dl>
+          {/* Quick jump — collection names, no numbers */}
+          {collections.length > 0 ? (
+            <nav aria-label="Jump to a collection" className="mt-10 flex flex-wrap gap-2.5">
+              {collections.map((collection) => (
+                <Link
+                  key={collection.id}
+                  to={shopHref(collection.shopCategory)}
+                  className="rounded-full border border-offgrid-cream/20 px-4 py-2 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-offgrid-cream/75 transition-colors hover:border-offgrid-lime hover:bg-offgrid-lime hover:text-offgrid-cream"
+                >
+                  {collection.title}
+                </Link>
+              ))}
+            </nav>
+          ) : null}
         </div>
       </section>
 
@@ -101,7 +82,6 @@ export function CollectionsPage() {
       <section className="bg-offgrid-cream py-16 sm:py-20 md:py-24">
         <div className={cn(siteContainer, "space-y-16 sm:space-y-24")}>
           {collections.map((collection, index) => {
-            const count = countByCategory.get(collection.shopCategory) ?? 0;
             const imageRight = index % 2 === 1;
             return (
               <motion.article
@@ -131,10 +111,7 @@ export function CollectionsPage() {
                   <span className="absolute left-5 top-5 rounded-full bg-offgrid-cream/90 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-offgrid-green backdrop-blur">
                     {collection.tag}
                   </span>
-                  <span className="absolute right-5 top-5 font-display text-5xl font-black tabular-nums text-offgrid-cream/80 mix-blend-overlay">
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
-                  <span className="absolute bottom-5 left-5 inline-flex items-center gap-2 rounded-full bg-offgrid-lime px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-offgrid-green opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 translate-y-2">
+                  <span className="absolute bottom-5 left-5 inline-flex items-center gap-2 rounded-full bg-offgrid-lime px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-offgrid-cream opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 translate-y-2">
                     Shop now
                     <ArrowRight className="h-3.5 w-3.5" />
                   </span>
@@ -142,7 +119,7 @@ export function CollectionsPage() {
 
                 <div className={cn("min-w-0", imageRight && "lg:order-1")}>
                   <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-offgrid-green/45">
-                    Collection {String(index + 1).padStart(2, "0")}
+                    Signature collection
                   </p>
                   <h2 className="mt-3 font-display text-4xl font-black leading-[0.95] tracking-tight text-offgrid-green sm:text-5xl">
                     {collection.title}
@@ -150,12 +127,6 @@ export function CollectionsPage() {
                   <p className="mt-3 font-display text-lg font-medium italic text-offgrid-green/70">
                     {collection.subtitle}
                   </p>
-                  <div className="mt-5 flex flex-wrap items-center gap-2 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/55">
-                    <span className="rounded-full bg-offgrid-green/5 px-3 py-1.5">{collection.tag}</span>
-                    <span className="rounded-full bg-offgrid-green/5 px-3 py-1.5 tabular-nums">
-                      {count} {count === 1 ? "piece" : "pieces"}
-                    </span>
-                  </div>
                   <Button className="group mt-7" size="lg" asChild>
                     <Link to={shopHref(collection.shopCategory)}>
                       Shop {collection.title}
@@ -209,12 +180,7 @@ export function CollectionsPage() {
                       aria-hidden
                     />
                     <div className="relative z-10 flex items-end justify-between gap-3 p-5">
-                      <div className="min-w-0">
-                        <h3 className="font-display text-xl font-bold text-offgrid-cream">{line.category}</h3>
-                        <p className="mt-0.5 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-cream/70 tabular-nums">
-                          {line.count} {line.count === 1 ? "piece" : "pieces"}
-                        </p>
-                      </div>
+                      <h3 className="min-w-0 font-display text-xl font-bold text-offgrid-cream">{line.category}</h3>
                       <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-offgrid-cream/15 backdrop-blur-md transition-colors group-hover:bg-offgrid-lime">
                         <ArrowUpRight className="h-4 w-4 text-offgrid-cream transition-colors group-hover:text-offgrid-green" />
                       </span>
@@ -260,7 +226,6 @@ export function CollectionsPage() {
         </div>
       </section>
 
-      <Footer />
     </>
   );
 }

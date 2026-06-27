@@ -1,12 +1,25 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { X, Check, CreditCard, Wallet, Banknote, Package, ChevronRight, MapPin, Truck } from "lucide-react";
+import { X, Check, Wallet, Banknote, Package, ChevronRight, MapPin, Truck, Zap } from "lucide-react";
 import { useShallow } from "zustand/react/shallow";
 import { useStore } from "@/src/store/store";
 import { usePortalStore } from "@/src/store/usePortalStore";
 import { Button } from "./ui/Button";
 import { formatPrice } from "@/src/data/products";
+import { validateShippingInfo } from "@/src/lib/formValidation";
+import {
+  checkoutPaymentConfigFromSettings,
+  isRetailPaymentMethodSelectable,
+  RETAIL_PAYMENT_METHODS,
+  validateRetailPaymentMethod,
+} from "@/src/types/payments";
 import { cn } from "@/src/lib/utils";
+
+const PAYMENT_ICONS = {
+  cod: Banknote,
+  gcash: Wallet,
+  paymongo: Zap,
+} as const;
 
 export function CheckoutModal() {
   const {
@@ -40,8 +53,20 @@ export function CheckoutModal() {
   );
 
   const [formData, setFormData] = useState(shippingInfo);
-  const [cardDetails, setCardDetails] = useState({ number: "", expiry: "", cvv: "" });
+  const [shippingError, setShippingError] = useState<string | null>(null);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const paymentSettings = usePortalStore((s) => s.paymentSettings);
+  const checkoutPaymentConfig = useMemo(
+    () => checkoutPaymentConfigFromSettings(paymentSettings),
+    [paymentSettings.cod, paymentSettings.paymongo],
+  );
+
+  useEffect(() => {
+    if (checkoutStep !== 2) return;
+    if (!isRetailPaymentMethodSelectable(paymentMethod, checkoutPaymentConfig)) {
+      setPaymentMethod("gcash");
+    }
+  }, [checkoutStep, paymentMethod, checkoutPaymentConfig, setPaymentMethod]);
 
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const shipping = subtotal >= 2000 ? 0 : 150;
@@ -56,12 +81,42 @@ export function CheckoutModal() {
 
   const handleShippingSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const error = validateShippingInfo(formData);
+    if (error) {
+      setShippingError(error);
+      return;
+    }
+    setShippingError(null);
+    setCheckoutError(null);
     setShippingInfo(formData);
     setCheckoutStep(2);
   };
 
   const handlePlaceOrder = () => {
-    placeOrder();
+    if (!cart.length) {
+      setCheckoutError("Your cart is empty. Add items before placing an order.");
+      return;
+    }
+
+    const shippingErrorMsg = validateShippingInfo(shippingInfo);
+    if (shippingErrorMsg) {
+      setCheckoutError(shippingErrorMsg);
+      setCheckoutStep(1);
+      return;
+    }
+
+    const paymentError = validateRetailPaymentMethod(paymentMethod, checkoutPaymentConfig);
+    if (paymentError) {
+      setCheckoutError(paymentError);
+      return;
+    }
+
+    try {
+      setCheckoutError(null);
+      placeOrder();
+    } catch (err) {
+      setCheckoutError(err instanceof Error ? err.message : "Could not place order.");
+    }
   };
 
   const handleContinueShopping = () => {
@@ -69,6 +124,27 @@ export function CheckoutModal() {
   };
 
   if (!isCheckoutOpen) return null;
+
+  if (!cart.length && checkoutStep < 3) {
+    return (
+      <AnimatePresence>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-offgrid-dark/80 backdrop-blur-sm px-4"
+        >
+          <div className="max-w-md rounded-2xl bg-offgrid-cream p-8 text-center">
+            <h2 className="text-xl font-display font-bold text-offgrid-green">Cart is empty</h2>
+            <p className="mt-2 text-sm text-offgrid-green/60">Add products from the shop before checking out.</p>
+            <Button variant="default" size="lg" className="mt-6" onClick={closeCheckout}>
+              Continue shopping
+            </Button>
+          </div>
+        </motion.div>
+      </AnimatePresence>
+    );
+  }
 
   return (
     <AnimatePresence>
@@ -104,7 +180,7 @@ export function CheckoutModal() {
                 <div className="flex items-center justify-center gap-2 sm:gap-4">
                   {[
                     { step: 1, label: "Shipping", icon: MapPin },
-                    { step: 2, label: "Payment", icon: CreditCard },
+                    { step: 2, label: "Payment", icon: Wallet },
                   ].map((item, index) => (
                     <div key={item.step} className="flex items-center gap-2 sm:gap-4">
                       <div
@@ -244,6 +320,12 @@ export function CheckoutModal() {
                           </div>
                         </div>
 
+                        {shippingError ? (
+                          <p className="text-sm font-medium text-red-600" role="alert">
+                            {shippingError}
+                          </p>
+                        ) : null}
+
                         <Button variant="default" size="lg" type="submit" className="w-full mt-6 sm:mt-8 h-12 sm:h-14">
                           Continue to Payment
                           <ChevronRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5" />
@@ -266,74 +348,66 @@ export function CheckoutModal() {
                       </h2>
 
                       <div className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
-                        {/* COD */}
-                        <button
-                          onClick={() => setPaymentMethod("cod")}
-                          className={cn(
-                            "w-full flex items-center gap-3 sm:gap-4 p-4 sm:p-5 rounded-xl border-2 transition-all",
-                            paymentMethod === "cod"
-                              ? "border-offgrid-green bg-offgrid-green/5"
-                              : "border-offgrid-green/20 hover:border-offgrid-green/40"
-                          )}
-                        >
-                          <div className={cn(
-                            "w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center flex-shrink-0",
-                            paymentMethod === "cod" ? "bg-offgrid-green text-offgrid-cream" : "bg-offgrid-green/10"
-                          )}>
-                            <Banknote className="w-5 h-5 sm:w-6 sm:h-6" />
-                          </div>
-                          <div className="flex-1 text-left min-w-0">
-                            <p className="font-bold text-offgrid-green text-sm sm:text-base">Cash on Delivery</p>
-                            <p className="text-[10px] sm:text-xs text-offgrid-green/60 truncate">Pay when you receive</p>
-                          </div>
-                        </button>
+                        {RETAIL_PAYMENT_METHODS.map((method) => {
+                          const Icon = PAYMENT_ICONS[method.id];
+                          const selectable = isRetailPaymentMethodSelectable(method.id, checkoutPaymentConfig);
+                          const isSelected = paymentMethod === method.id;
 
-                        {/* GCash */}
-                        <button
-                          onClick={() => setPaymentMethod("gcash")}
-                          className={cn(
-                            "w-full flex items-center gap-3 sm:gap-4 p-4 sm:p-5 rounded-xl border-2 transition-all",
-                            paymentMethod === "gcash"
-                              ? "border-offgrid-green bg-offgrid-green/5"
-                              : "border-offgrid-green/20 hover:border-offgrid-green/40"
-                          )}
-                        >
-                          <div className={cn(
-                            "w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center flex-shrink-0",
-                            paymentMethod === "gcash" ? "bg-offgrid-green text-offgrid-cream" : "bg-offgrid-green/10"
-                          )}>
-                            <Wallet className="w-5 h-5 sm:w-6 sm:h-6" />
-                          </div>
-                          <div className="flex-1 text-left min-w-0">
-                            <p className="font-bold text-offgrid-green text-sm sm:text-base">GCash</p>
-                            <p className="text-[10px] sm:text-xs text-offgrid-green/60 truncate">Pay via GCash mobile wallet</p>
-                          </div>
-                        </button>
-
-                        {/* Card */}
-                        <button
-                          onClick={() => setPaymentMethod("card")}
-                          className={cn(
-                            "w-full flex items-center gap-3 sm:gap-4 p-4 sm:p-5 rounded-xl border-2 transition-all",
-                            paymentMethod === "card"
-                              ? "border-offgrid-green bg-offgrid-green/5"
-                              : "border-offgrid-green/20 hover:border-offgrid-green/40"
-                          )}
-                        >
-                          <div className={cn(
-                            "w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center flex-shrink-0",
-                            paymentMethod === "card" ? "bg-offgrid-green text-offgrid-cream" : "bg-offgrid-green/10"
-                          )}>
-                            <CreditCard className="w-5 h-5 sm:w-6 sm:h-6" />
-                          </div>
-                          <div className="flex-1 text-left min-w-0">
-                            <p className="font-bold text-offgrid-green text-sm sm:text-base">Credit / Debit Card</p>
-                            <p className="text-[10px] sm:text-xs text-offgrid-green/60 truncate">Visa, Mastercard</p>
-                          </div>
-                        </button>
+                          return (
+                            <button
+                              key={method.id}
+                              type="button"
+                              disabled={!selectable}
+                              onClick={() => selectable && setPaymentMethod(method.id)}
+                              className={cn(
+                                "w-full flex items-center gap-3 sm:gap-4 p-4 sm:p-5 rounded-xl border-2 transition-all text-left",
+                                !selectable && "cursor-not-allowed opacity-60",
+                                isSelected && selectable
+                                  ? "border-offgrid-green bg-offgrid-green/5"
+                                  : "border-offgrid-green/20",
+                                selectable && !isSelected && "hover:border-offgrid-green/40",
+                              )}
+                            >
+                              <div
+                                className={cn(
+                                  "w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center flex-shrink-0",
+                                  isSelected && selectable
+                                    ? "bg-offgrid-green text-offgrid-cream"
+                                    : "bg-offgrid-green/10",
+                                )}
+                              >
+                                <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <p className="font-bold text-offgrid-green text-sm sm:text-base">{method.label}</p>
+                                  {method.comingSoon && !selectable ? (
+                                    <span className="rounded-full bg-offgrid-gold/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-offgrid-gold">
+                                      Coming soon
+                                    </span>
+                                  ) : null}
+                                </div>
+                                <p className="text-[10px] sm:text-xs text-offgrid-green/60 truncate">{method.description}</p>
+                              </div>
+                            </button>
+                          );
+                        })}
                       </div>
 
-                      {/* Card Details (if card selected) */}
+                      {paymentMethod === "paymongo" && isRetailPaymentMethodSelectable("paymongo", checkoutPaymentConfig) ? (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          className="mb-8 rounded-xl border border-offgrid-green/10 bg-white p-6"
+                        >
+                          <p className="text-sm text-offgrid-green/70">{paymentSettings.paymongo.checkoutDescription}</p>
+                          <p className="mt-2 text-xs text-offgrid-green/50">
+                            You will be redirected to PayMongo to complete payment after placing your order.
+                          </p>
+                        </motion.div>
+                      ) : null}
+
+                      {/* GCash QR */}
                       {paymentMethod === "gcash" && (
                         <motion.div
                           initial={{ opacity: 0, height: 0 }}
@@ -356,56 +430,21 @@ export function CheckoutModal() {
                         </motion.div>
                       )}
 
-                      {/* Card Details (if card selected) */}
-                      {paymentMethod === "card" && (
+                      {paymentMethod === "cod" && isRetailPaymentMethodSelectable("cod", checkoutPaymentConfig) ? (
                         <motion.div
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: "auto" }}
-                          className="mb-8 p-6 bg-white rounded-xl border border-offgrid-green/10 space-y-4"
+                          className="mb-8 rounded-xl border border-offgrid-green/10 bg-white p-6"
                         >
-                          <div>
-                            <label className="block text-xs font-semibold tracking-[0.15em] uppercase text-offgrid-green mb-2">
-                              Card Number
-                            </label>
-                            <input
-                              type="text"
-                              value={cardDetails.number}
-                              onChange={(e) => setCardDetails({ ...cardDetails, number: e.target.value })}
-                              className="w-full px-4 py-3 rounded-xl border border-offgrid-green/20 focus:border-offgrid-green focus:ring-2 focus:ring-offgrid-green/20 outline-none transition-all text-offgrid-green"
-                              placeholder="1234 5678 9012 3456"
-                              maxLength={19}
-                            />
-                          </div>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <label className="block text-xs font-semibold tracking-[0.15em] uppercase text-offgrid-green mb-2">
-                                Expiry Date
-                              </label>
-                              <input
-                                type="text"
-                                value={cardDetails.expiry}
-                                onChange={(e) => setCardDetails({ ...cardDetails, expiry: e.target.value })}
-                                className="w-full px-4 py-3 rounded-xl border border-offgrid-green/20 focus:border-offgrid-green focus:ring-2 focus:ring-offgrid-green/20 outline-none transition-all text-offgrid-green"
-                                placeholder="MM/YY"
-                                maxLength={5}
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-xs font-semibold tracking-[0.15em] uppercase text-offgrid-green mb-2">
-                                CVV
-                              </label>
-                              <input
-                                type="text"
-                                value={cardDetails.cvv}
-                                onChange={(e) => setCardDetails({ ...cardDetails, cvv: e.target.value })}
-                                className="w-full px-4 py-3 rounded-xl border border-offgrid-green/20 focus:border-offgrid-green focus:ring-2 focus:ring-offgrid-green/20 outline-none transition-all text-offgrid-green"
-                                placeholder="123"
-                                maxLength={3}
-                              />
-                            </div>
-                          </div>
+                          <p className="text-sm text-offgrid-green/70">{paymentSettings.cod.checkoutDescription}</p>
                         </motion.div>
-                      )}
+                      ) : null}
+
+                      {checkoutError ? (
+                        <p className="mb-4 text-sm font-medium text-red-600" role="alert">
+                          {checkoutError}
+                        </p>
+                      ) : null}
 
                       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                         <Button

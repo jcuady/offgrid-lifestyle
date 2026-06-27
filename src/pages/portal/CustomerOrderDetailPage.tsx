@@ -1,10 +1,15 @@
-import { Link, useParams } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { useParams } from "react-router-dom";
 import { usePortalStore } from "@/src/store/usePortalStore";
+import { useSiteContentStore } from "@/src/store/useSiteContentStore";
+import {
+  headwearOptionLabel,
+  isTowelHeadwearType,
+  resolveHeadwearOptions,
+} from "@/src/data/customHeadwearOptions";
 import { formatMoney, php } from "@/src/types/commerce";
 import { cn } from "@/src/lib/utils";
-import { accountHeroMonoTitle } from "@/src/lib/brandLayout";
-import { AccountPageShell } from "@/src/components/account/AccountPageShell";
+import { AccountLayout } from "@/src/components/account/AccountLayout";
+import { OrderTracker } from "@/src/components/account/OrderTracker";
 import { CustomOrderFileButton } from "@/src/components/custom-order/CustomOrderFileButton";
 import { CustomOrderTimeline } from "@/src/components/custom-order/CustomOrderTimeline";
 import {
@@ -14,13 +19,15 @@ import {
   formatOrderTimestamp,
   formatPaymentMethodLabel,
   formatPaymentStatus,
+  orderStatusClassCustomer,
   paymentStatusClassCustomer,
   hasOfficialCustomQuote,
-  orderStatusClassOnHero,
-  paymentStatusClassOnHero,
-  quoteBadgeClassOnHero,
-  quotePendingClassOnHero,
 } from "@/src/lib/portal";
+
+const quoteBadgeLight =
+  "rounded-full border border-offgrid-green/25 bg-offgrid-lime/25 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green";
+const quotePendingLight =
+  "rounded-full border border-offgrid-green/15 bg-offgrid-cream px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/70";
 
 export function CustomerOrderDetailPage() {
   const { orderId } = useParams<{ orderId: string }>();
@@ -41,69 +48,74 @@ export function CustomerOrderDetailPage() {
       (entry.customerId === user.id || entry.customerEmail.toLowerCase() === user.email.toLowerCase()),
   );
 
-  const backLink = (
-    <Link
-      to="/account/orders"
-      className="-mt-2 mb-6 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-offgrid-green/60 hover:text-offgrid-green"
-    >
-      <ArrowLeft className="h-3.5 w-3.5 shrink-0" />
-      Back to my orders
-    </Link>
-  );
+  const backTo = { to: "/account/orders", label: "Back to my orders" };
 
   if (!retail && !custom) {
     return (
-      <AccountPageShell title="Order not found" description="This order does not exist or is not linked to your account.">
-        {backLink}
-      </AccountPageShell>
+      <AccountLayout
+        active="orders"
+        backTo={backTo}
+        title="Order not found"
+        description="This order does not exist or is not linked to your account."
+      >
+        <div className="rounded-2xl border border-dashed border-offgrid-green/20 bg-white px-6 py-12 text-center text-sm text-offgrid-green/60">
+          We couldn't find this order under your account.
+        </div>
+      </AccountLayout>
     );
   }
 
   const activeOrder = retail ?? custom!;
   const orderKind = retail ? "Retail order" : "Custom order";
   const paymentSettings = usePortalStore((s) => s.paymentSettings);
+  const headwearOptions = resolveHeadwearOptions(useSiteContentStore((s) => s.customHeadwearOptions));
   const hasLegacyCustomSpecs = Boolean(
     custom && (custom.cut || custom.material || custom.printMethod || custom.category),
   );
   const teamOrderType = custom
     ? custom.category === "apparel"
       ? "Jerseys & shorts"
-      : custom.headwearType === "towel-face" || custom.headwearType === "towel-hand"
+      : isTowelHeadwearType(custom.headwearType, headwearOptions)
         ? "Towels"
         : "Headwear"
     : "—";
 
   return (
-    <AccountPageShell
+    <AccountLayout
+      active="orders"
+      backTo={backTo}
       eyebrow={orderKind}
       title={activeOrder.id}
-      titleClassName={accountHeroMonoTitle}
-      contentClassName="-mt-10 sm:-mt-12"
+      titleClassName="font-mono text-2xl font-bold tracking-tight break-all sm:text-3xl"
       headerExtra={
         <div className="mt-4 flex flex-wrap gap-2">
-          <span className={cn(orderStatusClassOnHero(activeOrder.status))}>
+          <span className={orderStatusClassCustomer(activeOrder.status)}>
             {formatOrderStatus(activeOrder.status)}
           </span>
-          <span className={cn(paymentStatusClassOnHero(activeOrder.paymentStatus))}>
+          <span className={paymentStatusClassCustomer(activeOrder.paymentStatus)}>
             {formatPaymentStatus(activeOrder.paymentStatus)}
           </span>
           {"officialTotal" in activeOrder && hasOfficialCustomQuote(activeOrder.officialTotal) ? (
-            <span className={quoteBadgeClassOnHero}>Official quote</span>
+            <span className={quoteBadgeLight}>Official quote</span>
           ) : null}
           {"officialTotal" in activeOrder && !hasOfficialCustomQuote(activeOrder.officialTotal) && !retail ? (
-            <span className={quotePendingClassOnHero}>Quote pending</span>
+            <span className={quotePendingLight}>Quote pending</span>
           ) : null}
         </div>
       }
     >
-      {backLink}
-
       {retail ? (
         <>
-          <p className="text-xs text-offgrid-green/55">
-            Placed {formatOrderTimestamp(retail.createdAt)}
-            {retail.updatedAt !== retail.createdAt ? ` · Updated ${formatOrderTimestamp(retail.updatedAt)}` : ""}
-          </p>
+          <div className="rounded-2xl border border-offgrid-green/10 bg-white p-5 shadow-sm sm:p-6">
+            <h2 className="text-lg font-display font-bold text-offgrid-green">Delivery status</h2>
+            <div className="mt-5 rounded-2xl border border-offgrid-green/10 bg-offgrid-cream/40 p-4">
+              <OrderTracker status={retail.status} type="retail" />
+            </div>
+            <p className="mt-4 text-xs text-offgrid-green/55">
+              Placed {formatOrderTimestamp(retail.createdAt)}
+              {retail.updatedAt !== retail.createdAt ? ` · Updated ${formatOrderTimestamp(retail.updatedAt)}` : ""}
+            </p>
+          </div>
 
           <div className="mt-6 grid gap-5 sm:mt-8 sm:gap-6 lg:grid-cols-2">
             <div className="min-w-0 rounded-2xl border border-offgrid-green/10 bg-white p-5 shadow-sm sm:p-6">
@@ -379,7 +391,9 @@ export function CustomerOrderDetailPage() {
                   {custom.category === "headwear_towels" ? (
                     <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3">
                       <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/50">Headwear type</p>
-                      <p className="mt-1 text-sm font-semibold text-offgrid-green">{formatEnumLabel(custom.headwearType ?? "")}</p>
+                      <p className="mt-1 text-sm font-semibold text-offgrid-green">
+                        {headwearOptionLabel(custom.headwearType, headwearOptions)}
+                      </p>
                     </div>
                   ) : (
                     <>
@@ -442,6 +456,6 @@ export function CustomerOrderDetailPage() {
           </div>
         </>
       ) : null}
-    </AccountPageShell>
+    </AccountLayout>
   );
 }

@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "motion/react";
 import { ArrowLeft, ArrowRight, Star, Quote, BadgeCheck, MapPin, TrendingUp } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
-import { Footer } from "@/src/components/Footer";
 import { testimonialEntries } from "@/src/data/testimonials";
 import { siteContainer, sectionEyebrow, sectionEyebrowOnDark } from "@/src/lib/brandLayout";
 import { cn } from "@/src/lib/utils";
@@ -316,7 +315,6 @@ export function TestimonialsPage() {
         </div>
       </section>
 
-      <Footer />
     </>
   );
 }

@@ -26,10 +26,12 @@ function getQuality() {
 }
 
 export interface HorizonHeroScene {
+  /** Small mono kicker above the title (category / context). */
+  eyebrow?: string;
   /** Big display word(s) for this scene. */
   title: string;
-  /** Two supporting lines shown under the title. */
-  lines: [string, string];
+  /** One supporting line shown under the title. */
+  tagline: string;
 }
 
 export interface HorizonHeroCta {
@@ -46,6 +48,8 @@ export interface HorizonHeroProps {
   primaryCta?: HorizonHeroCta;
   /** Secondary CTA (ghost), shown on the first scene. */
   secondaryCta?: HorizonHeroCta;
+  /** Brand logo image shown in place of the first scene's title word. */
+  logoSrc?: string;
 }
 
 // Camera waypoints — one per scene. The rig eases between these on scroll.
@@ -56,9 +60,9 @@ const CAMERA_POSITIONS = [
 ];
 
 const DEFAULT_SCENES: HorizonHeroScene[] = [
-  { title: "OFF GRID\u00AE", lines: ["Play Different. Live Off Grid.", "When comfort meets movement."] },
-  { title: "IN MOTION", lines: ["Gritty. Product-focused.", "Engineered for the way you move."] },
-  { title: "EST. MANILA", lines: ["Progress over perfection.", "Premium Filipino sportswear."] },
+  { eyebrow: "Premium Filipino sportswear", title: "OFF GRID\u00AE", tagline: "Play different. Live off grid." },
+  { eyebrow: "Built to move", title: "IN MOTION", tagline: "Engineered for the way you move." },
+  { eyebrow: "Est. Manila, PH", title: "EST. MANILA", tagline: "Progress over perfection." },
 ];
 
 export const Component: React.FC<HorizonHeroProps> = ({
@@ -66,12 +70,15 @@ export const Component: React.FC<HorizonHeroProps> = ({
   sideLabel = "EST. MANILA, PH",
   primaryCta,
   secondaryCta,
+  logoSrc,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const eyebrowRef = useRef<HTMLParagraphElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
-  const subtitleRef = useRef<HTMLDivElement>(null);
+  const dividerRef = useRef<HTMLDivElement>(null);
+  const subtitleRef = useRef<HTMLParagraphElement>(null);
   const asideRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
   const fillRef = useRef<HTMLDivElement>(null);
@@ -490,25 +497,37 @@ export const Component: React.FC<HorizonHeroProps> = ({
     return () => ctx.revert();
   }, [isReady]);
 
-  // ── Per-scene title/subtitle entrance (replays on scene change) ────────────
+  // ── Per-scene entrance — one sequenced timeline (replays on scene change) ───
   useEffect(() => {
     if (!isReady) return;
+    const eyebrow = eyebrowRef.current;
     const chars = titleRef.current?.querySelectorAll(".title-char");
-    const lines = subtitleRef.current?.querySelectorAll(".subtitle-line");
+    const logo = titleRef.current?.querySelector(".title-logo");
+    const divider = dividerRef.current;
+    const tagline = subtitleRef.current;
+
     const ctx = gsap.context(() => {
+      const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+
+      if (eyebrow) {
+        tl.fromTo(eyebrow, { y: 18, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5 }, 0);
+      }
       if (chars && chars.length) {
-        gsap.fromTo(
+        tl.fromTo(
           chars,
-          { y: 80, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.9, stagger: 0.04, ease: "power4.out" },
+          { yPercent: 110, opacity: 0 },
+          { yPercent: 0, opacity: 1, duration: 0.9, stagger: 0.035, ease: "power4.out" },
+          0.08,
         );
       }
-      if (lines && lines.length) {
-        gsap.fromTo(
-          lines,
-          { y: 30, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.7, stagger: 0.12, ease: "power3.out", delay: 0.15 },
-        );
+      if (logo) {
+        tl.fromTo(logo, { y: 50, opacity: 0 }, { y: 0, opacity: 1, duration: 0.9, ease: "power4.out" }, 0.08);
+      }
+      if (divider) {
+        tl.fromTo(divider, { scaleX: 0, opacity: 0 }, { scaleX: 1, opacity: 1, duration: 0.6 }, 0.32);
+      }
+      if (tagline) {
+        tl.fromTo(tagline, { y: 22, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7 }, 0.42);
       }
     });
     return () => ctx.revert();
@@ -590,13 +609,22 @@ export const Component: React.FC<HorizonHeroProps> = ({
 
           {/* Centered content — re-keyed per scene so it animates in */}
           <div className="horizon-hero__content">
+            {scene.eyebrow && (
+              <p ref={eyebrowRef} key={`e-${currentSection}`} className="horizon-hero__eyebrow">
+                {scene.eyebrow}
+              </p>
+            )}
             <h1 ref={titleRef} key={`t-${currentSection}`} className="horizon-hero__title">
-              {splitTitle(scene.title)}
+              {currentSection === 0 && logoSrc ? (
+                <img src={logoSrc} alt={scene.title} className="horizon-hero__logo title-logo" />
+              ) : (
+                splitTitle(scene.title)
+              )}
             </h1>
-            <div ref={subtitleRef} key={`s-${currentSection}`} className="horizon-hero__subtitle">
-              <p className="subtitle-line">{scene.lines[0]}</p>
-              <p className="subtitle-line">{scene.lines[1]}</p>
-            </div>
+            <div ref={dividerRef} key={`d-${currentSection}`} className="horizon-hero__divider" aria-hidden />
+            <p ref={subtitleRef} key={`s-${currentSection}`} className="horizon-hero__subtitle">
+              {scene.tagline}
+            </p>
 
             {currentSection === 0 && (primaryCta || secondaryCta) && (
               <div className="horizon-hero__cta-row">

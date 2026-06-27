@@ -19,7 +19,7 @@ import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { cn } from "@/src/lib/utils";
 
 const SHORTCUTS: { name: string; description: string; to: string; icon: typeof Home }[] = [
-  { name: "Payments", description: "GCash QR and checkout instructions", to: "/portal/admin/payments", icon: QrCode },
+  { name: "Payments", description: "GCash QR, PayMongo (coming soon)", to: "/portal/admin/payments", icon: QrCode },
   { name: "Homepage", description: "Hero, collections, and landing copy", to: "/portal/admin/homepage", icon: Home },
   { name: "Custom pages", description: "Ordering guide sections and templates", to: "/portal/admin/custom-pages", icon: Palette },
   { name: "Events", description: "Community events and spotlights", to: "/portal/admin/events", icon: CalendarDays },
@@ -69,12 +69,33 @@ export function AdminSettingsPage() {
         detail: auditCount > 0 ? `${auditCount} event(s) recorded` : "No activity recorded yet",
       },
       {
+        label: "COD prepared",
+        done: paymentSettings.cod.enabled,
+        detail: paymentSettings.cod.enabled
+          ? "COD enabled at checkout"
+          : "Coming soon — enable in Payments when courier COD is ready",
+      },
+      {
+        label: "PayMongo prepared",
+        done: Boolean(paymentSettings.paymongo.publicKey) || paymentSettings.paymongo.enabled,
+        detail: paymentSettings.paymongo.enabled
+          ? "Enabled — deploy server checkout endpoint to go live"
+          : "Coming soon — configure public key in Payments when ready",
+      },
+      {
+        label: "Custom page CMS schema",
+        done: Boolean(supabaseUrl),
+        detail: supabaseUrl
+          ? "Apply migration 20260627160000_site_custom_content.sql"
+          : "Migration ready — hub, guide panels, template slots",
+      },
+      {
         label: "Database backend connected",
         done: Boolean(supabaseUrl),
         detail: supabaseUrl ? "Supabase URL detected" : "localStorage MVP — Supabase migration ready",
       },
     ];
-  }, [paymentSettings.gcashQrImageUrl, products, staffAccounts.length, auditCount, supabaseUrl]);
+  }, [paymentSettings.gcashQrImageUrl, paymentSettings.paymongo, paymentSettings.cod, products, staffAccounts.length, auditCount, supabaseUrl]);
 
   const completed = checklist.filter((c) => c.done).length;
 

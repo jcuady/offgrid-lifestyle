@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { motion } from "motion/react";
-import { Star } from "lucide-react";
+import { Star, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { formatPrice } from "@/src/data/products";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
@@ -57,7 +57,7 @@ export function BestSellers() {
               className="inline-flex items-center text-sm font-bold uppercase tracking-[0.15em] text-offgrid-green hover:text-offgrid-lime transition-colors group cursor-pointer"
             >
               {shopLinkLabel}
-              <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
+              <ArrowRight className="ml-2 h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
             </button>
           </div>
         </div>
@@ -109,7 +109,7 @@ export function BestSellers() {
                   <div className="absolute inset-x-0 bottom-0 z-10 translate-y-full bg-offgrid-green/95 px-4 py-3 text-center backdrop-blur-sm transition-transform duration-300 ease-out group-hover:translate-y-0 group-focus-visible:translate-y-0">
                     <span className="inline-flex items-center font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-white">
                       View product
-                      <span className="ml-2 transition-transform group-hover:translate-x-1">→</span>
+                      <ArrowRight className="ml-2 h-3 w-3 transition-transform group-hover:translate-x-1" />
                     </span>
                   </div>
                 </div>

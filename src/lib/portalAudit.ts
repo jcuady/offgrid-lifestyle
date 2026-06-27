@@ -5,6 +5,7 @@ export const MAX_AUDIT_LOGS = 500;
 const ACTION_LABELS: Record<AuditAction, string> = {
   "auth.login": "Sign in",
   "auth.logout": "Sign out",
+  "auth.register": "Account created",
   "staff.created": "Staff created",
   "staff.deactivated": "Staff deactivated",
   "staff.reactivated": "Staff reactivated",
@@ -20,6 +21,7 @@ const ACTION_LABELS: Record<AuditAction, string> = {
 const ACTION_TONE: Record<AuditAction, string> = {
   "auth.login": "bg-offgrid-lime/15 text-offgrid-green border-offgrid-lime/35",
   "auth.logout": "bg-offgrid-green/5 text-offgrid-green/70 border-offgrid-green/15",
+  "auth.register": "bg-offgrid-lime/15 text-offgrid-green border-offgrid-lime/35",
   "staff.created": "bg-offgrid-lime/15 text-offgrid-green border-offgrid-lime/35",
   "staff.deactivated": "bg-red-50 text-red-700 border-red-200",
   "staff.reactivated": "bg-offgrid-lime/15 text-offgrid-green border-offgrid-lime/35",

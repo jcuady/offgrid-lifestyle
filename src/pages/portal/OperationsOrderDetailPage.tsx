@@ -2,6 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { usePortalStore, type ManagedCustomOrder } from "@/src/store/usePortalStore";
+import { useSiteContentStore } from "@/src/store/useSiteContentStore";
+import {
+  headwearOptionLabel,
+  isTowelHeadwearType,
+  resolveHeadwearOptions,
+} from "@/src/data/customHeadwearOptions";
 import { formatMoney, php } from "@/src/types/commerce";
 import { cn } from "@/src/lib/utils";
 import {
@@ -169,6 +175,7 @@ export function OperationsOrderDetailPage() {
   const updateCustomPaymentStatus = usePortalStore((s) => s.updateCustomPaymentStatus);
   const updateCustomOrderQuote = usePortalStore((s) => s.updateCustomOrderQuote);
   const paymentSettings = usePortalStore((s) => s.paymentSettings);
+  const headwearOptions = resolveHeadwearOptions(useSiteContentStore((s) => s.customHeadwearOptions));
 
   const [feedback, setFeedback] = useState<string | null>(null);
 
@@ -179,7 +186,7 @@ export function OperationsOrderDetailPage() {
   const teamOrderType = custom
     ? custom.category === "apparel"
       ? "Jerseys & shorts"
-      : custom.headwearType === "towel-face" || custom.headwearType === "towel-hand"
+      : isTowelHeadwearType(custom.headwearType, headwearOptions)
         ? "Towels"
         : "Headwear"
     : "—";
@@ -322,6 +329,12 @@ export function OperationsOrderDetailPage() {
                   <dt className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/45">Method</dt>
                   <dd className="font-medium text-offgrid-green">{formatPaymentMethodLabel(retail.paymentMethod)}</dd>
                 </div>
+                {retail.paymentProvider ? (
+                  <div>
+                    <dt className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/45">Provider</dt>
+                    <dd className="font-medium text-offgrid-green capitalize">{retail.paymentProvider}</dd>
+                  </div>
+                ) : null}
                 <div>
                   <dt className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/45">Payment status</dt>
                   <dd>
@@ -623,7 +636,9 @@ export function OperationsOrderDetailPage() {
                   {custom.category === "headwear_towels" ? (
                     <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3">
                       <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/50">Headwear type</p>
-                      <p className="mt-1 text-sm font-semibold text-offgrid-green">{formatEnumLabel(custom.headwearType ?? "")}</p>
+                      <p className="mt-1 text-sm font-semibold text-offgrid-green">
+                        {headwearOptionLabel(custom.headwearType, headwearOptions)}
+                      </p>
                     </div>
                   ) : (
                     <>

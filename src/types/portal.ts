@@ -5,6 +5,7 @@ export type AuditActorRole = PortalRole | "system";
 export type AuditAction =
   | "auth.login"
   | "auth.logout"
+  | "auth.register"
   | "staff.created"
   | "staff.deactivated"
   | "staff.reactivated"
@@ -49,6 +50,25 @@ export interface ManagedStaffAccount {
 }
 
 export interface CreateStaffInput {
+  name: string;
+  email: string;
+  password: string;
+}
+
+/** Self-registered storefront customer — mirrors future `auth.users` (role = customer). */
+export interface RegisteredCustomer {
+  id: string;
+  name: string;
+  email: string;
+  /** Plain in local MVP; store hashed in production. */
+  password: string;
+  role: "customer";
+  createdAt: string;
+  updatedAt: string;
+  lastLoginAt: string | null;
+}
+
+export interface RegisterCustomerInput {
   name: string;
   email: string;
   password: string;

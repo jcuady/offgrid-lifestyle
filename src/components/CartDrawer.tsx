@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "motion/react";
-import { X, Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
+import { X, Minus, Plus, Trash2, ShoppingBag, Check, ArrowRight } from "lucide-react";
 import { useShallow } from "zustand/react/shallow";
 import { useStore } from "@/src/store/store";
 import { Button } from "./ui/Button";
@@ -50,7 +50,7 @@ export function CartDrawer() {
             className="fixed right-0 top-0 bottom-0 z-50 w-full sm:w-[90vw] max-w-md bg-offgrid-cream shadow-2xl flex flex-col"
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-offgrid-green/10">
+            <div className="flex items-center justify-between border-b border-offgrid-green/10 p-4 pt-[max(1rem,env(safe-area-inset-top))] sm:p-6">
               <div>
                 <h2 className="text-xl sm:text-2xl font-display font-black text-offgrid-green">Your Cart</h2>
                 <p className="text-xs sm:text-sm text-offgrid-green/50 mt-1">{itemCount} {itemCount === 1 ? "item" : "items"}</p>
@@ -97,7 +97,7 @@ export function CartDrawer() {
                   {remainingForFreeShipping === 0 && subtotal > 0 && (
                     <div className="bg-offgrid-lime/10 rounded-xl p-4 border border-offgrid-lime/20">
                       <p className="text-xs font-bold text-offgrid-green flex items-center gap-2">
-                        <span className="text-lg">✓</span> You've unlocked FREE shipping!
+                        <Check className="h-4 w-4 text-offgrid-lime" strokeWidth={2.5} /> You've unlocked FREE shipping!
                       </p>
                     </div>
                   )}
@@ -131,35 +131,38 @@ export function CartDrawer() {
                           </p>
                         </div>
 
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between gap-2">
                           {/* Quantity Stepper */}
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1.5">
                             <button
                               onClick={() => updateQuantity(item.productId, item.size, item.color, item.quantity - 1)}
-                              className="w-7 h-7 rounded-full border border-offgrid-green/20 flex items-center justify-center hover:bg-offgrid-green/10 transition-colors"
+                              aria-label="Decrease quantity"
+                              className="flex h-9 w-9 items-center justify-center rounded-full border border-offgrid-green/20 transition-colors hover:bg-offgrid-green/10 active:scale-95"
                             >
-                              <Minus className="w-3 h-3" />
+                              <Minus className="h-3.5 w-3.5" />
                             </button>
-                            <span className="text-sm font-bold text-offgrid-green w-6 text-center">
+                            <span className="w-7 text-center text-sm font-bold text-offgrid-green">
                               {item.quantity}
                             </span>
                             <button
                               onClick={() => updateQuantity(item.productId, item.size, item.color, item.quantity + 1)}
-                              className="w-7 h-7 rounded-full border border-offgrid-green/20 flex items-center justify-center hover:bg-offgrid-green/10 transition-colors"
+                              aria-label="Increase quantity"
+                              className="flex h-9 w-9 items-center justify-center rounded-full border border-offgrid-green/20 transition-colors hover:bg-offgrid-green/10 active:scale-95"
                             >
-                              <Plus className="w-3 h-3" />
+                              <Plus className="h-3.5 w-3.5" />
                             </button>
                           </div>
 
-                          <div className="flex items-center gap-3">
-                            <p className="font-bold text-offgrid-green text-sm">
+                          <div className="flex items-center gap-1.5">
+                            <p className="text-sm font-bold text-offgrid-green">
                               {formatPrice(item.price * item.quantity)}
                             </p>
                             <button
                               onClick={() => removeFromCart(item.productId, item.size, item.color)}
-                              className="text-offgrid-green/40 hover:text-red-500 transition-colors"
+                              aria-label={`Remove ${item.name}`}
+                              className="flex h-9 w-9 items-center justify-center rounded-full text-offgrid-green/40 transition-colors hover:bg-red-500/10 hover:text-red-500 active:scale-95"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="h-4 w-4" />
                             </button>
                           </div>
                         </div>
@@ -180,7 +183,7 @@ export function CartDrawer() {
 
             {/* Footer - Sticky */}
             {cart.length > 0 && (
-              <div className="border-t border-offgrid-green/10 p-4 sm:p-6 bg-offgrid-cream">
+              <div className="border-t border-offgrid-green/10 bg-offgrid-cream p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:p-6">
                 <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
                   <div className="flex justify-between text-xs sm:text-sm text-offgrid-green/60">
                     <span>Subtotal</span>
@@ -207,7 +210,7 @@ export function CartDrawer() {
                   className="w-full group h-12 sm:h-14"
                 >
                   Checkout
-                  <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
+                  <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Button>
 
                 <p className="text-[10px] sm:text-xs text-center text-offgrid-green/40 mt-3 sm:mt-4">

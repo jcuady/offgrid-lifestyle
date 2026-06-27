@@ -1,13 +1,14 @@
 import { lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { FeaturedCollections } from "@/src/components/FeaturedCollections";
+import { FeaturedSpotlight } from "@/src/components/FeaturedSpotlight";
 import { BestSellers } from "@/src/components/BestSellers";
 import { BrandStory } from "@/src/components/BrandStory";
 import { EventSection } from "@/src/components/EventSection";
 import { SocialProof } from "@/src/components/SocialProof";
 import { CTASection } from "@/src/components/CTASection";
-import { Footer } from "@/src/components/Footer";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
+import { LOGO_WORDMARK_WHITE } from "@/src/lib/brandAssets";
 
 // Heavy WebGL hero (three + gsap) is code-split so it never blocks first paint.
 const HorizonHero = lazy(() =>
@@ -18,10 +19,12 @@ function HeroFallback({ title, tagline }: { title: string; tagline: string }) {
   return (
     <div className="relative flex h-[100svh] w-full items-center justify-center overflow-hidden bg-offgrid-dark px-6 text-center">
       <div>
-        <h1 className="font-display text-5xl font-black uppercase leading-[0.85] tracking-tight text-offgrid-cream sm:text-7xl lg:text-8xl">
-          {title}
-        </h1>
-        <p className="mt-4 font-display text-lg italic text-offgrid-cream/75">{tagline}</p>
+        <img
+          src={LOGO_WORDMARK_WHITE}
+          alt={title}
+          className="mx-auto h-[clamp(2.75rem,9vw,8.5rem)] w-auto drop-shadow-[0_2px_40px_rgba(0,0,0,0.5)]"
+        />
+        <p className="mt-5 font-sans text-base font-light tracking-wide text-offgrid-cream/80">{tagline}</p>
       </div>
     </div>
   );
@@ -39,11 +42,12 @@ export function HomePage() {
     <>
       <Suspense fallback={<HeroFallback title={hero.titleLine1} tagline={hero.tagline} />}>
         <HorizonHero
+          logoSrc={LOGO_WORDMARK_WHITE}
           sideLabel={hero.locality}
           scenes={[
-            { title: hero.titleLine1, lines: [hero.tagline, hero.badge] },
-            { title: "IN MOTION", lines: ["Gritty. Product-focused.", "Engineered for the way you move."] },
-            { title: "EST. MANILA", lines: ["Progress over perfection.", "Premium Filipino sportswear."] },
+            { eyebrow: hero.badge, title: hero.titleLine1, tagline: hero.tagline },
+            { eyebrow: "Built to move", title: "IN MOTION", tagline: "Engineered for the way you move." },
+            { eyebrow: hero.locality, title: "EST. MANILA", tagline: "Progress over perfection." },
           ]}
           primaryCta={{ label: hero.ctaShopLabel, onClick: () => navigate("/shop") }}
           secondaryCta={{ label: hero.ctaExploreLabel, onClick: scrollToCollections }}
@@ -51,13 +55,13 @@ export function HomePage() {
       </Suspense>
       <main>
         <FeaturedCollections />
+        <FeaturedSpotlight placement="home" />
         <BestSellers />
         <BrandStory />
         <EventSection />
         <SocialProof />
         <CTASection />
       </main>
-      <Footer />
     </>
   );
 }

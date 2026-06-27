@@ -7,10 +7,13 @@ import {
   CmsSectionPanel,
   CmsTextInput,
 } from "@/src/components/admin/landing/CmsField";
-import { FIXED_GUIDE_CTA_HREF, resolveGuideSections } from "@/src/lib/customGuideSections";
+import { CmsRouteSelect } from "@/src/components/admin/CmsRouteSelect";
+import { DEFAULT_GUIDE_CTA_HREF, resolveGuideSections } from "@/src/lib/customGuideSections";
+import { CUSTOM_PROCESS_STEP_COUNT } from "@/src/data/customPageContent";
 import type { CustomSectionSlug } from "@/src/store/useSiteContentStore";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { TemplateSlotsEditor } from "@/src/components/admin/custom/TemplateSlotsEditor";
+import { HeadwearOptionsEditor } from "@/src/components/admin/custom/HeadwearOptionsEditor";
 import { Button } from "@/src/components/ui/Button";
 import { PortalPageHeader } from "@/src/components/portal/PortalPageHeader";
 import { cn } from "@/src/lib/utils";
@@ -43,6 +46,7 @@ export function AdminCustomPagesPage() {
   const updateCustomSection = useSiteContentStore((s) => s.updateCustomSection);
   const resetCustomPageContent = useSiteContentStore((s) => s.resetCustomPageContent);
   const resetCustomGuideSections = useSiteContentStore((s) => s.resetCustomGuideSections);
+  const resetHeadwearOptions = useSiteContentStore((s) => s.resetHeadwearOptions);
   const updateTemplatesPage = useSiteContentStore((s) => s.updateCustomTemplatesPage);
 
   const [selectedSectionId, setSelectedSectionId] = useState(sections[0]?.id ?? "");
@@ -56,11 +60,12 @@ export function AdminCustomPagesPage() {
   const confirmResetAll = () => {
     if (
       window.confirm(
-        "Reset all custom page copy, guide panels, and template slots to defaults?",
+        "Reset all custom page copy, guide panels, headwear/towel types, and template slots to defaults?",
       )
     ) {
       resetCustomPageContent();
       resetCustomGuideSections();
+      resetHeadwearOptions();
     }
   };
 
@@ -73,8 +78,9 @@ export function AdminCustomPagesPage() {
           <>
             Ordering guide (<code className="text-xs">/custom</code>), templates (
             <code className="text-xs">/custom/templates</code>), place order (
-            <code className="text-xs">/custom/order</code>), and wizard copy. Layout is fixed — edit text and images
-            only. Template downloads use bundled files unless you upload a per-slot override (browser-local in this MVP).
+            <code className="text-xs">/custom/order</code>), and wizard copy. Layout is fixed — edit text, images,
+            button labels, and where each button links. Template downloads use bundled files unless you upload a per-slot
+            override (browser-local until Supabase sync is wired).
           </>
         }
         actions={
@@ -122,30 +128,169 @@ export function AdminCustomPagesPage() {
           <CmsField label="CTA — place order">
             <CmsTextInput value={hub.ctaPlaceOrder} onChange={(v) => updateHub({ ctaPlaceOrder: v })} />
           </CmsField>
+          <CmsField label="Place order → page">
+            <CmsRouteSelect value={hub.ctaPlaceOrderHref} onChange={(v) => updateHub({ ctaPlaceOrderHref: v })} />
+          </CmsField>
           <CmsField label="CTA — ordering guide">
             <CmsTextInput value={hub.ctaOrderingGuide} onChange={(v) => updateHub({ ctaOrderingGuide: v })} />
+          </CmsField>
+          <CmsField label="Ordering guide → page">
+            <CmsRouteSelect value={hub.ctaOrderingGuideHref} onChange={(v) => updateHub({ ctaOrderingGuideHref: v })} />
           </CmsField>
           <CmsField label="CTA — templates">
             <CmsTextInput value={hub.ctaTemplates} onChange={(v) => updateHub({ ctaTemplates: v })} />
           </CmsField>
+          <CmsField label="Templates → page">
+            <CmsRouteSelect value={hub.ctaTemplatesHref} onChange={(v) => updateHub({ ctaTemplatesHref: v })} />
+          </CmsField>
+          <CmsField label="Scroll cue" className="sm:col-span-2">
+            <CmsTextInput value={hub.heroScrollCue} onChange={(v) => updateHub({ heroScrollCue: v })} />
+          </CmsField>
+          {hub.heroFacts.map((fact, index) => (
+            <div key={index} className="contents">
+              <CmsField label={`Quick fact ${index + 1} value`}>
+                <CmsTextInput
+                  value={fact.value}
+                  onChange={(v) => {
+                    const next = [...hub.heroFacts];
+                    next[index] = { ...next[index]!, value: v };
+                    updateHub({ heroFacts: next });
+                  }}
+                />
+              </CmsField>
+              <CmsField label={`Quick fact ${index + 1} label`}>
+                <CmsTextInput
+                  value={fact.label}
+                  onChange={(v) => {
+                    const next = [...hub.heroFacts];
+                    next[index] = { ...next[index]!, label: v };
+                    updateHub({ heroFacts: next });
+                  }}
+                />
+              </CmsField>
+            </div>
+          ))}
         </CmsSectionPanel>
 
-        <CmsSectionPanel title="How it works" description="Three fixed steps on /custom (icons are fixed).">
-          <CmsField label="Section title" className="sm:col-span-2">
+        <CmsSectionPanel title="How it works" description={`${CUSTOM_PROCESS_STEP_COUNT} fixed steps on /custom (icons are fixed).`}>
+          <CmsField label="Section eyebrow" className="sm:col-span-2">
             <CmsTextInput value={hub.howItWorksTitle} onChange={(v) => updateHub({ howItWorksTitle: v })} />
+          </CmsField>
+          <CmsField label="Section heading" className="sm:col-span-2">
+            <CmsTextInput value={hub.howItWorksHeading} onChange={(v) => updateHub({ howItWorksHeading: v })} />
+          </CmsField>
+          <CmsField label="Section description" className="sm:col-span-2">
+            <CmsTextInput
+              value={hub.howItWorksDescription}
+              onChange={(v) => updateHub({ howItWorksDescription: v })}
+              multiline
+            />
           </CmsField>
           {hub.processSteps.map((step, index) => (
             <div key={index} className="contents">
               <CmsField label={`Step ${index + 1} label`}>
                 <CmsTextInput
                   value={step.label}
-                  onChange={(v) => updateProcessStep(index as 0 | 1 | 2, { label: v })}
+                  onChange={(v) => updateProcessStep(index as 0 | 1 | 2 | 3 | 4 | 5, { label: v })}
                 />
               </CmsField>
               <CmsField label={`Step ${index + 1} description`}>
                 <CmsTextInput
                   value={step.description}
-                  onChange={(v) => updateProcessStep(index as 0 | 1 | 2, { description: v })}
+                  onChange={(v) => updateProcessStep(index as 0 | 1 | 2 | 3 | 4 | 5, { description: v })}
+                />
+              </CmsField>
+            </div>
+          ))}
+        </CmsSectionPanel>
+
+        <CmsSectionPanel title="Design support" description="Two-column block on /custom">
+          <CmsField label="Section eyebrow" className="sm:col-span-2">
+            <CmsTextInput value={hub.designSectionEyebrow} onChange={(v) => updateHub({ designSectionEyebrow: v })} />
+          </CmsField>
+          <CmsField label="Section title" className="sm:col-span-2">
+            <CmsTextInput value={hub.designSectionTitle} onChange={(v) => updateHub({ designSectionTitle: v })} />
+          </CmsField>
+          <CmsField label="Own artwork — eyebrow">
+            <CmsTextInput
+              value={hub.designOwnArtwork.eyebrow}
+              onChange={(v) => updateHub({ designOwnArtwork: { ...hub.designOwnArtwork, eyebrow: v } })}
+            />
+          </CmsField>
+          <CmsField label="Own artwork — title">
+            <CmsTextInput
+              value={hub.designOwnArtwork.title}
+              onChange={(v) => updateHub({ designOwnArtwork: { ...hub.designOwnArtwork, title: v } })}
+            />
+          </CmsField>
+          <CmsField label="Own artwork — body" className="sm:col-span-2">
+            <CmsTextInput
+              value={hub.designOwnArtwork.body}
+              onChange={(v) => updateHub({ designOwnArtwork: { ...hub.designOwnArtwork, body: v } })}
+              multiline
+              rows={3}
+            />
+          </CmsField>
+          <CmsField label="Own artwork — button label">
+            <CmsTextInput
+              value={hub.designOwnArtwork.ctaLabel}
+              onChange={(v) => updateHub({ designOwnArtwork: { ...hub.designOwnArtwork, ctaLabel: v } })}
+            />
+          </CmsField>
+          <CmsField label="Own artwork — button page">
+            <CmsRouteSelect
+              value={hub.designOwnArtwork.ctaHref}
+              onChange={(v) => updateHub({ designOwnArtwork: { ...hub.designOwnArtwork, ctaHref: v } })}
+            />
+          </CmsField>
+          <CmsField label="Free support — eyebrow">
+            <CmsTextInput
+              value={hub.designFreeSupport.eyebrow}
+              onChange={(v) => updateHub({ designFreeSupport: { ...hub.designFreeSupport, eyebrow: v } })}
+            />
+          </CmsField>
+          <CmsField label="Free support — title">
+            <CmsTextInput
+              value={hub.designFreeSupport.title}
+              onChange={(v) => updateHub({ designFreeSupport: { ...hub.designFreeSupport, title: v } })}
+            />
+          </CmsField>
+          <CmsField label="Free support — body" className="sm:col-span-2">
+            <CmsTextInput
+              value={hub.designFreeSupport.body}
+              onChange={(v) => updateHub({ designFreeSupport: { ...hub.designFreeSupport, body: v } })}
+              multiline
+              rows={3}
+            />
+          </CmsField>
+          <CmsField label="Free support — button label">
+            <CmsTextInput
+              value={hub.designFreeSupport.ctaLabel}
+              onChange={(v) => updateHub({ designFreeSupport: { ...hub.designFreeSupport, ctaLabel: v } })}
+            />
+          </CmsField>
+          <CmsField label="Free support — button page">
+            <CmsRouteSelect
+              value={hub.designFreeSupport.ctaHref}
+              onChange={(v) => updateHub({ designFreeSupport: { ...hub.designFreeSupport, ctaHref: v } })}
+            />
+          </CmsField>
+          <CmsField label="Checklist title" className="sm:col-span-2">
+            <CmsTextInput
+              value={hub.designFreeSupport.checklistTitle ?? ""}
+              onChange={(v) => updateHub({ designFreeSupport: { ...hub.designFreeSupport, checklistTitle: v } })}
+            />
+          </CmsField>
+          {(hub.designFreeSupport.checklistItems ?? []).map((item, index) => (
+            <div key={index} className="contents">
+              <CmsField label={`Checklist item ${index + 1}`} className="sm:col-span-2">
+                <CmsTextInput
+                  value={item}
+                  onChange={(v) => {
+                    const next = [...(hub.designFreeSupport.checklistItems ?? [])];
+                    next[index] = v;
+                    updateHub({ designFreeSupport: { ...hub.designFreeSupport, checklistItems: next } });
+                  }}
                 />
               </CmsField>
             </div>
@@ -168,6 +313,50 @@ export function AdminCustomPagesPage() {
           <CmsField label="Sizing table — caption">
             <CmsTextInput value={hub.sizingPreviewCaption} onChange={(v) => updateHub({ sizingPreviewCaption: v })} multiline />
           </CmsField>
+          {hub.sizingRows.map((row, index) => (
+            <div key={index} className="contents">
+              <CmsField label={`Sizing row ${index + 1} — size`}>
+                <CmsTextInput
+                  value={row.size}
+                  onChange={(v) => {
+                    const next = [...hub.sizingRows];
+                    next[index] = { ...next[index]!, size: v };
+                    updateHub({ sizingRows: next });
+                  }}
+                />
+              </CmsField>
+              <CmsField label={`Row ${index + 1} — chest`}>
+                <CmsTextInput
+                  value={row.chest}
+                  onChange={(v) => {
+                    const next = [...hub.sizingRows];
+                    next[index] = { ...next[index]!, chest: v };
+                    updateHub({ sizingRows: next });
+                  }}
+                />
+              </CmsField>
+              <CmsField label={`Row ${index + 1} — length`}>
+                <CmsTextInput
+                  value={row.length}
+                  onChange={(v) => {
+                    const next = [...hub.sizingRows];
+                    next[index] = { ...next[index]!, length: v };
+                    updateHub({ sizingRows: next });
+                  }}
+                />
+              </CmsField>
+              <CmsField label={`Row ${index + 1} — waist`}>
+                <CmsTextInput
+                  value={row.waist}
+                  onChange={(v) => {
+                    const next = [...hub.sizingRows];
+                    next[index] = { ...next[index]!, waist: v };
+                    updateHub({ sizingRows: next });
+                  }}
+                />
+              </CmsField>
+            </div>
+          ))}
         </CmsSectionPanel>
 
         <CmsSectionPanel title="Guide panels" description="Seven fixed accordion items — select one to edit.">
@@ -193,7 +382,7 @@ export function AdminCustomPagesPage() {
         {selected ? (
           <CmsSectionPanel
             title={GUIDE_LABELS[selected.slug]}
-            description={`Deep link: /custom#${selected.slug} · CTA route: ${FIXED_GUIDE_CTA_HREF[selected.slug]} (fixed)`}
+            description={`Deep link: /custom#${selected.slug} · Default CTA: ${DEFAULT_GUIDE_CTA_HREF[selected.slug]}`}
           >
             <CmsField label="Panel title" className="sm:col-span-2">
               <CmsTextInput value={selected.title} onChange={(v) => updateSelected({ title: v })} />
@@ -217,6 +406,9 @@ export function AdminCustomPagesPage() {
             <CmsField label="CTA button label">
               <CmsTextInput value={selected.ctaLabel} onChange={(v) => updateSelected({ ctaLabel: v })} />
             </CmsField>
+            <CmsField label="CTA button → page">
+              <CmsRouteSelect value={selected.ctaHref} onChange={(v) => updateSelected({ ctaHref: v })} />
+            </CmsField>
             <CmsField label="Published on /custom">
               <label className="mt-2 flex cursor-pointer items-center gap-2 text-sm text-offgrid-green">
                 <input
@@ -231,15 +423,52 @@ export function AdminCustomPagesPage() {
           </CmsSectionPanel>
         ) : null}
 
-        <CmsSectionPanel title="Ordering guide — shop CTA" description="Bottom band on /custom">
-          <CmsField label="Title" className="sm:col-span-2">
+        <CmsSectionPanel title="Closing CTAs" description="Bottom band on /custom — two cards">
+          <CmsField label="Primary card — eyebrow">
+            <CmsTextInput value={hub.primaryClosingEyebrow} onChange={(v) => updateHub({ primaryClosingEyebrow: v })} />
+          </CmsField>
+          <CmsField label="Primary card — title">
+            <CmsTextInput value={hub.primaryClosingTitle} onChange={(v) => updateHub({ primaryClosingTitle: v })} />
+          </CmsField>
+          <CmsField label="Primary card — description" className="sm:col-span-2">
+            <CmsTextInput
+              value={hub.primaryClosingDescription}
+              onChange={(v) => updateHub({ primaryClosingDescription: v })}
+              multiline
+            />
+          </CmsField>
+          <CmsField label="Primary button label">
+            <CmsTextInput value={hub.primaryClosingCtaLabel} onChange={(v) => updateHub({ primaryClosingCtaLabel: v })} />
+          </CmsField>
+          <CmsField label="Primary button → page">
+            <CmsRouteSelect
+              value={hub.primaryClosingCtaHref}
+              onChange={(v) => updateHub({ primaryClosingCtaHref: v })}
+            />
+          </CmsField>
+          <CmsField label="Secondary button label">
+            <CmsTextInput
+              value={hub.primaryClosingSecondaryLabel}
+              onChange={(v) => updateHub({ primaryClosingSecondaryLabel: v })}
+            />
+          </CmsField>
+          <CmsField label="Secondary button → page">
+            <CmsRouteSelect
+              value={hub.primaryClosingSecondaryHref}
+              onChange={(v) => updateHub({ primaryClosingSecondaryHref: v })}
+            />
+          </CmsField>
+          <CmsField label="Shop card — title" className="sm:col-span-2">
             <CmsTextInput value={hub.bottomTitle} onChange={(v) => updateHub({ bottomTitle: v })} />
           </CmsField>
-          <CmsField label="Description" className="sm:col-span-2">
+          <CmsField label="Shop card — description" className="sm:col-span-2">
             <CmsTextInput value={hub.bottomDescription} onChange={(v) => updateHub({ bottomDescription: v })} multiline />
           </CmsField>
-          <CmsField label="Button label">
+          <CmsField label="Shop button label">
             <CmsTextInput value={hub.bottomCta} onChange={(v) => updateHub({ bottomCta: v })} />
+          </CmsField>
+          <CmsField label="Shop button → page">
+            <CmsRouteSelect value={hub.bottomCtaHref} onChange={(v) => updateHub({ bottomCtaHref: v })} />
           </CmsField>
         </CmsSectionPanel>
 
@@ -384,6 +613,8 @@ export function AdminCustomPagesPage() {
         </CmsSectionPanel>
 
         <div id="templates-cms">
+          <HeadwearOptionsEditor />
+
           <CmsSectionPanel title="Templates page — hero" description="/custom/templates header">
             <CmsField label="Back link">
               <CmsTextInput value={templatesPage.backLink} onChange={(v) => updateTemplatesPage({ backLink: v })} />

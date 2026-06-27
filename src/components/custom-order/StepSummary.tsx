@@ -7,8 +7,10 @@ import { usePortalStore } from "@/src/store/usePortalStore";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { localOrderService } from "@/src/services";
 import { CUT_OPTIONS, MATERIAL_OPTIONS, PRINT_OPTIONS, estimateUnitPrice } from "@/src/data/customOptions";
-import { estimateHeadwearUnitPrice } from "@/src/data/customHeadwearOptions";
+import { estimateHeadwearUnitPrice, isTowelHeadwearType, resolveHeadwearOptions, headwearOptionLabel } from "@/src/data/customHeadwearOptions";
 import { formatMoney, php } from "@/src/types/commerce";
+import { validateCustomOrderDraft, isValidEmail, isValidPhone } from "@/src/lib/formValidation";
+import { CUSTOMER_SIGN_IN_PATH } from "@/src/lib/authRoutes";
 import { cn } from "@/src/lib/utils";
 
 function SummaryRow({ label, value }: { label: string; value: React.ReactNode }) {
@@ -28,10 +30,13 @@ export function StepSummary() {
   const [submittedOrderId, setSubmittedOrderId] = useState<string | null>(null);
   const [submittedEmail, setSubmittedEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [submitErrors, setSubmitErrors] = useState<string[]>([]);
+  const headwearRaw = useSiteContentStore((s) => s.customHeadwearOptions);
+  const headwearOptions = useMemo(() => resolveHeadwearOptions(headwearRaw), [headwearRaw]);
   const teamOrderType =
     draft.category === "apparel"
       ? "Jerseys & shorts"
-      : draft.headwearType === "towel-face" || draft.headwearType === "towel-hand"
+      : isTowelHeadwearType(draft.headwearType, headwearOptions)
         ? "Towels"
         : "Headwear";
 
@@ -39,8 +44,8 @@ export function StepSummary() {
     if (draft.category === "apparel") {
       return estimateUnitPrice(draft.cut, draft.material, draft.printMethod);
     }
-    return estimateHeadwearUnitPrice(draft.headwearType, draft.printMethod);
-  }, [draft.category, draft.cut, draft.material, draft.printMethod, draft.headwearType]);
+    return estimateHeadwearUnitPrice(draft.headwearType, draft.printMethod, headwearOptions);
+  }, [draft.category, draft.cut, draft.material, draft.printMethod, draft.headwearType, headwearOptions]);
 
   const estimatedTotal = useMemo(() => php(unitPrice * draft.quantity), [unitPrice, draft.quantity]);
   const estimatedDeposit = useMemo(
@@ -55,14 +60,22 @@ export function StepSummary() {
 
   const canSubmit =
     draft.contactName.trim() !== "" &&
-    draft.contactEmail.trim() !== "" &&
-    draft.contactPhone.trim() !== "" &&
+    isValidEmail(draft.contactEmail) &&
+    isValidPhone(draft.contactPhone) &&
     Boolean(draft.orderSheetFileName) &&
     draft.quantity >= minQuantity;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!canSubmit || submitting) return;
+    if (submitting) return;
+
+    const errors = validateCustomOrderDraft(draft);
+    if (errors.length > 0) {
+      setSubmitErrors(errors);
+      return;
+    }
+
+    setSubmitErrors([]);
     setSubmitting(true);
     try {
       const submittedDraft = {
@@ -83,7 +96,7 @@ export function StepSummary() {
 
       setSubmittedOrderId(orderId);
     } catch (err) {
-      window.alert(err instanceof Error ? err.message : "Submission failed. Please try again.");
+      setSubmitErrors([err instanceof Error ? err.message : "Submission failed. Please try again."]);
     } finally {
       setSubmitting(false);
     }
@@ -112,7 +125,7 @@ export function StepSummary() {
         <p className="text-xs text-offgrid-green/55 max-w-md mx-auto leading-relaxed">{copy.accountHint}</p>
         <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
           <Button variant="default" size="lg" asChild>
-            <Link to={`/login?email=${encodeURIComponent(submittedEmail)}`}>Sign in to track</Link>
+            <Link to={`${CUSTOMER_SIGN_IN_PATH}?email=${encodeURIComponent(submittedEmail)}`}>Sign in to track</Link>
           </Button>
           <Button variant="outline" size="lg" asChild>
             <Link to="/custom">Back to ordering guide</Link>
@@ -146,6 +159,9 @@ export function StepSummary() {
           {copy.orderDetailsHeading}
         </h3>
         <SummaryRow label="Team order type" value={teamOrderType} />
+        {draft.category === "headwear_towels" ? (
+          <SummaryRow label="Product type" value={headwearOptionLabel(draft.headwearType, headwearOptions)} />
+        ) : null}
         {draft.category === "apparel" ? (
           <>
             <SummaryRow label="Cut" value={labelFor(CUT_OPTIONS, draft.cut)} />
@@ -257,6 +273,17 @@ export function StepSummary() {
           </div>
         </div>
       </div>
+
+      {submitErrors.length > 0 ? (
+        <div className="rounded-xl border border-red-200 bg-red-50/60 p-4" role="alert">
+          <p className="text-sm font-semibold text-red-800">Please fix the following before submitting:</p>
+          <ul className="mt-2 list-inside list-disc space-y-1 text-xs text-red-700">
+            {submitErrors.map((msg) => (
+              <li key={msg}>{msg}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
 
       <div className="flex flex-col sm:flex-row gap-3">
         <Button variant="outline" size="lg" className="sm:flex-1" type="button" onClick={prevStep}>

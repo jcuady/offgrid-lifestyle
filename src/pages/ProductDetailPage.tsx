@@ -7,7 +7,6 @@ import { useStore } from "@/src/store/store";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { formatPrice } from "@/src/data/products";
 import { Button } from "@/src/components/ui/Button";
-import { Footer } from "@/src/components/Footer";
 import { cn } from "@/src/lib/utils";
 
 export function ProductDetailPage() {
@@ -298,7 +297,6 @@ export function ProductDetailPage() {
           </div>
         </div>
       </div>
-      <Footer />
     </>
   );
 }

@@ -6,7 +6,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { CustomOrderDraft, Money, Order, OrderStatus, PaymentStatus } from "@/src/types/commerce";
-import type { AuditLogEntry, CreateStaffInput, ManagedStaffAccount } from "@/src/types/portal";
+import type { AuditLogEntry, CreateStaffInput, ManagedStaffAccount, RegisterCustomerInput, RegisteredCustomer } from "@/src/types/portal";
+import { DEFAULT_COD_SETTINGS, DEFAULT_PAYMONGO_SETTINGS, type CodSettings, type PayMongoSettings } from "@/src/types/payments";
 import { createAuditEntry, prependAuditLog } from "@/src/lib/portalAudit";
 
 export type UserRole = "customer" | "admin" | "staff";
@@ -72,6 +73,8 @@ export interface CustomOrderQuoteUpdate {
 export interface PaymentSettings {
   gcashQrImageUrl: string;
   gcashInstructions: string;
+  cod: CodSettings;
+  paymongo: PayMongoSettings;
 }
 
 type PersistedPortalSlice = {
@@ -80,6 +83,7 @@ type PersistedPortalSlice = {
   customOrders: ManagedCustomOrder[];
   paymentSettings: PaymentSettings;
   managedStaffAccounts: ManagedStaffAccount[];
+  registeredCustomers: RegisteredCustomer[];
   auditLogs: AuditLogEntry[];
 };
 
@@ -87,6 +91,8 @@ const DEFAULT_PAYMENT_SETTINGS: PaymentSettings = {
   gcashQrImageUrl: "https://placehold.co/640x640/png?text=Upload+GCash+QR",
   gcashInstructions:
     "Scan the QR with GCash, complete the payment, then keep your receipt for verification. Orders move once payment is confirmed.",
+  cod: { ...DEFAULT_COD_SETTINGS },
+  paymongo: { ...DEFAULT_PAYMONGO_SETTINGS },
 };
 
 function defaultQuoteFields(): Pick<
@@ -133,9 +139,11 @@ interface PortalState {
   customOrders: ManagedCustomOrder[];
   paymentSettings: PaymentSettings;
   managedStaffAccounts: ManagedStaffAccount[];
+  registeredCustomers: RegisteredCustomer[];
   auditLogs: AuditLogEntry[];
   login: (email: string, password: string) => { ok: boolean; message?: string };
   loginAsRole: (role: UserRole) => void;
+  registerCustomer: (input: RegisterCustomerInput) => { ok: boolean; message?: string; userId?: string };
   logout: () => void;
   recordAudit: (entry: Omit<AuditLogEntry, "id" | "createdAt">) => void;
   createStaffAccount: (input: CreateStaffInput) => { ok: boolean; message?: string; accountId?: string };
@@ -176,8 +184,10 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
   },
 ];
 
-function loginAccounts(state: Pick<PortalState, "demoAccounts" | "managedStaffAccounts">): DemoAccount[] {
-  const managed = state.managedStaffAccounts
+function loginAccounts(
+  state: Pick<PortalState, "demoAccounts" | "managedStaffAccounts" | "registeredCustomers">,
+): DemoAccount[] {
+  const managedStaff = state.managedStaffAccounts
     .filter((account) => account.status === "active")
     .map((account) => ({
       id: account.id,
@@ -186,13 +196,23 @@ function loginAccounts(state: Pick<PortalState, "demoAccounts" | "managedStaffAc
       password: account.password,
       role: "staff" as const,
     }));
-  return [...state.demoAccounts, ...managed];
+  const registered = state.registeredCustomers.map((account) => ({
+    id: account.id,
+    name: account.name,
+    email: account.email,
+    password: account.password,
+    role: "customer" as const,
+  }));
+  return [...state.demoAccounts, ...registered, ...managedStaff];
 }
 
-function allKnownEmails(state: Pick<PortalState, "demoAccounts" | "managedStaffAccounts">): string[] {
+function allKnownEmails(
+  state: Pick<PortalState, "demoAccounts" | "managedStaffAccounts" | "registeredCustomers">,
+): string[] {
   return [
     ...state.demoAccounts.map((a) => a.email.toLowerCase()),
     ...state.managedStaffAccounts.map((a) => a.email.toLowerCase()),
+    ...state.registeredCustomers.map((a) => a.email.toLowerCase()),
   ];
 }
 
@@ -229,6 +249,7 @@ export const usePortalStore = create<PortalState>()(
       customOrders: [],
       paymentSettings: { ...DEFAULT_PAYMENT_SETTINGS },
       managedStaffAccounts: [],
+      registeredCustomers: [],
       auditLogs: [],
 
       login: (email, password) => {
@@ -248,6 +269,9 @@ export const usePortalStore = create<PortalState>()(
         set((state) => ({
           currentUser: safeUser,
           managedStaffAccounts: state.managedStaffAccounts.map((account) =>
+            account.id === match.id ? { ...account, lastLoginAt: now, updatedAt: now } : account,
+          ),
+          registeredCustomers: state.registeredCustomers.map((account) =>
             account.id === match.id ? { ...account, lastLoginAt: now, updatedAt: now } : account,
           ),
           auditLogs: prependAuditLog(
@@ -286,6 +310,57 @@ export const usePortalStore = create<PortalState>()(
             }),
           ),
         }));
+      },
+
+      registerCustomer: (input) => {
+        const name = input.name.trim();
+        const email = input.email.trim().toLowerCase();
+        const password = input.password.trim();
+
+        if (!name) return { ok: false, message: "Full name is required." };
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          return { ok: false, message: "Enter a valid email address." };
+        }
+        if (password.length < 8) {
+          return { ok: false, message: "Password must be at least 8 characters." };
+        }
+        if (allKnownEmails(get()).includes(email)) {
+          return { ok: false, message: "An account with this email already exists. Sign in instead." };
+        }
+
+        const now = new Date().toISOString();
+        const account: RegisteredCustomer = {
+          id: `cust-${crypto.randomUUID().slice(0, 8)}`,
+          name,
+          email,
+          password,
+          role: "customer",
+          createdAt: now,
+          updatedAt: now,
+          lastLoginAt: null,
+        };
+
+        const { password: _password, ...safeUser } = account;
+
+        set((state) => ({
+          registeredCustomers: [account, ...state.registeredCustomers],
+          currentUser: safeUser,
+          auditLogs: prependAuditLog(
+            state.auditLogs,
+            createAuditEntry({
+              action: "auth.register",
+              actorId: safeUser.id,
+              actorEmail: safeUser.email,
+              actorRole: safeUser.role,
+              targetType: "user",
+              targetId: safeUser.id,
+              summary: `Customer account created for ${safeUser.email}`,
+              metadata: { customerId: safeUser.id },
+            }),
+          ),
+        }));
+
+        return { ok: true, userId: account.id };
       },
 
       logout: () => {
@@ -659,7 +734,11 @@ export const usePortalStore = create<PortalState>()(
           return {
             paymentSettings: { ...state.paymentSettings, ...patch },
             auditLogs:
-              actor && (patch.gcashQrImageUrl !== undefined || patch.gcashInstructions !== undefined)
+              actor &&
+              (patch.gcashQrImageUrl !== undefined ||
+                patch.gcashInstructions !== undefined ||
+                patch.paymongo !== undefined ||
+                patch.cod !== undefined)
                 ? prependAuditLog(
                     state.auditLogs,
                     createAuditEntry({
@@ -668,10 +747,22 @@ export const usePortalStore = create<PortalState>()(
                       actorEmail: actor.email,
                       actorRole: actor.role,
                       targetType: "payment",
-                      targetId: "global-gcash",
-                      summary: "Updated global GCash payment settings",
+                      targetId:
+                        patch.paymongo !== undefined
+                          ? "global-paymongo"
+                          : patch.cod !== undefined
+                            ? "global-cod"
+                            : "global-gcash",
+                      summary:
+                        patch.paymongo !== undefined
+                          ? "Updated PayMongo payment settings"
+                          : patch.cod !== undefined
+                            ? "Updated COD payment settings"
+                            : "Updated global GCash payment settings",
                       metadata: {
                         fields: Object.keys(patch),
+                        paymongoEnabled: patch.paymongo?.enabled,
+                        codEnabled: patch.cod?.enabled,
                       },
                     }),
                   )
@@ -681,13 +772,14 @@ export const usePortalStore = create<PortalState>()(
     }),
     {
       name: "og-portal",
-      version: 3,
+      version: 6,
       partialize: (state): PersistedPortalSlice => ({
         currentUser: state.currentUser,
         retailOrders: state.retailOrders,
         customOrders: state.customOrders,
         paymentSettings: state.paymentSettings,
         managedStaffAccounts: state.managedStaffAccounts,
+        registeredCustomers: state.registeredCustomers,
         auditLogs: state.auditLogs,
       }),
       migrate: (persistedState, version): PersistedPortalSlice => {
@@ -701,10 +793,34 @@ export const usePortalStore = create<PortalState>()(
           paymentSettings: {
             ...DEFAULT_PAYMENT_SETTINGS,
             ...p.paymentSettings,
+            paymongo: {
+              ...DEFAULT_PAYMONGO_SETTINGS,
+              ...p.paymentSettings?.paymongo,
+            },
+            cod: {
+              ...DEFAULT_COD_SETTINGS,
+              ...p.paymentSettings?.cod,
+            },
           },
           managedStaffAccounts: Array.isArray(p.managedStaffAccounts) ? p.managedStaffAccounts : [],
+          registeredCustomers: Array.isArray(p.registeredCustomers) ? p.registeredCustomers : [],
           auditLogs: Array.isArray(p.auditLogs) ? p.auditLogs : [],
         };
+        if (version < 6) {
+          base.registeredCustomers = base.registeredCustomers ?? [];
+        }
+        if (version < 5) {
+          base.paymentSettings.cod = {
+            ...DEFAULT_COD_SETTINGS,
+            ...base.paymentSettings.cod,
+          };
+        }
+        if (version < 4) {
+          base.paymentSettings.paymongo = {
+            ...DEFAULT_PAYMONGO_SETTINGS,
+            ...base.paymentSettings.paymongo,
+          };
+        }
         if (version < 3) return base;
         return base;
       },

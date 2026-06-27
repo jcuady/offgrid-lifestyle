@@ -5,11 +5,18 @@ import { products as initialProducts } from "@/src/data/products";
 import type { SiteEvent } from "@/src/data/events";
 import { initialEvents } from "@/src/data/events";
 import type { LandingCollectionId, LandingContent } from "@/src/data/landingContent";
-import { initialLandingContent } from "@/src/data/landingContent";
+import { initialFeaturedSpotlightContent, initialLandingContent } from "@/src/data/landingContent";
 import type { CustomPageContent } from "@/src/data/customPageContent";
 import { initialCustomPageContent, normalizeCustomPageContent } from "@/src/data/customPageContent";
+import type { CustomHeadwearOption } from "@/src/data/customHeadwearOptions";
 import {
-  FIXED_GUIDE_CTA_HREF,
+  createDefaultHeadwearOptions,
+  resolveHeadwearOptions,
+  slugifyHeadwearId,
+} from "@/src/data/customHeadwearOptions";
+import { sanitizeCmsHref } from "@/src/lib/cmsNavigation";
+import {
+  DEFAULT_GUIDE_CTA_HREF,
   getCanonicalGuideSectionSeeds,
   LEGACY_FAQS_BODY,
   LEGACY_FAQS_SUMMARY,
@@ -212,6 +219,7 @@ interface SiteContentState {
   customPageContent: CustomPageContent;
   customSections: CustomContentSection[];
   customTemplates: CustomTemplateAsset[];
+  customHeadwearOptions: CustomHeadwearOption[];
 
   updateCustomHub: (patch: Partial<CustomPageContent["hub"]>) => void;
   updateCustomOrderHero: (patch: Partial<CustomPageContent["orderHero"]>) => void;
@@ -219,7 +227,10 @@ interface SiteContentState {
   updateCustomWizardStep1: (patch: Partial<CustomPageContent["wizard"]["step1"]>) => void;
   updateCustomWizardStep2: (patch: Partial<CustomPageContent["wizard"]["step2"]>) => void;
   updateCustomWizardStep3: (patch: Partial<CustomPageContent["wizard"]["step3"]>) => void;
-  updateCustomProcessStep: (index: 0 | 1 | 2, patch: Partial<CustomPageContent["hub"]["processSteps"][number]>) => void;
+  updateCustomProcessStep: (
+    index: 0 | 1 | 2 | 3 | 4 | 5,
+    patch: Partial<CustomPageContent["hub"]["processSteps"][number]>,
+  ) => void;
   updateCustomTemplatesPage: (patch: Partial<CustomPageContent["templatesPage"]>) => void;
   updateCanonicalTemplate: (id: string, patch: EditableTemplatePatch) => void;
   applyCanonicalTemplateFileOverride: (
@@ -230,6 +241,10 @@ interface SiteContentState {
   resetCustomGuideSections: () => void;
   resetCanonicalTemplates: () => void;
   resetCanonicalTemplateSlot: (id: string) => void;
+  addHeadwearOption: (input: Omit<CustomHeadwearOption, "updatedAt">) => void;
+  updateHeadwearOption: (id: string, patch: Partial<Omit<CustomHeadwearOption, "id">>) => void;
+  removeHeadwearOption: (id: string) => void;
+  resetHeadwearOptions: () => void;
 
   setLandingContent: (next: LandingContent) => void;
   updateLandingHero: (patch: Partial<LandingContent["hero"]>) => void;
@@ -251,6 +266,11 @@ interface SiteContentState {
   updateLandingTestimonialsViewAll: (label: string) => void;
   updateLandingCta: (patch: Partial<LandingContent["cta"]>) => void;
   updateLandingFooter: (patch: Partial<LandingContent["footer"]>) => void;
+  updateLandingFeaturedSpotlight: (patch: Partial<LandingContent["featuredSpotlight"]>) => void;
+  updateLandingFeaturedSpotlightSlot: (
+    index: 0 | 1 | 2,
+    patch: Partial<LandingContent["featuredSpotlight"]["slots"][number]>,
+  ) => void;
   resetLandingContent: () => void;
 
   addProduct: (input: Product) => void;
@@ -275,8 +295,9 @@ const nowIso = () => new Date().toISOString();
 const initialCustomSections: CustomContentSection[] = getCanonicalGuideSectionSeeds();
 
 const initialTemplates: CustomTemplateAsset[] = createCanonicalOgTemplates(nowIso());
+const initialHeadwearOptions: CustomHeadwearOption[] = createDefaultHeadwearOptions(nowIso());
 
-const SITE_CONTENT_PERSIST_VERSION = 10;
+const SITE_CONTENT_PERSIST_VERSION = 14;
 
 type PersistedSiteContentSlice = {
   products?: Product[];
@@ -285,6 +306,7 @@ type PersistedSiteContentSlice = {
   customPageContent?: CustomPageContent;
   customSections?: CustomContentSection[];
   customTemplates?: CustomTemplateAsset[];
+  customHeadwearOptions?: CustomHeadwearOption[];
 };
 
 export const useSiteContentStore = create<SiteContentState>()(
@@ -296,6 +318,7 @@ export const useSiteContentStore = create<SiteContentState>()(
       customPageContent: normalizeCustomPageContent(initialCustomPageContent),
       customSections: initialCustomSections,
       customTemplates: initialTemplates,
+      customHeadwearOptions: initialHeadwearOptions,
 
       updateCustomHub: (patch) =>
         set((state) => ({
@@ -401,6 +424,37 @@ export const useSiteContentStore = create<SiteContentState>()(
           ),
         }));
       },
+      addHeadwearOption: (input) =>
+        set((state) => {
+          const resolved = resolveHeadwearOptions(state.customHeadwearOptions);
+          const baseId = input.id.trim() || slugifyHeadwearId(input.label);
+          let id = baseId;
+          let n = 2;
+          while (resolved.some((o) => o.id === id)) {
+            id = `${baseId}-${n}`;
+            n += 1;
+          }
+          const next: CustomHeadwearOption = {
+            ...input,
+            id,
+            updatedAt: nowIso(),
+          };
+          return { customHeadwearOptions: resolveHeadwearOptions([...resolved, next]) };
+        }),
+      updateHeadwearOption: (id, patch) =>
+        set((state) => ({
+          customHeadwearOptions: resolveHeadwearOptions(
+            state.customHeadwearOptions.map((entry) =>
+              entry.id === id ? { ...entry, ...patch, updatedAt: nowIso() } : entry,
+            ),
+          ),
+        })),
+      removeHeadwearOption: (id) =>
+        set((state) => ({
+          customHeadwearOptions: state.customHeadwearOptions.filter((entry) => entry.id !== id),
+        })),
+      resetHeadwearOptions: () =>
+        set({ customHeadwearOptions: createDefaultHeadwearOptions(nowIso()) }),
 
       setLandingContent: (next) => set({ landingContent: next }),
       updateLandingHero: (patch) =>
@@ -476,6 +530,25 @@ export const useSiteContentStore = create<SiteContentState>()(
         set((state) => ({
           landingContent: { ...state.landingContent, footer: { ...state.landingContent.footer, ...patch } },
         })),
+      updateLandingFeaturedSpotlight: (patch) =>
+        set((state) => ({
+          landingContent: {
+            ...state.landingContent,
+            featuredSpotlight: { ...state.landingContent.featuredSpotlight, ...patch },
+          },
+        })),
+      updateLandingFeaturedSpotlightSlot: (index, patch) =>
+        set((state) => ({
+          landingContent: {
+            ...state.landingContent,
+            featuredSpotlight: {
+              ...state.landingContent.featuredSpotlight,
+              slots: state.landingContent.featuredSpotlight.slots.map((slot, i) =>
+                i === index ? { ...slot, ...patch } : slot,
+              ) as LandingContent["featuredSpotlight"]["slots"],
+            },
+          },
+        })),
       resetLandingContent: () => set({ landingContent: initialLandingContent }),
 
       addProduct: (input) => set((state) => ({ products: [input, ...state.products] })),
@@ -502,11 +575,15 @@ export const useSiteContentStore = create<SiteContentState>()(
         set((state) => ({
           customSections: state.customSections.map((entry) => {
             if (entry.id !== id) return entry;
-            const { ctaHref: _cta, slug: _slug, id: _id, ...editable } = patch;
+            const { slug: _slug, id: _id, ...editable } = patch;
+            const nextHref =
+              patch.ctaHref != null
+                ? sanitizeCmsHref(patch.ctaHref, DEFAULT_GUIDE_CTA_HREF[entry.slug])
+                : entry.ctaHref;
             return {
               ...entry,
               ...editable,
-              ctaHref: FIXED_GUIDE_CTA_HREF[entry.slug],
+              ctaHref: nextHref,
               updatedAt: nowIso(),
             };
           }),
@@ -655,6 +732,64 @@ export const useSiteContentStore = create<SiteContentState>()(
           next = { ...next, products: migratedProducts };
         }
 
+        if (version < 11) {
+          next = {
+            ...next,
+            customPageContent: normalizeCustomPageContent({
+              ...(next.customPageContent ?? initialCustomPageContent),
+              hub: {
+                ...initialCustomPageContent.hub,
+                ...(next.customPageContent?.hub ?? {}),
+                processSteps: initialCustomPageContent.hub.processSteps,
+              },
+              wizard: {
+                ...initialCustomPageContent.wizard,
+                ...(next.customPageContent?.wizard ?? {}),
+                description: initialCustomPageContent.wizard.description,
+                stepLabels: initialCustomPageContent.wizard.stepLabels,
+              },
+            }),
+          };
+        }
+
+        if (version < 12) {
+          next = {
+            ...next,
+            customPageContent: normalizeCustomPageContent({
+              ...(next.customPageContent ?? initialCustomPageContent),
+              hub: {
+                ...initialCustomPageContent.hub,
+                ...(next.customPageContent?.hub ?? {}),
+              },
+            }),
+          };
+        }
+
+        if (version < 13) {
+          next = {
+            ...next,
+            customHeadwearOptions: createDefaultHeadwearOptions(nowIso()),
+          };
+        }
+
+        if (version < 14) {
+          const landing = next.landingContent ?? initialLandingContent;
+          next = {
+            ...next,
+            landingContent: {
+              ...landing,
+              featuredSpotlight: {
+                ...initialFeaturedSpotlightContent,
+                ...(landing.featuredSpotlight ?? {}),
+                slots: initialFeaturedSpotlightContent.slots.map((slot, i) => ({
+                  ...slot,
+                  ...(landing.featuredSpotlight?.slots?.[i] ?? {}),
+                })) as LandingContent["featuredSpotlight"]["slots"],
+              },
+            },
+          };
+        }
+
         next = {
           ...next,
           customPageContent: normalizeCustomPageContent(
@@ -662,6 +797,9 @@ export const useSiteContentStore = create<SiteContentState>()(
           ),
           customSections: resolveGuideSections(next.customSections ?? initialCustomSections),
           customTemplates: resolveCanonicalTemplates(next.customTemplates ?? initialTemplates),
+          customHeadwearOptions: resolveHeadwearOptions(
+            next.customHeadwearOptions ?? initialHeadwearOptions,
+          ),
         };
 
         return next;
@@ -673,6 +811,7 @@ export const useSiteContentStore = create<SiteContentState>()(
         customPageContent: normalizeCustomPageContent(state.customPageContent),
         customSections: resolveGuideSections(state.customSections),
         customTemplates: resolveCanonicalTemplates(state.customTemplates),
+        customHeadwearOptions: resolveHeadwearOptions(state.customHeadwearOptions),
       }),
     },
   ),

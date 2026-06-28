@@ -7,10 +7,8 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  FileCheck2,
   Maximize2,
   Minimize2,
-  Paintbrush2,
 } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
@@ -35,8 +33,9 @@ function scrollToId(id: string) {
 function ProcessStepper({ steps }: { steps: ProcessStepMeta[] }) {
   const [active, setActive] = useState(0);
   const count = steps.length;
-  const ActiveIcon = steps[active]?.icon;
   const progress = count > 1 ? (active / (count - 1)) * 100 : 0;
+  // ponytail: caret centers on an even step distribution (ignores the small grid gaps) — close enough for a 1rem marker.
+  const caretLeft = count > 0 ? ((active + 0.5) / count) * 100 : 50;
 
   return (
     <div>
@@ -67,12 +66,12 @@ function ProcessStepper({ steps }: { steps: ProcessStepMeta[] }) {
               >
                 <span
                   className={cn(
-                    "relative z-10 flex h-10 w-10 items-center justify-center rounded-full border-2 font-mono text-xs font-bold tabular-nums transition-all",
+                    "relative z-10 flex h-10 w-10 items-center justify-center rounded-full border-2 font-mono text-xs font-bold tabular-nums transition-all duration-300",
                     isActive
-                      ? "border-offgrid-lime bg-offgrid-lime text-white shadow-[0_6px_20px_-6px_rgba(0,10,255,0.6)]"
+                      ? "scale-110 border-offgrid-lime bg-offgrid-lime text-white shadow-[0_8px_24px_-6px_rgba(0,10,255,0.65)]"
                       : isDone
                         ? "border-offgrid-lime/40 bg-offgrid-lime/10 text-offgrid-lime"
-                        : "border-offgrid-green/20 bg-white text-offgrid-green/45 group-hover:border-offgrid-green/40",
+                        : "border-offgrid-green/20 bg-white text-offgrid-green/45 group-hover:border-offgrid-green/40 group-hover:scale-105",
                   )}
                 >
                   {String(i + 1).padStart(2, "0")}
@@ -92,25 +91,34 @@ function ProcessStepper({ steps }: { steps: ProcessStepMeta[] }) {
       </div>
 
       {/* Active detail panel */}
-      <div
-        id="process-panel"
-        role="tabpanel"
-        aria-labelledby={`process-tab-${active}`}
-        className="mt-6 overflow-hidden rounded-3xl bg-offgrid-green text-offgrid-cream"
-      >
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={active}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-            className="flex flex-col gap-6 p-6 sm:flex-row sm:items-center sm:gap-8 sm:p-10"
-          >
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-offgrid-lime text-white">
-              {ActiveIcon ? <ActiveIcon className="h-7 w-7" /> : null}
-            </div>
-            <div className="min-w-0 flex-1">
+      <div className="relative mt-6">
+        {/* Caret points up to the active step so the eye follows the sequence */}
+        <motion.span
+          aria-hidden
+          className="absolute -top-1.5 hidden h-4 w-4 rotate-45 rounded-[3px] bg-offgrid-green sm:block"
+          initial={false}
+          animate={{ left: `calc(${caretLeft}% - 0.5rem)` }}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+        />
+        <div
+          id="process-panel"
+          role="tabpanel"
+          aria-labelledby={`process-tab-${active}`}
+          className="overflow-hidden rounded-3xl bg-offgrid-green text-offgrid-cream"
+        >
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={active}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+              className="flex flex-col gap-6 p-6 sm:flex-row sm:items-center sm:gap-8 sm:p-10"
+            >
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-offgrid-lime font-display text-2xl font-black tabular-nums text-white sm:h-20 sm:w-20 sm:text-3xl">
+                {String(active + 1).padStart(2, "0")}
+              </div>
+              <div className="min-w-0 flex-1">
               <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-lime">
                 Step {String(active + 1).padStart(2, "0")} / {String(count).padStart(2, "0")}
               </p>
@@ -139,8 +147,9 @@ function ProcessStepper({ steps }: { steps: ProcessStepMeta[] }) {
                 <ChevronRight className="h-5 w-5" />
               </button>
             </div>
-          </motion.div>
-        </AnimatePresence>
+            </motion.div>
+          </AnimatePresence>
+        </div>
       </div>
     </div>
   );
@@ -176,12 +185,9 @@ function DesignSupportSection({
               <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-green/45">
                 {ownArtwork.eyebrow}
               </p>
-              <div className="mt-3 flex items-start gap-2.5">
-                <FileCheck2 className="mt-0.5 h-6 w-6 shrink-0 text-offgrid-lime" aria-hidden />
-                <h3 className="font-display text-xl font-black tracking-tight text-offgrid-green sm:text-2xl md:text-3xl">
-                  {ownArtwork.title}
-                </h3>
-              </div>
+              <h3 className="mt-3 font-display text-xl font-black tracking-tight text-offgrid-green sm:text-2xl md:text-3xl">
+                {ownArtwork.title}
+              </h3>
               <p className="mt-3 max-w-md font-sans text-sm leading-relaxed text-offgrid-green/75">{ownArtwork.body}</p>
               <Button
                 size="sm"
@@ -198,12 +204,9 @@ function DesignSupportSection({
               <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-green/45">
                 {freeSupport.eyebrow}
               </p>
-              <div className="mt-3 flex items-start gap-2.5">
-                <Paintbrush2 className="mt-0.5 h-6 w-6 shrink-0 text-offgrid-lime" aria-hidden />
-                <h3 className="font-display text-xl font-black tracking-tight text-offgrid-green sm:text-2xl md:text-3xl">
-                  {freeSupport.title}
-                </h3>
-              </div>
+              <h3 className="mt-3 font-display text-xl font-black tracking-tight text-offgrid-green sm:text-2xl md:text-3xl">
+                {freeSupport.title}
+              </h3>
               <p className="mt-3 max-w-md font-sans text-sm leading-relaxed text-offgrid-green/75">{freeSupport.body}</p>
               {freeSupport.checklistTitle && freeSupport.checklistItems?.length ? (
                 <div className="mt-4 rounded-2xl border border-offgrid-green/10 bg-offgrid-cream/60 p-4">

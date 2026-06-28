@@ -33,6 +33,25 @@
   --color-og-gray-800: #3A3939;
   --color-og-blue-700: #0008C3;
   --color-og-blue-900: #00068D;
+
+  /* shadcn-compatible semantic tokens (mapped to OFF GRID brand) */
+  --color-background: #F1F1F1;
+  --color-foreground: #000000;
+  --color-muted: #E4E4E4;
+  --color-muted-foreground: #6A6A6A;
+  --color-border: color-mix(in srgb, #000000 14%, transparent);
+  --color-input: color-mix(in srgb, #000000 18%, transparent);
+  --color-ring: #000AFF;
+  --color-ring-offset: #F1F1F1;
+  --color-primary: #000000;
+  --color-primary-foreground: #F1F1F1;
+  --color-secondary: #E4E4E4;
+  --color-secondary-foreground: #000000;
+  --color-accent: #E4E4E4;
+  --color-accent-foreground: #000000;
+  --color-destructive: #dc2626;
+  --color-destructive-foreground: #ffffff;
+  --font-heading: "Archivo", "Inter", ui-sans-serif, system-ui, sans-serif;
 }
 
 @layer base {

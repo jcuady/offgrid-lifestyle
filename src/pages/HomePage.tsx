@@ -1,4 +1,3 @@
-import { lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { FeaturedCollections } from "@/src/components/FeaturedCollections";
 import { FeaturedSpotlight } from "@/src/components/FeaturedSpotlight";
@@ -8,27 +7,7 @@ import { EventSection } from "@/src/components/EventSection";
 import { SocialProof } from "@/src/components/SocialProof";
 import { CTASection } from "@/src/components/CTASection";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
-import { LOGO_WORDMARK_WHITE } from "@/src/lib/brandAssets";
-
-// Heavy WebGL hero (three + gsap) is code-split so it never blocks first paint.
-const HorizonHero = lazy(() =>
-  import("@/src/components/ui/horizon-hero-section").then((m) => ({ default: m.Component })),
-);
-
-function HeroFallback({ title, tagline }: { title: string; tagline: string }) {
-  return (
-    <div className="relative flex h-[100svh] w-full items-center justify-center overflow-hidden bg-offgrid-dark px-6 text-center">
-      <div>
-        <img
-          src={LOGO_WORDMARK_WHITE}
-          alt={title}
-          className="mx-auto h-[clamp(2.75rem,9vw,8.5rem)] w-auto drop-shadow-[0_2px_40px_rgba(0,0,0,0.5)]"
-        />
-        <p className="mt-5 font-sans text-base font-light tracking-wide text-offgrid-cream/80">{tagline}</p>
-      </div>
-    </div>
-  );
-}
+import { OffgridHero } from "@/src/components/ui/offgrid-hero";
 
 export function HomePage() {
   const navigate = useNavigate();
@@ -38,21 +17,20 @@ export function HomePage() {
     document.getElementById("collections")?.scrollIntoView({ behavior: "smooth" });
   };
 
+  // Split a trailing brand mark (®) off the title so it renders as a superscript.
+  const titleMark = hero.titleLine1.match(/[®™]+$/)?.[0];
+  const titleText = titleMark ? hero.titleLine1.slice(0, -titleMark.length).trim() : hero.titleLine1;
+
   return (
     <>
-      <Suspense fallback={<HeroFallback title={hero.titleLine1} tagline={hero.tagline} />}>
-        <HorizonHero
-          logoSrc={LOGO_WORDMARK_WHITE}
-          sideLabel={hero.locality}
-          scenes={[
-            { eyebrow: hero.badge, title: hero.titleLine1, tagline: hero.tagline },
-            { eyebrow: "Built to move", title: "IN MOTION", tagline: "Engineered for the way you move." },
-            { eyebrow: hero.locality, title: "EST. MANILA", tagline: "Progress over perfection." },
-          ]}
-          primaryCta={{ label: hero.ctaShopLabel, onClick: () => navigate("/shop") }}
-          secondaryCta={{ label: hero.ctaExploreLabel, onClick: scrollToCollections }}
-        />
-      </Suspense>
+      <OffgridHero
+        badge={hero.badge}
+        title={titleText}
+        mark={titleMark}
+        description="Premium Filipino sportswear engineered for movement — on the court, on the course, and everywhere off the grid."
+        primaryCta={{ label: hero.ctaShopLabel, onClick: () => navigate("/shop") }}
+        secondaryCta={{ label: hero.ctaExploreLabel, onClick: scrollToCollections }}
+      />
       <main>
         <FeaturedCollections />
         <FeaturedSpotlight placement="home" />

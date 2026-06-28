@@ -16,18 +16,11 @@ export default defineConfig(({mode}) => {
       },
     },
     build: {
-      // Avoid post-build SIGSEGV on Vercel's 2-core builders when three/gsap chunks are huge.
       chunkSizeWarningLimit: 800,
       sourcemap: false,
       rollupOptions: {
         output: {
           manualChunks(id) {
-            if (id.includes('node_modules/three') || id.includes('three/addons')) {
-              return 'vendor-three';
-            }
-            if (id.includes('node_modules/gsap')) {
-              return 'vendor-gsap';
-            }
             if (id.includes('node_modules/xlsx')) {
               return 'vendor-xlsx';
             }

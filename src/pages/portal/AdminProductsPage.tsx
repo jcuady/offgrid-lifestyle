@@ -1,23 +1,34 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import { Package, Plus, Pencil, Trash2, Search, Star } from "lucide-react";
-import type { FabricType, GarmentCut, Product } from "@/src/data/products";
+import type { FabricType, GarmentCut, Product, SizeCode } from "@/src/data/products";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { formatPrice } from "@/src/data/products";
 import { localCatalogService } from "@/src/services";
+import {
+  formatSizesInput,
+  normalizeProductDraft,
+  parseSizesInput,
+  PRODUCT_TAG_PRESETS,
+  slugifyProductName,
+  validateProductDraft,
+  type ProductFieldErrors,
+} from "@/src/lib/productValidation";
 import { cn } from "@/src/lib/utils";
 import { PortalPageHeader } from "@/src/components/portal/PortalPageHeader";
 import { PortalDrawer } from "@/src/components/portal/PortalDrawer";
 
-function slugify(name: string, fallback: string) {
-  const s = name
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
-  return s || fallback;
-}
+const STATUS_BADGE: Record<NonNullable<Product["status"]>, string> = {
+  active: "bg-offgrid-lime/20 text-offgrid-green",
+  draft: "bg-offgrid-green/10 text-offgrid-green/70",
+  archived: "bg-offgrid-dark/10 text-offgrid-green/50",
+};
 
-const defaultDraft = (): Product => {
+const inputClass =
+  "w-full rounded-xl border border-offgrid-green/15 bg-white px-3 py-2.5 text-sm text-offgrid-green outline-none transition-colors focus:border-offgrid-lime/50 focus:ring-2 focus:ring-offgrid-lime/20";
+
+const inputErrorClass = "border-red-300 focus:border-red-400 focus:ring-red-100";
+
+function defaultDraft(): Product {
   const now = new Date().toISOString();
   return {
     id: "",
@@ -44,96 +55,121 @@ const defaultDraft = (): Product => {
     createdAt: now,
     updatedAt: now,
   };
-};
+}
 
-const STATUS_BADGE: Record<NonNullable<Product["status"]>, string> = {
-  active: "bg-offgrid-lime/20 text-offgrid-green",
-  draft: "bg-offgrid-green/10 text-offgrid-green/70",
-  archived: "bg-offgrid-dark/10 text-offgrid-green/50",
-};
-
-const inputClass = "w-full px-3 py-2 text-sm";
+function Field({
+  label,
+  hint,
+  error,
+  children,
+}: {
+  label: string;
+  hint?: string;
+  error?: string;
+  children: ReactNode;
+}) {
+  return (
+    <label className="block space-y-1.5">
+      <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/50">
+        {label}
+      </span>
+      {children}
+      {hint && !error ? <span className="block text-[11px] text-offgrid-green/45">{hint}</span> : null}
+      {error ? <span className="block text-xs text-red-600">{error}</span> : null}
+    </label>
+  );
+}
 
 export function AdminProductsPage() {
   const products = useSiteContentStore((state) => state.products);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<Product>(() => defaultDraft());
+  const [sizesInput, setSizesInput] = useState(() => formatSizesInput(defaultDraft().sizes));
+  const [customTagMode, setCustomTagMode] = useState(false);
   const [query, setQuery] = useState("");
-  const [formError, setFormError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<ProductFieldErrors>({});
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const slugTouched = useRef(false);
+
+  const categoryOptions = useMemo(() => {
+    const fromCatalog = products.map((p) => p.category.trim()).filter(Boolean);
+    return [...new Set([...fromCatalog, "Pickleball", "Golf", "Running", "Lifestyle / OG Vibe"])].sort();
+  }, [products]);
+
   const sorted = useMemo(() => [...products].sort((a, b) => a.name.localeCompare(b.name)), [products]);
   const filtered = sorted.filter((product) =>
-    `${product.name} ${product.category}`.toLowerCase().includes(query.toLowerCase().trim()),
+    `${product.name} ${product.category} ${product.tag ?? ""}`.toLowerCase().includes(query.toLowerCase().trim()),
   );
+
+  const resetForm = () => {
+    const next = defaultDraft();
+    setDraft(next);
+    setSizesInput(formatSizesInput(next.sizes));
+    setCustomTagMode(false);
+    setFieldErrors({});
+    slugTouched.current = false;
+  };
 
   const closeDrawer = () => {
     setDrawerOpen(false);
     setEditingId(null);
-    setDraft(defaultDraft());
-    setFormError(null);
+    resetForm();
   };
 
   const openCreate = () => {
     setEditingId(null);
-    setDraft(defaultDraft());
-    setFormError(null);
+    resetForm();
     setDrawerOpen(true);
   };
 
   const openEdit = (product: Product) => {
     setEditingId(product.id);
     setDraft(product);
-    setFormError(null);
+    setSizesInput(formatSizesInput(product.sizes));
+    setCustomTagMode(
+      Boolean(product.tag && !PRODUCT_TAG_PRESETS.includes(product.tag as (typeof PRODUCT_TAG_PRESETS)[number])),
+    );
+    setFieldErrors({});
+    slugTouched.current = true;
     setDrawerOpen(true);
   };
 
+  const setName = (name: string) => {
+    setDraft((prev) => {
+      const next = { ...prev, name };
+      if (!slugTouched.current) {
+        next.slug = slugifyProductName(name, prev.id || "product");
+      }
+      return next;
+    });
+  };
+
+  const applyTagPreset = (tag: string) => {
+    setCustomTagMode(false);
+    setDraft((prev) => {
+      const next: Product = { ...prev, tag };
+      if (tag === "Best Seller" && !prev.homeBestSellerRank) {
+        next.homeBestSellerRank = 1;
+      }
+      return next;
+    });
+    setFieldErrors((prev) => ({ ...prev, tag: undefined, homeBestSellerRank: undefined }));
+  };
+
+  const clearTag = () => {
+    setCustomTagMode(false);
+    setDraft((prev) => ({ ...prev, tag: undefined }));
+  };
+
   const submit = () => {
-    setFormError(null);
-    if (!draft.name.trim()) {
-      setFormError("Product name is required.");
-      return;
-    }
-    const newId = draft.id.trim() || `p-${crypto.randomUUID().slice(0, 8)}`;
-    const slug = draft.slug.trim() || slugify(draft.name, newId);
-    const price = Number(draft.price) || Number(draft.basePrice) || 0;
-    const basePrice = Number(draft.basePrice) || price;
-    const now = new Date().toISOString();
+    const sizes = parseSizesInput(sizesInput);
+    const withSizes = { ...draft, sizes };
+    const errors = validateProductDraft({ draft: withSizes, products, editingId });
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) return;
 
-    if (price <= 0) {
-      setFormError("Price must be greater than zero.");
-      return;
-    }
-    const duplicateSlug = products.find(
-      (entry) => entry.slug === slug && (!editingId || entry.id !== editingId),
-    );
-    if (duplicateSlug) {
-      setFormError("Slug must be unique. Please choose another.");
-      return;
-    }
-
-    const normalized: Product = {
-      ...draft,
-      id: newId,
-      slug,
-      basePrice,
-      price,
-      image: draft.image.trim() || "/images/product_polo.png",
-      description: draft.description.trim() || "Premium OffGrid product.",
-      material: draft.material.trim() || "Dri-fit blend",
-      fit: draft.fit?.trim() || "Regular fit",
-      sizes: draft.sizes.length ? draft.sizes : ["M"],
-      colors: draft.colors.length ? draft.colors : [{ name: "Green", value: "bg-offgrid-green" }],
-      cut: draft.cut || "short_sleeve",
-      fabricType: draft.fabricType || "dri_fit",
-      status: draft.status ?? "draft",
-      homeBestSellerRank:
-        typeof draft.homeBestSellerRank === "number" && draft.homeBestSellerRank > 0
-          ? Math.min(20, Math.floor(draft.homeBestSellerRank))
-          : undefined,
-      createdAt: editingId ? draft.createdAt : now,
-      updatedAt: now,
-    };
+    const normalized = normalizeProductDraft(withSizes, editingId);
 
     if (editingId) {
       localCatalogService.updateProduct(editingId, normalized);
@@ -150,14 +186,18 @@ export function AdminProductsPage() {
     }
   };
 
+  const activeTag = draft.tag?.trim() ?? "";
+  const tagIsPreset = PRODUCT_TAG_PRESETS.includes(activeTag as (typeof PRODUCT_TAG_PRESETS)[number]);
+
   return (
     <div className="p-6 sm:p-8 lg:p-10">
       <PortalPageHeader
         eyebrow="Admin Catalog Control"
         title="Products"
-        description="Changes publish immediately to Shop and landing best-sellers."
+        description="Full catalog CRUD — changes publish immediately to Shop, tags, and Crowd Favorites."
         actions={
           <button
+            type="button"
             onClick={openCreate}
             className="inline-flex items-center gap-2 rounded-xl bg-offgrid-green px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-offgrid-cream transition-colors hover:bg-offgrid-dark"
           >
@@ -174,7 +214,7 @@ export function AdminProductsPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search products…"
-            className="w-full !pl-9 pr-3 py-2.5 text-sm"
+            className={cn(inputClass, "!pl-9")}
           />
         </div>
         <p className="hidden shrink-0 font-mono text-xs uppercase tracking-[0.12em] text-offgrid-green/45 sm:block">
@@ -217,6 +257,11 @@ export function AdminProductsPage() {
                 >
                   {product.status ?? "draft"}
                 </span>
+                {product.tag ? (
+                  <span className="absolute bottom-3 left-3 rounded-full bg-offgrid-lime px-2.5 py-1 font-mono text-[9px] font-bold uppercase tracking-[0.1em] text-white">
+                    {product.tag}
+                  </span>
+                ) : null}
                 {product.homeBestSellerRank ? (
                   <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-offgrid-green/90 px-2.5 py-1 font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-offgrid-cream">
                     <Star className="h-3 w-3 fill-offgrid-lime text-offgrid-lime" />#{product.homeBestSellerRank}
@@ -229,10 +274,11 @@ export function AdminProductsPage() {
                 </p>
                 <h3 className="mt-1 line-clamp-1 font-display text-base font-bold text-offgrid-green">{product.name}</h3>
                 <p className="mt-1 text-sm text-offgrid-green/65">
-                  {formatPrice(product.price)} <span className="text-offgrid-green/35">·</span> Stock {product.stock}
+                  {formatPrice(product.price)} <span className="text-offgrid-green/35">·</span> Stock {product.stock ?? 0}
                 </p>
                 <div className="mt-4 flex gap-2 border-t border-offgrid-green/10 pt-3">
                   <button
+                    type="button"
                     onClick={() => openEdit(product)}
                     className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-offgrid-green/20 px-3 py-2 text-xs font-semibold uppercase tracking-[0.1em] text-offgrid-green transition-colors hover:bg-offgrid-green/5"
                   >
@@ -240,6 +286,7 @@ export function AdminProductsPage() {
                     Edit
                   </button>
                   <button
+                    type="button"
                     onClick={() => removeProduct(product)}
                     aria-label={`Delete ${product.name}`}
                     className="inline-flex items-center justify-center rounded-lg border border-red-300 px-3 py-2 text-red-600 transition-colors hover:bg-red-50"
@@ -261,12 +308,14 @@ export function AdminProductsPage() {
         footer={
           <div className="grid grid-cols-2 gap-2">
             <button
+              type="button"
               onClick={submit}
               className="rounded-xl bg-offgrid-green px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-offgrid-cream transition-colors hover:bg-offgrid-dark"
             >
               {editingId ? "Update product" : "Create product"}
             </button>
             <button
+              type="button"
               onClick={closeDrawer}
               className="rounded-xl border border-offgrid-green/20 px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-offgrid-green transition-colors hover:bg-offgrid-green/5"
             >
@@ -275,72 +324,164 @@ export function AdminProductsPage() {
           </div>
         }
       >
-        <div className="space-y-3">
-          {formError && (
-            <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">{formError}</p>
-          )}
-          <input
-            value={draft.name}
-            onChange={(e) => setDraft((prev) => ({ ...prev, name: e.target.value }))}
-            placeholder="Product name"
-            className={inputClass}
-          />
-          <input
-            value={draft.category}
-            onChange={(e) => setDraft((prev) => ({ ...prev, category: e.target.value }))}
-            placeholder="Category"
-            className={inputClass}
-          />
-          <input
-            value={draft.slug}
-            onChange={(e) => setDraft((prev) => ({ ...prev, slug: e.target.value }))}
-            placeholder="URL slug (e.g. og-golf)"
-            className={inputClass}
-          />
-          <div className="grid grid-cols-2 gap-2">
-            <select
-              value={draft.cut}
-              onChange={(e) => setDraft((prev) => ({ ...prev, cut: e.target.value as GarmentCut }))}
-              className={inputClass}
-            >
-              <option value="short_sleeve">Short sleeve</option>
-              <option value="long_sleeve">Long sleeve</option>
-              <option value="sleeveless">Sleeveless</option>
-              <option value="polo">Polo</option>
-              <option value="tank">Tank</option>
-              <option value="shorts">Shorts</option>
-              <option value="cap">Cap</option>
-            </select>
-            <select
-              value={draft.fabricType}
-              onChange={(e) => setDraft((prev) => ({ ...prev, fabricType: e.target.value as FabricType }))}
-              className={inputClass}
-            >
-              <option value="dri_fit">Dri-fit</option>
-              <option value="cotton">Cotton</option>
-              <option value="running_mesh">Running mesh</option>
-              <option value="poly_blend">Poly blend</option>
-              <option value="nylon_spandex">Nylon / spandex</option>
-            </select>
-          </div>
-          <select
-            value={draft.status}
-            onChange={(e) =>
-              setDraft((prev) => ({
-                ...prev,
-                status: e.target.value as Product["status"],
-              }))
-            }
-            className={inputClass}
+        <div className="space-y-4">
+          {fieldErrors.form ? (
+            <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700" role="alert">
+              {fieldErrors.form}
+            </p>
+          ) : null}
+
+          <Field label="Product name" error={fieldErrors.name}>
+            <input
+              value={draft.name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. OG Pickle Club Tee"
+              className={cn(inputClass, fieldErrors.name && inputErrorClass)}
+            />
+          </Field>
+
+          <Field label="Category" error={fieldErrors.category}>
+            <input
+              list="product-categories"
+              value={draft.category}
+              onChange={(e) => setDraft((prev) => ({ ...prev, category: e.target.value }))}
+              placeholder="Pickleball, Golf, Running…"
+              className={cn(inputClass, fieldErrors.category && inputErrorClass)}
+            />
+            <datalist id="product-categories">
+              {categoryOptions.map((cat) => (
+                <option key={cat} value={cat} />
+              ))}
+            </datalist>
+          </Field>
+
+          <Field
+            label="URL slug"
+            hint="Used in /shop/product/your-slug. Auto-generated from name until you edit it."
+            error={fieldErrors.slug}
           >
-            <option value="draft">Draft</option>
-            <option value="active">Active</option>
-            <option value="archived">Archived</option>
-          </select>
-          <div>
-            <label className="mb-1 block font-mono text-[10px] font-semibold uppercase tracking-[0.15em] text-offgrid-green/50">
-              Crowd Favorites rank (0 = off)
-            </label>
+            <input
+              value={draft.slug}
+              onChange={(e) => {
+                slugTouched.current = true;
+                setDraft((prev) => ({ ...prev, slug: e.target.value }));
+              }}
+              placeholder="og-pickle-club"
+              className={cn(inputClass, fieldErrors.slug && inputErrorClass)}
+            />
+          </Field>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Cut">
+              <select
+                value={draft.cut}
+                onChange={(e) => setDraft((prev) => ({ ...prev, cut: e.target.value as GarmentCut }))}
+                className={inputClass}
+              >
+                <option value="short_sleeve">Short sleeve</option>
+                <option value="long_sleeve">Long sleeve</option>
+                <option value="sleeveless">Sleeveless</option>
+                <option value="polo">Polo</option>
+                <option value="tank">Tank</option>
+                <option value="shorts">Shorts</option>
+                <option value="cap">Cap</option>
+              </select>
+            </Field>
+            <Field label="Fabric">
+              <select
+                value={draft.fabricType}
+                onChange={(e) => setDraft((prev) => ({ ...prev, fabricType: e.target.value as FabricType }))}
+                className={inputClass}
+              >
+                <option value="dri_fit">Dri-fit</option>
+                <option value="cotton">Cotton</option>
+                <option value="running_mesh">Running mesh</option>
+                <option value="poly_blend">Poly blend</option>
+                <option value="nylon_spandex">Nylon / spandex</option>
+              </select>
+            </Field>
+          </div>
+
+          <Field label="Status">
+            <select
+              value={draft.status}
+              onChange={(e) =>
+                setDraft((prev) => ({
+                  ...prev,
+                  status: e.target.value as Product["status"],
+                }))
+              }
+              className={inputClass}
+            >
+              <option value="draft">Draft — hidden from shop</option>
+              <option value="active">Active — live on storefront</option>
+              <option value="archived">Archived — hidden, kept for records</option>
+            </select>
+          </Field>
+
+          <Field
+            label="Storefront tag"
+            hint="Shows on product cards and powers shop tag filters."
+            error={fieldErrors.tag}
+          >
+            <div className="flex flex-wrap gap-2">
+              {PRODUCT_TAG_PRESETS.map((preset) => (
+                <button
+                  key={preset}
+                  type="button"
+                  onClick={() => applyTagPreset(preset)}
+                  className={cn(
+                    "rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors",
+                    activeTag === preset && !customTagMode
+                      ? "border-offgrid-lime bg-offgrid-lime text-white"
+                      : "border-offgrid-green/20 bg-white text-offgrid-green hover:border-offgrid-lime/40",
+                  )}
+                >
+                  {preset}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => {
+                  setCustomTagMode(true);
+                  if (tagIsPreset) setDraft((prev) => ({ ...prev, tag: "" }));
+                }}
+                className={cn(
+                  "rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors",
+                  customTagMode
+                    ? "border-offgrid-lime bg-offgrid-lime text-white"
+                    : "border-offgrid-green/20 bg-white text-offgrid-green hover:border-offgrid-lime/40",
+                )}
+              >
+                Custom
+              </button>
+              {activeTag ? (
+                <button
+                  type="button"
+                  onClick={clearTag}
+                  className="rounded-full border border-offgrid-green/15 px-3 py-1.5 text-xs text-offgrid-green/55 hover:text-offgrid-green"
+                >
+                  Clear
+                </button>
+              ) : null}
+            </div>
+            {customTagMode ? (
+              <input
+                value={draft.tag ?? ""}
+                onChange={(e) => setDraft((prev) => ({ ...prev, tag: e.target.value }))}
+                placeholder="e.g. Team Bundle, Pre-order"
+                className={cn("mt-2", inputClass, fieldErrors.tag && inputErrorClass)}
+              />
+            ) : activeTag && !tagIsPreset ? (
+              <p className="mt-2 text-xs text-offgrid-green/60">Current: {activeTag}</p>
+            ) : null}
+          </Field>
+
+          <Field
+            label="Crowd favorites rank"
+            hint="1 = first on homepage Crowd Favorites. 0 = off."
+            error={fieldErrors.homeBestSellerRank}
+          >
             <input
               type="number"
               min={0}
@@ -355,55 +496,103 @@ export function AdminProductsPage() {
                 }));
               }}
               placeholder="0"
-              className={inputClass}
+              className={cn(inputClass, fieldErrors.homeBestSellerRank && inputErrorClass)}
             />
-          </div>
-          <input
-            value={draft.image}
-            onChange={(e) => setDraft((prev) => ({ ...prev, image: e.target.value }))}
-            placeholder="Image URL /images/..."
-            className={inputClass}
-          />
-          <div className="grid grid-cols-2 gap-2">
+          </Field>
+
+          <Field label="Image" error={fieldErrors.image}>
             <input
-              type="number"
-              value={draft.price}
-              onChange={(e) =>
-                setDraft((prev) => {
+              value={draft.image}
+              onChange={(e) => setDraft((prev) => ({ ...prev, image: e.target.value }))}
+              placeholder="/images/product-og-golf.png"
+              className={cn(inputClass, fieldErrors.image && inputErrorClass)}
+            />
+          </Field>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Price (PHP)" error={fieldErrors.price}>
+              <input
+                type="number"
+                min={1}
+                value={draft.price}
+                onChange={(e) => {
                   const n = Number(e.target.value);
-                  return { ...prev, price: n, basePrice: n };
-                })
-              }
-              placeholder="Price"
-              className={inputClass}
-            />
+                  setDraft((prev) => ({ ...prev, price: n, basePrice: n }));
+                }}
+                className={cn(inputClass, fieldErrors.price && inputErrorClass)}
+              />
+            </Field>
+            <Field label="Stock" error={fieldErrors.stock}>
+              <input
+                type="number"
+                min={0}
+                value={draft.stock ?? 0}
+                onChange={(e) => setDraft((prev) => ({ ...prev, stock: Number(e.target.value) }))}
+                className={cn(inputClass, fieldErrors.stock && inputErrorClass)}
+              />
+            </Field>
+          </div>
+
+          <Field label="Units sold" hint="Displayed on product cards." error={fieldErrors.sold}>
             <input
               type="number"
-              value={draft.stock}
-              onChange={(e) => setDraft((prev) => ({ ...prev, stock: Number(e.target.value) }))}
-              placeholder="Stock"
+              min={0}
+              value={draft.sold}
+              onChange={(e) => setDraft((prev) => ({ ...prev, sold: Number(e.target.value) }))}
+              className={cn(inputClass, fieldErrors.sold && inputErrorClass)}
+            />
+          </Field>
+
+          <Field
+            label="Sizes"
+            hint="Comma-separated: XS, S, M, L, XL"
+            error={fieldErrors.sizes}
+          >
+            <input
+              value={sizesInput}
+              onChange={(e) => setSizesInput(e.target.value)}
+              placeholder="XS, S, M, L, XL, 2XL"
+              className={cn(inputClass, fieldErrors.sizes && inputErrorClass)}
+            />
+          </Field>
+
+          <Field label="Description" error={fieldErrors.description}>
+            <textarea
+              rows={3}
+              value={draft.description}
+              onChange={(e) => setDraft((prev) => ({ ...prev, description: e.target.value }))}
+              placeholder="Product story and details for the storefront."
+              className={cn(inputClass, "resize-y", fieldErrors.description && inputErrorClass)}
+            />
+          </Field>
+
+          <Field label="Short description" hint="Optional — used in compact views.">
+            <input
+              value={draft.shortDescription ?? ""}
+              onChange={(e) => setDraft((prev) => ({ ...prev, shortDescription: e.target.value }))}
+              placeholder="One-line summary"
               className={inputClass}
             />
+          </Field>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Field label="Material">
+              <input
+                value={draft.material}
+                onChange={(e) => setDraft((prev) => ({ ...prev, material: e.target.value }))}
+                placeholder="Dri-fit blend"
+                className={inputClass}
+              />
+            </Field>
+            <Field label="Fit notes">
+              <input
+                value={draft.fit ?? ""}
+                onChange={(e) => setDraft((prev) => ({ ...prev, fit: e.target.value }))}
+                placeholder="Regular fit"
+                className={inputClass}
+              />
+            </Field>
           </div>
-          <textarea
-            rows={3}
-            value={draft.description}
-            onChange={(e) => setDraft((prev) => ({ ...prev, description: e.target.value }))}
-            placeholder="Description"
-            className={inputClass}
-          />
-          <input
-            value={draft.material}
-            onChange={(e) => setDraft((prev) => ({ ...prev, material: e.target.value }))}
-            placeholder="Material"
-            className={inputClass}
-          />
-          <input
-            value={draft.fit}
-            onChange={(e) => setDraft((prev) => ({ ...prev, fit: e.target.value }))}
-            placeholder="Fit notes"
-            className={inputClass}
-          />
         </div>
       </PortalDrawer>
     </div>

@@ -5,7 +5,7 @@ import { BestSellers } from "@/src/components/BestSellers";
 import { BrandStory } from "@/src/components/BrandStory";
 import { EventSection } from "@/src/components/EventSection";
 import { SocialProof } from "@/src/components/SocialProof";
-import { CTASection } from "@/src/components/CTASection";
+import { TeamCommunity } from "@/src/components/TeamCommunity";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { OffgridHero } from "@/src/components/ui/offgrid-hero";
 
@@ -38,7 +38,7 @@ export function HomePage() {
         <BrandStory />
         <EventSection />
         <SocialProof />
-        <CTASection />
+        <TeamCommunity />
       </main>
     </>
   );

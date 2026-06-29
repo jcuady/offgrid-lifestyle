@@ -31,10 +31,15 @@ export function CustomerSignInPage() {
     logout();
   }, [currentUser, navigate, redirectedFrom, logout]);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setError(null);
-    const result = localAuthService.login(email, password);
+    const result = await localAuthService.login(email, password);
     if (!result.ok) {
+      // Give a clear, actionable message for email confirmation
+      if (result.message?.toLowerCase().includes("email not confirmed")) {
+        setError("Please confirm your email first. Check your inbox for the confirmation link we sent when you signed up.");
+        return;
+      }
       setError(result.message ?? "Unable to sign in.");
       return;
     }
@@ -43,7 +48,7 @@ export function CustomerSignInPage() {
     if (!user) return;
 
     if (user.role !== "customer") {
-      logout();
+      await localAuthService.logout();
       setError("This email is for the team portal. Use the portal sign-in instead.");
       return;
     }

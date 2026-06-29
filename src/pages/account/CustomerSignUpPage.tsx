@@ -14,6 +14,7 @@ export function CustomerSignUpPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
   const [errors, setErrors] = useState<{
     name?: string;
     email?: string;
@@ -38,17 +39,45 @@ export function CustomerSignUpPage() {
     return Object.keys(next).length === 0;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validate()) return;
 
-    const result = localAuthService.registerCustomer({ name, email, password });
+    const result = await localAuthService.registerCustomer({ name, email, password });
     if (!result.ok) {
       setErrors({ form: result.message ?? "Unable to create account." });
       return;
     }
 
+    if (result.emailConfirmationRequired) {
+      // Email confirmation required — show confirmation message, don't redirect
+      setPendingEmail(email);
+      return;
+    }
+
     navigate("/account/orders", { replace: true });
   };
+
+  // Email confirmation pending state
+  if (pendingEmail) {
+    return (
+      <AuthPage
+        mode="sign-in"
+        title="Check your email"
+        description={`We sent a confirmation link to ${pendingEmail}. Click it to activate your account, then sign in here.`}
+        email={pendingEmail}
+        password=""
+        onEmailChange={() => {}}
+        onPasswordChange={() => {}}
+        onSubmit={() => navigate(CUSTOMER_SIGN_IN_PATH)}
+        submitLabel="Go to sign in"
+        alternateLink={{
+          prompt: "Didn't receive the email?",
+          label: "Try again",
+          href: "/account/signup",
+        }}
+      />
+    );
+  }
 
   return (
     <AuthPage

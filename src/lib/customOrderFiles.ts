@@ -1,8 +1,11 @@
-/** Local file blobs for custom orders (IndexedDB). Production: Supabase Storage. */
+/** Custom order file blobs — IndexedDB locally, Supabase Storage for admin access. */
+
+import { supabase } from "@/src/lib/supabase";
 
 const DB_NAME = "og-custom-order-files";
 const STORE = "files";
 const DB_VERSION = 1;
+const STORAGE_BUCKET = "custom-order-files";
 
 export const PENDING_DESIGN_KEY = "pending:design";
 export const PENDING_SHEET_KEY = "pending:sheet";
@@ -67,32 +70,83 @@ export async function deleteCustomOrderFile(key: string): Promise<void> {
   db.close();
 }
 
-/** Copy pending draft uploads to permanent order keys. */
+async function uploadToStorage(orderId: string, kind: "design" | "sheet", file: File): Promise<string> {
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+  const path = `${orderId}/${kind}-${Date.now()}-${safeName}`;
+  const { data, error } = await supabase.storage
+    .from(STORAGE_BUCKET)
+    .upload(path, file, { upsert: true });
+  if (error) throw error;
+  const { data: { publicUrl } } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(data.path);
+  return publicUrl;
+}
+
+/** Copy pending draft uploads to permanent keys and mirror to Supabase Storage. */
 export async function finalizeCustomOrderFiles(
   orderId: string,
   designKey: string | null,
   sheetKey: string | null,
-): Promise<{ designFileKey: string | null; orderSheetFileKey: string | null }> {
+): Promise<{
+  designFileKey: string | null;
+  orderSheetFileKey: string | null;
+  designFileUrl: string | null;
+  orderSheetFileUrl: string | null;
+}> {
   const designFileKey = designKey ? orderFileKey(orderId, "design") : null;
   const orderSheetFileKey = sheetKey ? orderFileKey(orderId, "sheet") : null;
+  let designFileUrl: string | null = null;
+  let orderSheetFileUrl: string | null = null;
 
   if (designKey && designFileKey) {
     const file = await getCustomOrderFile(designKey);
-    if (file) await saveCustomOrderFile(designFileKey, file);
+    if (file) {
+      await saveCustomOrderFile(designFileKey, file);
+      try {
+        designFileUrl = await uploadToStorage(orderId, "design", file);
+      } catch (err) {
+        console.warn("Design file storage upload failed:", err);
+      }
+    }
     if (designKey.startsWith("pending:")) await deleteCustomOrderFile(designKey);
   }
 
   if (sheetKey && orderSheetFileKey) {
     const file = await getCustomOrderFile(sheetKey);
-    if (file) await saveCustomOrderFile(orderSheetFileKey, file);
+    if (file) {
+      await saveCustomOrderFile(orderSheetFileKey, file);
+      try {
+        orderSheetFileUrl = await uploadToStorage(orderId, "sheet", file);
+      } catch (err) {
+        console.warn("Order sheet storage upload failed:", err);
+      }
+    }
     if (sheetKey.startsWith("pending:")) await deleteCustomOrderFile(sheetKey);
   }
 
-  return { designFileKey, orderSheetFileKey };
+  return { designFileKey, orderSheetFileKey, designFileUrl, orderSheetFileUrl };
 }
 
-export async function downloadCustomOrderFile(key: string, fallbackName: string): Promise<void> {
-  const file = await getCustomOrderFile(key);
+export async function downloadCustomOrderFile(
+  fileKey: string | null | undefined,
+  fileUrl: string | null | undefined,
+  fallbackName: string,
+): Promise<void> {
+  if (fileUrl) {
+    const a = document.createElement("a");
+    a.href = fileUrl;
+    a.download = fallbackName;
+    a.target = "_blank";
+    a.rel = "noreferrer";
+    a.click();
+    return;
+  }
+
+  if (!fileKey) {
+    window.alert("File not found.");
+    return;
+  }
+
+  const file = await getCustomOrderFile(fileKey);
   if (!file) {
     window.alert("File not found. It may have been cleared from this browser.");
     return;
@@ -105,6 +159,6 @@ export async function downloadCustomOrderFile(key: string, fallbackName: string)
   URL.revokeObjectURL(url);
 }
 
-export function hasCustomOrderFile(key: string | null | undefined): boolean {
-  return Boolean(key);
+export function hasCustomOrderFile(fileKey: string | null | undefined, fileUrl?: string | null): boolean {
+  return Boolean(fileUrl || fileKey);
 }

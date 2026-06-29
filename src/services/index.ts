@@ -1,6 +1,6 @@
-export { localOrderService } from "./orderService";
-export { localCatalogService } from "./catalogService";
-export { localContentService } from "./contentService";
-export { localAuthService } from "./authService";
-export { localAuditService } from "./auditService";
-export { localStaffService } from "./staffService";
+export { supabaseOrderService as localOrderService } from "./orderService";
+export { supabaseCatalogService as localCatalogService } from "./catalogService";
+export { supabaseContentService as localContentService, hydrateCustomContentFromSupabase } from "./contentService";
+export { supabaseAuthService as localAuthService } from "./authService";
+export { supabaseAuditService as localAuditService } from "./auditService";
+export { supabaseStaffService as localStaffService } from "./staffService";

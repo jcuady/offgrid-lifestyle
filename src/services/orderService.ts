@@ -12,7 +12,7 @@ import {
 } from "@/src/types/commerce";
 import type { Json } from "@/src/types/database";
 import type { PaymentProvider } from "@/src/types/payments";
-import { usePortalStore, type ManagedCustomOrder, type ManagedRetailOrder } from "@/src/store/usePortalStore";
+import { usePortalStore, type CustomOrderQuoteUpdate, type ManagedCustomOrder, type ManagedRetailOrder } from "@/src/store/usePortalStore";
 import { supabase } from "@/src/lib/supabase";
 import { finalizeCustomOrderFiles } from "@/src/lib/customOrderFiles";
 import { validateCustomOrderDraft, validateShippingInfo } from "@/src/lib/formValidation";
@@ -41,6 +41,7 @@ export interface OrderService {
   listOrders: () => Promise<{ retailOrders: ManagedRetailOrder[]; customOrders: ManagedCustomOrder[] }>;
   updateOrderField: (id: string, patch: { status?: string; payment_status?: string; payment_proof_url?: string }) => Promise<void>;
   fetchOrderProofUrl: (orderId: string) => Promise<string | null>;
+  persistCustomOrderQuote: (orderId: string, update: CustomOrderQuoteUpdate, order: ManagedCustomOrder) => Promise<void>;
 }
 
 export const supabaseOrderService: OrderService = {
@@ -106,15 +107,24 @@ export const supabaseOrderService: OrderService = {
     const finalDraft: CustomOrderDraft = {
       ...draft,
       id: orderId,
+      status: draft.status === "draft" ? "pending_deposit" : draft.status,
       designFileKey: fileKeys.designFileKey ?? draft.designFileKey,
       orderSheetFileKey: fileKeys.orderSheetFileKey ?? draft.orderSheetFileKey,
+      designFileUrl: fileKeys.designFileUrl ?? draft.designFileUrl ?? null,
+      orderSheetFileUrl: fileKeys.orderSheetFileUrl ?? draft.orderSheetFileUrl ?? null,
+      createdAt: draft.createdAt ?? new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
+
+    const currentUser = usePortalStore.getState().currentUser;
+    const orderStatus = finalDraft.status;
 
     const { error } = await supabase.from("og_orders").insert({
       id: orderId,
       order_type: "custom",
-      status: "draft",
+      status: orderStatus,
       payment_status: "unpaid",
+      customer_id: currentUser?.role === "customer" ? currentUser.id : null,
       customer_email: draft.contactEmail ?? null,
       customer_name: draft.contactName ?? null,
       customer_phone: draft.contactPhone ?? null,
@@ -123,7 +133,7 @@ export const supabaseOrderService: OrderService = {
     });
 
     if (error) {
-      console.warn("Supabase custom order insert failed:", error.message);
+      throw new Error(`Could not save custom order: ${error.message}`);
     }
 
     return usePortalStore.getState().recordCustomOrder(finalDraft);
@@ -187,8 +197,10 @@ export const supabaseOrderService: OrderService = {
           printMethod: (p.printMethod as PrintMethod | null) ?? null,
           designFileName: (p.designFileName as string) ?? null,
           designFileKey: (p.designFileKey as string) ?? null,
+          designFileUrl: (p.designFileUrl as string) ?? null,
           orderSheetFileName: (p.orderSheetFileName as string) ?? null,
           orderSheetFileKey: (p.orderSheetFileKey as string) ?? null,
+          orderSheetFileUrl: (p.orderSheetFileUrl as string) ?? null,
           designNotes: (p.designNotes as string) ?? "",
           estimatedTotal: (p.estimatedTotal as Money | null) ?? null,
           depositRequired: (p.depositRequired as Money | null) ?? null,
@@ -219,5 +231,50 @@ export const supabaseOrderService: OrderService = {
       .eq("id", orderId)
       .single();
     return data?.payment_proof_url ?? null;
+  },
+
+  persistCustomOrderQuote: async (orderId, update, order) => {
+    const hasOfficial =
+      update.officialTotal !== null &&
+      update.officialTotal !== undefined &&
+      update.officialTotal.amount > 0;
+
+    let officialDeposit = update.officialDeposit ?? null;
+    if (hasOfficial && update.officialTotal && (!officialDeposit || officialDeposit.amount <= 0)) {
+      officialDeposit = {
+        amount: Math.round(update.officialTotal.amount * 0.6),
+        currency: update.officialTotal.currency,
+      };
+    }
+
+    const now = new Date().toISOString();
+    const actor = usePortalStore.getState().currentUser;
+
+    const payload: Record<string, unknown> = {
+      ...order,
+      officialTotal: hasOfficial ? update.officialTotal : null,
+      officialDeposit: hasOfficial ? officialDeposit : null,
+      quoteCustomerNotes: hasOfficial ? update.quoteCustomerNotes : "",
+      quoteInternalNotes: hasOfficial ? update.quoteInternalNotes : "",
+      quotedAt: hasOfficial ? now : null,
+      quotedBy: hasOfficial ? actor?.id ?? null : null,
+      updatedAt: now,
+    };
+
+    const patch: {
+      custom_payload: Json;
+      total_centavos?: number;
+      updated_at: string;
+    } = {
+      custom_payload: payload as unknown as Json,
+      updated_at: now,
+    };
+
+    if (hasOfficial && update.officialTotal) {
+      patch.total_centavos = Math.round(update.officialTotal.amount * 100);
+    }
+
+    const { error } = await supabase.from("og_orders").update(patch).eq("id", orderId);
+    if (error) console.warn("Supabase custom quote update failed:", error.message);
   },
 };

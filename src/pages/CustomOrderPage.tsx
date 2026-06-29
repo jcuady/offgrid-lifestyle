@@ -3,12 +3,18 @@ import { Link } from "react-router-dom";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { CustomOrderWizard } from "@/src/components/custom-order/CustomOrderWizard";
+import { hydrateCustomContentFromSupabase } from "@/src/services";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { siteContainer, sectionEyebrow } from "@/src/lib/brandLayout";
 import { cn } from "@/src/lib/utils";
 
 export function CustomOrderPage() {
   const hero = useSiteContentStore((s) => s.customPageContent.orderHero);
+
+  useEffect(() => {
+    void hydrateCustomContentFromSupabase();
+  }, []);
+
   const teamOrderSteps = [
     {
       title: "Know the details",

@@ -11,6 +11,7 @@ import {
   Minimize2,
 } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
+import { hydrateCustomContentFromSupabase } from "@/src/services";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { buildProcessSteps, type ProcessStepMeta } from "@/src/components/custom-order/customOrderFlowMeta";
 import { GuideSectionProse } from "@/src/components/custom/GuideSectionProse";
@@ -246,6 +247,11 @@ function DesignSupportSection({
 export function CustomHubPage() {
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    void hydrateCustomContentFromSupabase();
+  }, []);
+
   const hub = useSiteContentStore((state) => state.customPageContent.hub);
   const customSectionsRaw = useSiteContentStore((state) => state.customSections);
   const sections = useMemo(

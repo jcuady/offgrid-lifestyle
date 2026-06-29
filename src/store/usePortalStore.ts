@@ -47,8 +47,10 @@ export interface ManagedCustomOrder {
   printMethod: CustomOrderDraft["printMethod"];
   designFileName: string | null;
   designFileKey: string | null;
+  designFileUrl: string | null;
   orderSheetFileName: string | null;
   orderSheetFileKey: string | null;
+  orderSheetFileUrl: string | null;
   designNotes: string;
   estimatedTotal: CustomOrderDraft["estimatedTotal"];
   depositRequired: CustomOrderDraft["depositRequired"];
@@ -123,6 +125,8 @@ function migrateManagedCustomOrderRecord(raw: unknown): ManagedCustomOrder {
     orderSheetFileName: c.orderSheetFileName ?? null,
     orderSheetFileKey: c.orderSheetFileKey ?? null,
     designFileKey: c.designFileKey ?? null,
+    designFileUrl: c.designFileUrl ?? null,
+    orderSheetFileUrl: c.orderSheetFileUrl ?? null,
     officialTotal: c.officialTotal ?? null,
     officialDeposit: c.officialDeposit ?? null,
     quoteCustomerNotes: c.quoteCustomerNotes ?? "",
@@ -141,6 +145,7 @@ interface PortalState {
   managedStaffAccounts: ManagedStaffAccount[];
   registeredCustomers: RegisteredCustomer[];
   auditLogs: AuditLogEntry[];
+  setCurrentUser: (user: PortalUser | null) => void;
   login: (email: string, password: string) => { ok: boolean; message?: string };
   loginAsRole: (role: UserRole) => void;
   registerCustomer: (input: RegisterCustomerInput) => { ok: boolean; message?: string; userId?: string };
@@ -251,6 +256,8 @@ export const usePortalStore = create<PortalState>()(
       managedStaffAccounts: [],
       registeredCustomers: [],
       auditLogs: [],
+
+      setCurrentUser: (user) => set({ currentUser: user }),
 
       login: (email, password) => {
         const normalizedEmail = email.trim().toLowerCase();
@@ -549,8 +556,10 @@ export const usePortalStore = create<PortalState>()(
             printMethod: draft.printMethod,
             designFileName: draft.designFileName,
             designFileKey: draft.designFileKey ?? null,
+            designFileUrl: draft.designFileUrl ?? null,
             orderSheetFileName: draft.orderSheetFileName,
             orderSheetFileKey: draft.orderSheetFileKey ?? null,
+            orderSheetFileUrl: draft.orderSheetFileUrl ?? null,
             designNotes: draft.designNotes,
             estimatedTotal: draft.estimatedTotal,
             depositRequired: draft.depositRequired,

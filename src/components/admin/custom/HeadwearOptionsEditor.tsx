@@ -6,6 +6,7 @@ import {
   type HeadwearOptionGroup,
   resolveHeadwearOptions,
 } from "@/src/data/customHeadwearOptions";
+import { localContentService } from "@/src/services";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { Button } from "@/src/components/ui/Button";
 import { cn } from "@/src/lib/utils";
@@ -18,9 +19,6 @@ const GROUP_LABELS: Record<HeadwearOptionGroup, string> = {
 export function HeadwearOptionsEditor() {
   const raw = useSiteContentStore((s) => s.customHeadwearOptions);
   const options = resolveHeadwearOptions(raw);
-  const addOption = useSiteContentStore((s) => s.addHeadwearOption);
-  const updateOption = useSiteContentStore((s) => s.updateHeadwearOption);
-  const removeOption = useSiteContentStore((s) => s.removeHeadwearOption);
   const resetOptions = useSiteContentStore((s) => s.resetHeadwearOptions);
 
   const [selectedId, setSelectedId] = useState(options[0]?.id ?? "");
@@ -28,13 +26,13 @@ export function HeadwearOptionsEditor() {
 
   const patchSelected = (patch: Partial<Omit<CustomHeadwearOption, "id">>) => {
     if (!selected) return;
-    updateOption(selected.id, patch);
+    localContentService.updateHeadwearOption(selected.id, patch);
   };
 
   const handleAdd = () => {
     const label = "New option";
     const group: HeadwearOptionGroup = "headwear";
-    addOption({
+    localContentService.addHeadwearOption({
       id: "",
       label,
       description: "Describe this headwear or towel type for customers.",
@@ -53,7 +51,7 @@ export function HeadwearOptionsEditor() {
     if (!selected) return;
     if (!window.confirm(`Delete "${selected.label}"? Existing orders keep the stored id.`)) return;
     const remaining = options.filter((o) => o.id !== selected.id);
-    removeOption(selected.id);
+    localContentService.removeHeadwearOption(selected.id);
     setSelectedId(remaining[0]?.id ?? "");
   };
 

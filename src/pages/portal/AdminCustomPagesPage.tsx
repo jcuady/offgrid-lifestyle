@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ExternalLink, RotateCcw } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
@@ -12,6 +12,7 @@ import { DEFAULT_GUIDE_CTA_HREF, resolveGuideSections } from "@/src/lib/customGu
 import { CUSTOM_PROCESS_STEP_COUNT } from "@/src/data/customPageContent";
 import type { CustomSectionSlug } from "@/src/store/useSiteContentStore";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
+import { hydrateCustomContentFromSupabase, localContentService } from "@/src/services";
 import { TemplateSlotsEditor } from "@/src/components/admin/custom/TemplateSlotsEditor";
 import { HeadwearOptionsEditor } from "@/src/components/admin/custom/HeadwearOptionsEditor";
 import { Button } from "@/src/components/ui/Button";
@@ -49,12 +50,16 @@ export function AdminCustomPagesPage() {
   const resetHeadwearOptions = useSiteContentStore((s) => s.resetHeadwearOptions);
   const updateTemplatesPage = useSiteContentStore((s) => s.updateCustomTemplatesPage);
 
+  useEffect(() => {
+    void hydrateCustomContentFromSupabase();
+  }, []);
+
   const [selectedSectionId, setSelectedSectionId] = useState(sections[0]?.id ?? "");
   const selected = sections.find((s) => s.id === selectedSectionId) ?? sections[0];
 
   const updateSelected = (patch: Parameters<typeof updateCustomSection>[1]) => {
     if (!selected) return;
-    updateCustomSection(selected.id, patch);
+    localContentService.updateCustomSection(selected.id, patch);
   };
 
   const confirmResetAll = () => {

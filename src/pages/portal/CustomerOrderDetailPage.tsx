@@ -177,17 +177,19 @@ function PaymentProofSection({
   orderId,
   paymentMethod,
   paymentStatus,
+  forceShow = false,
 }: {
   orderId: string;
   paymentMethod: string | null | undefined;
   paymentStatus: string;
+  forceShow?: boolean;
 }) {
   const [proofUrl, setProofUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
-  const isManualPayment = paymentMethod === "gcash" || paymentMethod === "bank_transfer";
+  const isManualPayment = forceShow || paymentMethod === "gcash" || paymentMethod === "bank_transfer";
   const isPaid = paymentStatus === "fully_paid";
 
   useEffect(() => {
@@ -637,19 +639,36 @@ export function CustomerOrderDetailPage() {
             </div>
           </div>
 
+          {custom.paymentStatus !== "fully_paid" && custom.paymentStatus !== "refunded" ? (
+            <PaymentProofSection
+              orderId={custom.id}
+              paymentMethod={null}
+              paymentStatus={custom.paymentStatus}
+              forceShow
+            />
+          ) : null}
+
           <div className="mt-6 min-w-0 rounded-2xl border border-offgrid-green/10 bg-white p-5 shadow-sm sm:mt-8 sm:p-6">
             <h2 className="text-xl font-display font-bold text-offgrid-green">Production specs</h2>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/50">Design file</p>
                 <div className="mt-2">
-                  <CustomOrderFileButton fileKey={custom.designFileKey} fileName={custom.designFileName} />
+                  <CustomOrderFileButton
+                    fileKey={custom.designFileKey}
+                    fileUrl={custom.designFileUrl}
+                    fileName={custom.designFileName}
+                  />
                 </div>
               </div>
               <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/50">Order sheet</p>
                 <div className="mt-2">
-                  <CustomOrderFileButton fileKey={custom.orderSheetFileKey} fileName={custom.orderSheetFileName} />
+                  <CustomOrderFileButton
+                    fileKey={custom.orderSheetFileKey}
+                    fileUrl={custom.orderSheetFileUrl}
+                    fileName={custom.orderSheetFileName}
+                  />
                 </div>
               </div>
               <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3">

@@ -36,19 +36,23 @@ function PaymentProofAdminSection({
   paymentStatus,
   isAdmin,
   onConfirm,
+  forceShow = false,
+  confirmAsDeposit = false,
 }: {
   orderId: string;
   paymentMethod: string | null | undefined;
   paymentStatus: string;
   isAdmin: boolean;
   onConfirm: () => void;
+  forceShow?: boolean;
+  confirmAsDeposit?: boolean;
 }) {
   const [proofUrl, setProofUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [confirming, setConfirming] = useState(false);
 
-  const isManualPayment = paymentMethod === "gcash" || paymentMethod === "bank_transfer";
-  const isPaid = paymentStatus === "fully_paid";
+  const isManualPayment = forceShow || paymentMethod === "gcash" || paymentMethod === "bank_transfer";
+  const isSettled = paymentStatus === "fully_paid";
 
   useEffect(() => {
     localOrderService.fetchOrderProofUrl(orderId).then((url) => {
@@ -61,10 +65,14 @@ function PaymentProofAdminSection({
 
   const handleConfirm = async () => {
     setConfirming(true);
-    await localOrderService.updateOrderField(orderId, { payment_status: "fully_paid" });
+    const nextStatus =
+      confirmAsDeposit && paymentStatus === "unpaid" ? "deposit_paid" : "fully_paid";
+    await localOrderService.updateOrderField(orderId, { payment_status: nextStatus });
     onConfirm();
     setConfirming(false);
   };
+
+  const showConfirm = isAdmin && !isSettled && proofUrl;
 
   return (
     <div className="rounded-2xl border border-offgrid-green/10 bg-white p-5 shadow-sm">
@@ -73,13 +81,13 @@ function PaymentProofAdminSection({
           <h2 className="text-lg font-display font-bold text-offgrid-green">Payment proof</h2>
           <p className="mt-0.5 text-xs text-offgrid-green/55">
             {proofUrl
-              ? isPaid
+              ? isSettled
                 ? "Payment confirmed."
                 : "Customer uploaded a screenshot — review and confirm below."
               : "Waiting for customer to upload payment screenshot."}
           </p>
         </div>
-        {isAdmin && !isPaid && proofUrl && (
+        {showConfirm ? (
           <Button
             variant="default"
             size="sm"
@@ -88,10 +96,14 @@ function PaymentProofAdminSection({
             className="gap-2 shrink-0"
           >
             <CheckCircle2 className="h-4 w-4" />
-            {confirming ? "Confirming…" : "Confirm payment received"}
+            {confirming
+              ? "Confirming…"
+              : confirmAsDeposit && paymentStatus === "unpaid"
+                ? "Confirm deposit received"
+                : "Confirm payment received"}
           </Button>
-        )}
-        {isPaid && (
+        ) : null}
+        {isSettled && (
           <span className="inline-flex items-center gap-1.5 rounded-full bg-offgrid-lime/15 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-offgrid-lime">
             <CheckCircle2 className="h-3.5 w-3.5" /> Confirmed
           </span>
@@ -611,17 +623,20 @@ export function OperationsOrderDetailPage() {
           {isAdmin ? (
             <AdminQuoteEditor
               order={custom}
-              onSave={(payload) => {
+              onSave={async (payload) => {
                 updateCustomOrderQuote(custom.id, payload);
+                await localOrderService.persistCustomOrderQuote(custom.id, payload, custom);
                 setFeedback("Official quote saved.");
               }}
-              onClear={() => {
-                updateCustomOrderQuote(custom.id, {
+              onClear={async () => {
+                const cleared = {
                   officialTotal: null,
                   officialDeposit: null,
                   quoteCustomerNotes: "",
                   quoteInternalNotes: "",
-                });
+                };
+                updateCustomOrderQuote(custom.id, cleared);
+                await localOrderService.persistCustomOrderQuote(custom.id, cleared, custom);
                 setFeedback("Official quote cleared.");
               }}
             />
@@ -653,6 +668,20 @@ export function OperationsOrderDetailPage() {
               )}
             </div>
           )}
+
+          <PaymentProofAdminSection
+            orderId={custom.id}
+            paymentMethod={null}
+            paymentStatus={custom.paymentStatus}
+            isAdmin={isAdmin}
+            forceShow
+            confirmAsDeposit
+            onConfirm={() => {
+              const next = custom.paymentStatus === "unpaid" ? ("deposit_paid" as const) : ("fully_paid" as const);
+              updateCustomPaymentStatus(custom.id, next);
+              setFeedback(`Payment → ${formatPaymentStatus(next)}.`);
+            }}
+          />
 
           <div className="grid gap-6 lg:grid-cols-2">
             <div className="rounded-2xl border border-offgrid-green/10 bg-white p-5 shadow-sm">
@@ -718,13 +747,21 @@ export function OperationsOrderDetailPage() {
               <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/50">Design file</p>
                 <div className="mt-2">
-                  <CustomOrderFileButton fileKey={custom.designFileKey} fileName={custom.designFileName} />
+                  <CustomOrderFileButton
+                    fileKey={custom.designFileKey}
+                    fileUrl={custom.designFileUrl}
+                    fileName={custom.designFileName}
+                  />
                 </div>
               </div>
               <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/50">Order sheet</p>
                 <div className="mt-2">
-                  <CustomOrderFileButton fileKey={custom.orderSheetFileKey} fileName={custom.orderSheetFileName} />
+                  <CustomOrderFileButton
+                    fileKey={custom.orderSheetFileKey}
+                    fileUrl={custom.orderSheetFileUrl}
+                    fileName={custom.orderSheetFileName}
+                  />
                 </div>
               </div>
               <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3">

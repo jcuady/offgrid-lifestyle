@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Package2, ArrowRight, ShoppingBag, Sparkles, Truck, CheckCircle2 } from "lucide-react";
 import { formatMoney } from "@/src/types/commerce";
@@ -15,6 +15,7 @@ import {
 } from "@/src/lib/portal";
 import { usePortalStore } from "@/src/store/usePortalStore";
 import type { ManagedCustomOrder, ManagedRetailOrder } from "@/src/store/usePortalStore";
+import { localOrderService } from "@/src/services";
 import { Button } from "@/src/components/ui/Button";
 import { AccountLayout } from "@/src/components/account/AccountLayout";
 import { OrderTracker } from "@/src/components/account/OrderTracker";
@@ -36,6 +37,12 @@ export function CustomerOrdersPage() {
   const user = usePortalStore((state) => state.currentUser);
   const retailOrders = usePortalStore((state) => state.retailOrders);
   const customOrders = usePortalStore((state) => state.customOrders);
+
+  useEffect(() => {
+    localOrderService.listOrders().then(({ retailOrders: r, customOrders: c }) => {
+      usePortalStore.setState({ retailOrders: r, customOrders: c });
+    });
+  }, []);
 
   const ownsOrder = (order: { customerId: string | null; customerEmail: string }) =>
     !!user &&

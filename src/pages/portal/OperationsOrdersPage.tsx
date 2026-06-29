@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import type { OrderStatus, PaymentStatus } from "@/src/types/commerce";
 import {
@@ -26,6 +26,7 @@ import {
   canTransitionStatus,
 } from "@/src/lib/operationsOrderFlow";
 import { usePortalStore, type ManagedCustomOrder, type ManagedRetailOrder, type UserRole } from "@/src/store/usePortalStore";
+import { localOrderService } from "@/src/services";
 import { Button } from "@/src/components/ui/Button";
 
 interface OperationsOrdersPageProps {
@@ -73,6 +74,12 @@ export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
   const updateRetailPaymentStatus = usePortalStore((state) => state.updateRetailPaymentStatus);
   const updateCustomOrderStatus = usePortalStore((state) => state.updateCustomOrderStatus);
   const updateCustomPaymentStatus = usePortalStore((state) => state.updateCustomPaymentStatus);
+
+  useEffect(() => {
+    localOrderService.listOrders().then(({ retailOrders, customOrders }) => {
+      usePortalStore.setState({ retailOrders, customOrders });
+    });
+  }, []);
 
   const [feedback, setFeedback] = useState<string | null>(null);
   const [query, setQuery] = useState("");
@@ -151,6 +158,7 @@ export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
             setFeedback(`Order ${id} → ${formatOrderStatus(next)}.`);
             if (row.kind === "retail") updateRetailOrderStatus(id, next);
             else updateCustomOrderStatus(id, next);
+            localOrderService.updateOrderField(id, { status: next });
           }}
           className="max-w-[10.5rem] rounded-xl border border-offgrid-green/18 bg-offgrid-cream/30 px-2.5 py-2 text-xs text-offgrid-green shadow-sm focus:border-offgrid-lime focus:outline-none focus:ring-2 focus:ring-offgrid-lime/35"
         >
@@ -168,6 +176,7 @@ export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
               setFeedback(`Payment → ${formatPaymentStatus(next)}.`);
               if (row.kind === "retail") updateRetailPaymentStatus(id, next);
               else updateCustomPaymentStatus(id, next);
+              localOrderService.updateOrderField(id, { payment_status: next });
             }}
             className="max-w-[9.5rem] rounded-xl border border-offgrid-green/18 bg-offgrid-cream/30 px-2.5 py-2 text-xs text-offgrid-green shadow-sm focus:border-offgrid-lime focus:outline-none focus:ring-2 focus:ring-offgrid-lime/35"
           >

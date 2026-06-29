@@ -28,6 +28,7 @@ import {
 } from "@/src/lib/operationsOrderFlow";
 import { Button } from "@/src/components/ui/Button";
 import { CustomOrderFileButton } from "@/src/components/custom-order/CustomOrderFileButton";
+import { localOrderService } from "@/src/services";
 
 function AdminQuoteEditor({
   order,
@@ -255,6 +256,7 @@ export function OperationsOrderDetailPage() {
                   }
                   setFeedback(`Order ${retail.id} → ${formatOrderStatus(next)}.`);
                   updateRetailOrderStatus(retail.id, next);
+                  localOrderService.updateOrderField(retail.id, { status: next });
                 }}
                 className="mt-1 block rounded-xl border border-offgrid-green/20 px-3 py-2 text-sm"
               >
@@ -274,6 +276,7 @@ export function OperationsOrderDetailPage() {
                     const next = e.target.value as (typeof retail)["paymentStatus"];
                     setFeedback(`Payment → ${formatPaymentStatus(next)}.`);
                     updateRetailPaymentStatus(retail.id, next);
+                    localOrderService.updateOrderField(retail.id, { payment_status: next });
                   }}
                   className="mt-1 block rounded-xl border border-offgrid-green/20 px-3 py-2 text-sm"
                 >
@@ -461,6 +464,7 @@ export function OperationsOrderDetailPage() {
                   }
                   setFeedback(`Order ${custom.id} → ${formatOrderStatus(next)}.`);
                   updateCustomOrderStatus(custom.id, next);
+                  localOrderService.updateOrderField(custom.id, { status: next });
                 }}
                 className="mt-1 block rounded-xl border border-offgrid-green/20 px-3 py-2 text-sm"
               >
@@ -480,6 +484,7 @@ export function OperationsOrderDetailPage() {
                     const next = e.target.value as (typeof custom)["paymentStatus"];
                     setFeedback(`Payment → ${formatPaymentStatus(next)}.`);
                     updateCustomPaymentStatus(custom.id, next);
+                    localOrderService.updateOrderField(custom.id, { payment_status: next });
                   }}
                   className="mt-1 block rounded-xl border border-offgrid-green/20 px-3 py-2 text-sm"
                 >

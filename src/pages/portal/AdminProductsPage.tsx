@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Package, Plus, Pencil, Trash2, Search, Star } from "lucide-react";
 import type { FabricType, GarmentCut, Product, SizeCode } from "@/src/data/products";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
@@ -90,7 +90,14 @@ export function AdminProductsPage() {
   const [query, setQuery] = useState("");
   const [fieldErrors, setFieldErrors] = useState<ProductFieldErrors>({});
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const slugTouched = useRef(false);
+
+  useEffect(() => {
+    localCatalogService.listProducts().then((fetched) => {
+      useSiteContentStore.setState({ products: fetched });
+    });
+  }, []);
 
   const categoryOptions = useMemo(() => {
     const fromCatalog = products.map((p) => p.category.trim()).filter(Boolean);
@@ -162,7 +169,7 @@ export function AdminProductsPage() {
     setDraft((prev) => ({ ...prev, tag: undefined }));
   };
 
-  const submit = () => {
+  const submit = async () => {
     const sizes = parseSizesInput(sizesInput);
     const withSizes = { ...draft, sizes };
     const errors = validateProductDraft({ draft: withSizes, products, editingId });
@@ -170,11 +177,15 @@ export function AdminProductsPage() {
     if (Object.keys(errors).length > 0) return;
 
     const normalized = normalizeProductDraft(withSizes, editingId);
-
-    if (editingId) {
-      localCatalogService.updateProduct(editingId, normalized);
-    } else {
-      localCatalogService.addProduct(normalized);
+    setIsSaving(true);
+    try {
+      if (editingId) {
+        await localCatalogService.updateProduct(editingId, normalized);
+      } else {
+        await localCatalogService.addProduct(normalized);
+      }
+    } finally {
+      setIsSaving(false);
     }
     closeDrawer();
   };
@@ -310,9 +321,10 @@ export function AdminProductsPage() {
             <button
               type="button"
               onClick={submit}
-              className="rounded-xl bg-offgrid-green px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-offgrid-cream transition-colors hover:bg-offgrid-dark"
+              disabled={isSaving}
+              className="rounded-xl bg-offgrid-green px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-offgrid-cream transition-colors hover:bg-offgrid-dark disabled:opacity-60"
             >
-              {editingId ? "Update product" : "Create product"}
+              {isSaving ? "Saving…" : editingId ? "Update product" : "Create product"}
             </button>
             <button
               type="button"

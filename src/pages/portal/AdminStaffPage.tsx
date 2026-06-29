@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { KeyRound, Plus, Shield, UserCheck, UserX, Users } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { PortalDrawer } from "@/src/components/portal/PortalDrawer";
@@ -33,6 +33,12 @@ export function AdminStaffPage() {
   const staffAccounts = usePortalStore((s) => s.managedStaffAccounts);
   const demoStaffEmail = "staff@offgrid.test";
 
+  useEffect(() => {
+    localStaffService.list().then((accounts) => {
+      usePortalStore.setState({ managedStaffAccounts: accounts });
+    });
+  }, []);
+
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [resetTarget, setResetTarget] = useState<ManagedStaffAccount | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -66,13 +72,13 @@ export function AdminStaffPage() {
     setConfirmNewPassword("");
   };
 
-  const submitCreate = () => {
+  const submitCreate = async () => {
     setFormError(null);
     if (password !== confirmPassword) {
       setFormError("Passwords do not match.");
       return;
     }
-    const result = localStaffService.create({ name, email, password });
+    const result = await localStaffService.create({ name, email, password });
     if (!result.ok) {
       setFormError(result.message ?? "Could not create account.");
       return;
@@ -80,14 +86,14 @@ export function AdminStaffPage() {
     closeCreateDrawer();
   };
 
-  const submitReset = () => {
+  const submitReset = async () => {
     if (!resetTarget) return;
     setFormError(null);
     if (newPassword !== confirmNewPassword) {
       setFormError("Passwords do not match.");
       return;
     }
-    const result = localStaffService.resetPassword(resetTarget.id, newPassword);
+    const result = await localStaffService.resetPassword(resetTarget.id, newPassword);
     if (!result.ok) {
       setFormError(result.message ?? "Could not reset password.");
       return;
@@ -95,11 +101,11 @@ export function AdminStaffPage() {
     closeResetDrawer();
   };
 
-  const toggleStatus = (account: ManagedStaffAccount) => {
+  const toggleStatus = async (account: ManagedStaffAccount) => {
     const next = account.status === "active" ? "inactive" : "active";
     const label = next === "inactive" ? "deactivate" : "reactivate";
     if (!window.confirm(`${label.charAt(0).toUpperCase() + label.slice(1)} ${account.email}?`)) return;
-    const result = localStaffService.setStatus(account.id, next);
+    const result = await localStaffService.setStatus(account.id, next);
     if (!result.ok) window.alert(result.message ?? "Update failed.");
   };
 

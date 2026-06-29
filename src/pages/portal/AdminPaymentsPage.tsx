@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
 import { ExternalLink, QrCode, Upload, Zap, Banknote } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/src/components/ui/Button";
@@ -8,6 +8,7 @@ import { PortalPageHeader } from "@/src/components/portal/PortalPageHeader";
 import { fileAcceptAttribute, fileRuleHint, validateUploadedFile } from "@/src/lib/fileValidation";
 import { paymongoWebhookPath } from "@/src/lib/paymongo";
 import type { PayMongoMode } from "@/src/types/payments";
+import { supabase } from "@/src/lib/supabase";
 
 export function AdminPaymentsPage() {
   const paymentSettings = usePortalStore((s) => s.paymentSettings);
@@ -15,7 +16,21 @@ export function AdminPaymentsPage() {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
-  const onUploadQr = (e: ChangeEvent<HTMLInputElement>) => {
+  // On mount: sync GCash QR URL from Supabase so all admins see the latest.
+  useEffect(() => {
+    supabase
+      .from("og_payment_settings")
+      .select("gcash_qr_image_url")
+      .single()
+      .then(({ data }) => {
+        if (data?.gcash_qr_image_url) {
+          updatePaymentSettings({ gcashQrImageUrl: data.gcash_qr_image_url });
+        }
+      });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const onUploadQr = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
@@ -28,17 +43,43 @@ export function AdminPaymentsPage() {
 
     setUploadError(null);
     setUploading(true);
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = typeof reader.result === "string" ? reader.result : "";
-      if (result) updatePaymentSettings({ gcashQrImageUrl: result });
+    try {
+      const ext = file.name.split(".").pop() ?? "png";
+      const path = `gcash-qr.${ext}`;
+
+      const { data: storageData, error: storageErr } = await supabase.storage
+        .from("payment-assets")
+        .upload(path, file, { upsert: true });
+      if (storageErr) throw storageErr;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("payment-assets")
+        .getPublicUrl(storageData.path);
+
+      // Upsert the global payment settings row with the new QR URL
+      const { data: existing } = await supabase
+        .from("og_payment_settings")
+        .select("id")
+        .limit(1)
+        .single();
+
+      if (existing) {
+        await supabase
+          .from("og_payment_settings")
+          .update({ gcash_qr_image_url: publicUrl })
+          .eq("id", existing.id);
+      } else {
+        await supabase
+          .from("og_payment_settings")
+          .insert({ gcash_qr_image_url: publicUrl });
+      }
+
+      updatePaymentSettings({ gcashQrImageUrl: publicUrl });
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : "Upload failed. Please try again.");
+    } finally {
       setUploading(false);
-    };
-    reader.onerror = () => {
-      setUploading(false);
-      setUploadError("Could not read image. Try another file.");
-    };
-    reader.readAsDataURL(file);
+    }
   };
 
   const patchPaymongo = (patch: Partial<typeof paymentSettings.paymongo>) => {
@@ -78,7 +119,7 @@ export function AdminPaymentsPage() {
           />
         </CmsField>
 
-        <CmsField label="Upload QR image" className="sm:col-span-2" hint="Stored in localStorage as image data URL for this MVP.">
+        <CmsField label="Upload QR image" className="sm:col-span-2" hint="Stored in Supabase Storage — visible to all admins globally.">
           <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-offgrid-green/25 px-4 py-3 text-sm text-offgrid-green/70 hover:bg-offgrid-green/[0.03]">
             <Upload className="h-4 w-4" />
             <span className="font-semibold text-offgrid-green">{uploading ? "Uploading..." : "Upload image file"}</span>

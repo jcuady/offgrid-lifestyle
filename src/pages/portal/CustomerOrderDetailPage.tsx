@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+import { type Attributes, type ChangeEvent, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Star } from "lucide-react";
-import { usePortalStore } from "@/src/store/usePortalStore";
+import { Star, Upload } from "lucide-react";
+import { usePortalStore, type PortalUser } from "@/src/store/usePortalStore";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { reviewService } from "@/src/services/reviewService";
+import { localOrderService } from "@/src/services";
+import { supabase } from "@/src/lib/supabase";
 import type { RetailOrderLine } from "@/src/types/commerce";
 import {
   headwearOptionLabel,
@@ -57,10 +59,10 @@ function ReviewCard({
   line,
   orderId,
   user,
-}: {
+}: Attributes & {
   line: RetailOrderLine;
   orderId: string;
-  user: { id: string; name: string; email: string } | null;
+  user: PortalUser | null;
 }) {
   const [checked, setChecked] = useState(false);
   const [alreadyReviewed, setAlreadyReviewed] = useState(false);
@@ -167,6 +169,117 @@ function ReviewCard({
           {submitting ? "Submitting…" : "Submit review"}
         </button>
       </div>
+    </div>
+  );
+}
+
+function PaymentProofSection({
+  orderId,
+  paymentMethod,
+  paymentStatus,
+}: {
+  orderId: string;
+  paymentMethod: string | null | undefined;
+  paymentStatus: string;
+}) {
+  const [proofUrl, setProofUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  const isManualPayment = paymentMethod === "gcash" || paymentMethod === "bank_transfer";
+  const isPaid = paymentStatus === "fully_paid";
+
+  useEffect(() => {
+    localOrderService.fetchOrderProofUrl(orderId).then((url) => {
+      setProofUrl(url);
+      setLoading(false);
+    });
+  }, [orderId]);
+
+  const handleUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadError(null);
+    setUploading(true);
+    try {
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const path = `${orderId}/${Date.now()}-${safeName}`;
+      const { data, error: storageErr } = await supabase.storage
+        .from("payment-proofs")
+        .upload(path, file, { upsert: true });
+      if (storageErr) throw storageErr;
+      const { data: { publicUrl } } = supabase.storage
+        .from("payment-proofs")
+        .getPublicUrl(data.path);
+      await localOrderService.updateOrderField(orderId, { payment_proof_url: publicUrl });
+      setProofUrl(publicUrl);
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : "Upload failed. Please try again.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  if (!isManualPayment || loading) return null;
+
+  return (
+    <div className="mt-6 min-w-0 rounded-2xl border border-offgrid-green/10 bg-white p-5 shadow-sm sm:mt-8 sm:p-6">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h2 className="text-lg font-display font-bold text-offgrid-green">Payment proof</h2>
+          <p className="mt-1 text-xs text-offgrid-green/55">
+            {proofUrl
+              ? isPaid
+                ? "Payment confirmed by OG team."
+                : "Screenshot received — our team will confirm payment shortly."
+              : "Upload your GCash or bank transfer screenshot so our team can verify your payment."}
+          </p>
+        </div>
+        {!isPaid && (
+          <label
+            className={cn(
+              "inline-flex shrink-0 cursor-pointer items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] transition-colors",
+              uploading
+                ? "cursor-not-allowed bg-offgrid-green/20 text-offgrid-green/50"
+                : "bg-offgrid-green text-offgrid-cream hover:bg-offgrid-dark",
+            )}
+          >
+            <Upload className="h-3.5 w-3.5" />
+            {uploading ? "Uploading…" : proofUrl ? "Update screenshot" : "Upload screenshot"}
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleUpload}
+              disabled={uploading}
+            />
+          </label>
+        )}
+      </div>
+
+      {uploadError ? (
+        <p className="mt-2 text-xs font-medium text-red-600">{uploadError}</p>
+      ) : null}
+
+      {proofUrl ? (
+        <div className="mt-4">
+          <img
+            src={proofUrl}
+            alt="Payment screenshot"
+            className="max-h-80 rounded-xl border border-offgrid-green/10 object-contain shadow-sm"
+          />
+          {isPaid ? (
+            <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-offgrid-lime/15 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-offgrid-lime">
+              ✓ Payment confirmed
+            </p>
+          ) : null}
+        </div>
+      ) : (
+        <div className="mt-4 rounded-xl border-2 border-dashed border-offgrid-green/15 px-4 py-8 text-center text-sm text-offgrid-green/45">
+          No screenshot uploaded yet.
+        </div>
+      )}
     </div>
   );
 }
@@ -341,6 +454,12 @@ export function CustomerOrderDetailPage() {
               </dl>
             </div>
           </div>
+
+          <PaymentProofSection
+            orderId={retail.id}
+            paymentMethod={retail.paymentMethod}
+            paymentStatus={retail.paymentStatus}
+          />
 
           <div className="mt-6 min-w-0 rounded-2xl border border-offgrid-green/10 bg-white p-5 shadow-sm sm:mt-8 sm:p-6">
             <h2 className="text-xl font-display font-bold text-offgrid-green">Items</h2>

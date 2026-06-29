@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { X, Check, Wallet, Banknote, Package, ChevronRight, MapPin, Truck, Zap } from "lucide-react";
+import { X, Check, Wallet, Banknote, Package, ChevronRight, MapPin, Truck, Zap, Upload } from "lucide-react";
 import { useShallow } from "zustand/react/shallow";
 import { useStore } from "@/src/store/store";
 import { usePortalStore } from "@/src/store/usePortalStore";
@@ -92,7 +92,7 @@ export function CheckoutModal() {
     setCheckoutStep(2);
   };
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     if (!cart.length) {
       setCheckoutError("Your cart is empty. Add items before placing an order.");
       return;
@@ -113,7 +113,7 @@ export function CheckoutModal() {
 
     try {
       setCheckoutError(null);
-      placeOrder();
+      await placeOrder();
     } catch (err) {
       setCheckoutError(err instanceof Error ? err.message : "Could not place order.");
     }
@@ -503,6 +503,30 @@ export function CheckoutModal() {
                         </div>
                       )}
 
+                      {/* GCash payment next steps */}
+                      {paymentMethod === "gcash" && (
+                        <div className="mb-6 sm:mb-8 rounded-xl border border-offgrid-lime/30 bg-offgrid-lime/8 p-4 sm:p-6 text-left">
+                          <p className="text-xs font-bold uppercase tracking-[0.16em] text-offgrid-green/60 mb-3">
+                            Next step — Send payment proof
+                          </p>
+                          <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
+                            <img
+                              src={paymentSettings.gcashQrImageUrl}
+                              alt="GCash QR"
+                              className="h-36 w-36 shrink-0 rounded-xl border border-offgrid-green/10 bg-white object-contain"
+                            />
+                            <div className="space-y-2">
+                              <p className="text-sm leading-relaxed text-offgrid-green/75">
+                                {paymentSettings.gcashInstructions}
+                              </p>
+                              <p className="text-sm font-semibold text-offgrid-green">
+                                After paying, upload your GCash screenshot from your order page so our team can confirm.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                       <div className="bg-offgrid-green/5 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8 text-left">
                         <div className="flex items-start gap-3 mb-4">
                           <Truck className="w-4 h-4 sm:w-5 sm:h-5 text-offgrid-lime flex-shrink-0 mt-0.5" />
@@ -525,8 +549,22 @@ export function CheckoutModal() {
                       </div>
 
                       <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                        {paymentMethod === "gcash" && orderId ? (
+                          <Button
+                            variant="default"
+                            size="lg"
+                            onClick={() => {
+                              handleContinueShopping();
+                              window.location.href = `/account/orders/${orderId}`;
+                            }}
+                            className="h-12 sm:h-14 gap-2"
+                          >
+                            <Upload className="w-4 h-4" />
+                            Upload Payment Proof
+                          </Button>
+                        ) : null}
                         <Button
-                          variant="default"
+                          variant={paymentMethod === "gcash" ? "outline" : "default"}
                           size="lg"
                           onClick={handleContinueShopping}
                           className="h-12 sm:h-14"

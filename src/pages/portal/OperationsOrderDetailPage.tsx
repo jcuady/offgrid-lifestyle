@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, CheckCircle2, ImageOff } from "lucide-react";
 import { usePortalStore, type ManagedCustomOrder } from "@/src/store/usePortalStore";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import {
@@ -29,6 +29,100 @@ import {
 import { Button } from "@/src/components/ui/Button";
 import { CustomOrderFileButton } from "@/src/components/custom-order/CustomOrderFileButton";
 import { localOrderService } from "@/src/services";
+
+function PaymentProofAdminSection({
+  orderId,
+  paymentMethod,
+  paymentStatus,
+  isAdmin,
+  onConfirm,
+}: {
+  orderId: string;
+  paymentMethod: string | null | undefined;
+  paymentStatus: string;
+  isAdmin: boolean;
+  onConfirm: () => void;
+}) {
+  const [proofUrl, setProofUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [confirming, setConfirming] = useState(false);
+
+  const isManualPayment = paymentMethod === "gcash" || paymentMethod === "bank_transfer";
+  const isPaid = paymentStatus === "fully_paid";
+
+  useEffect(() => {
+    localOrderService.fetchOrderProofUrl(orderId).then((url) => {
+      setProofUrl(url);
+      setLoading(false);
+    });
+  }, [orderId]);
+
+  if (!isManualPayment || loading) return null;
+
+  const handleConfirm = async () => {
+    setConfirming(true);
+    await localOrderService.updateOrderField(orderId, { payment_status: "fully_paid" });
+    onConfirm();
+    setConfirming(false);
+  };
+
+  return (
+    <div className="rounded-2xl border border-offgrid-green/10 bg-white p-5 shadow-sm">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-display font-bold text-offgrid-green">Payment proof</h2>
+          <p className="mt-0.5 text-xs text-offgrid-green/55">
+            {proofUrl
+              ? isPaid
+                ? "Payment confirmed."
+                : "Customer uploaded a screenshot — review and confirm below."
+              : "Waiting for customer to upload payment screenshot."}
+          </p>
+        </div>
+        {isAdmin && !isPaid && proofUrl && (
+          <Button
+            variant="default"
+            size="sm"
+            disabled={confirming}
+            onClick={handleConfirm}
+            className="gap-2 shrink-0"
+          >
+            <CheckCircle2 className="h-4 w-4" />
+            {confirming ? "Confirming…" : "Confirm payment received"}
+          </Button>
+        )}
+        {isPaid && (
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-offgrid-lime/15 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-offgrid-lime">
+            <CheckCircle2 className="h-3.5 w-3.5" /> Confirmed
+          </span>
+        )}
+      </div>
+
+      {proofUrl ? (
+        <div className="mt-4">
+          <img
+            src={proofUrl}
+            alt="Customer payment screenshot"
+            className="max-h-96 w-auto rounded-xl border border-offgrid-green/10 object-contain shadow-sm"
+          />
+          <a
+            href={proofUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-2 inline-block text-xs font-medium text-offgrid-green/60 underline hover:text-offgrid-green"
+          >
+            Open full image
+          </a>
+        </div>
+      ) : (
+        <div className="mt-4 flex items-center gap-2 rounded-xl border-2 border-dashed border-offgrid-green/15 px-4 py-6 text-sm text-offgrid-green/40">
+          <ImageOff className="h-4 w-4 shrink-0" />
+          No proof uploaded yet.
+        </div>
+      )}
+    </div>
+  );
+}
 
 function AdminQuoteEditor({
   order,
@@ -379,6 +473,17 @@ export function OperationsOrderDetailPage() {
               ) : null}
             </div>
           </div>
+
+          <PaymentProofAdminSection
+            orderId={retail.id}
+            paymentMethod={retail.paymentMethod}
+            paymentStatus={retail.paymentStatus}
+            isAdmin={isAdmin}
+            onConfirm={() => {
+              updateRetailPaymentStatus(retail.id, "fully_paid");
+              setFeedback(`Payment confirmed for order ${retail.id}.`);
+            }}
+          />
 
           <div className="rounded-2xl border border-offgrid-green/10 bg-white p-5 shadow-sm">
             <h2 className="text-xl font-display font-bold text-offgrid-green">Items</h2>

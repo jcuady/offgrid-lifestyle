@@ -241,6 +241,7 @@ export type Database = {
           line_items: Json | null
           order_type: string
           payment_method: string | null
+          payment_proof_url: string | null
           payment_provider: string | null
           payment_provider_ref: string | null
           payment_status: string
@@ -264,6 +265,7 @@ export type Database = {
           line_items?: Json | null
           order_type: string
           payment_method?: string | null
+          payment_proof_url?: string | null
           payment_provider?: string | null
           payment_provider_ref?: string | null
           payment_status?: string
@@ -287,6 +289,7 @@ export type Database = {
           line_items?: Json | null
           order_type?: string
           payment_method?: string | null
+          payment_proof_url?: string | null
           payment_provider?: string | null
           payment_provider_ref?: string | null
           payment_status?: string

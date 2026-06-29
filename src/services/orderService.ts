@@ -39,7 +39,8 @@ export interface OrderService {
   submitRetailOrder: (input: SubmitRetailOrderInput) => Promise<string>;
   submitCustomOrder: (draft: CustomOrderDraft) => Promise<string>;
   listOrders: () => Promise<{ retailOrders: ManagedRetailOrder[]; customOrders: ManagedCustomOrder[] }>;
-  updateOrderField: (id: string, patch: { status?: string; payment_status?: string }) => Promise<void>;
+  updateOrderField: (id: string, patch: { status?: string; payment_status?: string; payment_proof_url?: string }) => Promise<void>;
+  fetchOrderProofUrl: (orderId: string) => Promise<string | null>;
 }
 
 export const supabaseOrderService: OrderService = {
@@ -209,5 +210,14 @@ export const supabaseOrderService: OrderService = {
   updateOrderField: async (id, patch) => {
     const { error } = await supabase.from("og_orders").update(patch).eq("id", id);
     if (error) console.warn("Supabase order field update failed:", error.message);
+  },
+
+  fetchOrderProofUrl: async (orderId: string): Promise<string | null> => {
+    const { data } = await supabase
+      .from("og_orders")
+      .select("payment_proof_url")
+      .eq("id", orderId)
+      .single();
+    return data?.payment_proof_url ?? null;
   },
 };

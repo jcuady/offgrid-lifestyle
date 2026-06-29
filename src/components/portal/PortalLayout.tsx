@@ -9,6 +9,7 @@ import {
   Palette,
   BarChart3,
   Home,
+  MessageSquare,
   QrCode,
   Menu,
   X,
@@ -57,6 +58,7 @@ const navByRole: Record<Exclude<UserRole, "customer">, NavSection[]> = {
       items: [
         { name: "Orders", to: "/portal/admin/orders", icon: ClipboardList },
         { name: "Products", to: "/portal/admin/products", icon: Package },
+        { name: "Reviews", to: "/portal/admin/reviews", icon: MessageSquare },
         { name: "Payments", to: "/portal/admin/payments", icon: QrCode },
         { name: "Events", to: "/portal/admin/events", icon: CalendarDays },
       ],
@@ -109,8 +111,8 @@ export function PortalLayout({ role }: PortalLayoutProps) {
   const navSections = navByRole[role];
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const logout = () => {
-    localAuthService.logout();
+  const logout = async () => {
+    await localAuthService.logout();
     navigate(PORTAL_LOGIN_PATH);
   };
 

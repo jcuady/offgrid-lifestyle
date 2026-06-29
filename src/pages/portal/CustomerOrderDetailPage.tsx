@@ -1,6 +1,10 @@
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { Star } from "lucide-react";
 import { usePortalStore } from "@/src/store/usePortalStore";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
+import { reviewService } from "@/src/services/reviewService";
+import type { RetailOrderLine } from "@/src/types/commerce";
 import {
   headwearOptionLabel,
   isTowelHeadwearType,
@@ -23,6 +27,149 @@ import {
   paymentStatusClassCustomer,
   hasOfficialCustomQuote,
 } from "@/src/lib/portal";
+
+const inputCls =
+  "w-full rounded-xl border border-offgrid-green/20 bg-white px-3.5 py-2.5 text-sm text-offgrid-green outline-none transition-colors focus:border-offgrid-lime/60 focus:ring-2 focus:ring-offgrid-lime/20";
+
+function StarPicker({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  const [hovered, setHovered] = useState(0);
+  return (
+    <div className="flex gap-1" onMouseLeave={() => setHovered(0)}>
+      {[1, 2, 3, 4, 5].map((n) => (
+        <button
+          key={n}
+          type="button"
+          onClick={() => onChange(n)}
+          onMouseEnter={() => setHovered(n)}
+          className="p-0.5 transition-transform hover:scale-110"
+          aria-label={`${n} star${n !== 1 ? "s" : ""}`}
+        >
+          <Star
+            className={cn("h-7 w-7 transition-colors", n <= (hovered || value) ? "fill-offgrid-lime text-offgrid-lime" : "fill-none text-offgrid-green/25")}
+          />
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function ReviewCard({
+  line,
+  orderId,
+  user,
+}: {
+  line: RetailOrderLine;
+  orderId: string;
+  user: { id: string; name: string; email: string } | null;
+}) {
+  const [checked, setChecked] = useState(false);
+  const [alreadyReviewed, setAlreadyReviewed] = useState(false);
+  const [rating, setRating] = useState(5);
+  const [title, setTitle] = useState("");
+  const [body, setBody] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    reviewService.hasReviewed(orderId, line.productId, user.email).then((has) => {
+      setAlreadyReviewed(has);
+      setChecked(true);
+    });
+  }, [orderId, line.productId, user]);
+
+  const handleSubmit = async () => {
+    if (!user) return;
+    if (!title.trim() || !body.trim()) {
+      setError("Please fill in both the title and review.");
+      return;
+    }
+    setError(null);
+    setSubmitting(true);
+    const result = await reviewService.submit({
+      productId: line.productId,
+      productName: line.name,
+      orderId,
+      customerId: user.id,
+      customerName: user.name,
+      customerEmail: user.email,
+      rating,
+      title,
+      body,
+    });
+    setSubmitting(false);
+    if (result.ok) {
+      setSubmitted(true);
+    } else {
+      setError(result.message ?? "Could not submit review.");
+    }
+  };
+
+  if (!checked) return null;
+
+  if (alreadyReviewed || submitted) {
+    return (
+      <div className="rounded-2xl border border-offgrid-lime/30 bg-offgrid-lime/8 p-5">
+        <div className="flex items-center gap-3">
+          <img src={line.image} alt={line.name} className="h-12 w-12 rounded-lg border border-offgrid-green/10 bg-white object-cover" />
+          <div>
+            <p className="text-sm font-semibold text-offgrid-green">{line.name}</p>
+            <p className="mt-0.5 text-xs font-semibold text-offgrid-lime">
+              {submitted ? "Review submitted — thank you!" : "You've already reviewed this item."}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl border border-offgrid-green/12 bg-white p-5 shadow-sm">
+      <div className="flex items-center gap-3">
+        <img src={line.image} alt={line.name} className="h-12 w-12 shrink-0 rounded-lg border border-offgrid-green/10 bg-white object-cover" />
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold text-offgrid-green">{line.name}</p>
+          <p className="text-xs text-offgrid-green/50">{line.size} · {line.color}</p>
+        </div>
+      </div>
+      <div className="mt-4 space-y-3">
+        <div>
+          <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/50">Rating</p>
+          <StarPicker value={rating} onChange={setRating} />
+        </div>
+        <div>
+          <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/50">Title</p>
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Summarize your experience"
+            className={inputCls}
+          />
+        </div>
+        <div>
+          <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/50">Review</p>
+          <textarea
+            rows={3}
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            placeholder="Tell others what you think about this product…"
+            className={cn(inputCls, "resize-y")}
+          />
+        </div>
+        {error ? <p className="text-xs text-red-600">{error}</p> : null}
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={submitting}
+          className="inline-flex items-center gap-2 rounded-xl bg-offgrid-green px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-offgrid-cream transition-colors hover:bg-offgrid-dark disabled:opacity-60"
+        >
+          {submitting ? "Submitting…" : "Submit review"}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 const quoteBadgeLight =
   "rounded-full border border-offgrid-green/25 bg-offgrid-lime/25 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green";
@@ -248,6 +395,20 @@ export function CustomerOrderDetailPage() {
               </div>
             </div>
           </div>
+
+          {retail.status === "delivered" && retail.lines.length > 0 ? (
+            <div className="mt-6 sm:mt-8">
+              <h2 className="text-lg font-display font-bold text-offgrid-green">Rate your items</h2>
+              <p className="mt-1 text-xs text-offgrid-green/55">
+                Your review helps others discover the right OG gear. Reviews appear on product pages after approval.
+              </p>
+              <div className="mt-4 space-y-4">
+                {retail.lines.map((line) => (
+                  <ReviewCard key={line.lineItemId} line={line} orderId={retail.id} user={user} />
+                ))}
+              </div>
+            </div>
+          ) : null}
         </>
       ) : null}
 

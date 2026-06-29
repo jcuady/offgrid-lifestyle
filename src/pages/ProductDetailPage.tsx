@@ -8,6 +8,7 @@ import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { formatPrice } from "@/src/data/products";
 import { Button } from "@/src/components/ui/Button";
 import { cn } from "@/src/lib/utils";
+import { reviewService, type ProductReview } from "@/src/services/reviewService";
 
 export function ProductDetailPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -25,14 +26,15 @@ export function ProductDetailPage() {
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [selectedColor, setSelectedColor] = useState<string>("");
   const [quantity, setQuantity] = useState(1);
+  const [reviews, setReviews] = useState<ProductReview[]>([]);
 
-  // Set defaults when product loads
   useEffect(() => {
     if (product) {
       setSelectedSize(product.sizes[0]);
       setSelectedColor(product.colors[0]?.value || "");
       setQuantity(1);
       window.scrollTo(0, 0);
+      reviewService.listApprovedByProduct(product.id).then(setReviews);
     }
   }, [product]);
 
@@ -295,6 +297,45 @@ export function ProductDetailPage() {
               </motion.div>
             </div>
           </div>
+
+          {/* Reviews Section */}
+          {reviews.length > 0 ? (
+            <div className="mt-16 border-t border-offgrid-green/10 pt-12">
+              <div className="flex items-baseline gap-4 mb-8">
+                <h2 className="text-2xl font-display font-black text-offgrid-green">Customer Reviews</h2>
+                <div className="flex items-center gap-1.5">
+                  <div className="flex">
+                    {[1, 2, 3, 4, 5].map((n) => {
+                      const avg = reviews.reduce((s, r) => s + r.rating, 0) / reviews.length;
+                      return (
+                        <Star key={n} className={cn("h-4 w-4", n <= Math.round(avg) ? "fill-offgrid-lime text-offgrid-lime" : "fill-none text-offgrid-green/20")} />
+                      );
+                    })}
+                  </div>
+                  <span className="text-sm font-semibold text-offgrid-green">
+                    {(reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)}
+                  </span>
+                  <span className="text-xs text-offgrid-green/50">({reviews.length} review{reviews.length !== 1 ? "s" : ""})</span>
+                </div>
+              </div>
+              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {reviews.map((review) => (
+                  <div key={review.id} className="rounded-2xl border border-offgrid-green/10 bg-white p-5 shadow-sm">
+                    <div className="flex items-center gap-1 mb-2">
+                      {[1, 2, 3, 4, 5].map((n) => (
+                        <Star key={n} className={cn("h-3.5 w-3.5", n <= review.rating ? "fill-offgrid-lime text-offgrid-lime" : "fill-none text-offgrid-green/20")} />
+                      ))}
+                    </div>
+                    <p className="font-semibold text-sm text-offgrid-green">{review.title}</p>
+                    <p className="mt-1.5 text-sm text-offgrid-green/70 leading-relaxed line-clamp-4">{review.body}</p>
+                    <p className="mt-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/40">
+                      {review.customerName} · {new Date(review.createdAt).toLocaleDateString("en-PH", { month: "short", year: "numeric" })}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </div>
       </div>
     </>

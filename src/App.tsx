@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Navbar } from "./components/Navbar";
 import { Footer } from "./components/Footer";
@@ -12,6 +12,7 @@ import { CheckoutModal } from "./components/CheckoutModal";
 import { isAuthScreen, PORTAL_LOGIN_PATH } from "@/src/lib/authRoutes";
 import { usePortalStore, getPortalLandingByRole } from "./store/usePortalStore";
 import { RequirePortalRole } from "./components/portal/RequirePortalRole";
+import { initAuthListener } from "@/src/services/authService";
 
 const HomePage = lazy(() => import("./pages/HomePage").then((m) => ({ default: m.HomePage })));
 const ProductDetailPage = lazy(() =>
@@ -109,6 +110,9 @@ const AdminAuditLogsPage = lazy(() =>
 const AdminSettingsPage = lazy(() =>
   import("./pages/portal/AdminSettingsPage").then((m) => ({ default: m.AdminSettingsPage })),
 );
+const AdminReviewsPage = lazy(() =>
+  import("./pages/portal/AdminReviewsPage").then((m) => ({ default: m.AdminReviewsPage })),
+);
 
 function PortalIndexRedirect() {
   const user = usePortalStore((state) => state.currentUser);
@@ -117,6 +121,10 @@ function PortalIndexRedirect() {
 }
 
 export default function App() {
+  useEffect(() => {
+    initAuthListener();
+  }, []);
+
   return (
     <Router>
       <AppFrame />
@@ -206,6 +214,7 @@ function AppFrame() {
           <Route path="audit-logs" element={<AdminAuditLogsPage />} />
           <Route path="settings" element={<AdminSettingsPage />} />
           <Route path="custom-content" element={<AdminCustomContentPage />} />
+          <Route path="reviews" element={<AdminReviewsPage />} />
         </Route>
 
         <Route

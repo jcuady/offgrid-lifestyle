@@ -1,17 +1,49 @@
-import React, { useMemo, useState } from "react";
+import React, { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Send, Check, AlertCircle, RotateCcw, Loader2 } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { useCustomOrderStore } from "@/src/store/useCustomOrderStore";
 import { usePortalStore } from "@/src/store/usePortalStore";
+import { useStore } from "@/src/store/store";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { localOrderService } from "@/src/services";
 import { CUT_OPTIONS, MATERIAL_OPTIONS, PRINT_OPTIONS, estimateUnitPrice } from "@/src/data/customOptions";
 import { estimateHeadwearUnitPrice, isTowelHeadwearType, resolveHeadwearOptions, headwearOptionLabel } from "@/src/data/customHeadwearOptions";
 import { formatMoney, php } from "@/src/types/commerce";
-import { validateCustomOrderDraft, isValidEmail, isValidPhone } from "@/src/lib/formValidation";
+import {
+  validateCustomOrderDraft,
+  validateDeliveryAddressFields,
+  mergeCustomOrderShipping,
+  normalizeShippingInfo,
+  isValidEmail,
+  isValidPhone,
+  type DeliveryAddressFieldErrors,
+} from "@/src/lib/formValidation";
+import { formatCityProvinceZipLine } from "@/src/lib/portal";
 import { CUSTOMER_SIGN_IN_PATH } from "@/src/lib/authRoutes";
 import { cn } from "@/src/lib/utils";
+
+const PhilippinesAddressFields = lazy(() =>
+  import("@/src/components/checkout/PhilippinesAddressFields").then((m) => ({
+    default: m.PhilippinesAddressFields,
+  })),
+);
+
+const contactInputClass = (hasError: boolean) =>
+  cn(
+    "w-full rounded-xl border border-offgrid-green/20 bg-white px-4 py-3 text-sm text-offgrid-green outline-none transition-all focus:border-offgrid-lime focus:ring-2 focus:ring-offgrid-lime/25",
+    hasError && "border-red-500 focus:border-red-500 focus:ring-red-500/20",
+  );
+
+function scrollToFirstFieldError(container: HTMLElement | null) {
+  if (!container) return;
+  requestAnimationFrame(() => {
+    const target =
+      container.querySelector<HTMLElement>("[data-field-error]") ??
+      container.querySelector<HTMLElement>("[aria-invalid='true']");
+    target?.scrollIntoView({ behavior: "smooth", block: "center" });
+  });
+}
 
 function SummaryRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -24,13 +56,16 @@ function SummaryRow({ label, value }: { label: string; value: React.ReactNode })
 
 export function StepSummary() {
   const navigate = useNavigate();
+  const formRef = useRef<HTMLFormElement>(null);
   const copy = useSiteContentStore((s) => s.customPageContent.wizard.step3);
   const { draft, updateDraft, prevStep, resetDraft } = useCustomOrderStore();
   const currentUser = usePortalStore((s) => s.currentUser);
+  const savedShipping = useStore((s) => s.shippingInfo);
   const [submittedOrderId, setSubmittedOrderId] = useState<string | null>(null);
   const [submittedEmail, setSubmittedEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitErrors, setSubmitErrors] = useState<string[]>([]);
+  const [deliveryFieldErrors, setDeliveryFieldErrors] = useState<DeliveryAddressFieldErrors>({});
   const headwearRaw = useSiteContentStore((s) => s.customHeadwearOptions);
   const headwearOptions = useMemo(() => resolveHeadwearOptions(headwearRaw), [headwearRaw]);
   const teamOrderType =
@@ -58,28 +93,65 @@ export function StepSummary() {
 
   const minQuantity = draft.category === "apparel" ? 10 : 1;
 
+  const deliveryComplete = useMemo(() => {
+    const errors = validateDeliveryAddressFields(mergeCustomOrderShipping(draft));
+    return Object.keys(errors).length === 0;
+  }, [draft]);
+
+  useEffect(() => {
+    if (currentUser?.role !== "customer") return;
+    updateDraft({
+      contactName: draft.contactName || currentUser.name,
+      contactEmail: currentUser.email,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- prefill once per session
+  }, [currentUser?.id]);
+
+  useEffect(() => {
+    if (draft.shippingInfo.regionCode) return;
+    if (!savedShipping.regionCode) return;
+    updateDraft({ shippingInfo: normalizeShippingInfo(savedShipping) });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- prefill saved address once
+  }, []);
+
+  const clearDeliveryError = (field: keyof DeliveryAddressFieldErrors) => {
+    setDeliveryFieldErrors((prev) => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+
   const canSubmit =
     draft.contactName.trim() !== "" &&
     isValidEmail(draft.contactEmail) &&
     isValidPhone(draft.contactPhone) &&
     Boolean(draft.orderSheetFileName) &&
-    draft.quantity >= minQuantity;
+    draft.quantity >= minQuantity &&
+    deliveryComplete;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submitting) return;
 
+    const deliveryErrors = validateDeliveryAddressFields(mergeCustomOrderShipping(draft));
+    setDeliveryFieldErrors(deliveryErrors);
+
     const errors = validateCustomOrderDraft(draft);
     if (errors.length > 0) {
       setSubmitErrors(errors);
+      scrollToFirstFieldError(formRef.current);
       return;
     }
 
     setSubmitErrors([]);
+    setDeliveryFieldErrors({});
     setSubmitting(true);
     try {
       const submittedDraft = {
         ...draft,
+        shippingInfo: mergeCustomOrderShipping(draft),
         estimatedTotal,
         depositRequired: estimatedDeposit,
         status: "pending_deposit" as const,
@@ -147,7 +219,7 @@ export function StepSummary() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
+    <form ref={formRef} onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
       <div>
         <h2 className="text-xl sm:text-2xl font-display font-bold text-offgrid-green mb-2">{copy.title}</h2>
         <p className="text-sm text-offgrid-green/60">{copy.description}</p>
@@ -171,6 +243,14 @@ export function StepSummary() {
         <SummaryRow label="Print" value={labelFor(PRINT_OPTIONS, draft.printMethod)} />
         <SummaryRow label="Design" value={draft.designFileName ?? "Brief only — design support requested"} />
         <SummaryRow label="Order sheet" value={draft.orderSheetFileName ?? "No file uploaded"} />
+        {draft.shippingInfo.barangay && draft.shippingInfo.city ? (
+          <SummaryRow
+            label="Delivery"
+            value={formatCityProvinceZipLine(mergeCustomOrderShipping(draft))}
+          />
+        ) : (
+          <SummaryRow label="Delivery" value="Add address below" />
+        )}
         <SummaryRow
           label="Quantity"
           value={
@@ -228,9 +308,13 @@ export function StepSummary() {
               type="text"
               required
               value={draft.contactName}
-              onChange={(e) => updateDraft({ contactName: e.target.value })}
-              className="w-full rounded-xl border border-offgrid-green/20 bg-white px-4 py-3 text-sm text-offgrid-green outline-none transition-all focus:border-offgrid-lime focus:ring-2 focus:ring-offgrid-lime/25"
+              onChange={(e) => {
+                updateDraft({ contactName: e.target.value });
+                setSubmitErrors([]);
+              }}
+              className={contactInputClass(submitErrors.some((m) => m.includes("Full name")))}
               placeholder="Juan Dela Cruz"
+              aria-invalid={submitErrors.some((m) => m.includes("Full name"))}
             />
           </div>
           <div>
@@ -240,9 +324,16 @@ export function StepSummary() {
             <input
               type="email"
               required
+              readOnly={currentUser?.role === "customer"}
               value={draft.contactEmail}
-              onChange={(e) => updateDraft({ contactEmail: e.target.value })}
-              className="w-full rounded-xl border border-offgrid-green/20 bg-white px-4 py-3 text-sm text-offgrid-green outline-none transition-all focus:border-offgrid-lime focus:ring-2 focus:ring-offgrid-lime/25"
+              onChange={(e) => {
+                updateDraft({ contactEmail: e.target.value });
+                setSubmitErrors([]);
+              }}
+              className={cn(
+                contactInputClass(submitErrors.some((m) => m.includes("email"))),
+                currentUser?.role === "customer" && "cursor-not-allowed bg-offgrid-cream/60",
+              )}
               placeholder="juan@email.com"
             />
           </div>
@@ -254,9 +345,13 @@ export function StepSummary() {
               type="tel"
               required
               value={draft.contactPhone}
-              onChange={(e) => updateDraft({ contactPhone: e.target.value })}
-              className="w-full rounded-xl border border-offgrid-green/20 bg-white px-4 py-3 text-sm text-offgrid-green outline-none transition-all focus:border-offgrid-lime focus:ring-2 focus:ring-offgrid-lime/25"
+              onChange={(e) => {
+                updateDraft({ contactPhone: e.target.value });
+                setSubmitErrors([]);
+              }}
+              className={contactInputClass(submitErrors.some((m) => m.includes("phone")))}
               placeholder="+63 917 123 4567"
+              aria-invalid={submitErrors.some((m) => m.includes("phone"))}
             />
           </div>
           <div className="md:col-span-2">
@@ -272,6 +367,29 @@ export function StepSummary() {
             />
           </div>
         </div>
+      </div>
+
+      <div>
+        <h3 className="mb-2 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-offgrid-green/50">
+          Delivery address *
+        </h3>
+        <p className="mb-4 text-sm text-offgrid-green/60">
+          Where should we ship your finished order? Select manually or use quick-fill search and map.
+        </p>
+        <Suspense
+          fallback={
+            <p className="rounded-xl border border-offgrid-green/15 bg-white px-4 py-6 text-sm text-offgrid-green/60">
+              Loading Philippines address options…
+            </p>
+          }
+        >
+          <PhilippinesAddressFields
+            value={draft.shippingInfo}
+            onChange={(shippingInfo) => updateDraft({ shippingInfo })}
+            errors={deliveryFieldErrors}
+            onClearError={clearDeliveryError}
+          />
+        </Suspense>
       </div>
 
       {submitErrors.length > 0 ? (

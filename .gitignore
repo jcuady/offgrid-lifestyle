@@ -7,3 +7,17 @@ __MACOSX/
 *.log
 .env*
 !.env.example
+
+# Local credentials / export artifacts. Keep secrets out of git.
+*credentials*
+*service-role*
+*service_role*
+*vapid-private*
+
+.vercel
+
+# Large local design-source assets (not used by the build; exceed GitHub size limits)
+og photos/
+Offgrid - Branding Guide/
+dist/OG logo/
+*.zip

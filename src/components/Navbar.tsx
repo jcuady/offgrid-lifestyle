@@ -8,9 +8,13 @@ import { LOGO_WORDMARK_WHITE } from "@/src/lib/brandAssets";
 import { motion, AnimatePresence } from "motion/react";
 import { useStore } from "@/src/store/store";
 import { usePortalStore } from "@/src/store/usePortalStore";
+import { localAuthService } from "@/src/services";
 import { formatPrice } from "@/src/data/products";
 import { siteContainer } from "@/src/lib/brandLayout";
 import { CUSTOMER_SIGN_IN_PATH, CUSTOMER_SIGN_UP_PATH, PORTAL_LOGIN_PATH } from "@/src/lib/authRoutes";
+import { NotificationBell } from "@/src/components/notifications/NotificationBell";
+import { usePwaStandalone } from "@/src/hooks/usePwaStandalone";
+import { openInstallGuide } from "@/src/lib/pwa";
 
 const ACCOUNT_MENU_ID = "navbar-account-menu";
 
@@ -38,11 +42,11 @@ export function Navbar() {
     })),
   );
   const currentUser = usePortalStore((state) => state.currentUser);
-  const logout = usePortalStore((state) => state.logout);
   const navigate = useNavigate();
   const location = useLocation();
   const cartDropdownRef = useRef<HTMLDivElement | null>(null);
   const accountDropdownRef = useRef<HTMLDivElement | null>(null);
+  const isStandalone = usePwaStandalone();
 
   const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const cartSubtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -100,9 +104,9 @@ export function Navbar() {
     setIsMobileMenuOpen(false);
   };
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
     const role = currentUser?.role;
-    logout();
+    await localAuthService.logout();
     setIsAccountMenuOpen(false);
     setIsMobileMenuOpen(false);
     if (role === "admin" || role === "staff") {
@@ -128,28 +132,43 @@ export function Navbar() {
     ? currentUser.name?.trim().split(/\s+/)[0] || currentUser.email.split("@")[0]
     : "Sign In";
 
+  const openInstallGuideFromMenu = () => {
+    setIsAccountMenuOpen(false);
+    setIsMobileMenuOpen(false);
+    openInstallGuide();
+  };
+
+  const installItem: AccountMenuItem = { label: "Install App", onSelect: openInstallGuideFromMenu };
+
   const buildAccountMenuItems = (): AccountMenuItem[] => {
+    const withInstall = (items: AccountMenuItem[]): AccountMenuItem[] => {
+      if (isStandalone) return items;
+      const dangerIndex = items.findIndex((i) => i.tone === "danger");
+      if (dangerIndex === -1) return [...items, installItem];
+      return [...items.slice(0, dangerIndex), installItem, ...items.slice(dangerIndex)];
+    };
+
     if (!currentUser) {
-      return [
+      return withInstall([
         { label: "Sign In", onSelect: () => handleNavigate(CUSTOMER_SIGN_IN_PATH) },
         { label: "Create Account", onSelect: () => handleNavigate(CUSTOMER_SIGN_UP_PATH) },
         { label: "Custom Order", onSelect: () => handleNavigate("/custom/order") },
-      ];
+      ]);
     }
     if (currentUser.role === "customer") {
-      return [
+      return withInstall([
         { label: "My Orders", onSelect: () => handleNavigate("/account/orders") },
         { label: "Profile", onSelect: () => handleNavigate("/account/profile") },
         { label: "Custom Order", onSelect: () => handleNavigate("/custom") },
         { label: "Sign out", onSelect: handleSignOut, tone: "danger" },
-      ];
+      ]);
     }
     const portalBase = currentUser.role === "admin" ? "/portal/admin" : "/portal/staff";
-    return [
+    return withInstall([
       { label: "Portal Dashboard", onSelect: () => handleNavigate(portalBase) },
       { label: "Operations Orders", onSelect: () => handleNavigate(`${portalBase}/orders`) },
       { label: "Sign out", onSelect: handleSignOut, tone: "danger" },
-    ];
+    ]);
   };
 
   const accountPanelClass =
@@ -194,7 +213,8 @@ export function Navbar() {
     <>
       <header
         className={cn(
-          "fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out",
+          "fixed left-0 right-0 z-50 transition-all duration-300 ease-in-out top-[var(--pwa-install-banner-height,0px)]",
+          isStandalone && "pt-[env(safe-area-inset-top)]",
           navSolid ? "bg-offgrid-green/95 backdrop-blur-md py-3 shadow-sm" : "bg-transparent py-5",
         )}
       >
@@ -277,6 +297,19 @@ export function Navbar() {
             <Button variant="secondary" size="sm" className="hidden md:inline-flex" onClick={() => handleNavigate("/shop")}>
               Shop Now
             </Button>
+
+            {currentUser ? (
+              <NotificationBell
+                variant="dark"
+                settingsHref={
+                  currentUser.role === "customer"
+                    ? "/account/profile"
+                    : currentUser.role === "admin"
+                      ? "/portal/admin/settings"
+                      : undefined
+                }
+              />
+            ) : null}
 
             <div className="relative" ref={accountDropdownRef}>
               <button

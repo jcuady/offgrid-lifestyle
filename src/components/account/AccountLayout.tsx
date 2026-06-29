@@ -4,6 +4,7 @@ import { Package2, UserRound, LogOut, ChevronRight, ArrowLeft } from "lucide-rea
 import { accountContainer } from "@/src/lib/brandLayout";
 import { cn } from "@/src/lib/utils";
 import { usePortalStore } from "@/src/store/usePortalStore";
+import { localAuthService } from "@/src/services";
 
 export type AccountSection = "orders" | "profile";
 
@@ -47,10 +48,9 @@ export function AccountLayout({
 }: AccountLayoutProps) {
   const navigate = useNavigate();
   const user = usePortalStore((state) => state.currentUser);
-  const logout = usePortalStore((state) => state.logout);
 
-  const handleSignOut = () => {
-    logout();
+  const handleSignOut = async () => {
+    await localAuthService.logout();
     navigate("/");
   };
 

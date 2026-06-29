@@ -23,6 +23,7 @@ import { cn } from "@/src/lib/utils";
 import { usePortalStore, type UserRole } from "@/src/store/usePortalStore";
 import { localAuthService } from "@/src/services";
 import { PORTAL_LOGIN_PATH } from "@/src/lib/authRoutes";
+import { NotificationBell } from "@/src/components/notifications/NotificationBell";
 
 interface PortalLayoutProps {
   role: Exclude<UserRole, "customer">;
@@ -204,6 +205,10 @@ export function PortalLayout({ role }: PortalLayoutProps) {
             <img src={LOGO_WORDMARK_WHITE} alt="OffGrid" className="h-7 w-auto" />
           </button>
           <div className="flex items-center gap-3">
+            <NotificationBell
+              variant="dark"
+              settingsHref={role === "admin" ? "/portal/admin/settings" : undefined}
+            />
             <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-offgrid-cream/60">
               {labelsByRole[role]}
             </span>
@@ -233,6 +238,11 @@ export function PortalLayout({ role }: PortalLayoutProps) {
         )}
 
         <main className="portal-surface min-h-screen min-w-0 bg-offgrid-cream">
+          <div className="hidden lg:flex sticky top-0 z-30 items-center justify-end border-b border-offgrid-green/10 bg-offgrid-cream/95 px-8 py-3 backdrop-blur-sm">
+            <NotificationBell
+              settingsHref={role === "admin" ? "/portal/admin/settings" : undefined}
+            />
+          </div>
           <Outlet />
         </main>
       </div>

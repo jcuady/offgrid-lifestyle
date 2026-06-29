@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { X, ShoppingBag, Minus, Plus, Star, ArrowRight, Zap } from "lucide-react";
+import { X, Minus, Plus, Star, ArrowRight, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useShallow } from "zustand/react/shallow";
 import { formatPrice, type Product } from "@/src/data/products";
@@ -14,10 +14,9 @@ interface ProductQuickViewModalProps {
 }
 
 export function ProductQuickViewModal({ product, onClose }: ProductQuickViewModalProps) {
-  const { addToCart, toggleCart, openCheckout } = useStore(
+  const { addToCart, openCheckout } = useStore(
     useShallow((state) => ({
       addToCart: state.addToCart,
-      toggleCart: state.toggleCart,
       openCheckout: state.openCheckout,
     })),
   );
@@ -77,7 +76,6 @@ export function ProductQuickViewModal({ product, onClose }: ProductQuickViewModa
     if (!item) return;
     addToCart(item);
     onClose();
-    toggleCart(true);
   };
 
   const handleBuyNow = () => {
@@ -332,9 +330,8 @@ export function ProductQuickViewModal({ product, onClose }: ProductQuickViewModa
                   variant="default"
                   size="lg"
                   onClick={handleAddToCart}
-                  className="group h-12 w-full sm:h-14 sm:flex-[1.5]"
+                  className="h-12 w-full text-sm font-semibold tracking-wide sm:h-14 sm:flex-[1.5]"
                 >
-                  <ShoppingBag className="mr-2 h-4 w-4 shrink-0 transition-transform group-hover:scale-110" />
                   <span className="truncate">Add to cart · {formatPrice(lineTotal)}</span>
                 </Button>
                 <Button

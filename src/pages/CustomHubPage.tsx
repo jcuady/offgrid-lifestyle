@@ -11,7 +11,7 @@ import {
   Minimize2,
 } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
-import { hydrateCustomContentFromSupabase } from "@/src/services";
+import { hydrateSiteContentFromSupabase } from "@/src/services";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { buildProcessSteps, type ProcessStepMeta } from "@/src/components/custom-order/customOrderFlowMeta";
 import { GuideSectionProse } from "@/src/components/custom/GuideSectionProse";
@@ -249,7 +249,7 @@ export function CustomHubPage() {
   const location = useLocation();
 
   useEffect(() => {
-    void hydrateCustomContentFromSupabase();
+    void hydrateSiteContentFromSupabase();
   }, []);
 
   const hub = useSiteContentStore((state) => state.customPageContent.hub);

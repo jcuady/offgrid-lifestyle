@@ -11,13 +11,15 @@ export default defineConfig(() => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
-        injectRegister: 'auto',
+        injectRegister: null,
         strategies: 'injectManifest',
         srcDir: 'src',
         filename: 'sw.ts',
         manifest: false,
         injectManifest: {
           globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+          globIgnores: ['**/vendor-ph-addresses*.js', '**/vendor-leaflet*.js', '**/PhilippinesAddressFields*.js', '**/PhilippinesLocationMap*.js'],
+          maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         },
         devOptions: {
           enabled: false,
@@ -37,6 +39,12 @@ export default defineConfig(() => {
           manualChunks(id) {
             if (id.includes('node_modules/xlsx')) {
               return 'vendor-xlsx';
+            }
+            if (id.includes('ph-addresses-locations')) {
+              return 'vendor-ph-addresses';
+            }
+            if (id.includes('node_modules/leaflet')) {
+              return 'vendor-leaflet';
             }
           },
         },

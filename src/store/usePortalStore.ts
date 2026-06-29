@@ -5,10 +5,11 @@
  */
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { CustomOrderDraft, Money, Order, OrderStatus, PaymentStatus } from "@/src/types/commerce";
+import type { CustomOrderDraft, Money, Order, OrderStatus, PaymentStatus, ShippingInfo } from "@/src/types/commerce";
 import type { AuditLogEntry, CreateStaffInput, ManagedStaffAccount, RegisterCustomerInput, RegisteredCustomer } from "@/src/types/portal";
 import { DEFAULT_COD_SETTINGS, DEFAULT_PAYMONGO_SETTINGS, type CodSettings, type PayMongoSettings } from "@/src/types/payments";
-import { createAuditEntry, prependAuditLog } from "@/src/lib/portalAudit";
+import { appendAudit, type AuditInput } from "@/src/lib/portalAudit";
+import { notifyCustomerOrderEvent } from "@/src/lib/customerNotifications";
 
 export type UserRole = "customer" | "admin" | "staff";
 
@@ -61,6 +62,7 @@ export interface ManagedCustomOrder {
   quoteInternalNotes: string;
   quotedAt: string | null;
   quotedBy: string | null;
+  shippingInfo: ShippingInfo | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -133,6 +135,7 @@ function migrateManagedCustomOrderRecord(raw: unknown): ManagedCustomOrder {
     quoteInternalNotes: c.quoteInternalNotes ?? "",
     quotedAt: c.quotedAt ?? null,
     quotedBy: c.quotedBy ?? null,
+    shippingInfo: c.shippingInfo ?? null,
   } as ManagedCustomOrder;
 }
 
@@ -150,7 +153,7 @@ interface PortalState {
   loginAsRole: (role: UserRole) => void;
   registerCustomer: (input: RegisterCustomerInput) => { ok: boolean; message?: string; userId?: string };
   logout: () => void;
-  recordAudit: (entry: Omit<AuditLogEntry, "id" | "createdAt">) => void;
+  recordAudit: (entry: AuditInput) => void;
   createStaffAccount: (input: CreateStaffInput) => { ok: boolean; message?: string; accountId?: string };
   setStaffAccountStatus: (staffId: string, status: ManagedStaffAccount["status"]) => { ok: boolean; message?: string };
   resetStaffPassword: (staffId: string, newPassword: string) => { ok: boolean; message?: string };
@@ -165,29 +168,7 @@ interface PortalState {
   updatePaymentSettings: (patch: Partial<PaymentSettings>) => void;
 }
 
-const DEMO_ACCOUNTS: DemoAccount[] = [
-  {
-    id: "cust-001",
-    name: "Juan Dela Cruz",
-    email: "customer@offgrid.test",
-    password: "offgrid123",
-    role: "customer",
-  },
-  {
-    id: "admin-001",
-    name: "John Doe",
-    email: "admin@offgrid.test",
-    password: "offgrid123",
-    role: "admin",
-  },
-  {
-    id: "staff-001",
-    name: "Marco Reyes",
-    email: "staff@offgrid.test",
-    password: "offgrid123",
-    role: "staff",
-  },
-];
+const DEMO_ACCOUNTS: DemoAccount[] = [];
 
 function loginAccounts(
   state: Pick<PortalState, "demoAccounts" | "managedStaffAccounts" | "registeredCustomers">,
@@ -248,7 +229,7 @@ export function resolvePostLoginPath(role: UserRole, from?: string | null): stri
 export const usePortalStore = create<PortalState>()(
   persist(
     (set, get) => ({
-      demoAccounts: DEMO_ACCOUNTS,
+      demoAccounts: import.meta.env.DEV ? DEMO_ACCOUNTS : [],
       currentUser: null,
       retailOrders: [],
       customOrders: [],
@@ -281,41 +262,36 @@ export const usePortalStore = create<PortalState>()(
           registeredCustomers: state.registeredCustomers.map((account) =>
             account.id === match.id ? { ...account, lastLoginAt: now, updatedAt: now } : account,
           ),
-          auditLogs: prependAuditLog(
-            state.auditLogs,
-            createAuditEntry({
-              action: "auth.login",
-              actorId: safeUser.id,
-              actorEmail: safeUser.email,
-              actorRole: safeUser.role,
-              targetType: "session",
-              targetId: safeUser.id,
-              summary: `${safeUser.email} signed in`,
-            }),
-          ),
+          auditLogs: appendAudit(state.auditLogs, {
+            action: "auth.login",
+            actorId: safeUser.id,
+            actorEmail: safeUser.email,
+            actorRole: safeUser.role,
+            targetType: "session",
+            targetId: safeUser.id,
+            summary: `${safeUser.email} signed in`,
+          }),
         }));
         return { ok: true };
       },
 
       loginAsRole: (role) => {
+        if (!import.meta.env.DEV) return;
         const account = get().demoAccounts.find((entry) => entry.role === role);
         if (!account) return;
         const { password: _password, ...safeUser } = account;
         set((state) => ({
           currentUser: safeUser,
-          auditLogs: prependAuditLog(
-            state.auditLogs,
-            createAuditEntry({
-              action: "auth.login",
-              actorId: safeUser.id,
-              actorEmail: safeUser.email,
-              actorRole: safeUser.role,
-              targetType: "session",
-              targetId: safeUser.id,
-              summary: `${safeUser.email} signed in (demo role)`,
-              metadata: { demo: true },
-            }),
-          ),
+          auditLogs: appendAudit(state.auditLogs, {
+            action: "auth.login",
+            actorId: safeUser.id,
+            actorEmail: safeUser.email,
+            actorRole: safeUser.role,
+            targetType: "session",
+            targetId: safeUser.id,
+            summary: `${safeUser.email} signed in (demo role)`,
+            metadata: { demo: true },
+          }),
         }));
       },
 
@@ -352,19 +328,16 @@ export const usePortalStore = create<PortalState>()(
         set((state) => ({
           registeredCustomers: [account, ...state.registeredCustomers],
           currentUser: safeUser,
-          auditLogs: prependAuditLog(
-            state.auditLogs,
-            createAuditEntry({
-              action: "auth.register",
-              actorId: safeUser.id,
-              actorEmail: safeUser.email,
-              actorRole: safeUser.role,
-              targetType: "user",
-              targetId: safeUser.id,
-              summary: `Customer account created for ${safeUser.email}`,
-              metadata: { customerId: safeUser.id },
-            }),
-          ),
+          auditLogs: appendAudit(state.auditLogs, {
+            action: "auth.register",
+            actorId: safeUser.id,
+            actorEmail: safeUser.email,
+            actorRole: safeUser.role,
+            targetType: "user",
+            targetId: safeUser.id,
+            summary: `Customer account created for ${safeUser.email}`,
+            metadata: { customerId: safeUser.id },
+          }),
         }));
 
         return { ok: true, userId: account.id };
@@ -378,24 +351,21 @@ export const usePortalStore = create<PortalState>()(
         }
         set((state) => ({
           currentUser: null,
-          auditLogs: prependAuditLog(
-            state.auditLogs,
-            createAuditEntry({
-              action: "auth.logout",
-              actorId: user.id,
-              actorEmail: user.email,
-              actorRole: user.role,
-              targetType: "session",
-              targetId: user.id,
-              summary: `${user.email} signed out`,
-            }),
-          ),
+          auditLogs: appendAudit(state.auditLogs, {
+            action: "auth.logout",
+            actorId: user.id,
+            actorEmail: user.email,
+            actorRole: user.role,
+            targetType: "session",
+            targetId: user.id,
+            summary: `${user.email} signed out`,
+          }),
         }));
       },
 
       recordAudit: (entry) =>
         set((state) => ({
-          auditLogs: prependAuditLog(state.auditLogs, createAuditEntry(entry)),
+          auditLogs: appendAudit(state.auditLogs, entry),
         })),
 
       createStaffAccount: (input) => {
@@ -433,19 +403,16 @@ export const usePortalStore = create<PortalState>()(
 
         set((state) => ({
           managedStaffAccounts: [account, ...state.managedStaffAccounts],
-          auditLogs: prependAuditLog(
-            state.auditLogs,
-            createAuditEntry({
-              action: "staff.created",
-              actorId: admin.id,
-              actorEmail: admin.email,
-              actorRole: admin.role,
-              targetType: "user",
-              targetId: account.id,
-              summary: `Created staff account for ${account.name} (${account.email})`,
-              metadata: { staffId: account.id, staffEmail: account.email },
-            }),
-          ),
+          auditLogs: appendAudit(state.auditLogs, {
+            action: "staff.created",
+            actorId: admin.id,
+            actorEmail: admin.email,
+            actorRole: admin.role,
+            targetType: "user",
+            targetId: account.id,
+            summary: `Created staff account for ${account.name} (${account.email})`,
+            metadata: { staffId: account.id, staffEmail: account.email },
+          }),
         }));
 
         return { ok: true, accountId: account.id };
@@ -466,19 +433,16 @@ export const usePortalStore = create<PortalState>()(
           managedStaffAccounts: state.managedStaffAccounts.map((account) =>
             account.id === staffId ? { ...account, status, updatedAt: now } : account,
           ),
-          auditLogs: prependAuditLog(
-            state.auditLogs,
-            createAuditEntry({
-              action,
-              actorId: admin.id,
-              actorEmail: admin.email,
-              actorRole: admin.role,
-              targetType: "user",
-              targetId: staffId,
-              summary: `${status === "active" ? "Reactivated" : "Deactivated"} staff account ${target.email}`,
-              metadata: { staffId, staffEmail: target.email, status },
-            }),
-          ),
+          auditLogs: appendAudit(state.auditLogs, {
+            action,
+            actorId: admin.id,
+            actorEmail: admin.email,
+            actorRole: admin.role,
+            targetType: "user",
+            targetId: staffId,
+            summary: `${status === "active" ? "Reactivated" : "Deactivated"} staff account ${target.email}`,
+            metadata: { staffId, staffEmail: target.email, status },
+          }),
         }));
 
         return { ok: true };
@@ -501,19 +465,16 @@ export const usePortalStore = create<PortalState>()(
           managedStaffAccounts: state.managedStaffAccounts.map((account) =>
             account.id === staffId ? { ...account, password, updatedAt: now } : account,
           ),
-          auditLogs: prependAuditLog(
-            state.auditLogs,
-            createAuditEntry({
-              action: "staff.password_reset",
-              actorId: admin.id,
-              actorEmail: admin.email,
-              actorRole: admin.role,
-              targetType: "user",
-              targetId: staffId,
-              summary: `Reset password for staff account ${target.email}`,
-              metadata: { staffId, staffEmail: target.email },
-            }),
-          ),
+          auditLogs: appendAudit(state.auditLogs, {
+            action: "staff.password_reset",
+            actorId: admin.id,
+            actorEmail: admin.email,
+            actorRole: admin.role,
+            targetType: "user",
+            targetId: staffId,
+            summary: `Reset password for staff account ${target.email}`,
+            metadata: { staffId, staffEmail: target.email },
+          }),
         }));
 
         return { ok: true };
@@ -563,6 +524,7 @@ export const usePortalStore = create<PortalState>()(
             designNotes: draft.designNotes,
             estimatedTotal: draft.estimatedTotal,
             depositRequired: draft.depositRequired,
+            shippingInfo: draft.shippingInfo,
             ...defaultQuoteFields(),
             createdAt: draft.createdAt ?? now,
             updatedAt: now,
@@ -581,21 +543,25 @@ export const usePortalStore = create<PortalState>()(
           ),
           auditLogs:
             actor && previous && previous.status !== status
-              ? prependAuditLog(
-                  state.auditLogs,
-                  createAuditEntry({
-                    action: "order.retail_status_changed",
-                    actorId: actor.id,
-                    actorEmail: actor.email,
-                    actorRole: actor.role,
-                    targetType: "order",
-                    targetId: orderId,
-                    summary: `Retail order ${orderId}: ${previous.status} → ${status}`,
-                    metadata: { channel: "shop", from: previous.status, to: status },
-                  }),
-                )
+              ? appendAudit(state.auditLogs, {
+                  action: "order.retail_status_changed",
+                  actorId: actor.id,
+                  actorEmail: actor.email,
+                  actorRole: actor.role,
+                  targetType: "order",
+                  targetId: orderId,
+                  summary: `Retail order ${orderId}: ${previous.status} → ${status}`,
+                  metadata: { channel: "shop", from: previous.status, to: status },
+                })
               : state.auditLogs,
         }));
+        if (previous && previous.status !== status) {
+          if (status === "shipped") {
+            void notifyCustomerOrderEvent(previous.customerId, orderId, "shipped");
+          } else if (status === "delivered") {
+            void notifyCustomerOrderEvent(previous.customerId, orderId, "delivered");
+          }
+        }
       },
 
       updateRetailPaymentStatus: (orderId, paymentStatus) => {
@@ -609,21 +575,25 @@ export const usePortalStore = create<PortalState>()(
           ),
           auditLogs:
             actor && previous && previous.paymentStatus !== paymentStatus
-              ? prependAuditLog(
-                  state.auditLogs,
-                  createAuditEntry({
-                    action: "order.retail_payment_changed",
-                    actorId: actor.id,
-                    actorEmail: actor.email,
-                    actorRole: actor.role,
-                    targetType: "order",
-                    targetId: orderId,
-                    summary: `Retail order ${orderId} payment: ${previous.paymentStatus} → ${paymentStatus}`,
-                    metadata: { channel: "shop", from: previous.paymentStatus, to: paymentStatus },
-                  }),
-                )
+              ? appendAudit(state.auditLogs, {
+                  action: "order.retail_payment_changed",
+                  actorId: actor.id,
+                  actorEmail: actor.email,
+                  actorRole: actor.role,
+                  targetType: "order",
+                  targetId: orderId,
+                  summary: `Retail order ${orderId} payment: ${previous.paymentStatus} → ${paymentStatus}`,
+                  metadata: { channel: "shop", from: previous.paymentStatus, to: paymentStatus },
+                })
               : state.auditLogs,
         }));
+        if (
+          previous &&
+          previous.paymentStatus !== paymentStatus &&
+          (paymentStatus === "deposit_paid" || paymentStatus === "fully_paid")
+        ) {
+          void notifyCustomerOrderEvent(previous.customerId, orderId, "payment_confirmed");
+        }
       },
 
       updateCustomOrderStatus: (orderId, status) => {
@@ -635,21 +605,25 @@ export const usePortalStore = create<PortalState>()(
           ),
           auditLogs:
             actor && previous && previous.status !== status
-              ? prependAuditLog(
-                  state.auditLogs,
-                  createAuditEntry({
-                    action: "order.custom_status_changed",
-                    actorId: actor.id,
-                    actorEmail: actor.email,
-                    actorRole: actor.role,
-                    targetType: "order",
-                    targetId: orderId,
-                    summary: `Custom order ${orderId}: ${previous.status} → ${status}`,
-                    metadata: { channel: "custom", from: previous.status, to: status },
-                  }),
-                )
+              ? appendAudit(state.auditLogs, {
+                  action: "order.custom_status_changed",
+                  actorId: actor.id,
+                  actorEmail: actor.email,
+                  actorRole: actor.role,
+                  targetType: "order",
+                  targetId: orderId,
+                  summary: `Custom order ${orderId}: ${previous.status} → ${status}`,
+                  metadata: { channel: "custom", from: previous.status, to: status },
+                })
               : state.auditLogs,
         }));
+        if (previous && previous.status !== status) {
+          if (status === "shipped") {
+            void notifyCustomerOrderEvent(previous.customerId, orderId, "shipped");
+          } else if (status === "delivered") {
+            void notifyCustomerOrderEvent(previous.customerId, orderId, "delivered");
+          }
+        }
       },
 
       updateCustomPaymentStatus: (orderId, paymentStatus) => {
@@ -663,21 +637,25 @@ export const usePortalStore = create<PortalState>()(
           ),
           auditLogs:
             actor && previous && previous.paymentStatus !== paymentStatus
-              ? prependAuditLog(
-                  state.auditLogs,
-                  createAuditEntry({
-                    action: "order.custom_payment_changed",
-                    actorId: actor.id,
-                    actorEmail: actor.email,
-                    actorRole: actor.role,
-                    targetType: "order",
-                    targetId: orderId,
-                    summary: `Custom order ${orderId} payment: ${previous.paymentStatus} → ${paymentStatus}`,
-                    metadata: { channel: "custom", from: previous.paymentStatus, to: paymentStatus },
-                  }),
-                )
+              ? appendAudit(state.auditLogs, {
+                  action: "order.custom_payment_changed",
+                  actorId: actor.id,
+                  actorEmail: actor.email,
+                  actorRole: actor.role,
+                  targetType: "order",
+                  targetId: orderId,
+                  summary: `Custom order ${orderId} payment: ${previous.paymentStatus} → ${paymentStatus}`,
+                  metadata: { channel: "custom", from: previous.paymentStatus, to: paymentStatus },
+                })
               : state.auditLogs,
         }));
+        if (
+          previous &&
+          previous.paymentStatus !== paymentStatus &&
+          (paymentStatus === "deposit_paid" || paymentStatus === "fully_paid")
+        ) {
+          void notifyCustomerOrderEvent(previous.customerId, orderId, "payment_confirmed");
+        }
       },
 
       updateCustomOrderQuote: (orderId, update) => {
@@ -716,25 +694,26 @@ export const usePortalStore = create<PortalState>()(
             };
           }),
           auditLogs: hasOfficial
-            ? prependAuditLog(
-                state.auditLogs,
-                createAuditEntry({
-                  action: "order.custom_quote_updated",
-                  actorId: actor.id,
-                  actorEmail: actor.email,
-                  actorRole: actor.role,
-                  targetType: "order",
-                  targetId: orderId,
-                  summary: `Official quote set for custom order ${orderId}`,
-                  metadata: {
-                    orderId,
-                    officialTotal: update.officialTotal,
-                    officialDeposit,
-                  },
-                }),
-              )
+            ? appendAudit(state.auditLogs, {
+                action: "order.custom_quote_updated",
+                actorId: actor.id,
+                actorEmail: actor.email,
+                actorRole: actor.role,
+                targetType: "order",
+                targetId: orderId,
+                summary: `Official quote set for custom order ${orderId}`,
+                metadata: {
+                  orderId,
+                  officialTotal: update.officialTotal,
+                  officialDeposit,
+                },
+              })
             : state.auditLogs,
         }));
+        if (hasOfficial) {
+          const order = get().customOrders.find((e) => e.id === orderId);
+          void notifyCustomerOrderEvent(order?.customerId, orderId, "quote_ready");
+        }
       },
 
       updatePaymentSettings: (patch) =>
@@ -748,33 +727,30 @@ export const usePortalStore = create<PortalState>()(
                 patch.gcashInstructions !== undefined ||
                 patch.paymongo !== undefined ||
                 patch.cod !== undefined)
-                ? prependAuditLog(
-                    state.auditLogs,
-                    createAuditEntry({
-                      action: "payment.settings_updated",
-                      actorId: actor.id,
-                      actorEmail: actor.email,
-                      actorRole: actor.role,
-                      targetType: "payment",
-                      targetId:
-                        patch.paymongo !== undefined
-                          ? "global-paymongo"
-                          : patch.cod !== undefined
-                            ? "global-cod"
-                            : "global-gcash",
-                      summary:
-                        patch.paymongo !== undefined
-                          ? "Updated PayMongo payment settings"
-                          : patch.cod !== undefined
-                            ? "Updated COD payment settings"
-                            : "Updated global GCash payment settings",
-                      metadata: {
-                        fields: Object.keys(patch),
-                        paymongoEnabled: patch.paymongo?.enabled,
-                        codEnabled: patch.cod?.enabled,
-                      },
-                    }),
-                  )
+                ? appendAudit(state.auditLogs, {
+                    action: "payment.settings_updated",
+                    actorId: actor.id,
+                    actorEmail: actor.email,
+                    actorRole: actor.role,
+                    targetType: "payment",
+                    targetId:
+                      patch.paymongo !== undefined
+                        ? "global-paymongo"
+                        : patch.cod !== undefined
+                          ? "global-cod"
+                          : "global-gcash",
+                    summary:
+                      patch.paymongo !== undefined
+                        ? "Updated PayMongo payment settings"
+                        : patch.cod !== undefined
+                          ? "Updated COD payment settings"
+                          : "Updated global GCash payment settings",
+                    metadata: {
+                      fields: Object.keys(patch),
+                      paymongoEnabled: patch.paymongo?.enabled,
+                      codEnabled: patch.cod?.enabled,
+                    },
+                  })
                 : state.auditLogs,
           };
         }),

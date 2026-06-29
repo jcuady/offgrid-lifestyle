@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { ExternalLink, RotateCcw } from "lucide-react";
 import { Link } from "react-router-dom";
 import { CmsField, CmsImageInput, CmsSectionPanel, CmsTextInput } from "@/src/components/admin/landing/CmsField";
@@ -7,6 +8,8 @@ import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { Button } from "@/src/components/ui/Button";
 import { PortalPageHeader } from "@/src/components/portal/PortalPageHeader";
 import { cn } from "@/src/lib/utils";
+import { hydrateSiteContentFromSupabase } from "@/src/services";
+import { useDebouncedLandingPersist } from "@/src/hooks/useDebouncedSitePersist";
 
 const COLLECTION_LABELS: Record<(typeof LANDING_COLLECTION_IDS)[number], string> = {
   pickleball: "Collection 1 — Pickleball (wide)",
@@ -16,6 +19,13 @@ const COLLECTION_LABELS: Record<(typeof LANDING_COLLECTION_IDS)[number], string>
 };
 
 export function AdminLandingPage() {
+  const [persistReady, setPersistReady] = useState(false);
+  useDebouncedLandingPersist(persistReady);
+
+  useEffect(() => {
+    void hydrateSiteContentFromSupabase().finally(() => setPersistReady(true));
+  }, []);
+
   const landing = useSiteContentStore((s) => s.landingContent);
   const products = useSiteContentStore((s) => s.products);
   const updateHero = useSiteContentStore((s) => s.updateLandingHero);

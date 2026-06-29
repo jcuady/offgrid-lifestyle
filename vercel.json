@@ -3,9 +3,25 @@
   "buildCommand": "NODE_OPTIONS=--max-old-space-size=4096 npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
+  "headers": [
+    {
+      "source": "/sw.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" },
+        { "key": "Service-Worker-Allowed", "value": "/" }
+      ]
+    },
+    {
+      "source": "/manifest.webmanifest",
+      "headers": [
+        { "key": "Content-Type", "value": "application/manifest+json" },
+        { "key": "Cache-Control", "value": "public, max-age=86400" }
+      ]
+    }
+  ],
   "rewrites": [
     {
-      "source": "/((?!assets/|images/|favicon/|templates/|OG%20logo/|logo\\.png|favicon\\.ico|robots\\.txt|sitemap\\.xml).*)",
+      "source": "/((?!assets/|images/|favicon/|favicon_io/|templates/|OG%20logo/|logo\\.png|favicon\\.ico|robots\\.txt|sitemap\\.xml|manifest\\.webmanifest|sw\\.js|workbox-.*\\.js).*)",
       "destination": "/index.html"
     }
   ]

@@ -1,0 +1,165 @@
+import { logger } from "@/src/lib/logger";
+import { supabase } from "@/src/lib/supabase";
+import { usePortalStore } from "@/src/store/usePortalStore";
+
+function urlBase64ToUint8Array(base64String: string): Uint8Array {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; i++) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
+export async function subscribeToPush(): Promise<boolean> {
+  const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+  if (!vapidPublicKey) {
+    logger.warn("VAPID public key not configured", { operation: "subscribeToPush" });
+    return false;
+  }
+
+  if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+    logger.warn("Push notifications not supported", { operation: "subscribeToPush" });
+    return false;
+  }
+
+  try {
+    const registration = await navigator.serviceWorker.ready;
+
+    const existing = await registration.pushManager.getSubscription();
+    if (existing) {
+      await saveSubscription(existing);
+      return true;
+    }
+
+    const permission = await Notification.requestPermission();
+    if (permission !== "granted") {
+      return false;
+    }
+
+    const subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+    });
+
+    await saveSubscription(subscription);
+    return true;
+  } catch (err) {
+    logger.error("Push subscription failed", {
+      operation: "subscribeToPush",
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return false;
+  }
+}
+
+async function saveSubscription(subscription: PushSubscription): Promise<void> {
+  const keys = subscription.toJSON().keys;
+  if (!keys) return;
+
+  const currentUser = usePortalStore.getState().currentUser;
+  const portalUserId = currentUser?.id ?? null;
+
+  await supabase.from("og_push_subscriptions").upsert(
+    {
+      endpoint: subscription.endpoint,
+      keys_p256dh: keys.p256dh!,
+      keys_auth: keys.auth!,
+      user_id: portalUserId,
+    },
+    { onConflict: "endpoint" },
+  );
+}
+
+/** Attach browser push subscription to the signed-in portal user after login. */
+export async function linkPushSubscriptionToUser(): Promise<void> {
+  if (!("serviceWorker" in navigator)) return;
+  try {
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await registration.pushManager.getSubscription();
+    if (subscription) {
+      await saveSubscription(subscription);
+    }
+  } catch (err) {
+    logger.warn("Failed to link push subscription", {
+      operation: "linkPushSubscriptionToUser",
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+}
+
+export async function unsubscribeFromPush(): Promise<boolean> {
+  try {
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await registration.pushManager.getSubscription();
+    if (!subscription) return true;
+
+    await subscription.unsubscribe();
+
+    await supabase
+      .from("og_push_subscriptions")
+      .delete()
+      .eq("endpoint", subscription.endpoint);
+
+    return true;
+  } catch (err) {
+    logger.error("Push unsubscribe failed", {
+      operation: "unsubscribeFromPush",
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return false;
+  }
+}
+
+export async function isPushSubscribed(): Promise<boolean> {
+  if (!("serviceWorker" in navigator)) return false;
+  try {
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await registration.pushManager.getSubscription();
+    return subscription !== null;
+  } catch {
+    return false;
+  }
+}
+
+export type OperationalAlertType = "new_retail_order" | "new_custom_order" | "payment_proof";
+
+/** Trigger push notification via Edge Function. */
+export async function sendPushNotification(params: {
+  title: string;
+  body: string;
+  url?: string;
+  userIds?: string[];
+  operationalAlert?: { orderId: string; alertType: OperationalAlertType };
+}): Promise<{ sent: number; failed: number }> {
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const session = (await supabase.auth.getSession()).data.session;
+
+  const resp = await fetch(`${supabaseUrl}/functions/v1/send-push`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${session?.access_token ?? ""}`,
+    },
+    body: JSON.stringify({
+      title: params.title,
+      body: params.body,
+      url: params.url,
+      user_ids: params.userIds,
+      operational_alert: params.operationalAlert
+        ? {
+            order_id: params.operationalAlert.orderId,
+            alert_type: params.operationalAlert.alertType,
+          }
+        : undefined,
+    }),
+  });
+
+  if (!resp.ok) {
+    throw new Error(`Push send failed: ${resp.status}`);
+  }
+
+  return resp.json();
+}

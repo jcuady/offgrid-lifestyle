@@ -29,7 +29,7 @@ export interface AuthPageProps {
   onNameChange?: (value: string) => void;
   onConfirmPasswordChange?: (value: string) => void;
   error?: string | null;
-  fieldErrors?: Partial<Record<"name" | "email" | "password" | "confirmPassword" | "form", string>>;
+  fieldErrors?: Partial<Record<"name" | "email" | "password" | "confirmPassword" | "acceptedTerms" | "form", string>>;
   alternateLink?: { prompt: string; label: string; href: string };
   homeHref?: string;
   badge?: ReactNode;
@@ -37,6 +37,10 @@ export interface AuthPageProps {
   quote?: { text: string; attribution: string };
   demoAccounts?: AuthDemoAccount[];
   footer?: ReactNode;
+  hidePassword?: boolean;
+  hideEmail?: boolean;
+  acceptedTerms?: boolean;
+  onAcceptedTermsChange?: (value: boolean) => void;
 }
 
 export function AuthPage({
@@ -61,6 +65,10 @@ export function AuthPage({
   quote,
   demoAccounts,
   footer,
+  hidePassword = false,
+  hideEmail = false,
+  acceptedTerms = false,
+  onAcceptedTermsChange,
 }: AuthPageProps) {
   const handleFormSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -167,6 +175,7 @@ export function AuthPage({
               </Field>
             ) : null}
 
+            {!hideEmail ? (
             <Field label="Email" error={fieldErrors.email}>
               <div className="relative">
                 <Input
@@ -182,7 +191,9 @@ export function AuthPage({
                 </div>
               </div>
             </Field>
+            ) : null}
 
+            {!hidePassword ? (
             <Field label="Password" error={fieldErrors.password}>
               <div className="relative">
                 <Input
@@ -198,6 +209,7 @@ export function AuthPage({
                 </div>
               </div>
             </Field>
+            ) : null}
 
             {mode === "sign-up" && onConfirmPasswordChange ? (
               <Field label="Confirm password" error={fieldErrors.confirmPassword}>
@@ -215,6 +227,31 @@ export function AuthPage({
                   </div>
                 </div>
               </Field>
+            ) : null}
+
+            {mode === "sign-up" && onAcceptedTermsChange ? (
+              <label className="flex items-start gap-3 rounded-lg border border-border bg-muted/30 p-3">
+                <input
+                  type="checkbox"
+                  className="mt-0.5 h-4 w-4 rounded border-border text-offgrid-green focus:ring-offgrid-lime"
+                  checked={acceptedTerms}
+                  onChange={(e) => onAcceptedTermsChange(e.target.checked)}
+                />
+                <span className="text-xs leading-relaxed text-muted-foreground">
+                  I agree to the{" "}
+                  <Link to="/legal/terms" className="font-semibold text-foreground underline underline-offset-4">
+                    Terms &amp; Conditions
+                  </Link>{" "}
+                  and{" "}
+                  <Link to="/legal/privacy" className="font-semibold text-foreground underline underline-offset-4">
+                    Privacy Policy
+                  </Link>
+                  .
+                </span>
+              </label>
+            ) : null}
+            {fieldErrors.acceptedTerms ? (
+              <span className="block text-xs text-red-600">{fieldErrors.acceptedTerms}</span>
             ) : null}
 
             {formError ? (
@@ -240,15 +277,21 @@ export function AuthPage({
           {footer}
 
           <p className="text-xs leading-relaxed text-muted-foreground">
-            By continuing, you agree to our{" "}
-            <Link to="/contact" className="underline underline-offset-4 hover:text-foreground">
-              Terms of Service
-            </Link>{" "}
-            and{" "}
-            <Link to="/contact" className="underline underline-offset-4 hover:text-foreground">
-              Privacy Policy
-            </Link>
-            .
+            {mode === "sign-up" ? (
+              <>Create an account only if you agree to our legal terms above.</>
+            ) : (
+              <>
+                By continuing, you agree to our{" "}
+                <Link to="/legal/terms" className="underline underline-offset-4 hover:text-foreground">
+                  Terms &amp; Conditions
+                </Link>{" "}
+                and{" "}
+                <Link to="/legal/privacy" className="underline underline-offset-4 hover:text-foreground">
+                  Privacy Policy
+                </Link>
+                .
+              </>
+            )}
           </p>
         </div>
       </div>

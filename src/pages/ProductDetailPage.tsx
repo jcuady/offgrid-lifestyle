@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useShallow } from "zustand/react/shallow";
 import { motion } from "motion/react";
-import { ArrowLeft, ShoppingBag, Star, Minus, Plus, Check } from "lucide-react";
+import { ArrowLeft, Star, Minus, Plus, Check } from "lucide-react";
 import { useStore } from "@/src/store/store";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { formatPrice } from "@/src/data/products";
@@ -10,10 +10,18 @@ import { Button } from "@/src/components/ui/Button";
 import { cn } from "@/src/lib/utils";
 import { reviewService, type ProductReview } from "@/src/services/reviewService";
 
+import { hydrateProductsFromSupabase } from "@/src/services";
+
 export function ProductDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const products = useSiteContentStore((state) => state.products);
+  const [catalogReady, setCatalogReady] = useState(false);
+
+  useEffect(() => {
+    void hydrateProductsFromSupabase().finally(() => setCatalogReady(true));
+  }, []);
+
   const product = products.find((p) => p.slug === slug);
 
   const { addToCart, toggleCart } = useStore(
@@ -27,18 +35,33 @@ export function ProductDetailPage() {
   const [selectedColor, setSelectedColor] = useState<string>("");
   const [quantity, setQuantity] = useState(1);
   const [reviews, setReviews] = useState<ProductReview[]>([]);
+  const [justAdded, setJustAdded] = useState(false);
 
   useEffect(() => {
     if (product) {
       setSelectedSize(product.sizes[0]);
       setSelectedColor(product.colors[0]?.value || "");
       setQuantity(1);
+      setJustAdded(false);
       window.scrollTo(0, 0);
       reviewService.listApprovedByProduct(product.id).then(setReviews);
     }
   }, [product]);
 
+  useEffect(() => {
+    if (!justAdded) return;
+    const timer = window.setTimeout(() => setJustAdded(false), 4000);
+    return () => window.clearTimeout(timer);
+  }, [justAdded]);
+
   if (!product) {
+    if (!catalogReady) {
+      return (
+        <div className="min-h-screen bg-offgrid-cream flex flex-col items-center justify-center pt-20 text-sm text-offgrid-green/60">
+          Loading product…
+        </div>
+      );
+    }
     return (
       <div className="min-h-screen bg-offgrid-cream flex flex-col items-center justify-center pt-20">
         <h1 className="text-4xl font-display font-black text-offgrid-green mb-4">Product Not Found</h1>
@@ -48,6 +71,7 @@ export function ProductDetailPage() {
   }
 
   const activeColor = product.colors.find((c) => c.value === selectedColor) || product.colors[0];
+  const averageRating = reviews.length > 0 ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : 0;
 
   const handleAddToCart = () => {
     if (!selectedSize) return;
@@ -61,7 +85,7 @@ export function ProductDetailPage() {
       color: activeColor?.name || "",
       quantity,
     });
-    toggleCart(true);
+    setJustAdded(true);
   };
 
   return (
@@ -242,12 +266,24 @@ export function ProductDetailPage() {
                     size="lg"
                     onClick={handleAddToCart}
                     disabled={!selectedSize}
-                    className="flex-1 group h-[52px]"
+                    className="flex-1 h-[52px] text-sm font-semibold tracking-wide"
                   >
-                    <ShoppingBag className="mr-2 w-5 h-5 group-hover:scale-110 transition-transform" />
                     Add to Cart — {formatPrice(product.price * quantity)}
                   </Button>
                 </div>
+
+                {justAdded ? (
+                  <p className="mt-3 text-sm text-offgrid-green/70" role="status" aria-live="polite">
+                    Added to cart.{" "}
+                    <button
+                      type="button"
+                      onClick={() => toggleCart(true)}
+                      className="font-semibold text-offgrid-green underline decoration-offgrid-green/30 underline-offset-2 hover:text-offgrid-lime hover:decoration-offgrid-lime"
+                    >
+                      View cart
+                    </button>
+                  </p>
+                ) : null}
 
                 {/* Shipping & returns — PDP trust pattern (structured like category leaders, OFF GRID tokens) */}
                 <div
@@ -299,25 +335,23 @@ export function ProductDetailPage() {
           </div>
 
           {/* Reviews Section */}
-          {reviews.length > 0 ? (
-            <div className="mt-16 border-t border-offgrid-green/10 pt-12">
-              <div className="flex items-baseline gap-4 mb-8">
-                <h2 className="text-2xl font-display font-black text-offgrid-green">Customer Reviews</h2>
+          <div className="mt-16 border-t border-offgrid-green/10 pt-12">
+            <div className="flex flex-wrap items-baseline gap-x-4 gap-y-2 mb-8">
+              <h2 className="text-2xl font-display font-black text-offgrid-green">Customer Reviews</h2>
+              {reviews.length > 0 ? (
                 <div className="flex items-center gap-1.5">
                   <div className="flex">
-                    {[1, 2, 3, 4, 5].map((n) => {
-                      const avg = reviews.reduce((s, r) => s + r.rating, 0) / reviews.length;
-                      return (
-                        <Star key={n} className={cn("h-4 w-4", n <= Math.round(avg) ? "fill-offgrid-lime text-offgrid-lime" : "fill-none text-offgrid-green/20")} />
-                      );
-                    })}
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <Star key={n} className={cn("h-4 w-4", n <= Math.round(averageRating) ? "fill-offgrid-lime text-offgrid-lime" : "fill-none text-offgrid-green/20")} />
+                    ))}
                   </div>
-                  <span className="text-sm font-semibold text-offgrid-green">
-                    {(reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)}
-                  </span>
+                  <span className="text-sm font-semibold text-offgrid-green">{averageRating.toFixed(1)}</span>
                   <span className="text-xs text-offgrid-green/50">({reviews.length} review{reviews.length !== 1 ? "s" : ""})</span>
                 </div>
-              </div>
+              ) : null}
+            </div>
+
+            {reviews.length > 0 ? (
               <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 {reviews.map((review) => (
                   <div key={review.id} className="rounded-2xl border border-offgrid-green/10 bg-white p-5 shadow-sm">
@@ -334,8 +368,20 @@ export function ProductDetailPage() {
                   </div>
                 ))}
               </div>
-            </div>
-          ) : null}
+            ) : (
+              <div className="rounded-2xl border border-dashed border-offgrid-green/20 bg-white px-6 py-12 text-center">
+                <div className="mb-3 flex justify-center">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <Star key={n} className="h-5 w-5 fill-none text-offgrid-green/20" />
+                  ))}
+                </div>
+                <p className="text-sm font-semibold text-offgrid-green">No reviews yet</p>
+                <p className="mt-1 text-sm text-offgrid-green/60">
+                  Be the first to share your experience — verified buyers can leave a review from their order.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </>

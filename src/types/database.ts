@@ -522,6 +522,42 @@ export type Database = {
         }
         Relationships: []
       }
+      og_notifications: {
+        Row: {
+          body: string
+          category: string
+          created_at: string
+          id: string
+          metadata: Json
+          read_at: string | null
+          title: string
+          url: string | null
+          user_id: string
+        }
+        Insert: {
+          body: string
+          category?: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          read_at?: string | null
+          title: string
+          url?: string | null
+          user_id: string
+        }
+        Update: {
+          body?: string
+          category?: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          read_at?: string | null
+          title?: string
+          url?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       og_push_subscriptions: {
         Row: {
           created_at: string
@@ -546,6 +582,72 @@ export type Database = {
           keys_auth?: string
           keys_p256dh?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      og_events: {
+        Row: {
+          id: string
+          title: string
+          subtitle: string
+          event_date: string
+          event_time: string
+          location: string
+          address: string
+          description: string
+          image: string
+          category: string
+          status: string
+          featured: boolean
+          price: string
+          capacity: number | null
+          registered: number | null
+          highlights: Json
+          sort_order: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          title?: string
+          subtitle?: string
+          event_date?: string
+          event_time?: string
+          location?: string
+          address?: string
+          description?: string
+          image?: string
+          category?: string
+          status?: string
+          featured?: boolean
+          price?: string
+          capacity?: number | null
+          registered?: number | null
+          highlights?: Json
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          subtitle?: string
+          event_date?: string
+          event_time?: string
+          location?: string
+          address?: string
+          description?: string
+          image?: string
+          category?: string
+          status?: string
+          featured?: boolean
+          price?: string
+          capacity?: number | null
+          registered?: number | null
+          highlights?: Json
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -597,6 +699,8 @@ export type Database = {
     }
     Functions: {
       og_portal_role: { Args: Record<string, never>; Returns: string }
+      og_staff_admin_user_ids: { Args: Record<string, never>; Returns: string[] }
+      og_submit_payment_proof: { Args: { p_order_id: string; p_proof_url: string }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never

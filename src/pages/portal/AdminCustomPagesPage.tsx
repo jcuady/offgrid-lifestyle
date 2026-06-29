@@ -12,7 +12,8 @@ import { DEFAULT_GUIDE_CTA_HREF, resolveGuideSections } from "@/src/lib/customGu
 import { CUSTOM_PROCESS_STEP_COUNT } from "@/src/data/customPageContent";
 import type { CustomSectionSlug } from "@/src/store/useSiteContentStore";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
-import { hydrateCustomContentFromSupabase, localContentService } from "@/src/services";
+import { hydrateSiteContentFromSupabase, localContentService } from "@/src/services";
+import { useDebouncedCustomPagesPersist } from "@/src/hooks/useDebouncedSitePersist";
 import { TemplateSlotsEditor } from "@/src/components/admin/custom/TemplateSlotsEditor";
 import { HeadwearOptionsEditor } from "@/src/components/admin/custom/HeadwearOptionsEditor";
 import { Button } from "@/src/components/ui/Button";
@@ -30,6 +31,9 @@ const GUIDE_LABELS: Record<CustomSectionSlug, string> = {
 };
 
 export function AdminCustomPagesPage() {
+  const [persistReady, setPersistReady] = useState(false);
+  useDebouncedCustomPagesPersist(persistReady);
+
   const hub = useSiteContentStore((s) => s.customPageContent.hub);
   const orderHero = useSiteContentStore((s) => s.customPageContent.orderHero);
   const wizard = useSiteContentStore((s) => s.customPageContent.wizard);
@@ -51,7 +55,7 @@ export function AdminCustomPagesPage() {
   const updateTemplatesPage = useSiteContentStore((s) => s.updateCustomTemplatesPage);
 
   useEffect(() => {
-    void hydrateCustomContentFromSupabase();
+    void hydrateSiteContentFromSupabase().finally(() => setPersistReady(true));
   }, []);
 
   const [selectedSectionId, setSelectedSectionId] = useState(sections[0]?.id ?? "");

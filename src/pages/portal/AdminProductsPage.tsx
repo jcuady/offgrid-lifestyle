@@ -190,10 +190,13 @@ export function AdminProductsPage() {
     closeDrawer();
   };
 
-  const removeProduct = (product: Product) => {
-    if (window.confirm(`Delete ${product.name}? This updates live storefront data.`)) {
-      localCatalogService.removeProduct(product.id);
+  const removeProduct = async (product: Product) => {
+    if (!window.confirm(`Delete ${product.name}? This updates live storefront data.`)) return;
+    try {
+      await localCatalogService.removeProduct(product.id);
       if (editingId === product.id) closeDrawer();
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : "Could not delete product.");
     }
   };
 

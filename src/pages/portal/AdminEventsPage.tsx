@@ -1,8 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CalendarDays, MapPin, Plus, Pencil, Trash2, Search, Star } from "lucide-react";
 import type { SiteEvent } from "@/src/data/events";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
-import { localContentService } from "@/src/services";
+import { hydrateSiteContentFromSupabase, localContentService } from "@/src/services";
 import { cn } from "@/src/lib/utils";
 import { PortalPageHeader } from "@/src/components/portal/PortalPageHeader";
 import { PortalDrawer } from "@/src/components/portal/PortalDrawer";
@@ -28,6 +28,10 @@ const inputClass = "w-full px-3 py-2 text-sm";
 
 export function AdminEventsPage() {
   const events = useSiteContentStore((state) => state.events);
+
+  useEffect(() => {
+    void hydrateSiteContentFromSupabase();
+  }, []);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<SiteEvent>(defaultDraft);

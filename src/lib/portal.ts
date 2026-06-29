@@ -1,4 +1,4 @@
-import type { OrderStatus, PaymentStatus, ShippingInfo } from "@/src/types/commerce";
+import type { OrderStatus, PaymentStatus, ShippingInfo, OrderType } from "@/src/types/commerce";
 
 /** Display snake_case enums / identifiers as Title Case labels */
 export function formatEnumLabel(value: string | null | undefined): string {
@@ -16,7 +16,9 @@ export function formatPaymentMethodLabel(method: string | null | undefined): str
   return formatEnumLabel(method);
 }
 
-export function formatOrderStatus(status: OrderStatus): string {
+export function formatOrderStatus(status: OrderStatus, orderType?: OrderType): string {
+  if (orderType === "retail" && status === "pending_deposit") return "Order placed";
+  if (orderType === "custom" && status === "pending_deposit") return "Pending deposit";
   return status.replace(/_/g, " ").replace(/\b\w/g, (ch) => ch.toUpperCase());
 }
 
@@ -131,10 +133,12 @@ function looksLikeTechnicalId(value: string): boolean {
 /** Safe one-line destination for order cards; hides UUID-like province/city values. */
 export function formatShippingLocality(info: ShippingInfo | null | undefined): string | null {
   if (!info) return null;
+  const barangay = info.barangay?.trim() ?? "";
   const city = info.city?.trim() ?? "";
   const province = info.province?.trim() ?? "";
   const zip = info.zip?.trim() ?? "";
   const parts: string[] = [];
+  if (barangay && !looksLikeTechnicalId(barangay)) parts.push(barangay);
   if (city && !looksLikeTechnicalId(city)) parts.push(city);
   if (province && !looksLikeTechnicalId(province)) parts.push(province);
   if (parts.length) {

@@ -10,14 +10,23 @@ export type AuditAction =
   | "staff.deactivated"
   | "staff.reactivated"
   | "staff.password_reset"
+  | "staff.updated"
   | "order.retail_status_changed"
   | "order.retail_payment_changed"
   | "order.custom_status_changed"
   | "order.custom_payment_changed"
   | "order.custom_quote_updated"
-  | "payment.settings_updated";
+  | "payment.settings_updated"
+  | "product.created"
+  | "product.updated"
+  | "product.deleted"
+  | "content.created"
+  | "content.updated"
+  | "content.deleted"
+  | "review.status_changed"
+  | "review.deleted";
 
-export type AuditTargetType = "user" | "order" | "payment" | "session";
+export type AuditTargetType = "user" | "order" | "payment" | "session" | "product" | "content" | "review";
 
 export interface AuditLogEntry {
   id: string;

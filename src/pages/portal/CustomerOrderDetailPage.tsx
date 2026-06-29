@@ -5,6 +5,7 @@ import { usePortalStore, type PortalUser } from "@/src/store/usePortalStore";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { reviewService } from "@/src/services/reviewService";
 import { localOrderService } from "@/src/services";
+import { useOrderDetail } from "@/src/hooks/useOrderDetail";
 import { supabase } from "@/src/lib/supabase";
 import type { RetailOrderLine } from "@/src/types/commerce";
 import {
@@ -14,10 +15,14 @@ import {
 } from "@/src/data/customHeadwearOptions";
 import { formatMoney, php } from "@/src/types/commerce";
 import { cn } from "@/src/lib/utils";
+import { notifyStaffOrderEvent } from "@/src/lib/notifications";
+import { fileAcceptAttribute, validateUploadedFile } from "@/src/lib/fileValidation";
+import { resolveStorageReference, toStorageReference } from "@/src/lib/storageAccess";
 import { AccountLayout } from "@/src/components/account/AccountLayout";
 import { OrderTracker } from "@/src/components/account/OrderTracker";
 import { CustomOrderFileButton } from "@/src/components/custom-order/CustomOrderFileButton";
 import { CustomOrderTimeline } from "@/src/components/custom-order/CustomOrderTimeline";
+import { OrderDeliveryDetails } from "@/src/components/portal/OrderDeliveryDetails";
 import {
   formatCityProvinceZipLine,
   formatEnumLabel,
@@ -203,6 +208,12 @@ function PaymentProofSection({
     const file = e.target.files?.[0];
     if (!file) return;
     setUploadError(null);
+    const validation = validateUploadedFile(file, "imageAsset");
+    if (validation.ok === false) {
+      setUploadError(validation.error);
+      e.target.value = "";
+      return;
+    }
     setUploading(true);
     try {
       const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
@@ -211,11 +222,11 @@ function PaymentProofSection({
         .from("payment-proofs")
         .upload(path, file, { upsert: true });
       if (storageErr) throw storageErr;
-      const { data: { publicUrl } } = supabase.storage
-        .from("payment-proofs")
-        .getPublicUrl(data.path);
-      await localOrderService.updateOrderField(orderId, { payment_proof_url: publicUrl });
-      setProofUrl(publicUrl);
+      const reference = toStorageReference("payment-proofs", data.path);
+      await localOrderService.updateOrderField(orderId, { payment_proof_url: reference });
+      const displayUrl = await resolveStorageReference(reference);
+      setProofUrl(displayUrl);
+      void notifyStaffOrderEvent(orderId, "payment_proof");
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : "Upload failed. Please try again.");
     } finally {
@@ -251,7 +262,7 @@ function PaymentProofSection({
             {uploading ? "Uploading…" : proofUrl ? "Update screenshot" : "Upload screenshot"}
             <input
               type="file"
-              accept="image/*"
+              accept={fileAcceptAttribute("imageAsset")}
               className="hidden"
               onChange={handleUpload}
               disabled={uploading}
@@ -294,23 +305,32 @@ const quotePendingLight =
 export function CustomerOrderDetailPage() {
   const { orderId } = useParams<{ orderId: string }>();
   const user = usePortalStore((state) => state.currentUser);
-  const retailOrders = usePortalStore((state) => state.retailOrders);
-  const customOrders = usePortalStore((state) => state.customOrders);
+  const { retail: fetchedRetail, custom: fetchedCustom, loading } = useOrderDetail(orderId);
 
-  const retail = retailOrders.find(
-    (entry) =>
-      entry.id === orderId &&
-      !!user &&
-      (entry.customerId === user.id || entry.customerEmail.toLowerCase() === user.email.toLowerCase()),
-  );
-  const custom = customOrders.find(
-    (entry) =>
-      entry.id === orderId &&
-      !!user &&
-      (entry.customerId === user.id || entry.customerEmail.toLowerCase() === user.email.toLowerCase()),
-  );
+  const retail = fetchedRetail &&
+    !!user &&
+    (fetchedRetail.customerId === user.id ||
+      fetchedRetail.customerEmail.toLowerCase() === user.email.toLowerCase())
+    ? fetchedRetail
+    : undefined;
+  const custom = fetchedCustom &&
+    !!user &&
+    (fetchedCustom.customerId === user.id ||
+      fetchedCustom.customerEmail.toLowerCase() === user.email.toLowerCase())
+    ? fetchedCustom
+    : undefined;
 
   const backTo = { to: "/account/orders", label: "Back to my orders" };
+
+  if (loading) {
+    return (
+      <AccountLayout active="orders" backTo={backTo} title="Loading order" description="">
+        <div className="rounded-2xl border border-dashed border-offgrid-green/20 bg-white px-6 py-12 text-center text-sm text-offgrid-green/60">
+          Loading your order...
+        </div>
+      </AccountLayout>
+    );
+  }
 
   if (!retail && !custom) {
     return (
@@ -352,7 +372,7 @@ export function CustomerOrderDetailPage() {
       headerExtra={
         <div className="mt-4 flex flex-wrap gap-2">
           <span className={orderStatusClassCustomer(activeOrder.status)}>
-            {formatOrderStatus(activeOrder.status)}
+            {formatOrderStatus(activeOrder.status, retail ? "retail" : "custom")}
           </span>
           <span className={paymentStatusClassCustomer(activeOrder.paymentStatus)}>
             {formatPaymentStatus(activeOrder.paymentStatus)}
@@ -574,13 +594,14 @@ export function CustomerOrderDetailPage() {
                   <dd>{custom.teamOrOrg || "—"}</dd>
                 </div>
               </dl>
-              <p className="mt-4 text-xs text-offgrid-green/50">
-                Final delivery address and fulfillment updates will be coordinated by our team after your deposit is
-                confirmed.
-              </p>
             </div>
 
             <div className="min-w-0 rounded-2xl border border-offgrid-green/10 bg-white p-5 shadow-sm sm:p-6">
+              <h2 className="text-lg font-display font-bold text-offgrid-green">Delivery address</h2>
+              <OrderDeliveryDetails shippingInfo={custom.shippingInfo} />
+            </div>
+
+            <div className="min-w-0 rounded-2xl border border-offgrid-green/10 bg-white p-5 shadow-sm sm:p-6 lg:col-span-2">
               <h2 className="text-lg font-display font-bold text-offgrid-green">Payment & quote</h2>
               {!hasOfficialCustomQuote(custom.officialTotal) ? (
                 <p className="mt-3 rounded-xl border border-offgrid-green/10 bg-offgrid-cream/50 px-3 py-2 text-xs text-offgrid-green/70">
@@ -636,6 +657,28 @@ export function CustomerOrderDetailPage() {
                   </div>
                 ) : null}
               </dl>
+              {custom.paymentStatus !== "fully_paid" ? (
+                <div className="mt-4 rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/45">
+                    Pay deposit via GCash
+                  </p>
+                  <p className="mt-1 text-xs text-offgrid-green/60">{paymentSettings.gcashInstructions}</p>
+                  <img
+                    src={paymentSettings.gcashQrImageUrl}
+                    alt="GCash QR"
+                    className="mt-2 h-28 w-28 rounded-lg border border-offgrid-green/10 bg-white object-contain"
+                  />
+                  {hasOfficialCustomQuote(custom.officialTotal) && custom.officialDeposit ? (
+                    <p className="mt-2 text-sm font-semibold text-offgrid-green">
+                      Amount due now: {formatMoney(custom.officialDeposit)}
+                    </p>
+                  ) : custom.depositRequired ? (
+                    <p className="mt-2 text-sm font-semibold text-offgrid-green">
+                      Estimated deposit: {formatMoney(custom.depositRequired)}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
           </div>
 

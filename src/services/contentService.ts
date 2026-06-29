@@ -2,8 +2,102 @@ import type { SiteEvent } from "@/src/data/events";
 import type { CustomContentSection, CustomTemplateAsset } from "@/src/store/useSiteContentStore";
 import type { CustomHeadwearOption } from "@/src/data/customHeadwearOptions";
 import type { Database } from "@/src/types/database";
+import { logger } from "@/src/lib/logger";
+import { loadFeaturedSpotlight, loadSiteCustomPages } from "@/src/lib/siteContentPersistence";
 import { supabase } from "@/src/lib/supabase";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
+import { usePortalStore } from "@/src/store/usePortalStore";
+
+type EventRow = {
+  id: string;
+  title: string;
+  subtitle: string;
+  event_date: string;
+  event_time: string;
+  location: string;
+  address: string;
+  description: string;
+  image: string;
+  category: string;
+  status: string;
+  featured: boolean;
+  price: string;
+  capacity: number | null;
+  registered: number | null;
+  highlights: string[];
+  sort_order: number;
+};
+
+function eventRowToSite(row: EventRow): SiteEvent {
+  return {
+    id: row.id,
+    title: row.title,
+    subtitle: row.subtitle,
+    date: row.event_date,
+    time: row.event_time,
+    location: row.location,
+    address: row.address,
+    description: row.description,
+    image: row.image,
+    category: row.category as SiteEvent["category"],
+    status: row.status === "cancelled" ? "past" : (row.status as SiteEvent["status"]),
+    featured: row.featured,
+    price: row.price,
+    capacity: row.capacity ?? undefined,
+    registered: row.registered ?? undefined,
+    highlights: row.highlights ?? [],
+  };
+}
+
+function siteEventToRow(event: SiteEvent, sortOrder = 0) {
+  return {
+    id: event.id,
+    title: event.title,
+    subtitle: event.subtitle,
+    event_date: event.date,
+    event_time: event.time,
+    location: event.location,
+    address: event.address,
+    description: event.description,
+    image: event.image,
+    category: event.category,
+    status: event.status,
+    featured: event.featured ?? false,
+    price: event.price,
+    capacity: event.capacity ?? null,
+    registered: event.registered ?? null,
+    highlights: event.highlights,
+    sort_order: sortOrder,
+    updated_at: new Date().toISOString(),
+  };
+}
+
+type ContentAuditAction = "content.created" | "content.updated" | "content.deleted";
+
+function logContentError(operation: string, error: string): void {
+  logger.warn("Content persistence failed", { service: "contentService", operation, error });
+}
+
+function auditContent(action: ContentAuditAction, targetId: string, label: string, metadata: Record<string, unknown> = {}) {
+  const actor = usePortalStore.getState().currentUser;
+  if (!actor) return;
+
+  usePortalStore.getState().recordAudit({
+    action,
+    actorId: actor.id,
+    actorEmail: actor.email,
+    actorRole: actor.role,
+    targetType: "content",
+    targetId,
+    summary:
+      action === "content.created"
+        ? `Created ${label}`
+        : action === "content.updated"
+          ? `Updated ${label}`
+          : `Deleted ${label}`,
+    metadata,
+  });
+}
 
 export interface ContentService {
   listEvents: () => SiteEvent[];
@@ -25,15 +119,44 @@ export interface ContentService {
 }
 
 /**
- * Content service backed by Supabase for headwear options, guide sections,
- * and template slots. Events still use the local store (no DB table yet).
+ * Content service backed by Supabase for events, headwear, guide sections, templates, and custom page copy.
  */
 export const supabaseContentService: ContentService = {
-  // Events stay localStorage (no og_events table yet)
   listEvents: () => useSiteContentStore.getState().events,
-  addEvent: (input) => useSiteContentStore.getState().addEvent(input),
-  updateEvent: (id, patch) => useSiteContentStore.getState().updateEvent(id, patch),
-  removeEvent: (id) => useSiteContentStore.getState().removeEvent(id),
+  addEvent: (input) => {
+    useSiteContentStore.getState().addEvent(input);
+    supabase
+      .from("og_events")
+      .upsert(siteEventToRow(input))
+      .then(({ error }) => {
+        if (error) logContentError("events.upsert", error.message);
+        else auditContent("content.created", input.id, `event ${input.title}`, { kind: "event" });
+      });
+  },
+  updateEvent: (id, patch) => {
+    useSiteContentStore.getState().updateEvent(id, patch);
+    const current = useSiteContentStore.getState().events.find((e) => e.id === id);
+    if (!current) return;
+    const merged = { ...current, ...patch };
+    supabase
+      .from("og_events")
+      .upsert(siteEventToRow(merged))
+      .then(({ error }) => {
+        if (error) logContentError("events.update", error.message);
+        else auditContent("content.updated", id, `event ${merged.title}`, { kind: "event", fields: Object.keys(patch) });
+      });
+  },
+  removeEvent: (id) => {
+    useSiteContentStore.getState().removeEvent(id);
+    supabase
+      .from("og_events")
+      .delete()
+      .eq("id", id)
+      .then(({ error }) => {
+        if (error) logContentError("events.delete", error.message);
+        else auditContent("content.deleted", id, `event ${id}`, { kind: "event" });
+      });
+  },
 
   // Custom guide sections — backed by og_custom_guide_sections
   listCustomSections: () => useSiteContentStore.getState().customSections,
@@ -55,7 +178,8 @@ export const supabaseContentService: ContentService = {
         sort_order: 0,
       })
       .then(({ error }) => {
-        if (error) console.warn("Guide section upsert failed:", error.message);
+        if (error) logContentError("guideSections.upsert", error.message);
+        else auditContent("content.created", input.id, `guide section ${input.title}`, { kind: "guide_section" });
       });
   },
   updateCustomSection: (id, patch) => {
@@ -76,7 +200,8 @@ export const supabaseContentService: ContentService = {
         .update(partial)
         .eq("id", id)
         .then(({ error }) => {
-          if (error) console.warn("Guide section update failed:", error.message);
+          if (error) logContentError("guideSections.update", error.message);
+          else auditContent("content.updated", id, `guide section ${id}`, { kind: "guide_section", fields: Object.keys(patch) });
         });
     }
   },
@@ -87,7 +212,8 @@ export const supabaseContentService: ContentService = {
       .delete()
       .eq("id", id)
       .then(({ error }) => {
-        if (error) console.warn("Guide section delete failed:", error.message);
+        if (error) logContentError("guideSections.delete", error.message);
+        else auditContent("content.deleted", id, `guide section ${id}`, { kind: "guide_section" });
       });
   },
 
@@ -109,7 +235,8 @@ export const supabaseContentService: ContentService = {
         is_published: input.isPublished,
       })
       .then(({ error }) => {
-        if (error) console.warn("Template upsert failed:", error.message);
+        if (error) logContentError("templates.upsert", error.message);
+        else auditContent("content.created", input.id, `template ${input.name}`, { kind: "template" });
       });
   },
   updateTemplate: (id, patch) => {
@@ -127,7 +254,8 @@ export const supabaseContentService: ContentService = {
         .update(partial)
         .eq("id", id)
         .then(({ error }) => {
-          if (error) console.warn("Template update failed:", error.message);
+          if (error) logContentError("templates.update", error.message);
+          else auditContent("content.updated", id, `template ${id}`, { kind: "template", fields: Object.keys(patch) });
         });
     }
   },
@@ -138,7 +266,8 @@ export const supabaseContentService: ContentService = {
       .delete()
       .eq("id", id)
       .then(({ error }) => {
-        if (error) console.warn("Template delete failed:", error.message);
+        if (error) logContentError("templates.delete", error.message);
+        else auditContent("content.deleted", id, `template ${id}`, { kind: "template" });
       });
   },
 
@@ -159,7 +288,8 @@ export const supabaseContentService: ContentService = {
         is_published: input.isPublished,
       })
       .then(({ error }) => {
-        if (error) console.warn("Headwear option upsert failed:", error.message);
+        if (error) logContentError("headwearOptions.upsert", error.message);
+        else auditContent("content.created", input.id, `headwear option ${input.label}`, { kind: "headwear_option" });
       });
   },
   updateHeadwearOption: (id, patch) => {
@@ -177,7 +307,8 @@ export const supabaseContentService: ContentService = {
         .update(partial)
         .eq("id", id)
         .then(({ error }) => {
-          if (error) console.warn("Headwear option update failed:", error.message);
+          if (error) logContentError("headwearOptions.update", error.message);
+          else auditContent("content.updated", id, `headwear option ${id}`, { kind: "headwear_option", fields: Object.keys(patch) });
         });
     }
   },
@@ -188,7 +319,8 @@ export const supabaseContentService: ContentService = {
       .delete()
       .eq("id", id)
       .then(({ error }) => {
-        if (error) console.warn("Headwear option delete failed:", error.message);
+        if (error) logContentError("headwearOptions.delete", error.message);
+        else auditContent("content.deleted", id, `headwear option ${id}`, { kind: "headwear_option" });
       });
   },
 };
@@ -249,5 +381,51 @@ export async function hydrateCustomContentFromSupabase(): Promise<void> {
 
   if (Object.keys(patch).length > 0) {
     useSiteContentStore.setState(patch);
+  }
+}
+
+/** Load landing, custom page copy, events, and custom CMS from Supabase. */
+export async function hydrateSiteContentFromSupabase(): Promise<void> {
+  await hydrateCustomContentFromSupabase();
+
+  const [pagesPatch, spotlight, eventsRes] = await Promise.all([
+    loadSiteCustomPages(),
+    loadFeaturedSpotlight(),
+    supabase.from("og_events").select("*").order("sort_order"),
+  ]);
+
+  const storePatch: Record<string, unknown> = {};
+
+  if (pagesPatch.landing) {
+    storePatch.landingContent = {
+      ...useSiteContentStore.getState().landingContent,
+      ...pagesPatch.landing,
+      ...(spotlight ? { featuredSpotlight: spotlight } : {}),
+    };
+  } else if (spotlight) {
+    storePatch.landingContent = {
+      ...useSiteContentStore.getState().landingContent,
+      featuredSpotlight: spotlight,
+    };
+  }
+
+  const customPagePatch: Record<string, unknown> = {};
+  if (pagesPatch.hub) customPagePatch.hub = pagesPatch.hub;
+  if (pagesPatch.orderHero) customPagePatch.orderHero = pagesPatch.orderHero;
+  if (pagesPatch.wizard) customPagePatch.wizard = pagesPatch.wizard;
+  if (pagesPatch.templatesPage) customPagePatch.templatesPage = pagesPatch.templatesPage;
+  if (Object.keys(customPagePatch).length > 0) {
+    storePatch.customPageContent = {
+      ...useSiteContentStore.getState().customPageContent,
+      ...customPagePatch,
+    };
+  }
+
+  if (eventsRes.data?.length) {
+    storePatch.events = eventsRes.data.map((row) => eventRowToSite(row as EventRow));
+  }
+
+  if (Object.keys(storePatch).length > 0) {
+    useSiteContentStore.setState(storePatch);
   }
 }

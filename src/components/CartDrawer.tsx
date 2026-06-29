@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "motion/react";
-import { X, Minus, Plus, Trash2, ShoppingBag, Check, ArrowRight } from "lucide-react";
+import { X, Minus, Plus, Trash2, ShoppingBag, Check } from "lucide-react";
 import { useShallow } from "zustand/react/shallow";
 import { useStore } from "@/src/store/store";
 import { Button } from "./ui/Button";
@@ -207,10 +207,9 @@ export function CartDrawer() {
                   variant="default"
                   size="lg"
                   onClick={openCheckout}
-                  className="w-full group h-12 sm:h-14"
+                  className="w-full h-12 text-sm font-semibold tracking-wide sm:h-14"
                 >
                   Checkout
-                  <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Button>
 
                 <p className="text-[10px] sm:text-xs text-center text-offgrid-green/40 mt-3 sm:mt-4">

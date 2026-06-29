@@ -1,12 +1,14 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
-import { X, Check, Wallet, Banknote, Package, ChevronRight, MapPin, Truck, Zap, Upload } from "lucide-react";
+import { X, Check, Wallet, Banknote, Package, ChevronRight, ChevronLeft, MapPin, Truck, Zap, Upload, Loader2 } from "lucide-react";
 import { useShallow } from "zustand/react/shallow";
 import { useStore } from "@/src/store/store";
 import { usePortalStore } from "@/src/store/usePortalStore";
 import { Button } from "./ui/Button";
 import { formatPrice } from "@/src/data/products";
-import { validateShippingInfo } from "@/src/lib/formValidation";
+import { validateShippingInfoFields, validateRetailCart, normalizeShippingInfo, sanitizeShippingInfo, type ShippingFieldErrors } from "@/src/lib/formValidation";
+import { EMPTY_SHIPPING_INFO, type ShippingInfo } from "@/src/types/commerce";
 import {
   checkoutPaymentConfigFromSettings,
   isRetailPaymentMethodSelectable,
@@ -15,13 +17,41 @@ import {
 } from "@/src/types/payments";
 import { cn } from "@/src/lib/utils";
 
+const PhilippinesAddressFields = lazy(() =>
+  import("@/src/components/checkout/PhilippinesAddressFields").then((m) => ({
+    default: m.PhilippinesAddressFields,
+  })),
+);
+
 const PAYMENT_ICONS = {
   cod: Banknote,
   gcash: Wallet,
   paymongo: Zap,
 } as const;
 
+const inputClass =
+  "w-full rounded-xl border border-offgrid-green/20 bg-white px-3 py-2.5 text-sm text-offgrid-green outline-none transition-all focus:border-offgrid-green focus:ring-2 focus:ring-offgrid-green/20 sm:px-4 sm:py-3 sm:text-base";
+
+function contactInputClass(hasError: boolean) {
+  return cn(
+    inputClass,
+    hasError && "border-red-500 focus:border-red-500 focus:ring-red-500/20",
+  );
+}
+
+function scrollToFirstFieldError(container: HTMLElement | null) {
+  if (!container) return;
+  requestAnimationFrame(() => {
+    const target =
+      container.querySelector<HTMLElement>("[data-field-error]") ??
+      container.querySelector<HTMLElement>("[aria-invalid='true']");
+    target?.scrollIntoView({ behavior: "smooth", block: "center" });
+  });
+}
+
 export function CheckoutModal() {
+  const navigate = useNavigate();
+  const currentUser = usePortalStore((s) => s.currentUser);
   const {
     isCheckoutOpen,
     closeCheckout,
@@ -35,6 +65,7 @@ export function CheckoutModal() {
     placeOrder,
     orderId,
     resetCheckout,
+    toggleCart,
   } = useStore(
     useShallow((state) => ({
       isCheckoutOpen: state.isCheckoutOpen,
@@ -49,17 +80,40 @@ export function CheckoutModal() {
       placeOrder: state.placeOrder,
       orderId: state.orderId,
       resetCheckout: state.resetCheckout,
+      toggleCart: state.toggleCart,
     })),
   );
 
-  const [formData, setFormData] = useState(shippingInfo);
+  const [formData, setFormData] = useState<ShippingInfo>(() => normalizeShippingInfo(shippingInfo));
   const [shippingError, setShippingError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<ShippingFieldErrors>({});
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [placingOrder, setPlacingOrder] = useState(false);
+  const shippingFormRef = useRef<HTMLFormElement>(null);
   const paymentSettings = usePortalStore((s) => s.paymentSettings);
   const checkoutPaymentConfig = useMemo(
     () => checkoutPaymentConfigFromSettings(paymentSettings),
     [paymentSettings.cod, paymentSettings.paymongo],
   );
+
+  useEffect(() => {
+    if (!isCheckoutOpen) return;
+    setFormData(normalizeShippingInfo(shippingInfo));
+    setFieldErrors({});
+    setShippingError(null);
+    setCheckoutError(null);
+  }, [isCheckoutOpen, shippingInfo]);
+
+  useEffect(() => {
+    if (!isCheckoutOpen) return;
+    if (currentUser?.role === "customer") {
+      setFormData((prev) => ({
+        ...prev,
+        fullName: prev.fullName || currentUser.name,
+        email: currentUser.email,
+      }));
+    }
+  }, [isCheckoutOpen, currentUser]);
 
   useEffect(() => {
     if (checkoutStep !== 2) return;
@@ -79,29 +133,56 @@ export function CheckoutModal() {
     }
   };
 
+  const handleBackFromShipping = () => {
+    closeCheckout();
+    toggleCart(true);
+  };
+
+  const clearFieldError = (field: keyof ShippingFieldErrors) => {
+    setFieldErrors((prev) => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+    setShippingError(null);
+  };
+
   const handleShippingSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const error = validateShippingInfo(formData);
-    if (error) {
-      setShippingError(error);
+    const sanitized = sanitizeShippingInfo(normalizeShippingInfo(formData));
+    const errors = validateShippingInfoFields(sanitized);
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setShippingError(Object.values(errors)[0] ?? "Please complete all required fields.");
+      scrollToFirstFieldError(shippingFormRef.current);
       return;
     }
+    setFieldErrors({});
     setShippingError(null);
     setCheckoutError(null);
-    setShippingInfo(formData);
+    setFormData(sanitized);
+    setShippingInfo(sanitized);
     setCheckoutStep(2);
   };
 
   const handlePlaceOrder = async () => {
-    if (!cart.length) {
-      setCheckoutError("Your cart is empty. Add items before placing an order.");
+    if (placingOrder) return;
+
+    const cartError = validateRetailCart(cart);
+    if (cartError) {
+      setCheckoutError(cartError);
       return;
     }
 
-    const shippingErrorMsg = validateShippingInfo(shippingInfo);
-    if (shippingErrorMsg) {
-      setCheckoutError(shippingErrorMsg);
+    const normalizedShipping = sanitizeShippingInfo(normalizeShippingInfo(shippingInfo));
+    const shippingFieldErrors = validateShippingInfoFields(normalizedShipping);
+    if (Object.keys(shippingFieldErrors).length > 0) {
+      setCheckoutError(Object.values(shippingFieldErrors)[0] ?? "Complete your shipping details.");
+      setFieldErrors(shippingFieldErrors);
+      setFormData(normalizedShipping);
       setCheckoutStep(1);
+      scrollToFirstFieldError(shippingFormRef.current);
       return;
     }
 
@@ -112,10 +193,22 @@ export function CheckoutModal() {
     }
 
     try {
+      setPlacingOrder(true);
       setCheckoutError(null);
+      setShippingInfo(normalizedShipping);
       await placeOrder();
     } catch (err) {
-      setCheckoutError(err instanceof Error ? err.message : "Could not place order.");
+      const message = err instanceof Error ? err.message : "Could not place order.";
+      setCheckoutError(message);
+      if (message.toLowerCase().includes("shipping") || message.toLowerCase().includes("region")) {
+        const retryErrors = validateShippingInfoFields(normalizedShipping);
+        setFieldErrors(retryErrors);
+        setFormData(normalizedShipping);
+        setCheckoutStep(1);
+        scrollToFirstFieldError(shippingFormRef.current);
+      }
+    } finally {
+      setPlacingOrder(false);
     }
   };
 
@@ -158,7 +251,7 @@ export function CheckoutModal() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 20 }}
-          className="min-h-screen px-3 sm:px-4 py-6 sm:py-8 md:py-12"
+          className="min-h-[100dvh] px-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(1.5rem,env(safe-area-inset-top))] sm:px-4 sm:py-8 md:py-12"
         >
           <div className="max-w-6xl mx-auto">
             {/* Header */}
@@ -219,117 +312,125 @@ export function CheckoutModal() {
                       <h2 className="text-xl sm:text-2xl font-display font-bold text-offgrid-green mb-5 sm:mb-6">
                         Shipping Information
                       </h2>
-                      <form onSubmit={handleShippingSubmit} className="space-y-4 sm:space-y-5">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
-                          <div className="md:col-span-2">
-                            <label className="block text-xs font-semibold tracking-[0.15em] uppercase text-offgrid-green mb-2">
-                              Full Name *
-                            </label>
-                            <input
-                              type="text"
-                              required
-                              value={formData.fullName}
-                              onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-offgrid-green/20 focus:border-offgrid-green focus:ring-2 focus:ring-offgrid-green/20 outline-none transition-all text-sm sm:text-base text-offgrid-green bg-white"
-                              placeholder="Juan Dela Cruz"
-                            />
+                      <form ref={shippingFormRef} onSubmit={handleShippingSubmit} className="flex min-h-0 flex-col">
+                        <div className="space-y-4 sm:space-y-5">
+                          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 sm:gap-5">
+                            <div className="md:col-span-2">
+                              <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.15em] text-offgrid-green">
+                                Full Name *
+                              </label>
+                              <input
+                                type="text"
+                                required
+                                value={formData.fullName}
+                                onChange={(e) => {
+                                  setFormData({ ...formData, fullName: e.target.value });
+                                  clearFieldError("fullName");
+                                }}
+                                className={contactInputClass(Boolean(fieldErrors.fullName))}
+                                placeholder="Juan Dela Cruz"
+                                autoComplete="name"
+                                aria-invalid={Boolean(fieldErrors.fullName)}
+                              />
+                              {fieldErrors.fullName ? (
+                                <p className="mt-1 text-xs text-red-600" role="alert" data-field-error="fullName">
+                                  {fieldErrors.fullName}
+                                </p>
+                              ) : null}
+                            </div>
+
+                            <div>
+                              <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.15em] text-offgrid-green">
+                                Email *
+                              </label>
+                              <input
+                                type="email"
+                                required
+                                value={formData.email}
+                                onChange={(e) => {
+                                  setFormData({ ...formData, email: e.target.value });
+                                  clearFieldError("email");
+                                }}
+                                className={contactInputClass(Boolean(fieldErrors.email))}
+                                placeholder="juan@email.com"
+                                autoComplete="email"
+                                aria-invalid={Boolean(fieldErrors.email)}
+                              />
+                              {fieldErrors.email ? (
+                                <p className="mt-1 text-xs text-red-600" role="alert" data-field-error="email">
+                                  {fieldErrors.email}
+                                </p>
+                              ) : null}
+                            </div>
+
+                            <div>
+                              <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.15em] text-offgrid-green">
+                                Phone *
+                              </label>
+                              <input
+                                type="tel"
+                                required
+                                inputMode="tel"
+                                value={formData.phone}
+                                onChange={(e) => {
+                                  setFormData({ ...formData, phone: e.target.value });
+                                  clearFieldError("phone");
+                                }}
+                                className={contactInputClass(Boolean(fieldErrors.phone))}
+                                placeholder="+63 917 123 4567"
+                                autoComplete="tel"
+                                aria-invalid={Boolean(fieldErrors.phone)}
+                              />
+                              {fieldErrors.phone ? (
+                                <p className="mt-1 text-xs text-red-600" role="alert" data-field-error="phone">
+                                  {fieldErrors.phone}
+                                </p>
+                              ) : null}
+                            </div>
                           </div>
 
-                          <div>
-                            <label className="block text-xs font-semibold tracking-[0.15em] uppercase text-offgrid-green mb-2">
-                              Email *
-                            </label>
-                            <input
-                              type="email"
-                              required
-                              value={formData.email}
-                              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-offgrid-green/20 focus:border-offgrid-green focus:ring-2 focus:ring-offgrid-green/20 outline-none transition-all text-sm sm:text-base text-offgrid-green bg-white"
-                              placeholder="juan@email.com"
+                          <Suspense
+                            fallback={
+                              <p className="rounded-xl border border-offgrid-green/15 bg-white px-4 py-6 text-sm text-offgrid-green/60">
+                                Loading Philippines address options…
+                              </p>
+                            }
+                          >
+                            <PhilippinesAddressFields
+                              value={formData}
+                              onChange={setFormData}
+                              errors={fieldErrors}
+                              onClearError={clearFieldError}
                             />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-semibold tracking-[0.15em] uppercase text-offgrid-green mb-2">
-                              Phone *
-                            </label>
-                            <input
-                              type="tel"
-                              required
-                              value={formData.phone}
-                              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-offgrid-green/20 focus:border-offgrid-green focus:ring-2 focus:ring-offgrid-green/20 outline-none transition-all text-sm sm:text-base text-offgrid-green bg-white"
-                              placeholder="+63 917 123 4567"
-                            />
-                          </div>
-
-                          <div className="md:col-span-2">
-                            <label className="block text-xs font-semibold tracking-[0.15em] uppercase text-offgrid-green mb-2">
-                              Address *
-                            </label>
-                            <input
-                              type="text"
-                              required
-                              value={formData.address}
-                              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-offgrid-green/20 focus:border-offgrid-green focus:ring-2 focus:ring-offgrid-green/20 outline-none transition-all text-sm sm:text-base text-offgrid-green bg-white"
-                              placeholder="123 Rizal Street, Barangay 5"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-semibold tracking-[0.15em] uppercase text-offgrid-green mb-2">
-                              City *
-                            </label>
-                            <input
-                              type="text"
-                              required
-                              value={formData.city}
-                              onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-offgrid-green/20 focus:border-offgrid-green focus:ring-2 focus:ring-offgrid-green/20 outline-none transition-all text-sm sm:text-base text-offgrid-green bg-white"
-                              placeholder="Taguig"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-semibold tracking-[0.15em] uppercase text-offgrid-green mb-2">
-                              Province *
-                            </label>
-                            <input
-                              type="text"
-                              required
-                              value={formData.province}
-                              onChange={(e) => setFormData({ ...formData, province: e.target.value })}
-                              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-offgrid-green/20 focus:border-offgrid-green focus:ring-2 focus:ring-offgrid-green/20 outline-none transition-all text-sm sm:text-base text-offgrid-green bg-white"
-                              placeholder="Metro Manila"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-semibold tracking-[0.15em] uppercase text-offgrid-green mb-2">
-                              ZIP Code *
-                            </label>
-                            <input
-                              type="text"
-                              required
-                              value={formData.zip}
-                              onChange={(e) => setFormData({ ...formData, zip: e.target.value })}
-                              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-offgrid-green/20 focus:border-offgrid-green focus:ring-2 focus:ring-offgrid-green/20 outline-none transition-all text-sm sm:text-base text-offgrid-green bg-white"
-                              placeholder="1634"
-                            />
-                          </div>
+                          </Suspense>
                         </div>
 
                         {shippingError ? (
-                          <p className="text-sm font-medium text-red-600" role="alert">
+                          <p className="mt-4 text-sm font-medium text-red-600" role="alert">
                             {shippingError}
                           </p>
                         ) : null}
 
-                        <Button variant="default" size="lg" type="submit" className="w-full mt-6 sm:mt-8 h-12 sm:h-14">
-                          Continue to Payment
-                          <ChevronRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5" />
-                        </Button>
+                        <div className="sticky bottom-0 z-10 -mx-5 mt-6 flex flex-col-reverse gap-3 border-t border-offgrid-green/10 bg-offgrid-cream/95 px-5 py-4 backdrop-blur-sm sm:static sm:mx-0 sm:mt-8 sm:flex-row sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="lg"
+                            onClick={handleBackFromShipping}
+                            className="h-12 w-full border-offgrid-green text-offgrid-green sm:h-14 sm:flex-1"
+                          >
+                            <ChevronLeft className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                            Back to cart
+                          </Button>
+                          <Button
+                            type="submit"
+                            size="lg"
+                            className="h-12 w-full bg-offgrid-lime font-bold text-offgrid-green hover:bg-offgrid-lime/90 sm:h-14 sm:flex-[1.2]"
+                          >
+                            Continue to Payment
+                            <ChevronRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
+                          </Button>
+                        </div>
                       </form>
                     </motion.div>
                   )}
@@ -446,23 +547,33 @@ export function CheckoutModal() {
                         </p>
                       ) : null}
 
-                      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                      <div className="sticky bottom-0 z-10 -mx-5 mt-6 flex flex-col-reverse gap-3 border-t border-offgrid-green/10 bg-offgrid-cream/95 px-5 py-4 backdrop-blur-sm sm:static sm:mx-0 sm:mt-8 sm:flex-row sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
                         <Button
                           variant="outline"
                           size="lg"
                           onClick={() => setCheckoutStep(1)}
-                          className="w-full sm:flex-1 h-12 sm:h-14"
+                          className="h-12 w-full border-offgrid-green text-offgrid-green sm:h-14 sm:flex-1"
                         >
+                          <ChevronLeft className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                           Back
                         </Button>
                         <Button
-                          variant="default"
                           size="lg"
-                          onClick={handlePlaceOrder}
-                          className="w-full sm:flex-1 group h-12 sm:h-14"
+                          disabled={placingOrder}
+                          onClick={() => void handlePlaceOrder()}
+                          className="h-12 w-full bg-offgrid-lime font-bold text-offgrid-green hover:bg-offgrid-lime/90 disabled:opacity-70 sm:h-14 sm:flex-[1.2]"
                         >
-                          Place Order — {formatPrice(total)}
-                          <Check className="ml-2 w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform" />
+                          {placingOrder ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Placing order…
+                            </>
+                          ) : (
+                            <>
+                              Place Order — {formatPrice(total)}
+                              <Check className="ml-2 h-4 w-4 transition-transform group-hover:scale-110 sm:h-5 sm:w-5" />
+                            </>
+                          )}
                         </Button>
                       </div>
                     </motion.div>
@@ -555,7 +666,12 @@ export function CheckoutModal() {
                             size="lg"
                             onClick={() => {
                               handleContinueShopping();
-                              window.location.href = `/account/orders/${orderId}`;
+                              const proofPath = `/account/orders/${orderId}`;
+                              if (currentUser?.role === "customer") {
+                                navigate(proofPath);
+                              } else {
+                                navigate("/account/sign-in", { state: { from: proofPath } });
+                              }
                             }}
                             className="h-12 sm:h-14 gap-2"
                           >

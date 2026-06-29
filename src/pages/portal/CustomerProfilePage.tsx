@@ -3,6 +3,8 @@ import { useStore } from "@/src/store/store";
 import { usePortalStore } from "@/src/store/usePortalStore";
 import { Button } from "@/src/components/ui/Button";
 import { AccountLayout } from "@/src/components/account/AccountLayout";
+import { NotificationSettings } from "@/src/components/settings/NotificationSettings";
+import { ChangePasswordForm } from "@/src/components/account/ChangePasswordForm";
 
 const fieldLabel = "text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/45";
 
@@ -42,7 +44,9 @@ export function CustomerProfilePage() {
           <dl className="mt-5 space-y-4">
             <Field label="Full name" value={shipping.fullName || "Not set"} />
             <Field label="Phone" value={shipping.phone || "Not set"} />
-            <Field label="Address" value={shipping.address || "Not set"} />
+            <Field label="Street address" value={shipping.address || "Not set"} />
+            <Field label="Barangay" value={shipping.barangay || "Not set"} />
+            <Field label="Region" value={shipping.region || "Not set"} />
             <Field
               label="City / province"
               value={[shipping.city, shipping.province].filter(Boolean).join(", ") || "Not set"}
@@ -53,6 +57,9 @@ export function CustomerProfilePage() {
             Update on next checkout
           </Button>
         </section>
+
+        <NotificationSettings />
+        <ChangePasswordForm />
       </div>
     </AccountLayout>
   );

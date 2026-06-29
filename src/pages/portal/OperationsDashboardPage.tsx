@@ -5,6 +5,8 @@ import type { UserRole } from "@/src/store/usePortalStore";
 import { usePortalStore } from "@/src/store/usePortalStore";
 import { useStore } from "@/src/store/store";
 import { PortalPageHeader } from "@/src/components/portal/PortalPageHeader";
+import { useEnsureOrdersLoaded } from "@/src/hooks/useEnsureOrdersLoaded";
+import { NotificationSettings } from "@/src/components/settings/NotificationSettings";
 
 interface OperationsDashboardPageProps {
   role: UserRole;
@@ -17,6 +19,7 @@ const titleByRole: Record<UserRole, string> = {
 };
 
 export function OperationsDashboardPage({ role }: OperationsDashboardPageProps) {
+  useEnsureOrdersLoaded();
   const navigate = useNavigate();
   const retailOrders = usePortalStore((state) => state.retailOrders);
   const customOrders = usePortalStore((state) => state.customOrders);
@@ -101,6 +104,12 @@ export function OperationsDashboardPage({ role }: OperationsDashboardPageProps) 
           Open Monthly Sales Analytics
         </button>
       </div>
+
+      {role === "staff" ? (
+        <div className="mt-6">
+          <NotificationSettings />
+        </div>
+      ) : null}
     </div>
   );
 }

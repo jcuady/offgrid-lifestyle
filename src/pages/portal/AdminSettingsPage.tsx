@@ -14,6 +14,7 @@ import {
   Users,
 } from "lucide-react";
 import { PortalPageHeader } from "@/src/components/portal/PortalPageHeader";
+import { NotificationSettings } from "@/src/components/settings/NotificationSettings";
 import { usePortalStore } from "@/src/store/usePortalStore";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { cn } from "@/src/lib/utils";
@@ -130,6 +131,10 @@ export function AdminSettingsPage() {
         <p className="mt-4 text-xs text-offgrid-green/55">
           Manage staff credentials in the Staff area. Self-service password changes arrive with production auth.
         </p>
+      </section>
+
+      <section className="mb-8">
+        <NotificationSettings />
       </section>
 
       {/* Configuration shortcuts */}

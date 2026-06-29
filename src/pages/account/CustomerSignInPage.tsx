@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { cn } from "@/src/lib/utils";
-import { CUSTOMER_SIGN_UP_PATH, PORTAL_LOGIN_PATH } from "@/src/lib/authRoutes";
+import { CUSTOMER_FORGOT_PASSWORD_PATH, CUSTOMER_SIGN_UP_PATH, PORTAL_LOGIN_PATH } from "@/src/lib/authRoutes";
 import {
   resolvePostLoginPath,
   usePortalStore,
 } from "@/src/store/usePortalStore";
 import { localAuthService } from "@/src/services";
 import { AuthPage } from "@/src/components/ui/auth-page";
+
+const showDemoShortcuts = import.meta.env.DEV;
 
 export function CustomerSignInPage() {
   const navigate = useNavigate();
@@ -67,24 +69,34 @@ export function CustomerSignInPage() {
       onPasswordChange={setPassword}
       onSubmit={handleSubmit}
       error={error}
-      demoAccounts={[
-        {
-          label: "Demo customer",
-          hint: "customer@offgrid.test · Autofill",
-          onSelect: () => {
-            setEmail("customer@offgrid.test");
-            setPassword("offgrid123");
-            setError(null);
-          },
-        },
-      ]}
+      demoAccounts={
+        showDemoShortcuts
+          ? [
+              {
+                label: "Demo customer",
+                hint: "customer@offgrid.test · Autofill email",
+                onSelect: () => {
+                  setEmail("customer@offgrid.test");
+                  setPassword("");
+                  setError(null);
+                },
+              },
+            ]
+          : undefined
+      }
       alternateLink={{
         prompt: "New here?",
         label: "Create an account",
         href: CUSTOMER_SIGN_UP_PATH,
       }}
       footer={
-        error?.includes("team portal") ? (
+        <div className="space-y-2">
+          <p className="text-center text-xs text-offgrid-green/55">
+            <Link to={CUSTOMER_FORGOT_PASSWORD_PATH} className="font-semibold text-offgrid-green hover:underline">
+              Forgot your password?
+            </Link>
+          </p>
+          {error?.includes("team portal") ? (
           <Link
             to={PORTAL_LOGIN_PATH}
             className={cn(
@@ -93,7 +105,8 @@ export function CustomerSignInPage() {
           >
             Go to portal sign in
           </Link>
-        ) : null
+        ) : null}
+        </div>
       }
     />
   );

@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useState, type ReactNode } from "react";
+import { Fragment, useMemo, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Package2, ArrowRight, ShoppingBag, Sparkles, Truck, CheckCircle2 } from "lucide-react";
 import { formatMoney } from "@/src/types/commerce";
@@ -15,10 +15,10 @@ import {
 } from "@/src/lib/portal";
 import { usePortalStore } from "@/src/store/usePortalStore";
 import type { ManagedCustomOrder, ManagedRetailOrder } from "@/src/store/usePortalStore";
-import { localOrderService } from "@/src/services";
 import { Button } from "@/src/components/ui/Button";
 import { AccountLayout } from "@/src/components/account/AccountLayout";
 import { OrderTracker } from "@/src/components/account/OrderTracker";
+import { useEnsureOrdersLoaded } from "@/src/hooks/useEnsureOrdersLoaded";
 
 type OrderFilter = "all" | "retail" | "custom";
 
@@ -33,16 +33,11 @@ const cardClass =
   "overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-offgrid-green/[0.07] transition-shadow hover:shadow-md";
 
 export function CustomerOrdersPage() {
+  useEnsureOrdersLoaded();
   const [filter, setFilter] = useState<OrderFilter>("all");
   const user = usePortalStore((state) => state.currentUser);
   const retailOrders = usePortalStore((state) => state.retailOrders);
   const customOrders = usePortalStore((state) => state.customOrders);
-
-  useEffect(() => {
-    localOrderService.listOrders().then(({ retailOrders: r, customOrders: c }) => {
-      usePortalStore.setState({ retailOrders: r, customOrders: c });
-    });
-  }, []);
 
   const ownsOrder = (order: { customerId: string | null; customerEmail: string }) =>
     !!user &&
@@ -218,7 +213,7 @@ function OrderCardShell({
         </div>
 
         <div className="mt-3 flex flex-wrap gap-2">
-          <span className={orderStatusClassCustomer(status)}>{formatOrderStatus(status)}</span>
+          <span className={orderStatusClassCustomer(status)}>{formatOrderStatus(status, type)}</span>
           <span className={paymentStatusClassCustomer(paymentStatus)}>
             {formatPaymentStatus(paymentStatus)}
           </span>
@@ -343,9 +338,9 @@ function CustomOrderCard({ order }: { order: ManagedCustomOrder }) {
           <dd className="mt-1 text-sm font-medium text-offgrid-green">{order.quantity}</dd>
         </div>
         <div>
-          <dt className={metaLabel}>Print method</dt>
+          <dt className={metaLabel}>Delivery</dt>
           <dd className="mt-1 text-sm font-medium text-offgrid-green">
-            {formatEnumLabel(order.printMethod ?? undefined)}
+            {formatShippingLocality(order.shippingInfo) ?? "Address pending"}
           </dd>
         </div>
       </dl>

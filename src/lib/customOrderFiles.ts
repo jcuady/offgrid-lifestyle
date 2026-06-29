@@ -1,6 +1,8 @@
 /** Custom order file blobs — IndexedDB locally, Supabase Storage for admin access. */
 
+import { logger } from "@/src/lib/logger";
 import { supabase } from "@/src/lib/supabase";
+import { resolveStorageReference, toStorageReference } from "@/src/lib/storageAccess";
 
 const DB_NAME = "og-custom-order-files";
 const STORE = "files";
@@ -77,8 +79,7 @@ async function uploadToStorage(orderId: string, kind: "design" | "sheet", file: 
     .from(STORAGE_BUCKET)
     .upload(path, file, { upsert: true });
   if (error) throw error;
-  const { data: { publicUrl } } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(data.path);
-  return publicUrl;
+  return toStorageReference(STORAGE_BUCKET, data.path);
 }
 
 /** Copy pending draft uploads to permanent keys and mirror to Supabase Storage. */
@@ -104,7 +105,12 @@ export async function finalizeCustomOrderFiles(
       try {
         designFileUrl = await uploadToStorage(orderId, "design", file);
       } catch (err) {
-        console.warn("Design file storage upload failed:", err);
+        logger.warn("Design file storage upload failed", {
+          service: "customOrderFiles",
+          operation: "uploadDesignFile",
+          orderId,
+          error: err instanceof Error ? err.message : String(err),
+        });
       }
     }
     if (designKey.startsWith("pending:")) await deleteCustomOrderFile(designKey);
@@ -117,7 +123,12 @@ export async function finalizeCustomOrderFiles(
       try {
         orderSheetFileUrl = await uploadToStorage(orderId, "sheet", file);
       } catch (err) {
-        console.warn("Order sheet storage upload failed:", err);
+        logger.warn("Order sheet storage upload failed", {
+          service: "customOrderFiles",
+          operation: "uploadOrderSheet",
+          orderId,
+          error: err instanceof Error ? err.message : String(err),
+        });
       }
     }
     if (sheetKey.startsWith("pending:")) await deleteCustomOrderFile(sheetKey);
@@ -132,13 +143,16 @@ export async function downloadCustomOrderFile(
   fallbackName: string,
 ): Promise<void> {
   if (fileUrl) {
-    const a = document.createElement("a");
-    a.href = fileUrl;
-    a.download = fallbackName;
-    a.target = "_blank";
-    a.rel = "noreferrer";
-    a.click();
-    return;
+    const resolved = await resolveStorageReference(fileUrl);
+    if (resolved) {
+      const a = document.createElement("a");
+      a.href = resolved;
+      a.download = fallbackName;
+      a.target = "_blank";
+      a.rel = "noreferrer";
+      a.click();
+      return;
+    }
   }
 
   if (!fileKey) {

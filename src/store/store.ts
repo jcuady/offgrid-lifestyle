@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { localOrderService } from "@/src/services";
+import type { ShippingInfo } from "@/src/types/commerce";
+import { EMPTY_SHIPPING_INFO } from "@/src/types/commerce";
 import type { RetailPaymentMethod } from "@/src/types/payments";
 
 // Types
@@ -14,15 +16,7 @@ export interface CartItem {
   quantity: number;
 }
 
-export interface ShippingInfo {
-  fullName: string;
-  email: string;
-  phone: string;
-  address: string;
-  city: string;
-  province: string;
-  zip: string;
-}
+export type { ShippingInfo };
 
 export type PaymentMethod = RetailPaymentMethod;
 export type CheckoutStep = 1 | 2 | 3;
@@ -52,7 +46,7 @@ interface StoreState {
   setCheckoutStep: (step: CheckoutStep) => void;
   setShippingInfo: (info: ShippingInfo) => void;
   setPaymentMethod: (method: PaymentMethod) => void;
-  placeOrder: () => string;
+  placeOrder: () => Promise<string>;
   resetCheckout: () => void;
 }
 
@@ -69,15 +63,7 @@ export const useStore = create<StoreState>()(
   isCartOpen: false,
   isCheckoutOpen: false,
   checkoutStep: 1,
-  shippingInfo: {
-    fullName: "",
-    email: "",
-    phone: "",
-    address: "",
-    city: "",
-    province: "",
-    zip: "",
-  },
+  shippingInfo: EMPTY_SHIPPING_INFO,
   paymentMethod: "gcash",
   orderId: null,
 
@@ -144,13 +130,13 @@ export const useStore = create<StoreState>()(
 
   setPaymentMethod: (method) => set({ paymentMethod: method }),
 
-  placeOrder: () => {
+  placeOrder: async () => {
     const state = get();
     if (!state.cart.length) {
       throw new Error("Your cart is empty.");
     }
     const orderId = generateOrderId();
-    localOrderService.submitRetailOrder({
+    await localOrderService.submitRetailOrder({
       orderId,
       cart: state.cart,
       shippingInfo: state.shippingInfo,
@@ -168,15 +154,7 @@ export const useStore = create<StoreState>()(
     set({
       isCheckoutOpen: false,
       checkoutStep: 1,
-      shippingInfo: {
-        fullName: "",
-        email: "",
-        phone: "",
-        address: "",
-        city: "",
-        province: "",
-        zip: "",
-      },
+      shippingInfo: EMPTY_SHIPPING_INFO,
       paymentMethod: "gcash",
       orderId: null,
       cart: [],

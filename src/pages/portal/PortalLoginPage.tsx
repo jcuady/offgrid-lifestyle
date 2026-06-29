@@ -16,14 +16,16 @@ const PORTAL_DEMOS: { role: Exclude<UserRole, "customer">; label: string; email:
   { role: "staff", label: "Staff", email: "staff@offgrid.test" },
 ];
 
+const showDemoShortcuts = import.meta.env.DEV;
+
 export function PortalLoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const currentUser = usePortalStore((state) => state.currentUser);
   const logout = usePortalStore((state) => state.logout);
 
-  const [email, setEmail] = useState("admin@offgrid.test");
-  const [password, setPassword] = useState("offgrid123");
+  const [email, setEmail] = useState(showDemoShortcuts ? "admin@offgrid.test" : "");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const redirectedFrom = (location.state as { from?: string } | null)?.from;
@@ -37,9 +39,9 @@ export function PortalLoginPage() {
     logout();
   }, [currentUser, navigate, redirectedFrom, logout]);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setError(null);
-    const result = localAuthService.login(email, password);
+    const result = await localAuthService.login(email, password);
     if (!result.ok) {
       setError(result.message ?? "Unable to sign in.");
       return;
@@ -49,7 +51,7 @@ export function PortalLoginPage() {
     if (!user) return;
 
     if (user.role === "customer") {
-      logout();
+      await localAuthService.logout();
       setError("Customer accounts sign in on the storefront, not the team portal.");
       return;
     }
@@ -78,15 +80,19 @@ export function PortalLoginPage() {
       onPasswordChange={setPassword}
       onSubmit={handleSubmit}
       error={error}
-      demoAccounts={PORTAL_DEMOS.map((demo) => ({
-        label: demo.label,
-        hint: `${demo.email} · Autofill`,
-        onSelect: () => {
-          setEmail(demo.email);
-          setPassword("offgrid123");
-          setError(null);
-        },
-      }))}
+      demoAccounts={
+        showDemoShortcuts
+          ? PORTAL_DEMOS.map((demo) => ({
+              label: demo.label,
+              hint: `${demo.email} · Autofill email`,
+              onSelect: () => {
+                setEmail(demo.email);
+                setPassword("");
+                setError(null);
+              },
+            }))
+          : undefined
+      }
       footer={
         error?.includes("storefront") ? (
           <Link

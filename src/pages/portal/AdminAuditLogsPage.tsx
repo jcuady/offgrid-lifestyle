@@ -1,9 +1,9 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ClipboardList, Search, Shield } from "lucide-react";
 import { PortalPageHeader } from "@/src/components/portal/PortalPageHeader";
 import { localAuditService } from "@/src/services";
 import { usePortalStore } from "@/src/store/usePortalStore";
-import type { AuditAction } from "@/src/types/portal";
+import type { AuditAction, AuditLogEntry } from "@/src/types/portal";
 import {
   auditActionCategory,
   auditActionLabel,
@@ -12,7 +12,7 @@ import {
 } from "@/src/lib/portalAudit";
 import { cn } from "@/src/lib/utils";
 
-type AuditCategory = "all" | "auth" | "staff" | "orders" | "payments";
+type AuditCategory = "all" | "auth" | "staff" | "orders" | "payments" | "content";
 
 const CATEGORY_FILTERS: { id: AuditCategory; label: string }[] = [
   { id: "all", label: "All" },
@@ -20,17 +20,23 @@ const CATEGORY_FILTERS: { id: AuditCategory; label: string }[] = [
   { id: "staff", label: "Staff" },
   { id: "orders", label: "Orders" },
   { id: "payments", label: "Payments" },
+  { id: "content", label: "Content" },
 ];
 
 export function AdminAuditLogsPage() {
   const totalCount = usePortalStore((s) => s.auditLogs.length);
   const [category, setCategory] = useState<AuditCategory>("all");
   const [query, setQuery] = useState("");
+  const [logs, setLogs] = useState<AuditLogEntry[]>([]);
 
-  const logs = useMemo(
-    () => localAuditService.list({ category, query }),
-    [category, query, totalCount],
-  );
+  const fetchLogs = useCallback(async () => {
+    const result = await localAuditService.list({ category, query });
+    setLogs(result);
+  }, [category, query]);
+
+  useEffect(() => {
+    fetchLogs();
+  }, [fetchLogs, totalCount]);
 
   const categoryCounts = useMemo(() => {
     const all = usePortalStore.getState().auditLogs;
@@ -40,6 +46,7 @@ export function AdminAuditLogsPage() {
       staff: all.filter((e) => auditActionCategory(e.action as AuditAction) === "staff").length,
       orders: all.filter((e) => auditActionCategory(e.action as AuditAction) === "orders").length,
       payments: all.filter((e) => auditActionCategory(e.action as AuditAction) === "payments").length,
+      content: all.filter((e) => auditActionCategory(e.action as AuditAction) === "content").length,
     };
   }, [totalCount]);
 
@@ -145,9 +152,8 @@ export function AdminAuditLogsPage() {
       <div className="mt-6 flex items-start gap-3 rounded-2xl border border-offgrid-green/10 bg-offgrid-green/[0.04] p-4 text-sm text-offgrid-green/70">
         <Shield className="mt-0.5 h-4 w-4 shrink-0 text-offgrid-green" />
         <p>
-          Database-ready: events mirror <code className="font-mono text-xs">og_audit_logs</code> with RLS restricted to
-          admins. Swap <code className="font-mono text-xs">localAuditService</code> for a Supabase adapter when auth is
-          connected.
+          Audit events are persisted to <code className="font-mono text-xs">og_audit_logs</code> in Supabase with RLS
+          restricted to admin users.
         </p>
       </div>
     </div>

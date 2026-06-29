@@ -10,10 +10,15 @@ import { Button } from "@/src/components/ui/Button";
 import { cn } from "@/src/lib/utils";
 import type { SiteEvent } from "@/src/data/events";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
+import { hydrateSiteContentFromSupabase } from "@/src/services";
 
 export function EventsPage() {
   const navigate = useNavigate();
   const events = useSiteContentStore((state) => state.events);
+
+  useEffect(() => {
+    void hydrateSiteContentFromSupabase();
+  }, []);
   const [selectedEvent, setSelectedEvent] = useState<SiteEvent | null>(null);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [registrationComplete, setRegistrationComplete] = useState(false);

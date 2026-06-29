@@ -102,12 +102,12 @@ export function Footer() {
           </div>
 
           <div className="flex items-center gap-6 text-xs text-offgrid-cream/65">
-            <a href="#" className="transition-colors hover:text-white">
+            <Link to="/legal/privacy" className="transition-colors hover:text-white">
               Privacy
-            </a>
-            <a href="#" className="transition-colors hover:text-white">
+            </Link>
+            <Link to="/legal/terms" className="transition-colors hover:text-white">
               Terms
-            </a>
+            </Link>
             <button
               type="button"
               onClick={scrollToTop}

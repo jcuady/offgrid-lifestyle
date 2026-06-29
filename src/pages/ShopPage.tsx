@@ -16,6 +16,7 @@ import { ProductQuickViewModal } from "@/src/components/ProductQuickViewModal";
 import { FeaturedSpotlight } from "@/src/components/FeaturedSpotlight";
 import { cn } from "@/src/lib/utils";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
+import { hydrateProductsFromSupabase } from "@/src/services";
 
 type SortOption = "newest" | "price-asc" | "price-desc" | "bestselling" | "name-asc";
 
@@ -44,6 +45,10 @@ export function ShopPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
   const gridTopRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    void hydrateProductsFromSupabase();
+  }, []);
 
   // Storefront never lists archived items (matches homepage convention).
   const products = useMemo(

@@ -4,14 +4,21 @@
  */
 
 import { lazy, Suspense, useEffect } from "react";
+import { hydratePaymentSettingsFromSupabase } from "@/src/services";
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Navbar } from "./components/Navbar";
 import { Footer } from "./components/Footer";
+import { ScrollToTop } from "./components/ScrollToTop";
 import { CartDrawer } from "./components/CartDrawer";
 import { CheckoutModal } from "./components/CheckoutModal";
 import { isAuthScreen, PORTAL_LOGIN_PATH } from "@/src/lib/authRoutes";
 import { usePortalStore, getPortalLandingByRole } from "./store/usePortalStore";
 import { RequirePortalRole } from "./components/portal/RequirePortalRole";
+import { CookieConsentBanner } from "./components/consent/CookieConsentBanner";
+import { PushPermissionPrompt } from "./components/notifications/PushPermissionPrompt";
+import { PwaInstallBanner } from "./components/pwa/PwaInstallBanner";
+import { PwaInstallModal } from "./components/pwa/PwaInstallModal";
+import { PwaUpdateBanner } from "./components/pwa/PwaUpdateBanner";
 import { initAuthListener } from "@/src/services/authService";
 
 const HomePage = lazy(() => import("./pages/HomePage").then((m) => ({ default: m.HomePage })));
@@ -45,6 +52,12 @@ const CustomerSignInPage = lazy(() =>
 );
 const CustomerSignUpPage = lazy(() =>
   import("./pages/account/CustomerSignUpPage").then((m) => ({ default: m.CustomerSignUpPage })),
+);
+const ForgotPasswordPage = lazy(() =>
+  import("./pages/account/ForgotPasswordPage").then((m) => ({ default: m.ForgotPasswordPage })),
+);
+const ResetPasswordPage = lazy(() =>
+  import("./pages/account/ResetPasswordPage").then((m) => ({ default: m.ResetPasswordPage })),
 );
 const PortalLoginPage = lazy(() =>
   import("./pages/portal/PortalLoginPage").then((m) => ({ default: m.PortalLoginPage })),
@@ -113,6 +126,15 @@ const AdminSettingsPage = lazy(() =>
 const AdminReviewsPage = lazy(() =>
   import("./pages/portal/AdminReviewsPage").then((m) => ({ default: m.AdminReviewsPage })),
 );
+const TermsPage = lazy(() =>
+  import("./pages/LegalPages").then((m) => ({ default: m.TermsPage })),
+);
+const PrivacyPage = lazy(() =>
+  import("./pages/LegalPages").then((m) => ({ default: m.PrivacyPage })),
+);
+const NotFoundPage = lazy(() =>
+  import("./pages/NotFoundPage").then((m) => ({ default: m.NotFoundPage })),
+);
 
 function PortalIndexRedirect() {
   const user = usePortalStore((state) => state.currentUser);
@@ -123,6 +145,7 @@ function PortalIndexRedirect() {
 export default function App() {
   useEffect(() => {
     initAuthListener();
+    void hydratePaymentSettingsFromSupabase();
   }, []);
 
   return (
@@ -139,6 +162,7 @@ function AppFrame() {
 
   return (
     <div className="min-h-screen bg-offgrid-cream font-sans text-offgrid-green overflow-x-hidden">
+      <ScrollToTop />
       {!hideStorefrontChrome && <Navbar />}
       <Suspense
         fallback={
@@ -155,6 +179,8 @@ function AppFrame() {
         <Route path="/events" element={<EventsPage />} />
         <Route path="/testimonials" element={<TestimonialsPage />} />
         <Route path="/contact" element={<ContactPage />} />
+        <Route path="/legal/terms" element={<TermsPage />} />
+        <Route path="/legal/privacy" element={<PrivacyPage />} />
         <Route path="/custom/order" element={<CustomOrderPage />} />
         <Route path="/custom/templates" element={<CustomTemplatesPage />} />
         <Route path="/custom" element={<CustomHubPage />} />
@@ -162,6 +188,8 @@ function AppFrame() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/account/sign-in" element={<CustomerSignInPage />} />
         <Route path="/account/sign-up" element={<CustomerSignUpPage />} />
+        <Route path="/account/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/account/reset-password" element={<ResetPasswordPage />} />
         <Route path="/portal/login" element={<PortalLoginPage />} />
         <Route path="/portal" element={<PortalIndexRedirect />} />
         <Route
@@ -215,6 +243,7 @@ function AppFrame() {
           <Route path="settings" element={<AdminSettingsPage />} />
           <Route path="custom-content" element={<AdminCustomContentPage />} />
           <Route path="reviews" element={<AdminReviewsPage />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Route>
 
         <Route
@@ -229,7 +258,9 @@ function AppFrame() {
           <Route path="orders" element={<OperationsOrdersPage role="staff" />} />
           <Route path="orders/:orderId" element={<OperationsOrderDetailPage />} />
           <Route path="analytics" element={<OperationsAnalyticsPage role="staff" />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Route>
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
       </Suspense>
 
@@ -237,6 +268,11 @@ function AppFrame() {
 
       <CartDrawer />
       <CheckoutModal />
+      <PwaInstallBanner />
+      <PwaInstallModal />
+      <PwaUpdateBanner />
+      <CookieConsentBanner />
+      <PushPermissionPrompt />
     </div>
   );
 }

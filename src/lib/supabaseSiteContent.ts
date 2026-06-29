@@ -22,7 +22,7 @@ export interface FeaturedSpotlightRow {
   updated_by: string | null;
 }
 
-export type SiteCustomPageScope = "hub" | "order_hero" | "wizard" | "templates_page";
+export type SiteCustomPageScope = "hub" | "order_hero" | "wizard" | "templates_page" | "landing";
 
 export interface SiteCustomPageRow {
   scope: SiteCustomPageScope;

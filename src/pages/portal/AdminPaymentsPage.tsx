@@ -8,27 +8,25 @@ import { PortalPageHeader } from "@/src/components/portal/PortalPageHeader";
 import { fileAcceptAttribute, fileRuleHint, validateUploadedFile } from "@/src/lib/fileValidation";
 import { paymongoWebhookPath } from "@/src/lib/paymongo";
 import type { PayMongoMode } from "@/src/types/payments";
+import { hydratePaymentSettingsFromSupabase, persistPaymentSettings } from "@/src/services";
 import { supabase } from "@/src/lib/supabase";
 
 export function AdminPaymentsPage() {
   const paymentSettings = usePortalStore((s) => s.paymentSettings);
-  const updatePaymentSettings = usePortalStore((s) => s.updatePaymentSettings);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
-  // On mount: sync GCash QR URL from Supabase so all admins see the latest.
   useEffect(() => {
-    supabase
-      .from("og_payment_settings")
-      .select("gcash_qr_image_url")
-      .single()
-      .then(({ data }) => {
-        if (data?.gcash_qr_image_url) {
-          updatePaymentSettings({ gcashQrImageUrl: data.gcash_qr_image_url });
-        }
-      });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    void hydratePaymentSettingsFromSupabase();
   }, []);
+
+  const saveSettings = (patch: Parameters<typeof persistPaymentSettings>[0]) => {
+    setSaveError(null);
+    void persistPaymentSettings(patch).catch((err) => {
+      setSaveError(err instanceof Error ? err.message : "Could not save payment settings.");
+    });
+  };
 
   const onUploadQr = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -56,25 +54,7 @@ export function AdminPaymentsPage() {
         .from("payment-assets")
         .getPublicUrl(storageData.path);
 
-      // Upsert the global payment settings row with the new QR URL
-      const { data: existing } = await supabase
-        .from("og_payment_settings")
-        .select("id")
-        .limit(1)
-        .single();
-
-      if (existing) {
-        await supabase
-          .from("og_payment_settings")
-          .update({ gcash_qr_image_url: publicUrl })
-          .eq("id", existing.id);
-      } else {
-        await supabase
-          .from("og_payment_settings")
-          .insert({ gcash_qr_image_url: publicUrl });
-      }
-
-      updatePaymentSettings({ gcashQrImageUrl: publicUrl });
+      await persistPaymentSettings({ gcashQrImageUrl: publicUrl });
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : "Upload failed. Please try again.");
     } finally {
@@ -83,15 +63,11 @@ export function AdminPaymentsPage() {
   };
 
   const patchPaymongo = (patch: Partial<typeof paymentSettings.paymongo>) => {
-    updatePaymentSettings({
-      paymongo: { ...paymentSettings.paymongo, ...patch },
-    });
+    saveSettings({ paymongo: { ...paymentSettings.paymongo, ...patch } });
   };
 
   const patchCod = (patch: Partial<typeof paymentSettings.cod>) => {
-    updatePaymentSettings({
-      cod: { ...paymentSettings.cod, ...patch },
-    });
+    saveSettings({ cod: { ...paymentSettings.cod, ...patch } });
   };
 
   return (
@@ -110,11 +86,17 @@ export function AdminPaymentsPage() {
         }
       />
 
+      {saveError ? (
+        <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
+          {saveError}
+        </p>
+      ) : null}
+
       <CmsSectionPanel title="Global GCash settings" description="Manual GCash QR shown at retail checkout.">
         <CmsField label="QR image URL" className="sm:col-span-2">
           <CmsImageInput
             value={paymentSettings.gcashQrImageUrl}
-            onChange={(v) => updatePaymentSettings({ gcashQrImageUrl: v })}
+            onChange={(v) => saveSettings({ gcashQrImageUrl: v })}
             alt="GCash QR"
           />
         </CmsField>
@@ -136,7 +118,7 @@ export function AdminPaymentsPage() {
         <CmsField label="Checkout instructions" className="sm:col-span-2">
           <CmsTextInput
             value={paymentSettings.gcashInstructions}
-            onChange={(v) => updatePaymentSettings({ gcashInstructions: v })}
+            onChange={(v) => saveSettings({ gcashInstructions: v })}
             multiline
             rows={3}
           />

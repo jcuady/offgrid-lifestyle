@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { ArrowLeft, CheckCircle2, ImageOff } from "lucide-react";
 import { usePortalStore, type ManagedCustomOrder } from "@/src/store/usePortalStore";
@@ -28,7 +28,9 @@ import {
 } from "@/src/lib/operationsOrderFlow";
 import { Button } from "@/src/components/ui/Button";
 import { CustomOrderFileButton } from "@/src/components/custom-order/CustomOrderFileButton";
+import { OrderDeliveryDetails } from "@/src/components/portal/OrderDeliveryDetails";
 import { localOrderService } from "@/src/services";
+import { useOrderDetail } from "@/src/hooks/useOrderDetail";
 
 function PaymentProofAdminSection({
   orderId,
@@ -273,8 +275,7 @@ export function OperationsOrderDetailPage() {
   const isAdmin = location.pathname.startsWith("/portal/admin");
   const basePath = isAdmin ? "/portal/admin" : "/portal/staff";
 
-  const retail = usePortalStore((s) => s.retailOrders.find((o) => o.id === orderId));
-  const custom = usePortalStore((s) => s.customOrders.find((o) => o.id === orderId));
+  const { retail, custom, loading, found } = useOrderDetail(orderId);
 
   const updateRetailOrderStatus = usePortalStore((s) => s.updateRetailOrderStatus);
   const updateRetailPaymentStatus = usePortalStore((s) => s.updateRetailPaymentStatus);
@@ -286,7 +287,6 @@ export function OperationsOrderDetailPage() {
 
   const [feedback, setFeedback] = useState<string | null>(null);
 
-  const found = useMemo(() => !!(retail || custom), [retail, custom]);
   const hasLegacyCustomSpecs = Boolean(
     custom && (custom.cut || custom.material || custom.printMethod || custom.category),
   );
@@ -298,7 +298,13 @@ export function OperationsOrderDetailPage() {
         : "Headwear"
     : "—";
 
-  if (!orderId || !found) {
+  if (!orderId || loading) {
+    return (
+      <div className="p-6 sm:p-8 lg:p-10 text-sm text-offgrid-green/60">Loading order...</div>
+    );
+  }
+
+  if (!found) {
     return (
       <div className="p-6 sm:p-8 lg:p-10">
         <Link
@@ -708,6 +714,11 @@ export function OperationsOrderDetailPage() {
                   <dd className="font-mono text-xs">{custom.customerId ?? "—"}</dd>
                 </div>
               </dl>
+            </div>
+
+            <div className="rounded-2xl border border-offgrid-green/10 bg-white p-5 shadow-sm">
+              <h2 className="text-lg font-display font-bold text-offgrid-green">Delivery address</h2>
+              <OrderDeliveryDetails shippingInfo={custom.shippingInfo} />
             </div>
 
             <div className="rounded-2xl border border-offgrid-green/10 bg-white p-5 shadow-sm">

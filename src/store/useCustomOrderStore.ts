@@ -8,6 +8,7 @@ import type {
   HeadwearType,
   PrintMethod,
 } from "@/src/types/commerce";
+import { EMPTY_SHIPPING_INFO } from "@/src/types/commerce";
 
 const EMPTY_DRAFT: CustomOrderDraft = {
   id: null,
@@ -28,6 +29,7 @@ const EMPTY_DRAFT: CustomOrderDraft = {
   contactEmail: "",
   contactPhone: "",
   teamOrOrg: "",
+  shippingInfo: { ...EMPTY_SHIPPING_INFO },
   estimatedTotal: null,
   depositRequired: null,
   status: "draft",
@@ -94,9 +96,16 @@ export const useCustomOrderStore = create<CustomOrderState>()(
     }),
     {
       name: "og-custom-order",
-      version: 3,
+      version: 4,
       migrate: (persisted, fromVersion) => {
         const next = { ...(persisted as Record<string, unknown>) };
+        if (fromVersion < 4) {
+          const draft = (next.draft as Partial<CustomOrderDraft> | undefined) ?? {};
+          next.draft = {
+            ...draft,
+            shippingInfo: draft.shippingInfo ?? { ...EMPTY_SHIPPING_INFO },
+          };
+        }
         if (fromVersion < 3) {
           const draft = (next.draft as Partial<CustomOrderDraft> | undefined) ?? {};
           next.draft = {

@@ -1,4 +1,6 @@
 import { supabase } from "@/src/lib/supabase";
+import { logger } from "@/src/lib/logger";
+import { usePortalStore } from "@/src/store/usePortalStore";
 import type { Database } from "@/src/types/database";
 
 type ReviewRow = Database["public"]["Tables"]["og_product_reviews"]["Row"];
@@ -52,6 +54,22 @@ function rowToReview(row: ReviewRow): ProductReview {
   };
 }
 
+function auditReview(action: "review.status_changed" | "review.deleted", reviewId: string, metadata: Record<string, unknown> = {}) {
+  const actor = usePortalStore.getState().currentUser;
+  if (!actor) return;
+
+  usePortalStore.getState().recordAudit({
+    action,
+    actorId: actor.id,
+    actorEmail: actor.email,
+    actorRole: actor.role,
+    targetType: "review",
+    targetId: reviewId,
+    summary: action === "review.deleted" ? `Deleted review ${reviewId}` : `Updated review ${reviewId} status`,
+    metadata,
+  });
+}
+
 export const reviewService = {
   submit: async (input: SubmitReviewInput): Promise<{ ok: boolean; message?: string }> => {
     const insert: ReviewInsert = {
@@ -69,7 +87,13 @@ export const reviewService = {
 
     const { error } = await supabase.from("og_product_reviews").insert(insert);
     if (error) {
-      console.warn("Review submit failed:", error.message);
+      logger.warn("Review submit failed", {
+        service: "reviewService",
+        operation: "reviews.submit",
+        orderId: input.orderId,
+        productId: input.productId,
+        error: error.message,
+      });
       return { ok: false, message: "Could not submit review. Please try again." };
     }
     return { ok: true };
@@ -104,18 +128,31 @@ export const reviewService = {
       .eq("id", id);
 
     if (error) {
-      console.warn("Review status update failed:", error.message);
+      logger.warn("Review status update failed", {
+        service: "reviewService",
+        operation: "reviews.setStatus",
+        reviewId: id,
+        status,
+        error: error.message,
+      });
       return { ok: false };
     }
+    auditReview("review.status_changed", id, { status });
     return { ok: true };
   },
 
   remove: async (id: string): Promise<{ ok: boolean }> => {
     const { error } = await supabase.from("og_product_reviews").delete().eq("id", id);
     if (error) {
-      console.warn("Review delete failed:", error.message);
+      logger.warn("Review delete failed", {
+        service: "reviewService",
+        operation: "reviews.remove",
+        reviewId: id,
+        error: error.message,
+      });
       return { ok: false };
     }
+    auditReview("review.deleted", id);
     return { ok: true };
   },
 

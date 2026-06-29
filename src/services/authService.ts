@@ -1,42 +1,87 @@
+import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/src/lib/supabase";
+import { logger } from "@/src/lib/logger";
 import { usePortalStore, type PortalUser, type UserRole } from "@/src/store/usePortalStore";
+import { linkPushSubscriptionToUser } from "@/src/lib/pushSubscription";
 import type { RegisterCustomerInput } from "@/src/types/portal";
 
 export interface AuthService {
   currentUser: () => PortalUser | null;
   login: (email: string, password: string) => Promise<{ ok: boolean; message?: string }>;
+  /** Development-only shortcut used by local demo flows. */
   loginAsRole: (role: UserRole) => void;
   registerCustomer: (input: RegisterCustomerInput) => Promise<{ ok: boolean; message?: string; userId?: string; emailConfirmationRequired?: boolean }>;
+  requestPasswordReset: (email: string) => Promise<{ ok: boolean; message?: string }>;
+  updatePassword: (newPassword: string) => Promise<{ ok: boolean; message?: string }>;
   logout: () => Promise<void>;
+}
+
+/** Ensure og_portal_users row exists and return the portal-scoped user (not auth.users id). */
+async function ensurePortalUserRow(user: User): Promise<PortalUser | null> {
+  const role = (user.app_metadata?.portal_role as UserRole) ?? "customer";
+
+  const { data: existing } = await supabase
+    .from("og_portal_users")
+    .select("id, name, email, role")
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
+
+  if (existing) {
+    return {
+      id: existing.id,
+      name: existing.name,
+      email: existing.email,
+      role: existing.role as UserRole,
+    };
+  }
+
+  if (role !== "customer") {
+    return null;
+  }
+
+  const name = (user.user_metadata?.name as string) ?? user.email?.split("@")[0] ?? "Customer";
+  const email = user.email ?? "";
+
+  const { data: inserted, error: insertErr } = await supabase
+    .from("og_portal_users")
+    .insert({
+      auth_user_id: user.id,
+      name,
+      email,
+      role: "customer",
+      status: "active",
+    })
+    .select("id, name, email, role")
+    .maybeSingle();
+
+  if (insertErr && !insertErr.message.includes("duplicate")) {
+    logger.warn("Portal user row insert failed", {
+      operation: "ensurePortalUserRow",
+      error: insertErr.message,
+    });
+  }
+
+  if (inserted) {
+    return { id: inserted.id, name: inserted.name, email: inserted.email, role: "customer" };
+  }
+
+  const { data: retry } = await supabase
+    .from("og_portal_users")
+    .select("id, name, email, role")
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
+
+  if (retry) {
+    return { id: retry.id, name: retry.name, email: retry.email, role: retry.role as UserRole };
+  }
+
+  return null;
 }
 
 async function resolvePortalUser(): Promise<PortalUser | null> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
-
-  const role = (user.app_metadata?.portal_role as UserRole) ?? "customer";
-
-  const { data: portalRow } = await supabase
-    .from("og_portal_users")
-    .select("id, name, email, role")
-    .eq("auth_user_id", user.id)
-    .single();
-
-  if (portalRow) {
-    return {
-      id: portalRow.id,
-      name: portalRow.name,
-      email: portalRow.email,
-      role: portalRow.role as UserRole,
-    };
-  }
-
-  return {
-    id: user.id,
-    name: user.user_metadata?.name ?? user.email?.split("@")[0] ?? "User",
-    email: user.email ?? "",
-    role,
-  };
+  return ensurePortalUserRow(user);
 }
 
 export const supabaseAuthService: AuthService = {
@@ -48,13 +93,31 @@ export const supabaseAuthService: AuthService = {
       return { ok: false, message: error.message };
     }
     const portalUser = await resolvePortalUser();
-    if (portalUser) {
-      usePortalStore.getState().setCurrentUser(portalUser);
+    if (!portalUser) {
+      return { ok: false, message: "Could not load your account profile. Please try again." };
     }
+    usePortalStore.getState().setCurrentUser(portalUser);
+    usePortalStore.getState().recordAudit({
+      action: "auth.login",
+      actorId: portalUser.id,
+      actorEmail: portalUser.email,
+      actorRole: portalUser.role,
+      targetType: "session",
+      targetId: portalUser.id,
+      summary: `${portalUser.email} signed in`,
+    });
+    void linkPushSubscriptionToUser();
     return { ok: true };
   },
 
   loginAsRole: (role) => {
+    if (!import.meta.env.DEV) {
+      logger.warn("Blocked demo role login outside development", {
+        operation: "auth.loginAsRole",
+        role,
+      });
+      return;
+    }
     usePortalStore.getState().loginAsRole(role);
   },
 
@@ -63,12 +126,11 @@ export const supabaseAuthService: AuthService = {
       email: input.email,
       password: input.password,
       options: {
-        data: { name: input.name, portal_role: "customer" },
+        data: { name: input.name },
       },
     });
 
     if (error) {
-      // "Email already registered" — give a clear, friendly message
       if (error.message.toLowerCase().includes("already registered") || error.message.toLowerCase().includes("already exists")) {
         return { ok: false, message: "An account with this email already exists. Please sign in instead." };
       }
@@ -80,52 +142,80 @@ export const supabaseAuthService: AuthService = {
       return { ok: false, message: "Sign-up succeeded but no user ID returned." };
     }
 
-    // Detect if email confirmation is pending (Supabase returns empty identities)
-    const emailConfirmationRequired = (data.user?.identities?.length ?? 1) === 0;
+    const emailConfirmationRequired = data.user?.identities !== undefined && data.user.identities.length === 0;
 
-    // Insert og_portal_users row — allowed by the customer insert RLS policy
-    const { data: portalRow, error: insertErr } = await supabase
-      .from("og_portal_users")
-      .insert({
-        auth_user_id: authUserId,
+    let portalUser: PortalUser | null = null;
+    if (data.session && data.user) {
+      portalUser = await ensurePortalUserRow(data.user);
+    }
+
+    if (!portalUser) {
+      portalUser = {
+        id: authUserId,
         name: input.name,
         email: input.email,
         role: "customer",
-        status: "active",
-      })
-      .select("id")
-      .single();
-
-    if (insertErr && !insertErr.message.includes("duplicate")) {
-      console.warn("Portal user row insert failed:", insertErr.message);
+      };
     }
 
-    // Fetch existing row if insert failed (user may have re-registered)
-    let portalId = portalRow?.id;
-    if (!portalId) {
-      const { data: existing } = await supabase
-        .from("og_portal_users")
-        .select("id")
-        .eq("auth_user_id", authUserId)
-        .single();
-      portalId = existing?.id ?? authUserId;
-    }
-
-    const portalUser: PortalUser = {
-      id: portalId,
-      name: input.name,
-      email: input.email,
-      role: "customer",
-    };
-
-    if (!emailConfirmationRequired) {
+    if (!emailConfirmationRequired && portalUser) {
       usePortalStore.getState().setCurrentUser(portalUser);
+      usePortalStore.getState().recordAudit({
+        action: "auth.register",
+        actorId: portalUser.id,
+        actorEmail: portalUser.email,
+        actorRole: portalUser.role,
+        targetType: "user",
+        targetId: portalUser.id,
+        summary: `Customer account created for ${portalUser.email}`,
+        metadata: { customerId: portalUser.id },
+      });
+      void linkPushSubscriptionToUser();
     }
 
     return { ok: true, userId: portalUser.id, emailConfirmationRequired };
   },
 
+  requestPasswordReset: async (email) => {
+    const normalized = email.trim().toLowerCase();
+    if (!normalized) {
+      return { ok: false, message: "Enter your email address." };
+    }
+
+    const redirectTo = `${window.location.origin}/account/reset-password`;
+    const { error } = await supabase.auth.resetPasswordForEmail(normalized, { redirectTo });
+    if (error) {
+      return { ok: false, message: error.message };
+    }
+    return { ok: true, message: "Check your email for a password reset link." };
+  },
+
+  updatePassword: async (newPassword) => {
+    const password = newPassword.trim();
+    if (password.length < 8) {
+      return { ok: false, message: "Password must be at least 8 characters." };
+    }
+
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) {
+      return { ok: false, message: error.message };
+    }
+    return { ok: true };
+  },
+
   logout: async () => {
+    const user = usePortalStore.getState().currentUser;
+    if (user) {
+      usePortalStore.getState().recordAudit({
+        action: "auth.logout",
+        actorId: user.id,
+        actorEmail: user.email,
+        actorRole: user.role,
+        targetType: "session",
+        targetId: user.id,
+        summary: `${user.email} signed out`,
+      });
+    }
     await supabase.auth.signOut();
     usePortalStore.getState().setCurrentUser(null);
   },
@@ -134,17 +224,16 @@ export const supabaseAuthService: AuthService = {
 /** Initialize auth state from existing session on app load. */
 export async function initAuthListener() {
   const portalUser = await resolvePortalUser();
-  if (portalUser) {
-    usePortalStore.getState().setCurrentUser(portalUser);
-  }
+  usePortalStore.getState().setCurrentUser(portalUser);
 
   supabase.auth.onAuthStateChange(async (event) => {
     if (event === "SIGNED_OUT") {
       usePortalStore.getState().setCurrentUser(null);
     } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
       const user = await resolvePortalUser();
-      if (user) {
-        usePortalStore.getState().setCurrentUser(user);
+      usePortalStore.getState().setCurrentUser(user);
+      if (event === "SIGNED_IN" && user) {
+        void linkPushSubscriptionToUser();
       }
     }
   });

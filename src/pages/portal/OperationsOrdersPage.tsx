@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useState, type ReactNode } from "react";
+import { Fragment, useMemo, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import type { OrderStatus, PaymentStatus } from "@/src/types/commerce";
 import {
@@ -28,6 +28,7 @@ import {
 import { usePortalStore, type ManagedCustomOrder, type ManagedRetailOrder, type UserRole } from "@/src/store/usePortalStore";
 import { localOrderService } from "@/src/services";
 import { Button } from "@/src/components/ui/Button";
+import { useEnsureOrdersLoaded } from "@/src/hooks/useEnsureOrdersLoaded";
 
 interface OperationsOrdersPageProps {
   role: UserRole;
@@ -65,6 +66,7 @@ function OrderFilterToggle({
 }
 
 export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
+  useEnsureOrdersLoaded();
   const isAdmin = role === "admin";
   const ordersBase = role === "admin" ? "/portal/admin/orders" : "/portal/staff/orders";
   const canUpdateStatus = role === "admin" || role === "staff";
@@ -74,12 +76,6 @@ export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
   const updateRetailPaymentStatus = usePortalStore((state) => state.updateRetailPaymentStatus);
   const updateCustomOrderStatus = usePortalStore((state) => state.updateCustomOrderStatus);
   const updateCustomPaymentStatus = usePortalStore((state) => state.updateCustomPaymentStatus);
-
-  useEffect(() => {
-    localOrderService.listOrders().then(({ retailOrders, customOrders }) => {
-      usePortalStore.setState({ retailOrders, customOrders });
-    });
-  }, []);
 
   const [feedback, setFeedback] = useState<string | null>(null);
   const [query, setQuery] = useState("");

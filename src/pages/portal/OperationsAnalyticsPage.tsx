@@ -3,6 +3,7 @@ import type { UserRole } from "@/src/store/usePortalStore";
 import { usePortalStore } from "@/src/store/usePortalStore";
 import { useStore } from "@/src/store/store";
 import { PortalPageHeader } from "@/src/components/portal/PortalPageHeader";
+import { useEnsureOrdersLoaded } from "@/src/hooks/useEnsureOrdersLoaded";
 
 interface OperationsAnalyticsPageProps {
   role: UserRole;
@@ -40,6 +41,7 @@ function buildMonthlySeries(totals: { amount: number; createdAt: string }[]): Mo
 }
 
 export function OperationsAnalyticsPage({ role }: OperationsAnalyticsPageProps) {
+  useEnsureOrdersLoaded();
   const retailOrders = usePortalStore((state) => state.retailOrders);
   const customOrders = usePortalStore((state) => state.customOrders);
   const cart = useStore((state) => state.cart);

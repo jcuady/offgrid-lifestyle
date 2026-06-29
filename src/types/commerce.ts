@@ -42,11 +42,38 @@ export interface ShippingInfo {
   fullName: string;
   email: string;
   phone: string;
+  /** Street, building, unit — excludes barangay/city. */
   address: string;
+  barangay: string;
   city: string;
   province: string;
+  region: string;
   zip: string;
+  latitude: number | null;
+  longitude: number | null;
+  regionCode: string;
+  provinceCode: string;
+  cityCode: string;
+  barangayCode: string;
 }
+
+export const EMPTY_SHIPPING_INFO: ShippingInfo = {
+  fullName: "",
+  email: "",
+  phone: "",
+  address: "",
+  barangay: "",
+  city: "",
+  province: "",
+  region: "",
+  zip: "",
+  latitude: null,
+  longitude: null,
+  regionCode: "",
+  provinceCode: "",
+  cityCode: "",
+  barangayCode: "",
+};
 
 export interface CustomOrderDraft {
   id: string | null;
@@ -67,6 +94,8 @@ export interface CustomOrderDraft {
   contactEmail: string;
   contactPhone: string;
   teamOrOrg: string;
+  /** Philippines delivery address (PSGC + street). */
+  shippingInfo: ShippingInfo;
   estimatedTotal: Money | null;
   depositRequired: Money | null;
   status: OrderStatus;

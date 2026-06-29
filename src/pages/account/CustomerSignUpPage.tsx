@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { isValidEmail } from "@/src/lib/formValidation";
+import { isValidEmail, validatePassword, validateTermsAccepted } from "@/src/lib/formValidation";
 import { CUSTOMER_SIGN_IN_PATH } from "@/src/lib/authRoutes";
 import { usePortalStore } from "@/src/store/usePortalStore";
 import { localAuthService } from "@/src/services";
@@ -14,12 +14,14 @@ export function CustomerSignUpPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
   const [errors, setErrors] = useState<{
     name?: string;
     email?: string;
     password?: string;
     confirmPassword?: string;
+    acceptedTerms?: string;
     form?: string;
   }>({});
 
@@ -33,8 +35,11 @@ export function CustomerSignUpPage() {
     const next: typeof errors = {};
     if (!name.trim()) next.name = "Full name is required.";
     if (!isValidEmail(email)) next.email = "Enter a valid email address.";
-    if (password.length < 8) next.password = "Use at least 8 characters.";
+    const passwordError = validatePassword(password);
+    if (passwordError) next.password = passwordError;
     if (password !== confirmPassword) next.confirmPassword = "Passwords do not match.";
+    const termsError = validateTermsAccepted(acceptedTerms);
+    if (termsError) next.acceptedTerms = termsError;
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -73,7 +78,7 @@ export function CustomerSignUpPage() {
         alternateLink={{
           prompt: "Didn't receive the email?",
           label: "Try again",
-          href: "/account/signup",
+          href: "/account/sign-up",
         }}
       />
     );
@@ -92,6 +97,8 @@ export function CustomerSignUpPage() {
       onEmailChange={setEmail}
       onPasswordChange={setPassword}
       onConfirmPasswordChange={setConfirmPassword}
+      acceptedTerms={acceptedTerms}
+      onAcceptedTermsChange={setAcceptedTerms}
       onSubmit={handleSubmit}
       fieldErrors={errors}
       alternateLink={{

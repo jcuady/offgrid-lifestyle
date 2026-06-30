@@ -62,6 +62,7 @@ export function isPwaInstallDismissed(): boolean {
 
 export function dismissPwaInstallPrompt(): void {
   localStorage.setItem(INSTALL_DISMISSED_KEY, "1");
+  emit();
 }
 
 export function shouldOfferPwaInstall(): boolean {

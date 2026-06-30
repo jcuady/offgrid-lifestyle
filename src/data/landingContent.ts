@@ -248,7 +248,7 @@ export const initialLandingContent: LandingContent = {
     paragraph3Prefix: "Because style isn't reserved for special occasions.",
     paragraph3Highlight: "It's found in the way we live, move, and make things our own.",
     closingQuote: "",
-    image: "/images/brand-story.jpg",
+    image: "/images/brand-story-editorial.jpg",
     badgeEst: "EST.",
     badgeLocality: "MANILA, PH",
     badgeGritty: "Gritty",

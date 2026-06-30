@@ -18,12 +18,14 @@
   --color-offgrid-green: #000000;
   /* offgrid-cream → near-white: page background, light cards, light text on dark */
   --color-offgrid-cream: #F1F1F1;
-  /* offgrid-lime → Electric Blue: brand accent (fills w/ white text, accents on light) */
-  --color-offgrid-lime: #000AFF;
+  /* offgrid-lime → Electric Blue (refined): brand accent. Brightened from the raw
+     #000AFF so it reads on both black and white and is easier on the eyes —
+     white-on-accent ≈ 5.8:1, accent-on-black (bold) ≈ 3.5:1. */
+  --color-offgrid-lime: #3D5AFE;
   /* offgrid-dark → Black: footer, deep overlays */
   --color-offgrid-dark: #000000;
-  /* offgrid-gold → deep brand navy: premium/special accents (events) */
-  --color-offgrid-gold: #00068D;
+  /* offgrid-gold → deep brand indigo: premium/special accents (events) */
+  --color-offgrid-gold: #1E2BB0;
 
   /* Guide secondary ramp — available for borders, muted UI, dividers */
   --color-og-gray-50: #F1F1F1;
@@ -31,8 +33,8 @@
   --color-og-gray-300: #A1A1A1;
   --color-og-gray-600: #6A6A6A;
   --color-og-gray-800: #3A3939;
-  --color-og-blue-700: #0008C3;
-  --color-og-blue-900: #00068D;
+  --color-og-blue-700: #2C44E6;
+  --color-og-blue-900: #1E2BB0;
 
   /* shadcn-compatible semantic tokens (mapped to OFF GRID brand) */
   --color-background: #F1F1F1;
@@ -41,7 +43,7 @@
   --color-muted-foreground: #6A6A6A;
   --color-border: color-mix(in srgb, #000000 14%, transparent);
   --color-input: color-mix(in srgb, #000000 18%, transparent);
-  --color-ring: #000AFF;
+  --color-ring: #3D5AFE;
   --color-ring-offset: #F1F1F1;
   --color-primary: #000000;
   --color-primary-foreground: #F1F1F1;
@@ -87,7 +89,7 @@
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: #000AFF;
+    background: #3D5AFE;
   }
 }
 
@@ -112,6 +114,6 @@
 .portal-surface select:focus,
 .portal-surface textarea:focus {
   outline: none;
-  border-color: #000aff;
-  box-shadow: 0 0 0 3px color-mix(in srgb, #000aff 22%, transparent);
+  border-color: #3D5AFE;
+  box-shadow: 0 0 0 3px color-mix(in srgb, #3D5AFE 22%, transparent);
 }

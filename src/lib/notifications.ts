@@ -1,5 +1,6 @@
 import { notificationService } from "@/src/services/notificationService";
 import { sendPushNotification, type OperationalAlertType } from "@/src/lib/pushSubscription";
+import { operationalPushUrl } from "@/src/lib/pushAuth";
 import { logger } from "@/src/lib/logger";
 
 export interface NotifyPayload {
@@ -46,19 +47,19 @@ const STAFF_MESSAGES: Record<StaffOrderEvent, (orderId: string) => NotifyPayload
   new_retail_order: (id) => ({
     title: "New shop order",
     body: `Retail order ${id} needs review in Operations.`,
-    url: `/portal/admin/orders/${id}`,
+    url: operationalPushUrl(id),
     category: "operations",
   }),
   new_custom_order: (id) => ({
     title: "New custom request",
     body: `Custom order ${id} was submitted and awaits quote review.`,
-    url: `/portal/admin/orders/${id}`,
+    url: operationalPushUrl(id),
     category: "operations",
   }),
   payment_proof: (id) => ({
     title: "Payment proof uploaded",
     body: `Customer uploaded payment proof for order ${id}.`,
-    url: `/portal/admin/orders/${id}`,
+    url: operationalPushUrl(id),
     category: "payment",
   }),
 };

@@ -177,12 +177,16 @@ export async function sendPushNotification(params: {
 }): Promise<{ sent: number; failed: number }> {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const session = (await supabase.auth.getSession()).data.session;
+  const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+  const bearer =
+    session?.access_token ??
+    (params.operationalAlert && anonKey ? anonKey : "");
 
   const resp = await fetch(`${supabaseUrl}/functions/v1/send-push`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${session?.access_token ?? ""}`,
+      Authorization: `Bearer ${bearer}`,
     },
     body: JSON.stringify({
       title: params.title,

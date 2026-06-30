@@ -63,6 +63,9 @@ const ResetPasswordPage = lazy(() =>
 const PortalLoginPage = lazy(() =>
   import("./pages/portal/PortalLoginPage").then((m) => ({ default: m.PortalLoginPage })),
 );
+const PortalOrderRedirect = lazy(() =>
+  import("./components/portal/PortalOrderRedirect").then((m) => ({ default: m.PortalOrderRedirect })),
+);
 const PortalLayout = lazy(() =>
   import("./components/portal/PortalLayout").then((m) => ({ default: m.PortalLayout })),
 );
@@ -193,6 +196,7 @@ function AppFrame() {
         <Route path="/account/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/account/reset-password" element={<ResetPasswordPage />} />
         <Route path="/portal/login" element={<PortalLoginPage />} />
+        <Route path="/portal/orders/:orderId" element={<PortalOrderRedirect />} />
         <Route path="/portal" element={<PortalIndexRedirect />} />
         <Route
           path="/account/orders"

@@ -16,6 +16,11 @@ __MACOSX/
 
 .vercel
 
+# Playwright e2e artifacts
+test-results/
+playwright-report/
+.playwright/
+
 # Large local design-source assets (not used by the build; exceed GitHub size limits)
 og photos/
 Offgrid - Branding Guide/

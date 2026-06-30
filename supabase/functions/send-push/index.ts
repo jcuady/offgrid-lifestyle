@@ -40,23 +40,6 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const userClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: authHeader } },
-      auth: { autoRefreshToken: false, persistSession: false },
-    });
-    const token = authHeader.replace("Bearer ", "");
-    const { data: authData, error: authError } = await userClient.auth.getUser(token);
-    if (authError || !authData.user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const role = authData.user.app_metadata?.portal_role as string | undefined;
-    const isStaffOrAdmin = role === "admin" || role === "staff";
-
     const { title, body, url: clickUrl, user_ids, operational_alert } = await req.json();
     if (!title || !body) {
       return new Response(JSON.stringify({ error: "title and body are required" }), {
@@ -70,6 +53,28 @@ Deno.serve(async (req: Request) => {
       operational_alert &&
       typeof operational_alert.order_id === "string" &&
       typeof operational_alert.alert_type === "string";
+
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const userClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+    const token = authHeader.replace("Bearer ", "");
+    const { data: authData } = await userClient.auth.getUser(token);
+    const authUser = authData.user ?? null;
+
+    const role = authUser?.app_metadata?.portal_role as string | undefined;
+    const isStaffOrAdmin = role === "admin" || role === "staff";
+
+    let callerPortalId: string | null = null;
+    if (authUser) {
+      const { data: portalRow } = await adminClient
+        .from("og_portal_users")
+        .select("id")
+        .eq("auth_user_id", authUser.id)
+        .maybeSingle();
+      callerPortalId = portalRow?.id ?? null;
+    }
 
     let targetUserIds: string[] | null = null;
 
@@ -90,16 +95,9 @@ Deno.serve(async (req: Request) => {
         });
       }
 
-      const { data: portalRow } = await adminClient
-        .from("og_portal_users")
-        .select("id")
-        .eq("auth_user_id", authData.user.id)
-        .maybeSingle();
-
-      const callerPortalId = portalRow?.id ?? null;
       const orderAgeMs = Date.now() - new Date(order.created_at).getTime();
-      const isRecentGuest = !order.customer_id && orderAgeMs < 10 * 60 * 1000;
-      const isOwner = order.customer_id && callerPortalId === order.customer_id;
+      const isRecentGuest = !order.customer_id && orderAgeMs >= 0 && orderAgeMs < 10 * 60 * 1000;
+      const isOwner = Boolean(order.customer_id && callerPortalId === order.customer_id);
       const isPaymentProof = alertType === "payment_proof" && isOwner;
 
       if (!isStaffOrAdmin && !isOwner && !isRecentGuest && !isPaymentProof) {
@@ -124,14 +122,27 @@ Deno.serve(async (req: Request) => {
       targetUserIds = staffUsers.map((u) => u.id);
     }
 
-    if (!hasTargetedUsers && !targetUserIds && role !== "admin") {
-      return new Response(JSON.stringify({ error: "Forbidden: admin only for broadcast" }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    if (hasTargetedUsers) {
+      if (isStaffOrAdmin) {
+        // Staff/admin may notify customers or other portal users.
+      } else if (authUser && callerPortalId) {
+        const allSelf = (user_ids as string[]).every((id) => id === callerPortalId);
+        if (!allSelf) {
+          return new Response(JSON.stringify({ error: "Forbidden: cannot notify other users" }), {
+            status: 403,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      } else {
+        return new Response(JSON.stringify({ error: "Forbidden: staff or admin required" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
-    if (hasTargetedUsers && !isStaffOrAdmin && !hasOperationalAlert) {
-      return new Response(JSON.stringify({ error: "Forbidden: staff or admin required" }), {
+
+    if (!hasTargetedUsers && !targetUserIds && !isStaffOrAdmin) {
+      return new Response(JSON.stringify({ error: "Forbidden: admin only for broadcast" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

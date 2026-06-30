@@ -7,10 +7,11 @@ import { useNotifications } from "@/src/hooks/useNotifications";
 import { usePortalStore } from "@/src/store/usePortalStore";
 import {
   isPushSubscribed,
-  subscribeToPush,
+  subscribeToPushDetailed,
   unsubscribeFromPush,
 } from "@/src/lib/pushSubscription";
 import { getCookieConsent } from "@/src/lib/consent";
+import { canReceiveWebPush } from "@/src/lib/pwa";
 
 function formatWhen(iso: string): string {
   const d = new Date(iso);
@@ -76,9 +77,17 @@ export function NotificationBell({
           setPushMessage("Enable all cookies to use push notifications.");
           return;
         }
-        const ok = await subscribeToPush();
-        setPushOn(ok);
-        setPushMessage(ok ? "Push notifications enabled." : "Could not enable — check browser permissions.");
+        if (!canReceiveWebPush()) {
+          setPushMessage("Push is not available on this browser or device.");
+          return;
+        }
+        const result = await subscribeToPushDetailed();
+        setPushOn(result.ok);
+        if (result.ok) {
+          setPushMessage("Push notifications enabled.");
+        } else if (result.ok === false) {
+          setPushMessage(result.reason);
+        }
       }
     } finally {
       setPushBusy(false);

@@ -1,5 +1,7 @@
 import { logger } from "@/src/lib/logger";
 import { supabase } from "@/src/lib/supabase";
+import { canReceiveWebPush, getPushUnsupportedReason } from "@/src/lib/pwa";
+import { ensureServiceWorkerReady } from "@/src/lib/serviceWorker";
 import { usePortalStore } from "@/src/store/usePortalStore";
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
@@ -13,71 +15,108 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
   return outputArray;
 }
 
+export type PushSubscribeResult =
+  | { ok: true }
+  | { ok: false; reason: string };
+
 export async function subscribeToPush(): Promise<boolean> {
-  const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
-  if (!vapidPublicKey) {
-    logger.warn("VAPID public key not configured", { operation: "subscribeToPush" });
-    return false;
+  const result = await subscribeToPushDetailed();
+  return result.ok;
+}
+
+export async function subscribeToPushDetailed(): Promise<PushSubscribeResult> {
+  const unsupported = getPushUnsupportedReason();
+  if (unsupported) {
+    logger.warn(unsupported, { operation: "subscribeToPush" });
+    return { ok: false, reason: unsupported };
   }
 
-  if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
-    logger.warn("Push notifications not supported", { operation: "subscribeToPush" });
-    return false;
+  const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+  if (!vapidPublicKey) {
+    const reason = "Push is not configured yet. Contact support if this persists.";
+    logger.warn("VAPID public key not configured", { operation: "subscribeToPush" });
+    return { ok: false, reason };
+  }
+
+  if (!canReceiveWebPush()) {
+    const reason = getPushUnsupportedReason() ?? "Push notifications are not supported.";
+    return { ok: false, reason };
   }
 
   try {
-    const registration = await navigator.serviceWorker.ready;
+    const registration = await ensureServiceWorkerReady();
+    if (!registration) {
+      return { ok: false, reason: "Could not activate the app service worker. Refresh and try again." };
+    }
 
     const existing = await registration.pushManager.getSubscription();
     if (existing) {
       await saveSubscription(existing);
-      return true;
+      return { ok: true };
     }
 
     const permission = await Notification.requestPermission();
     if (permission !== "granted") {
-      return false;
+      return {
+        ok: false,
+        reason:
+          permission === "denied"
+            ? "Notifications are blocked. Allow them in your browser or device settings."
+            : "Notification permission was not granted.",
+      };
     }
 
     const subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+      applicationServerKey: urlBase64ToUint8Array(vapidPublicKey) as BufferSource,
     });
 
     await saveSubscription(subscription);
-    return true;
+    return { ok: true };
   } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
     logger.error("Push subscription failed", {
       operation: "subscribeToPush",
-      error: err instanceof Error ? err.message : String(err),
+      error: message,
     });
-    return false;
+    return {
+      ok: false,
+      reason: message.includes("applicationServerKey")
+        ? "Invalid VAPID key configuration. Check VITE_VAPID_PUBLIC_KEY."
+        : "Could not enable push notifications. Try again or check browser settings.",
+    };
   }
 }
 
 async function saveSubscription(subscription: PushSubscription): Promise<void> {
   const keys = subscription.toJSON().keys;
-  if (!keys) return;
+  if (!keys?.p256dh || !keys.auth) return;
 
   const currentUser = usePortalStore.getState().currentUser;
   const portalUserId = currentUser?.id ?? null;
+  if (!portalUserId) {
+    throw new Error("Sign in before enabling push notifications.");
+  }
 
-  await supabase.from("og_push_subscriptions").upsert(
+  const { error } = await supabase.from("og_push_subscriptions").upsert(
     {
       endpoint: subscription.endpoint,
-      keys_p256dh: keys.p256dh!,
-      keys_auth: keys.auth!,
+      keys_p256dh: keys.p256dh,
+      keys_auth: keys.auth,
       user_id: portalUserId,
     },
     { onConflict: "endpoint" },
   );
+
+  if (error) throw error;
 }
 
 /** Attach browser push subscription to the signed-in portal user after login. */
 export async function linkPushSubscriptionToUser(): Promise<void> {
-  if (!("serviceWorker" in navigator)) return;
+  if (!canReceiveWebPush()) return;
   try {
-    const registration = await navigator.serviceWorker.ready;
+    const registration = await ensureServiceWorkerReady();
+    if (!registration) return;
     const subscription = await registration.pushManager.getSubscription();
     if (subscription) {
       await saveSubscription(subscription);
@@ -92,7 +131,8 @@ export async function linkPushSubscriptionToUser(): Promise<void> {
 
 export async function unsubscribeFromPush(): Promise<boolean> {
   try {
-    const registration = await navigator.serviceWorker.ready;
+    const registration = await ensureServiceWorkerReady();
+    if (!registration) return true;
     const subscription = await registration.pushManager.getSubscription();
     if (!subscription) return true;
 
@@ -114,9 +154,10 @@ export async function unsubscribeFromPush(): Promise<boolean> {
 }
 
 export async function isPushSubscribed(): Promise<boolean> {
-  if (!("serviceWorker" in navigator)) return false;
+  if (!canReceiveWebPush()) return false;
   try {
-    const registration = await navigator.serviceWorker.ready;
+    const registration = await ensureServiceWorkerReady();
+    if (!registration) return false;
     const subscription = await registration.pushManager.getSubscription();
     return subscription !== null;
   } catch {

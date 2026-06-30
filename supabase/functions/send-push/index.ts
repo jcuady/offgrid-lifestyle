@@ -1,74 +1,11 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import webpush from "npm:web-push@3.6.7";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
-
-function base64UrlToUint8Array(base64Url: string): Uint8Array {
-  const padding = "=".repeat((4 - (base64Url.length % 4)) % 4);
-  const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/") + padding;
-  const raw = atob(base64);
-  const bytes = new Uint8Array(raw.length);
-  for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
-  return bytes;
-}
-
-async function importVapidKeys(publicKeyB64: string, privateKeyB64: string) {
-  const publicKeyBytes = base64UrlToUint8Array(publicKeyB64);
-  const privateKeyBytes = base64UrlToUint8Array(privateKeyB64);
-
-  const publicKey = await crypto.subtle.importKey(
-    "raw",
-    publicKeyBytes,
-    { name: "ECDSA", namedCurve: "P-256" },
-    true,
-    []
-  );
-  const privateKey = await crypto.subtle.importKey(
-    "pkcs8",
-    privateKeyBytes,
-    { name: "ECDSA", namedCurve: "P-256" },
-    true,
-    ["sign"]
-  );
-
-  return { publicKey, privateKey };
-}
-
-async function createJwt(
-  endpoint: string,
-  vapidEmail: string,
-  privateKey: CryptoKey
-): Promise<string> {
-  const url = new URL(endpoint);
-  const audience = `${url.protocol}//${url.host}`;
-  const expiry = Math.floor(Date.now() / 1000) + 12 * 60 * 60;
-
-  const header = { typ: "JWT", alg: "ES256" };
-  const payload = { aud: audience, exp: expiry, sub: `mailto:${vapidEmail}` };
-
-  const encode = (obj: Record<string, unknown>) =>
-    btoa(JSON.stringify(obj))
-      .replace(/\+/g, "-")
-      .replace(/\//g, "_")
-      .replace(/=+$/, "");
-
-  const unsignedToken = `${encode(header)}.${encode(payload)}`;
-  const sig = await crypto.subtle.sign(
-    { name: "ECDSA", hash: "SHA-256" },
-    privateKey,
-    new TextEncoder().encode(unsignedToken)
-  );
-
-  const sigB64 = btoa(String.fromCharCode(...new Uint8Array(sig)))
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "");
-
-  return `${unsignedToken}.${sigB64}`;
-}
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
@@ -81,6 +18,15 @@ Deno.serve(async (req: Request) => {
     const vapidPublicKey = Deno.env.get("VAPID_PUBLIC_KEY")!;
     const vapidPrivateKey = Deno.env.get("VAPID_PRIVATE_KEY")!;
     const vapidEmail = Deno.env.get("VAPID_EMAIL") ?? "push@offgrid.ph";
+
+    if (!vapidPublicKey || !vapidPrivateKey) {
+      return new Response(JSON.stringify({ error: "VAPID keys not configured" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    webpush.setVapidDetails(`mailto:${vapidEmail}`, vapidPublicKey, vapidPrivateKey);
 
     const adminClient = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false },
@@ -206,12 +152,6 @@ Deno.serve(async (req: Request) => {
     }
 
     const payloadStr = JSON.stringify({ title, body, url: clickUrl ?? "/" });
-    const { publicKey, privateKey } = await importVapidKeys(vapidPublicKey, vapidPrivateKey);
-    const publicKeyRaw = await crypto.subtle.exportKey("raw", publicKey);
-    const publicKeyB64 = btoa(String.fromCharCode(...new Uint8Array(publicKeyRaw)))
-      .replace(/\+/g, "-")
-      .replace(/\//g, "_")
-      .replace(/=+$/, "");
 
     let sent = 0;
     let failed = 0;
@@ -219,26 +159,23 @@ Deno.serve(async (req: Request) => {
 
     for (const sub of subscriptions) {
       try {
-        const jwt = await createJwt(sub.endpoint, vapidEmail, privateKey);
-        const resp = await fetch(sub.endpoint, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/octet-stream",
-            TTL: "86400",
-            Authorization: `vapid t=${jwt}, k=${publicKeyB64}`,
+        await webpush.sendNotification(
+          {
+            endpoint: sub.endpoint,
+            keys: {
+              p256dh: sub.keys_p256dh,
+              auth: sub.keys_auth,
+            },
           },
-          body: new TextEncoder().encode(payloadStr),
-        });
-
-        if (resp.status === 201) {
-          sent++;
-        } else if (resp.status === 410 || resp.status === 404) {
+          payloadStr,
+          { TTL: 86400 },
+        );
+        sent++;
+      } catch (err: unknown) {
+        const statusCode = (err as { statusCode?: number })?.statusCode;
+        if (statusCode === 410 || statusCode === 404) {
           stale.push(sub.id);
-          failed++;
-        } else {
-          failed++;
         }
-      } catch {
         failed++;
       }
     }
@@ -249,7 +186,7 @@ Deno.serve(async (req: Request) => {
 
     return new Response(
       JSON.stringify({ sent, failed, stale_removed: stale.length }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (err) {
     return new Response(JSON.stringify({ error: (err as Error).message }), {

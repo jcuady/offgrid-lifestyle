@@ -109,19 +109,24 @@ self.addEventListener("push", (event) => {
   }
 });
 
-// Notification click — open the target URL
+// Notification click — open the target URL (absolute URL required for Safari)
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const url = (event.notification.data as { url?: string })?.url ?? "/";
+  const rawUrl = (event.notification.data as { url?: string })?.url ?? "/";
+  const targetUrl = new URL(rawUrl, self.location.origin).href;
 
   event.waitUntil(
-    self.clients.matchAll({ type: "window" }).then((windowClients) => {
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((windowClients) => {
       for (const client of windowClients) {
-        if (client.url.includes(url) && "focus" in client) {
+        const clientPath = new URL(client.url).pathname;
+        const targetPath = new URL(targetUrl).pathname;
+        if (clientPath === targetPath && "focus" in client) {
           return client.focus();
         }
       }
-      return self.clients.openWindow(url);
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(targetUrl);
+      }
     }),
   );
 });

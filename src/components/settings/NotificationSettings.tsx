@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
 import { Bell, BellOff } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
-import { isPushSubscribed, subscribeToPush, unsubscribeFromPush } from "@/src/lib/pushSubscription";
+import {
+  isPushSubscribed,
+  subscribeToPushDetailed,
+  unsubscribeFromPush,
+} from "@/src/lib/pushSubscription";
 import { getCookieConsent } from "@/src/lib/consent";
-import { isIosDevice, isStandalonePwa } from "@/src/lib/pwa";
+import { canReceiveWebPush, getPushUnsupportedReason, isIosDevice, isStandalonePwa, openInstallGuide } from "@/src/lib/pwa";
 import { usePortalStore } from "@/src/store/usePortalStore";
 
 export function NotificationSettings() {
@@ -12,6 +16,10 @@ export function NotificationSettings() {
   const [permission, setPermission] = useState<NotificationPermission | "unsupported">("default");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+
+  const pushSupported = canReceiveWebPush();
+  const unsupportedReason = getPushUnsupportedReason();
+  const vapidConfigured = Boolean(import.meta.env.VITE_VAPID_PUBLIC_KEY);
 
   const refresh = async () => {
     if (!("Notification" in window)) {
@@ -35,51 +43,113 @@ export function NotificationSettings() {
         setSubscribed(false);
         setMessage("Push notifications turned off.");
       } else {
+        if (!currentUser) {
+          setMessage("Sign in to enable push notifications.");
+          return;
+        }
         if (getCookieConsent() === "essential-only") {
           setMessage("Enable all cookies in the banner to use push notifications.");
           return;
         }
-        const ok = await subscribeToPush();
+        if (!vapidConfigured) {
+          setMessage("Push is not configured on this deployment yet.");
+          return;
+        }
+        const result = await subscribeToPushDetailed();
         await refresh();
-        setMessage(ok ? "Push notifications enabled." : "Could not enable notifications. Check browser permissions.");
+        if (result.ok) {
+          setMessage("Push notifications enabled.");
+        } else if (result.ok === false) {
+          setMessage(result.reason);
+        }
       }
     } finally {
       setBusy(false);
     }
   };
 
+  const permissionLabel =
+    permission === "unsupported"
+      ? "Not supported"
+      : permission === "granted"
+        ? "Allowed"
+        : permission === "denied"
+          ? "Blocked"
+          : "Not asked yet";
+
   return (
-    <section className="min-w-0 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-offgrid-green/[0.08]">
-      <div className="flex items-start gap-3">
+    <section className="min-w-0 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-offgrid-green/[0.08] sm:p-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-offgrid-green/8 text-offgrid-green">
           {subscribed ? <Bell className="h-5 w-5" /> : <BellOff className="h-5 w-5" />}
         </span>
         <div className="min-w-0 flex-1">
-          <h2 className="font-display text-lg font-bold text-offgrid-green">Notifications</h2>
-          <p className="mt-1 text-sm text-offgrid-green/60">
+          <h2 className="font-display text-lg font-bold text-offgrid-green">Push notifications</h2>
+          <p className="mt-1 text-sm leading-relaxed text-offgrid-green/60">
             {currentUser?.role === "customer"
               ? "Order updates: payment confirmed, custom quotes, shipping, and delivery."
               : "Operations alerts: new shop and custom orders, plus payment proof uploads."}
           </p>
-          <p className="mt-2 text-xs text-offgrid-green/45">
-            Browser permission:{" "}
-            {permission === "unsupported" ? "Not supported" : permission}
-          </p>
-          {message ? <p className="mt-2 text-xs font-medium text-offgrid-green">{message}</p> : null}
-          {isIosDevice() && !isStandalonePwa() && permission !== "granted" ? (
-            <p className="mt-2 text-xs text-offgrid-green/55">
-              On iPhone, add OffGrid to your Home Screen first, then enable notifications here.
+
+          <dl className="mt-4 grid gap-2 text-xs sm:grid-cols-2">
+            <div className="rounded-xl bg-offgrid-cream/60 px-3 py-2">
+              <dt className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/45">
+                Browser permission
+              </dt>
+              <dd className="mt-0.5 font-medium text-offgrid-green">{permissionLabel}</dd>
+            </div>
+            <div className="rounded-xl bg-offgrid-cream/60 px-3 py-2">
+              <dt className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/45">
+                Push status
+              </dt>
+              <dd className="mt-0.5 font-medium text-offgrid-green">
+                {subscribed ? "Enabled on this device" : "Off on this device"}
+              </dd>
+            </div>
+          </dl>
+
+          {unsupportedReason && !subscribed ? (
+            <p className="mt-3 text-xs leading-relaxed text-amber-800/90">{unsupportedReason}</p>
+          ) : null}
+
+          {isIosDevice() && !isStandalonePwa() && !subscribed ? (
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+              <p className="text-xs leading-relaxed text-offgrid-green/55">
+                iPhone and iPad require the installed app for push. Add OffGrid to your Home Screen, then return here.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="shrink-0"
+                onClick={openInstallGuide}
+              >
+                How to install
+              </Button>
+            </div>
+          ) : null}
+
+          {message ? (
+            <p className="mt-3 text-xs font-medium leading-relaxed text-offgrid-green" role="status">
+              {message}
             </p>
           ) : null}
-          <Button
-            variant={subscribed ? "outline" : "default"}
-            size="sm"
-            className="mt-4"
-            disabled={busy || permission === "unsupported"}
-            onClick={() => void toggle()}
-          >
-            {busy ? "Saving…" : subscribed ? "Turn off notifications" : "Enable notifications"}
-          </Button>
+
+          <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+            <Button
+              variant={subscribed ? "outline" : "default"}
+              size="sm"
+              className="w-full sm:w-auto"
+              disabled={busy || permission === "unsupported" || (!pushSupported && !subscribed) || !vapidConfigured}
+              onClick={() => void toggle()}
+            >
+              {busy ? "Saving…" : subscribed ? "Turn off notifications" : "Enable notifications"}
+            </Button>
+          </div>
+
+          <p className="mt-3 text-[11px] leading-relaxed text-offgrid-green/40">
+            Works on Chrome, Firefox, Edge, and Safari (macOS and installed iOS app). Uses encrypted Web Push with VAPID.
+          </p>
         </div>
       </div>
     </section>

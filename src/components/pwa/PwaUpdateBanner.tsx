@@ -1,20 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/src/components/ui/Button";
-import { registerSW } from "virtual:pwa-register";
+import { getServiceWorkerUpdate, onServiceWorkerNeedRefresh } from "@/src/lib/serviceWorker";
 
 export function PwaUpdateBanner() {
   const [needRefresh, setNeedRefresh] = useState(false);
-  const updateSWRef = useRef<((reloadPage?: boolean) => Promise<void>) | undefined>(undefined);
+  const updateSWRef = useRef(getServiceWorkerUpdate());
 
   useEffect(() => {
-    updateSWRef.current = registerSW({
-      onNeedRefresh() {
-        setNeedRefresh(true);
-      },
-      onOfflineReady() {
-        // Shell cached for offline use.
-      },
-    });
+    updateSWRef.current = getServiceWorkerUpdate();
+    return onServiceWorkerNeedRefresh(() => setNeedRefresh(true));
   }, []);
 
   if (!needRefresh) return null;

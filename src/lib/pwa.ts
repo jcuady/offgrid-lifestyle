@@ -34,6 +34,28 @@ export function isPushCapableBrowser(): boolean {
   return typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window;
 }
 
+/** Whether this device/browser can subscribe to Web Push right now. */
+export function canReceiveWebPush(): boolean {
+  if (!isPushCapableBrowser() || typeof Notification === "undefined") return false;
+  // iOS Safari only exposes push in an installed Home Screen PWA (16.4+).
+  if (isIosDevice() && !isStandalonePwa()) return false;
+  return true;
+}
+
+export function getPushUnsupportedReason(): string | null {
+  if (typeof window === "undefined") return "Push is not available in this environment.";
+  if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+    return "This browser does not support Web Push notifications.";
+  }
+  if (typeof Notification === "undefined") {
+    return "Notifications are not available in this browser.";
+  }
+  if (isIosDevice() && !isStandalonePwa()) {
+    return "On iPhone or iPad, add OffGrid to your Home Screen first, then enable notifications.";
+  }
+  return null;
+}
+
 export function isPwaInstallDismissed(): boolean {
   return localStorage.getItem(INSTALL_DISMISSED_KEY) === "1";
 }

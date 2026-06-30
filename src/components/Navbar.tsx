@@ -171,8 +171,11 @@ export function Navbar() {
     ]);
   };
 
-  const accountPanelClass =
-    "absolute right-0 mt-2 w-64 rounded-2xl border border-offgrid-green/15 bg-offgrid-cream p-2 shadow-2xl text-left z-[60]";
+  const accountPanelClass = cn(
+    "rounded-2xl border border-offgrid-green/15 bg-offgrid-cream p-2 shadow-2xl text-left z-[60]",
+    "fixed inset-x-3 top-[calc(env(safe-area-inset-top,0px)+4.25rem)] w-auto",
+    "sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 sm:w-64",
+  );
 
   const renderDesktopAccountItems = () =>
     buildAccountMenuItems().map((item) => (
@@ -211,6 +214,22 @@ export function Navbar() {
 
   return (
     <>
+      <AnimatePresence>
+        {isCartDropdownOpen || isAccountMenuOpen ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 z-[55] bg-offgrid-dark/40 sm:hidden"
+            aria-hidden
+            onClick={() => {
+              setIsCartDropdownOpen(false);
+              setIsAccountMenuOpen(false);
+            }}
+          />
+        ) : null}
+      </AnimatePresence>
       <header
         className={cn(
           "fixed left-0 right-0 z-50 transition-all duration-300 ease-in-out top-[var(--pwa-install-banner-height,0px)]",
@@ -323,15 +342,15 @@ export function Navbar() {
                   setIsAccountMenuOpen((prev) => !prev);
                 }}
                 className={cn(
-                  "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] transition-colors",
+                  "inline-flex items-center gap-2 rounded-full border px-2.5 py-2 text-xs font-semibold uppercase tracking-[0.12em] transition-colors sm:px-3 sm:py-1.5",
                   onAccountRoute
                     ? "border-offgrid-lime bg-offgrid-lime/20 text-white"
                     : "border-offgrid-cream/35 text-offgrid-cream hover:border-white hover:text-white",
                 )}
                 title={currentUser ? "Account menu" : "Sign in"}
               >
-                <UserRound className="w-3.5 h-3.5 shrink-0" />
-                <span className="max-w-[7rem] truncate">{accountLabel}</span>
+                <UserRound className="w-4 h-4 shrink-0" />
+                <span className="hidden max-w-[7rem] truncate sm:inline">{accountLabel}</span>
               </button>
               <AnimatePresence>
                 {isAccountMenuOpen && (
@@ -387,7 +406,11 @@ export function Navbar() {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 8, scale: 0.98 }}
                     transition={{ duration: 0.16 }}
-                    className="absolute right-0 mt-2 w-80 rounded-2xl border border-offgrid-green/10 bg-offgrid-cream p-4 text-offgrid-green shadow-2xl"
+                    className={cn(
+                      "rounded-2xl border border-offgrid-green/10 bg-offgrid-cream p-4 text-offgrid-green shadow-2xl z-[60]",
+                      "fixed inset-x-3 top-[calc(env(safe-area-inset-top,0px)+4.25rem)] w-auto",
+                      "sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 sm:w-80",
+                    )}
                   >
                     <div className="mb-3 flex items-center justify-between">
                       <p className="text-sm font-display font-bold">Cart Preview</p>

@@ -200,14 +200,20 @@ export function PortalLayout({ role }: PortalLayoutProps) {
 
       <div className="lg:pl-[264px]">
         {/* Mobile top bar */}
-        <header className="sticky top-0 z-40 flex items-center justify-between gap-3 border-b border-offgrid-cream/10 bg-offgrid-green px-4 py-3 lg:hidden">
+        <header className="sticky top-0 z-40 flex items-center justify-between gap-3 border-b border-offgrid-cream/10 bg-offgrid-green px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] lg:hidden">
           <button onClick={() => navigate("/")} aria-label="Go to storefront">
             <img src={LOGO_WORDMARK_WHITE} alt="OffGrid" className="h-7 w-auto" />
           </button>
           <div className="flex items-center gap-3">
             <NotificationBell
               variant="dark"
-              settingsHref={role === "admin" ? "/portal/admin/settings" : undefined}
+              settingsHref={
+                role === "admin"
+                  ? "/portal/admin/settings"
+                  : role === "staff"
+                    ? "/portal/staff"
+                    : undefined
+              }
             />
             <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-offgrid-cream/60">
               {labelsByRole[role]}
@@ -240,7 +246,13 @@ export function PortalLayout({ role }: PortalLayoutProps) {
         <main className="portal-surface min-h-screen min-w-0 bg-offgrid-cream">
           <div className="hidden lg:flex sticky top-0 z-30 items-center justify-end border-b border-offgrid-green/10 bg-offgrid-cream/95 px-8 py-3 backdrop-blur-sm">
             <NotificationBell
-              settingsHref={role === "admin" ? "/portal/admin/settings" : undefined}
+              settingsHref={
+                role === "admin"
+                  ? "/portal/admin/settings"
+                  : role === "staff"
+                    ? "/portal/staff"
+                    : undefined
+              }
             />
           </div>
           <Outlet />

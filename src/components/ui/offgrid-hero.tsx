@@ -115,7 +115,7 @@ export function OffgridHero({
           initial={{ y: 16, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-          className="absolute left-4 top-24 z-10 inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.34em] text-offgrid-cream/75 sm:left-6 md:left-10 md:text-xs"
+          className="absolute left-4 top-[max(6rem,calc(env(safe-area-inset-top)+4.5rem))] z-10 inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.34em] text-offgrid-cream/75 sm:left-6 md:left-10 md:text-xs"
         >
           <span className="h-1.5 w-1.5 rounded-full bg-offgrid-lime shadow-[0_0_10px_var(--color-offgrid-lime)]" />
           {badge}
@@ -123,7 +123,7 @@ export function OffgridHero({
       )}
 
       {/* Hero content */}
-      <div className="absolute bottom-0 left-0 right-0 px-4 pb-6 sm:px-6 md:px-10 md:pb-8">
+      <div className="absolute bottom-0 left-0 right-0 px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-6 md:px-10 md:pb-8">
         <div className="grid grid-cols-12 items-end gap-4">
           <div className="col-span-12 lg:col-span-8">
             <h1 className="font-display font-black uppercase leading-[0.82] tracking-[-0.05em] text-offgrid-cream text-[24vw] drop-shadow-[0_2px_40px_rgba(0,0,0,0.6)] sm:text-[22vw] md:text-[20vw] lg:text-[16vw] xl:text-[15vw]">

@@ -320,7 +320,7 @@ export function AdminProductsPage() {
         title={editingId ? "Edit product" : "Add product"}
         description="Publishes immediately to the live storefront."
         footer={
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <button
               type="button"
               onClick={submit}
@@ -386,7 +386,7 @@ export function AdminProductsPage() {
             />
           </Field>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Field label="Cut">
               <select
                 value={draft.cut}
@@ -524,7 +524,7 @@ export function AdminProductsPage() {
             />
           </Field>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Field label="Price (PHP)" error={fieldErrors.price}>
               <input
                 type="number"

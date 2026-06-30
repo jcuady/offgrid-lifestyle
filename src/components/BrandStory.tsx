@@ -101,7 +101,7 @@ export function BrandStory() {
 
             {/* Value trio — icon-free, accent-rule typographic system */}
             {values.length > 0 ? (
-              <dl className="mt-10 grid grid-cols-3 gap-4 border-t border-offgrid-cream/10 pt-8 sm:gap-6">
+              <dl className="mt-10 grid grid-cols-1 gap-4 border-t border-offgrid-cream/10 pt-8 sm:grid-cols-3 sm:gap-6">
                 {values.map((value, index) => (
                   <div key={value} className="min-w-0">
                     <span className="block h-0.5 w-8 rounded-full bg-offgrid-lime" aria-hidden />

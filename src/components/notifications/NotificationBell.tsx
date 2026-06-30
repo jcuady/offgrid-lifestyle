@@ -95,8 +95,13 @@ export function NotificationBell({
       : "border-offgrid-green/15 bg-white text-offgrid-green hover:bg-offgrid-green/5",
   );
 
-  const panelClass =
-    "absolute right-0 mt-2 w-[min(100vw-2rem,22rem)] overflow-hidden rounded-2xl border border-offgrid-green/10 bg-white text-offgrid-green shadow-2xl";
+  // On mobile the bell sits mid-cluster, so an `absolute right-0` panel overflows
+  // the screen edge. Anchor it to the viewport on small screens, drop down on sm+.
+  const panelClass = cn(
+    "z-[60] overflow-hidden rounded-2xl border border-offgrid-green/10 bg-white text-offgrid-green shadow-2xl",
+    "fixed inset-x-3 top-[calc(env(safe-area-inset-top,0px)+4.25rem)] w-auto",
+    "sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 sm:w-[22rem]",
+  );
 
   const handleOpen = () => {
     setOpen((v) => !v);
@@ -110,6 +115,20 @@ export function NotificationBell({
   };
 
   return (
+    <>
+      <AnimatePresence>
+        {open ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 z-[59] bg-offgrid-dark/40 sm:hidden"
+            aria-hidden
+            onClick={() => setOpen(false)}
+          />
+        ) : null}
+      </AnimatePresence>
     <div className={cn("relative", className)} ref={panelRef}>
       <button
         type="button"
@@ -230,5 +249,6 @@ export function NotificationBell({
         ) : null}
       </AnimatePresence>
     </div>
+    </>
   );
 }

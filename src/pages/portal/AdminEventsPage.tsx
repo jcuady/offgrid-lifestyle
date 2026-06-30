@@ -220,7 +220,7 @@ export function AdminEventsPage() {
         title={editingId ? "Edit event" : "Create event"}
         description="Publishes to the storefront events page."
         footer={
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <button
               onClick={submit}
               className="rounded-xl bg-offgrid-green px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-offgrid-cream transition-colors hover:bg-offgrid-dark"
@@ -252,7 +252,7 @@ export function AdminEventsPage() {
             placeholder="Subtitle"
             className={inputClass}
           />
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <input
               value={draft.date}
               onChange={(e) => setDraft((prev) => ({ ...prev, date: e.target.value }))}
@@ -291,7 +291,7 @@ export function AdminEventsPage() {
             placeholder="Event description"
             className={inputClass}
           />
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
             <input
               value={draft.price}
               onChange={(e) => setDraft((prev) => ({ ...prev, price: e.target.value }))}
@@ -332,7 +332,7 @@ export function AdminEventsPage() {
             placeholder="Highlights (comma separated)"
             className={inputClass}
           />
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <select
               value={draft.category}
               onChange={(e) => setDraft((prev) => ({ ...prev, category: e.target.value as SiteEvent["category"] }))}

@@ -95,7 +95,8 @@ export function OperationsAnalyticsPage({ role }: OperationsAnalyticsPageProps) 
         <p className="mt-1 text-xs text-offgrid-green/55">
           Green bars show sales amount; lime chips show order count per month.
         </p>
-        <div className="mt-6 grid grid-cols-6 gap-3">
+        <div className="mt-6 overflow-x-auto">
+        <div className="grid min-w-[460px] grid-cols-6 gap-3">
           {monthly.map((entry) => (
             <div key={entry.label} className="flex flex-col items-center">
               <div className="relative flex h-48 w-full items-end justify-center rounded-xl bg-offgrid-green/5">
@@ -116,6 +117,7 @@ export function OperationsAnalyticsPage({ role }: OperationsAnalyticsPageProps) 
               </div>
             </div>
           ))}
+        </div>
         </div>
       </div>
     </div>

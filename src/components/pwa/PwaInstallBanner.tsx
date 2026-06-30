@@ -1,26 +1,49 @@
-import { useEffect } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { Download, X } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { dismissPwaInstallPrompt, openInstallGuide } from "@/src/lib/pwa";
 import { usePwaInstall } from "@/src/hooks/usePwaInstall";
 
+const BANNER_HEIGHT_VAR = "--pwa-install-banner-height";
+
 export function PwaInstallBanner() {
   const { showAutoBanner, canNativeInstall, install } = usePwaInstall();
+  const bannerRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
+  // The header is offset by this CSS var. On notched iOS the banner's
+  // safe-area padding makes it taller than any hard-coded value, so we measure
+  // the real rendered height and keep it in sync across resize/orientation.
+  useLayoutEffect(() => {
+    const root = document.documentElement;
     if (!showAutoBanner) {
-      document.documentElement.style.removeProperty("--pwa-install-banner-height");
+      root.style.removeProperty(BANNER_HEIGHT_VAR);
       return;
     }
-    document.documentElement.style.setProperty("--pwa-install-banner-height", "5.75rem");
-    return () => document.documentElement.style.removeProperty("--pwa-install-banner-height");
+
+    const node = bannerRef.current;
+    if (!node) return;
+
+    const sync = () => {
+      root.style.setProperty(BANNER_HEIGHT_VAR, `${Math.ceil(node.offsetHeight)}px`);
+    };
+    sync();
+
+    const observer = new ResizeObserver(sync);
+    observer.observe(node);
+    window.addEventListener("orientationchange", sync);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("orientationchange", sync);
+      root.style.removeProperty(BANNER_HEIGHT_VAR);
+    };
   }, [showAutoBanner]);
 
   if (!showAutoBanner) return null;
 
   const handleDismiss = () => {
     dismissPwaInstallPrompt();
-    document.documentElement.style.removeProperty("--pwa-install-banner-height");
+    document.documentElement.style.removeProperty(BANNER_HEIGHT_VAR);
   };
 
   const handleInstall = async () => {
@@ -34,6 +57,7 @@ export function PwaInstallBanner() {
 
   return (
     <div
+      ref={bannerRef}
       role="dialog"
       aria-label="Install OffGrid app"
       className="fixed inset-x-0 top-0 z-[58] border-b border-offgrid-green/10 bg-offgrid-green px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] text-offgrid-cream shadow-lg"

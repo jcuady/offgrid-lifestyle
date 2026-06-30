@@ -1,13 +1,13 @@
 import { useLayoutEffect, useRef } from "react";
 import { Download, X } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
-import { dismissPwaInstallPrompt, openInstallGuide } from "@/src/lib/pwa";
+import { openInstallGuide } from "@/src/lib/pwa";
 import { usePwaInstall } from "@/src/hooks/usePwaInstall";
 
 const BANNER_HEIGHT_VAR = "--pwa-install-banner-height";
 
 export function PwaInstallBanner() {
-  const { showAutoBanner, canNativeInstall, install } = usePwaInstall();
+  const { showAutoBanner, canNativeInstall, install, dismiss } = usePwaInstall();
   const bannerRef = useRef<HTMLDivElement | null>(null);
 
   // The header is offset by this CSS var. On notched iOS the banner's
@@ -42,14 +42,14 @@ export function PwaInstallBanner() {
   if (!showAutoBanner) return null;
 
   const handleDismiss = () => {
-    dismissPwaInstallPrompt();
     document.documentElement.style.removeProperty(BANNER_HEIGHT_VAR);
+    dismiss();
   };
 
   const handleInstall = async () => {
     if (canNativeInstall) {
       const accepted = await install();
-      if (accepted) dismissPwaInstallPrompt();
+      if (accepted) dismiss();
       return;
     }
     openInstallGuide();

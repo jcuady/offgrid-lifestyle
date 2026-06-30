@@ -120,6 +120,7 @@ export function Navbar() {
     { name: "Collections", action: () => handleNavigate("/collections") },
     { name: "Shop", action: () => handleNavigate("/shop") },
     { name: "Events", action: () => handleNavigate("/events") },
+    { name: "About", action: () => handleNavigate("/about") },
     { name: "Testimonials", action: () => handleNavigate("/testimonials") },
     { name: "Contact", action: () => handleNavigate("/contact") },
   ];

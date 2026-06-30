@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { FeaturedCollections } from "@/src/components/FeaturedCollections";
 import { FeaturedSpotlight } from "@/src/components/FeaturedSpotlight";
 import { BestSellers } from "@/src/components/BestSellers";
-import { BrandStory } from "@/src/components/BrandStory";
 import { EventSection } from "@/src/components/EventSection";
 import { SocialProof } from "@/src/components/SocialProof";
 import { TeamCommunity } from "@/src/components/TeamCommunity";
@@ -42,7 +41,6 @@ export function HomePage() {
         <FeaturedCollections />
         <FeaturedSpotlight placement="home" />
         <BestSellers />
-        <BrandStory />
         <EventSection />
         <SocialProof />
         <TeamCommunity />

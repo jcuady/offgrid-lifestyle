@@ -27,7 +27,7 @@ const FOOTER_COLUMNS: { heading: string; links: FooterLink[] }[] = [
   {
     heading: "Company",
     links: [
-      { label: "Our Story", to: "/#about" },
+      { label: "About Us", to: "/about" },
       { label: "My Account", to: "/account/orders" },
       { label: "Contact", to: "/contact" },
       { label: "Sizing Guide", to: "/custom#sizing" },

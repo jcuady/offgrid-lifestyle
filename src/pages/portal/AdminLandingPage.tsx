@@ -369,7 +369,7 @@ export function AdminLandingPage() {
           </CmsField>
         </CmsSectionPanel>
 
-        <CmsSectionPanel title="Brand story" description="About section on homepage (#about).">
+        <CmsSectionPanel title="Brand story" description="Content for the About Us page (/about).">
           <CmsField label="Hero image" className="sm:col-span-2">
             <CmsImageInput
               value={landing.brandStory.image}

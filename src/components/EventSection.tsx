@@ -15,7 +15,7 @@ export function EventSection() {
       id="events"
       className={cn("relative overflow-hidden bg-offgrid-lime text-offgrid-cream", sectionPaddingDark)}
     >
-      {/* Electric-blue brand band — distinct from the dark BrandStory section. */}
+      {/* Electric-blue brand band — distinct from the surrounding dark sections. */}
       <div className="absolute top-0 left-0 h-full w-1/2 -skew-x-12 -translate-x-1/4 bg-offgrid-dark/15" />
       <div className="absolute bottom-0 right-0 h-64 w-64 rounded-full bg-offgrid-cream/10 blur-3xl" />
 

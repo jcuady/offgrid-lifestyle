@@ -34,6 +34,7 @@ const TestimonialsPage = lazy(() =>
   import("./pages/TestimonialsPage").then((m) => ({ default: m.TestimonialsPage })),
 );
 const ContactPage = lazy(() => import("./pages/ContactPage").then((m) => ({ default: m.ContactPage })));
+const AboutPage = lazy(() => import("./pages/AboutPage").then((m) => ({ default: m.AboutPage })));
 const CustomOrderPage = lazy(() =>
   import("./pages/CustomOrderPage").then((m) => ({ default: m.CustomOrderPage })),
 );
@@ -179,6 +180,7 @@ function AppFrame() {
         <Route path="/events" element={<EventsPage />} />
         <Route path="/testimonials" element={<TestimonialsPage />} />
         <Route path="/contact" element={<ContactPage />} />
+        <Route path="/about" element={<AboutPage />} />
         <Route path="/legal/terms" element={<TermsPage />} />
         <Route path="/legal/privacy" element={<PrivacyPage />} />
         <Route path="/custom/order" element={<CustomOrderPage />} />

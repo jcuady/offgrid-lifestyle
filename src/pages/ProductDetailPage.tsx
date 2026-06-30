@@ -240,21 +240,23 @@ export function ProductDetailPage() {
                 {/* Add to Cart Actions */}
                 <div className="flex items-center gap-4">
                   {/* Stepper */}
-                  <div className="flex items-center gap-4 border-2 border-offgrid-green/20 rounded-xl px-4 py-3 bg-white">
+                  <div className="flex items-center gap-1 border-2 border-offgrid-green/20 rounded-xl px-1.5 py-1 bg-white">
                     <button
                       onClick={() => setQuantity(Math.max(1, quantity - 1))}
                       disabled={quantity <= 1}
-                      className="text-offgrid-green hover:text-offgrid-lime disabled:opacity-30 disabled:cursor-not-allowed transition-colors outline-none"
+                      aria-label="Decrease quantity"
+                      className="grid h-10 w-10 place-items-center rounded-lg text-offgrid-green hover:bg-offgrid-green/5 hover:text-offgrid-lime disabled:opacity-30 disabled:cursor-not-allowed transition-colors outline-none"
                     >
                       <Minus className="w-4 h-4" />
                     </button>
-                    <span className="text-base font-sans font-semibold text-offgrid-green w-6 text-center select-none">
+                    <span className="text-base font-sans font-semibold text-offgrid-green w-7 text-center select-none">
                       {quantity}
                     </span>
                     <button
                       onClick={() => setQuantity(Math.min(10, quantity + 1))}
                       disabled={quantity >= 10}
-                      className="text-offgrid-green hover:text-offgrid-lime disabled:opacity-30 disabled:cursor-not-allowed transition-colors outline-none"
+                      aria-label="Increase quantity"
+                      className="grid h-10 w-10 place-items-center rounded-lg text-offgrid-green hover:bg-offgrid-green/5 hover:text-offgrid-lime disabled:opacity-30 disabled:cursor-not-allowed transition-colors outline-none"
                     >
                       <Plus className="w-4 h-4" />
                     </button>

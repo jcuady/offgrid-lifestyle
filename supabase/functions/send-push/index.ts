@@ -2,12 +2,44 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import webpush from "npm:web-push@3.6.7";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+const ORDER_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const ALLOWED_ALERT_TYPES = new Set(["new_retail_order", "new_custom_order", "payment_proof"]);
+
+function safeNavigationUrl(raw: unknown, fallback = "/"): string {
+  if (typeof raw !== "string") return fallback;
+  const trimmed = raw.trim();
+  if (!trimmed.startsWith("/") || trimmed.startsWith("//")) return fallback;
+  if (trimmed.includes("://") || trimmed.toLowerCase().startsWith("javascript:")) return fallback;
+  try {
+    const parsed = new URL(trimmed, "https://offgrid.local");
+    if (parsed.origin !== "https://offgrid.local") return fallback;
+    return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+  } catch {
+    return fallback;
+  }
+}
+
+function corsHeadersFor(req: Request): Record<string, string> {
+  const defaults =
+    "https://offgrid-lifestyle.vercel.app,https://offgrid-lifestyle-jcuadys-projects.vercel.app,http://localhost:3000,http://127.0.0.1:3000";
+  const allowed = (Deno.env.get("ALLOWED_ORIGINS") ?? defaults)
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const origin = req.headers.get("Origin") ?? "";
+  const allowOrigin = allowed.includes(origin) ? origin : (allowed[0] ?? "*");
+  return {
+    "Access-Control-Allow-Origin": allowOrigin,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    Vary: "Origin",
+  };
+}
 
 Deno.serve(async (req: Request) => {
+  const corsHeaders = corsHeadersFor(req);
+
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -48,11 +80,25 @@ Deno.serve(async (req: Request) => {
       });
     }
 
+    const safeTitle = String(title).trim().slice(0, 120);
+    const safeBody = String(body).trim().slice(0, 500);
+    const safeUrl = safeNavigationUrl(clickUrl);
+
     const hasTargetedUsers = user_ids && Array.isArray(user_ids) && user_ids.length > 0;
     const hasOperationalAlert =
       operational_alert &&
       typeof operational_alert.order_id === "string" &&
       typeof operational_alert.alert_type === "string";
+
+    if (hasTargetedUsers) {
+      const ids = user_ids as string[];
+      if (ids.length > 50 || !ids.every((id) => UUID_RE.test(id))) {
+        return new Response(JSON.stringify({ error: "Invalid user_ids" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
 
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const userClient = createClient(supabaseUrl, anonKey, {
@@ -81,6 +127,13 @@ Deno.serve(async (req: Request) => {
     if (hasOperationalAlert) {
       const orderId = operational_alert.order_id as string;
       const alertType = operational_alert.alert_type as string;
+
+      if (!ORDER_ID_RE.test(orderId) || !ALLOWED_ALERT_TYPES.has(alertType)) {
+        return new Response(JSON.stringify({ error: "Invalid operational_alert" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
 
       const { data: order, error: orderErr } = await adminClient
         .from("og_orders")
@@ -156,13 +209,13 @@ Deno.serve(async (req: Request) => {
     }
     const { data: subscriptions, error: fetchErr } = await query;
     if (fetchErr || !subscriptions) {
-      return new Response(JSON.stringify({ error: fetchErr?.message ?? "No subscriptions" }), {
+      return new Response(JSON.stringify({ error: "Failed to load subscriptions" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const payloadStr = JSON.stringify({ title, body, url: clickUrl ?? "/" });
+    const payloadStr = JSON.stringify({ title: safeTitle, body: safeBody, url: safeUrl });
 
     let sent = 0;
     let failed = 0;
@@ -199,10 +252,10 @@ Deno.serve(async (req: Request) => {
       JSON.stringify({ sent, failed, stale_removed: stale.length }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
-  } catch (err) {
-    return new Response(JSON.stringify({ error: (err as Error).message }), {
+  } catch {
+    return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeadersFor(req), "Content-Type": "application/json" },
     });
   }
 });

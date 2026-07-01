@@ -43,10 +43,11 @@ export function useNotifications() {
   );
 
   const markAllRead = useCallback(async () => {
-    await notificationService.markAllRead();
+    if (!currentUser?.id) return;
+    await notificationService.markAllRead(currentUser.id);
     const now = new Date().toISOString();
     setItems((prev) => prev.map((n) => ({ ...n, readAt: n.readAt ?? now })));
-  }, []);
+  }, [currentUser?.id]);
 
   return {
     items,

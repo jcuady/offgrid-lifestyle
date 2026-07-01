@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Bell, BellOff, Settings } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { cn } from "@/src/lib/utils";
+import { safeNavigationUrl } from "@/src/lib/safeUrl";
 import { useNotifications } from "@/src/hooks/useNotifications";
 import { usePortalStore } from "@/src/store/usePortalStore";
 import {
@@ -113,14 +114,16 @@ export function NotificationBell({
   );
 
   const handleOpen = () => {
-    setOpen((v) => !v);
-    if (!open) void refresh();
+    const next = !open;
+    setOpen(next);
+    if (next) void refresh();
   };
 
   const openNotification = async (id: string, url: string | null) => {
     await markRead(id);
     setOpen(false);
-    if (url) navigate(url);
+    const target = safeNavigationUrl(url, "/");
+    if (target !== "/") navigate(target);
   };
 
   return (

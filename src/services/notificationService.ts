@@ -98,10 +98,11 @@ export const notificationService = {
     }
   },
 
-  async markAllRead(): Promise<void> {
+  async markAllRead(userId: string): Promise<void> {
     const { error } = await supabase
       .from("og_notifications")
       .update({ read_at: new Date().toISOString() })
+      .eq("user_id", userId)
       .is("read_at", null);
 
     if (error) {

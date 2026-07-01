@@ -1,4 +1,5 @@
 import { logger } from "@/src/lib/logger";
+import { buildSendPushHeaders, readPushSendError } from "@/src/lib/pushRequest";
 import { supabase } from "@/src/lib/supabase";
 import { canReceiveWebPush, getPushUnsupportedReason } from "@/src/lib/pwa";
 import { ensureServiceWorkerReady } from "@/src/lib/serviceWorker";
@@ -159,7 +160,27 @@ export async function isPushSubscribed(): Promise<boolean> {
     const registration = await ensureServiceWorkerReady();
     if (!registration) return false;
     const subscription = await registration.pushManager.getSubscription();
-    return subscription !== null;
+    if (!subscription) return false;
+
+    const currentUser = usePortalStore.getState().currentUser;
+    if (!currentUser) return true;
+
+    const { data, error } = await supabase
+      .from("og_push_subscriptions")
+      .select("id")
+      .eq("endpoint", subscription.endpoint)
+      .eq("user_id", currentUser.id)
+      .maybeSingle();
+
+    if (error) {
+      logger.warn("Failed to verify push subscription in database", {
+        operation: "isPushSubscribed",
+        error: error.message,
+      });
+      return true;
+    }
+
+    return Boolean(data);
   } catch {
     return false;
   }
@@ -178,16 +199,14 @@ export async function sendPushNotification(params: {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const session = (await supabase.auth.getSession()).data.session;
   const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
-  const bearer =
-    session?.access_token ??
-    (params.operationalAlert && anonKey ? anonKey : "");
 
   const resp = await fetch(`${supabaseUrl}/functions/v1/send-push`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${bearer}`,
-    },
+    headers: buildSendPushHeaders(
+      session?.access_token,
+      anonKey,
+      Boolean(params.operationalAlert),
+    ),
     body: JSON.stringify({
       title: params.title,
       body: params.body,
@@ -203,7 +222,7 @@ export async function sendPushNotification(params: {
   });
 
   if (!resp.ok) {
-    throw new Error(`Push send failed: ${resp.status}`);
+    throw new Error(`Push send failed: ${await readPushSendError(resp)}`);
   }
 
   return resp.json();

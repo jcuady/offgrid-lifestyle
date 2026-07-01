@@ -16,6 +16,9 @@ __MACOSX/
 
 .vercel
 
+# Local security review notes (not for git)
+Security (1).md
+
 # Playwright e2e artifacts
 test-results/
 playwright-report/

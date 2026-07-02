@@ -46,7 +46,7 @@ export function PhilippinesLocationMap({
 
       const pinIcon = L.divIcon({
         className: "",
-        html: `<div style="width:28px;height:28px;margin:-14px 0 0 -14px;background:#c8f135;border:3px solid #1a3a2a;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 2px 8px rgba(0,0,0,0.25)"></div>`,
+        html: `<div style="width:28px;height:28px;margin:-14px 0 0 -14px;background:#000AFF;border:3px solid #000000;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 2px 8px rgba(0,0,0,0.25)"></div>`,
         iconSize: [28, 28],
         iconAnchor: [14, 28],
       });

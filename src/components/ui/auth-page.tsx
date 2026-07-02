@@ -108,7 +108,7 @@ export function AuthPage({
           aria-hidden
           className="pointer-events-none absolute inset-0 -z-10 isolate opacity-60 contain-strict"
         >
-          <div className="absolute top-0 right-0 h-80 w-72 -translate-y-1/2 rounded-full bg-[radial-gradient(circle_at_center,color-mix(in_srgb,#3D5AFE_14%,transparent)_0%,transparent_70%)]" />
+          <div className="absolute top-0 right-0 h-80 w-72 -translate-y-1/2 rounded-full bg-[radial-gradient(circle_at_center,color-mix(in_srgb,#000AFF_14%,transparent)_0%,transparent_70%)]" />
           <div className="absolute bottom-0 left-0 h-64 w-64 rounded-full bg-[radial-gradient(circle_at_center,color-mix(in_srgb,#000000_6%,transparent)_0%,transparent_70%)]" />
         </div>
 

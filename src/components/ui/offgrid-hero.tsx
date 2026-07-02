@@ -5,7 +5,7 @@ import { useRef, type CSSProperties } from "react";
 /**
  * OFF GRID® brand hero — full-bleed AI video background with a giant wordmark.
  * Colors/fonts pull from the Tailwind v4 @theme tokens in src/index.css
- * (Black / Electric Blue / near-white cream · Archivo display · Space Mono labels).
+ * (Black / Electric Blue / near-white cream · Swiss 721 display · TG Frekuent Mono labels).
  *
  * NOTE: the default video is a third-party CloudFront asset; self-host it on your
  * own CDN before production so the hero never breaks if that URL goes away.

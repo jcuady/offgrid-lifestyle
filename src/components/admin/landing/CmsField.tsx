@@ -153,7 +153,7 @@ export function CmsTypographyControls({
           <div className="flex items-center gap-2">
             <input
               type="color"
-              value={sanitizeCmsColor(value.headingColor) ?? "#1a3d2e"}
+              value={sanitizeCmsColor(value.headingColor) ?? "#000000"}
               onChange={(e) => onChange({ headingColor: e.target.value })}
               className="h-9 w-12 cursor-pointer rounded border border-offgrid-green/15 bg-white"
             />
@@ -161,7 +161,7 @@ export function CmsTypographyControls({
               type="text"
               value={value.headingColor ?? ""}
               onChange={(e) => onChange({ headingColor: e.target.value })}
-              placeholder="#1a3d2e"
+              placeholder="#000000"
               className={cn(inputClass, "flex-1")}
             />
           </div>
@@ -185,7 +185,7 @@ export function CmsTypographyControls({
           <div className="flex items-center gap-2">
             <input
               type="color"
-              value={sanitizeCmsColor(value.bodyColor) ?? "#1a3d2e"}
+              value={sanitizeCmsColor(value.bodyColor) ?? "#3A3939"}
               onChange={(e) => onChange({ bodyColor: e.target.value })}
               className="h-9 w-12 cursor-pointer rounded border border-offgrid-green/15 bg-white"
             />
@@ -193,7 +193,7 @@ export function CmsTypographyControls({
               type="text"
               value={value.bodyColor ?? ""}
               onChange={(e) => onChange({ bodyColor: e.target.value })}
-              placeholder="#4a5568"
+              placeholder="#3A3939"
               className={cn(inputClass, "flex-1")}
             />
           </div>

@@ -113,17 +113,4 @@ export const notificationService = {
       });
     }
   },
-
-  async getStaffAdminUserIds(): Promise<string[]> {
-    const { data, error } = await supabase.rpc("og_staff_admin_user_ids");
-    if (error || !data) {
-      logger.warn("Failed to load staff admin ids", {
-        service: "notificationService",
-        operation: "getStaffAdminUserIds",
-        error: error?.message,
-      });
-      return [];
-    }
-    return data as string[];
-  },
 };

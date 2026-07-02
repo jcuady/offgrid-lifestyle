@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import type { LandingCollectionId } from "@/src/data/landingContent";
 import { sectionEyebrow, sectionPaddingCream, sectionTitle, siteContainer } from "@/src/lib/brandLayout";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
+import { cmsTypographyStyle } from "@/src/lib/cmsTypography";
 import { cn } from "@/src/lib/utils";
 
 const colSpanById: Record<LandingCollectionId, string> = {
@@ -16,27 +17,33 @@ const colSpanById: Record<LandingCollectionId, string> = {
 export function FeaturedCollections() {
   const header = useSiteContentStore((s) => s.landingContent.collectionsHeader);
   const collections = useSiteContentStore((s) => s.landingContent.collections);
+  const viewAllLabel = useSiteContentStore((s) => s.landingContent.collectionsViewAllLabel);
+  const typography = useSiteContentStore((s) => s.landingContent.typography.collections);
+  const headingStyle = cmsTypographyStyle(typography, "heading");
+  const bodyStyle = cmsTypographyStyle(typography, "body");
 
   return (
     <section id="collections" className={cn(sectionPaddingCream, "bg-offgrid-cream")}>
       <div className={siteContainer}>
         <div className="mb-10 flex flex-col justify-between gap-6 sm:mb-12 md:flex-row md:items-end">
           <div className="min-w-0">
-            <span className={sectionEyebrow}>{header.eyebrow}</span>
-            <h2 className={sectionTitle}>
+            <span className={sectionEyebrow} style={bodyStyle}>{header.eyebrow}</span>
+            <h2 className={sectionTitle} style={headingStyle}>
               {header.titleLine1} <br />
               <span className="italic font-normal">{header.titleLine2Italic}</span>
             </h2>
           </div>
           <div className="flex flex-col gap-3 md:items-end">
             {header.caption ? (
-              <p className="max-w-xs text-sm leading-relaxed text-offgrid-green/70 md:text-right">{header.caption}</p>
+              <p className="max-w-xs text-sm leading-relaxed text-offgrid-green/70 md:text-right" style={bodyStyle}>
+                {header.caption}
+              </p>
             ) : null}
             <Link
               to="/collections"
               className="group inline-flex items-center gap-1.5 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/60 transition-colors hover:text-offgrid-green"
             >
-              View all collections
+              {viewAllLabel}
               <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
             </Link>
           </div>

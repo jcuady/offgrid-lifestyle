@@ -92,11 +92,13 @@ export async function finalizeCustomOrderFiles(
   orderSheetFileKey: string | null;
   designFileUrl: string | null;
   orderSheetFileUrl: string | null;
+  warnings: string[];
 }> {
   const designFileKey = designKey ? orderFileKey(orderId, "design") : null;
   const orderSheetFileKey = sheetKey ? orderFileKey(orderId, "sheet") : null;
   let designFileUrl: string | null = null;
   let orderSheetFileUrl: string | null = null;
+  const warnings: string[] = [];
 
   if (designKey && designFileKey) {
     const file = await getCustomOrderFile(designKey);
@@ -105,11 +107,13 @@ export async function finalizeCustomOrderFiles(
       try {
         designFileUrl = await uploadToStorage(orderId, "design", file);
       } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        warnings.push(`Design file upload failed: ${message}`);
         logger.warn("Design file storage upload failed", {
           service: "customOrderFiles",
           operation: "uploadDesignFile",
           orderId,
-          error: err instanceof Error ? err.message : String(err),
+          error: message,
         });
       }
     }
@@ -123,18 +127,20 @@ export async function finalizeCustomOrderFiles(
       try {
         orderSheetFileUrl = await uploadToStorage(orderId, "sheet", file);
       } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        warnings.push(`Order sheet upload failed: ${message}`);
         logger.warn("Order sheet storage upload failed", {
           service: "customOrderFiles",
           operation: "uploadOrderSheet",
           orderId,
-          error: err instanceof Error ? err.message : String(err),
+          error: message,
         });
       }
     }
     if (sheetKey.startsWith("pending:")) await deleteCustomOrderFile(sheetKey);
   }
 
-  return { designFileKey, orderSheetFileKey, designFileUrl, orderSheetFileUrl };
+  return { designFileKey, orderSheetFileKey, designFileUrl, orderSheetFileUrl, warnings };
 }
 
 export async function downloadCustomOrderFile(

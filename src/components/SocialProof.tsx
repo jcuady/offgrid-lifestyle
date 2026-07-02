@@ -10,6 +10,7 @@ import {
   siteContainer,
 } from "@/src/lib/brandLayout";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
+import { cmsTypographyStyle } from "@/src/lib/cmsTypography";
 import { cn } from "@/src/lib/utils";
 
 export function SocialProof() {
@@ -17,6 +18,9 @@ export function SocialProof() {
   const ugcTiles = useSiteContentStore((s) => s.landingContent.ugcTiles);
   const testimonials = useSiteContentStore((s) => s.landingContent.testimonials);
   const viewAllLabel = useSiteContentStore((s) => s.landingContent.testimonialsViewAll);
+  const typography = useSiteContentStore((s) => s.landingContent.typography.social);
+  const headingStyle = cmsTypographyStyle(typography, "heading");
+  const bodyStyle = cmsTypographyStyle(typography, "body");
 
   const [hero, ...rest] = ugcTiles;
 
@@ -24,13 +28,13 @@ export function SocialProof() {
     <section className={cn(sectionPaddingCream, "overflow-hidden bg-offgrid-cream")}>
       <div className={siteContainer}>
         <div className={cn(sectionHeaderCenter, "mb-10 sm:mb-14")}>
-          <span className={cn(sectionEyebrow, "mx-auto")}>{header.eyebrow}</span>
-          <h2 className={sectionTitle}>
+          <span className={cn(sectionEyebrow, "mx-auto")} style={bodyStyle}>{header.eyebrow}</span>
+          <h2 className={sectionTitle} style={headingStyle}>
             {header.titleLine1} <br />
             <span className="italic font-normal">{header.titleLine2Italic}</span>
           </h2>
           {header.caption ? (
-            <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-offgrid-green/70 md:text-base">
+            <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-offgrid-green/70 md:text-base" style={bodyStyle}>
               {header.caption}
             </p>
           ) : null}

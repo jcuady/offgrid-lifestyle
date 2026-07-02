@@ -4,6 +4,7 @@ import type { CustomHeadwearOption } from "@/src/data/customHeadwearOptions";
 import type { Database } from "@/src/types/database";
 import { logger } from "@/src/lib/logger";
 import { loadFeaturedSpotlight, loadSiteCustomPages } from "@/src/lib/siteContentPersistence";
+import { normalizeLandingContent } from "@/src/lib/normalizeLandingContent";
 import { supabase } from "@/src/lib/supabase";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { usePortalStore } from "@/src/store/usePortalStore";
@@ -397,16 +398,16 @@ export async function hydrateSiteContentFromSupabase(): Promise<void> {
   const storePatch: Record<string, unknown> = {};
 
   if (pagesPatch.landing) {
-    storePatch.landingContent = {
+    storePatch.landingContent = normalizeLandingContent({
       ...useSiteContentStore.getState().landingContent,
       ...pagesPatch.landing,
       ...(spotlight ? { featuredSpotlight: spotlight } : {}),
-    };
+    });
   } else if (spotlight) {
-    storePatch.landingContent = {
+    storePatch.landingContent = normalizeLandingContent({
       ...useSiteContentStore.getState().landingContent,
       featuredSpotlight: spotlight,
-    };
+    });
   }
 
   const customPagePatch: Record<string, unknown> = {};

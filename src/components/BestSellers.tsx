@@ -4,6 +4,7 @@ import { Star, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { formatPrice } from "@/src/data/products";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
+import { cmsTypographyStyle } from "@/src/lib/cmsTypography";
 import { sectionEyebrow, sectionPaddingCream, sectionTitle, siteContainer } from "@/src/lib/brandLayout";
 import { cn } from "@/src/lib/utils";
 
@@ -14,6 +15,9 @@ export function BestSellers() {
   const products = useSiteContentStore((state) => state.products);
   const header = useSiteContentStore((state) => state.landingContent.bestSellersHeader);
   const shopLinkLabel = useSiteContentStore((state) => state.landingContent.bestSellersShopLink);
+  const typography = useSiteContentStore((state) => state.landingContent.typography.bestSellers);
+  const headingStyle = cmsTypographyStyle(typography, "heading");
+  const bodyStyle = cmsTypographyStyle(typography, "body");
 
   const crowdFavorites = useMemo(() => {
     return [...products]
@@ -41,8 +45,8 @@ export function BestSellers() {
       <div className={siteContainer}>
         <div className="mb-10 flex flex-col justify-between gap-6 sm:mb-14 md:flex-row md:items-end">
           <div className="min-w-0">
-            <span className={sectionEyebrow}>{header.eyebrow}</span>
-            <h2 className={sectionTitle}>
+            <span className={sectionEyebrow} style={bodyStyle}>{header.eyebrow}</span>
+            <h2 className={sectionTitle} style={headingStyle}>
               {header.titleLine1} <br />
               <span className="italic font-normal">{header.titleLine2Italic}</span>
             </h2>

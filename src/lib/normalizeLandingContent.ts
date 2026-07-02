@@ -1,0 +1,72 @@
+import type { LandingContent } from "@/src/data/landingContent";
+import { initialLandingContent } from "@/src/data/landingContent";
+
+function mergeTypography(
+  base: LandingContent["typography"],
+  patch: LandingContent["typography"] | undefined,
+): LandingContent["typography"] {
+  if (!patch) return base;
+  const keys = Object.keys(base) as (keyof LandingContent["typography"])[];
+  const merged = { ...base };
+  for (const key of keys) {
+    merged[key] = { ...base[key], ...(patch[key] ?? {}) };
+  }
+  return merged;
+}
+
+/** Deep-merge persisted landing JSON with current defaults (new CMS fields). */
+export function normalizeLandingContent(partial?: Partial<LandingContent> | null): LandingContent {
+  const base = initialLandingContent;
+  if (!partial) return base;
+
+  return {
+    ...base,
+    ...partial,
+    hero: { ...base.hero, ...partial.hero },
+    collectionsHeader: { ...base.collectionsHeader, ...partial.collectionsHeader },
+    collections: base.collections.map((card, index) => ({
+      ...card,
+      ...(partial.collections?.[index] ?? {}),
+      id: card.id,
+      shopCategory: card.shopCategory,
+    })),
+    bestSellersHeader: { ...base.bestSellersHeader, ...partial.bestSellersHeader },
+    bestSellersShopLink: partial.bestSellersShopLink ?? base.bestSellersShopLink,
+    collectionsViewAllLabel: partial.collectionsViewAllLabel ?? base.collectionsViewAllLabel,
+    brandStory: { ...base.brandStory, ...partial.brandStory },
+    event: { ...base.event, ...partial.event },
+    socialHeader: { ...base.socialHeader, ...partial.socialHeader },
+    ugcTiles: base.ugcTiles.map((tile, index) => ({
+      ...tile,
+      ...(partial.ugcTiles?.[index] ?? {}),
+    })),
+    testimonials: base.testimonials.map((entry, index) => ({
+      ...entry,
+      ...(partial.testimonials?.[index] ?? {}),
+    })),
+    testimonialsViewAll: partial.testimonialsViewAll ?? base.testimonialsViewAll,
+    cta: { ...base.cta, ...partial.cta },
+    footer: { ...base.footer, ...partial.footer },
+    featuredSpotlight: {
+      ...base.featuredSpotlight,
+      ...partial.featuredSpotlight,
+      slots: base.featuredSpotlight.slots.map((slot, index) => ({
+        ...slot,
+        ...(partial.featuredSpotlight?.slots?.[index] ?? {}),
+      })) as LandingContent["featuredSpotlight"]["slots"],
+    },
+    teamCommunity: {
+      ...base.teamCommunity,
+      ...partial.teamCommunity,
+      faces: base.teamCommunity.faces.map((face, index) => ({
+        ...face,
+        ...(partial.teamCommunity?.faces?.[index] ?? {}),
+      })) as LandingContent["teamCommunity"]["faces"],
+      teams: base.teamCommunity.teams.map((team, index) => ({
+        ...team,
+        ...(partial.teamCommunity?.teams?.[index] ?? {}),
+      })) as LandingContent["teamCommunity"]["teams"],
+    },
+    typography: mergeTypography(base.typography, partial.typography),
+  };
+}

@@ -62,6 +62,7 @@ export function StepSummary() {
   const currentUser = usePortalStore((s) => s.currentUser);
   const savedShipping = useStore((s) => s.shippingInfo);
   const [submittedOrderId, setSubmittedOrderId] = useState<string | null>(null);
+  const [fileUploadWarnings, setFileUploadWarnings] = useState<string[]>([]);
   const [submittedEmail, setSubmittedEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitErrors, setSubmitErrors] = useState<string[]>([]);
@@ -157,16 +158,17 @@ export function StepSummary() {
         status: "pending_deposit" as const,
         createdAt: draft.createdAt ?? new Date().toISOString(),
       };
-      const orderId = await localOrderService.submitCustomOrder(submittedDraft);
+      const result = await localOrderService.submitCustomOrder(submittedDraft);
       setSubmittedEmail(submittedDraft.contactEmail);
+      setFileUploadWarnings(result.fileUploadWarnings);
       resetDraft();
 
       if (currentUser?.role === "customer") {
-        navigate(`/account/orders/${orderId}`);
+        navigate(`/account/orders/${result.orderId}`);
         return;
       }
 
-      setSubmittedOrderId(orderId);
+      setSubmittedOrderId(result.orderId);
     } catch (err) {
       setSubmitErrors([err instanceof Error ? err.message : "Submission failed. Please try again."]);
     } finally {
@@ -183,6 +185,19 @@ export function StepSummary() {
         <h2 className="text-2xl sm:text-3xl font-display font-black text-offgrid-green">{copy.successTitle}</h2>
         <p className="font-mono text-sm font-bold text-offgrid-green">{submittedOrderId}</p>
         <p className="text-sm text-offgrid-green/60 max-w-md mx-auto">{copy.successBody}</p>
+        {fileUploadWarnings.length > 0 ? (
+          <div className="mx-auto max-w-md rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-left text-sm text-amber-950">
+            <p className="font-semibold">Order received — file upload issue</p>
+            <ul className="mt-2 list-disc space-y-1 pl-5 text-xs">
+              {fileUploadWarnings.map((warning) => (
+                <li key={warning}>{warning}</li>
+              ))}
+            </ul>
+            <p className="mt-2 text-xs text-amber-900/80">
+              Your order is saved. Contact support or re-submit files if staff cannot download them.
+            </p>
+          </div>
+        ) : null}
         <div className="bg-offgrid-green/5 rounded-xl p-4 sm:p-6 text-left max-w-sm mx-auto space-y-2">
           <div className="flex items-start gap-3">
             <AlertCircle className="w-4 h-4 text-offgrid-lime flex-shrink-0 mt-0.5" />
@@ -209,6 +224,7 @@ export function StepSummary() {
           className="mt-2"
           onClick={() => {
             setSubmittedOrderId(null);
+            setFileUploadWarnings([]);
           }}
         >
           <RotateCcw className="mr-2 w-4 h-4" />

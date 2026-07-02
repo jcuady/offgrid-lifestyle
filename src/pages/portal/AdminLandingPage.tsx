@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ExternalLink, RotateCcw } from "lucide-react";
 import { Link } from "react-router-dom";
-import { CmsField, CmsImageInput, CmsSectionPanel, CmsTextInput } from "@/src/components/admin/landing/CmsField";
+import { CmsField, CmsImageInput, CmsSectionPanel, CmsTextInput, CmsTypographyControls } from "@/src/components/admin/landing/CmsField";
 import { CmsRouteSelect } from "@/src/components/admin/CmsRouteSelect";
 import { LANDING_COLLECTION_IDS } from "@/src/data/landingContent";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
@@ -30,6 +30,7 @@ export function AdminLandingPage() {
   const products = useSiteContentStore((s) => s.products);
   const updateHero = useSiteContentStore((s) => s.updateLandingHero);
   const updateCollectionsHeader = useSiteContentStore((s) => s.updateLandingCollectionsHeader);
+  const updateCollectionsViewAllLabel = useSiteContentStore((s) => s.updateLandingCollectionsViewAllLabel);
   const updateCollectionCard = useSiteContentStore((s) => s.updateLandingCollectionCard);
   const updateBestSellersHeader = useSiteContentStore((s) => s.updateLandingBestSellersHeader);
   const updateBestSellersShopLink = useSiteContentStore((s) => s.updateLandingBestSellersShopLink);
@@ -39,6 +40,10 @@ export function AdminLandingPage() {
   const updateUgcTile = useSiteContentStore((s) => s.updateLandingUgcTile);
   const updateTestimonial = useSiteContentStore((s) => s.updateLandingTestimonial);
   const updateTestimonialsViewAll = useSiteContentStore((s) => s.updateLandingTestimonialsViewAll);
+  const updateTeamCommunity = useSiteContentStore((s) => s.updateLandingTeamCommunity);
+  const updateTeamFace = useSiteContentStore((s) => s.updateLandingTeamFace);
+  const updateTeamChip = useSiteContentStore((s) => s.updateLandingTeamChip);
+  const updateTypography = useSiteContentStore((s) => s.updateLandingTypography);
   const updateCta = useSiteContentStore((s) => s.updateLandingCta);
   const updateFooter = useSiteContentStore((s) => s.updateLandingFooter);
   const updateFeaturedSpotlight = useSiteContentStore((s) => s.updateLandingFeaturedSpotlight);
@@ -100,6 +105,14 @@ export function AdminLandingPage() {
           <CmsField label="Tagline" className="sm:col-span-2">
             <CmsTextInput value={landing.hero.tagline} onChange={(v) => updateHero({ tagline: v })} />
           </CmsField>
+          <CmsField label="Description" className="sm:col-span-2">
+            <CmsTextInput
+              value={landing.hero.description}
+              onChange={(v) => updateHero({ description: v })}
+              multiline
+              rows={3}
+            />
+          </CmsField>
           <CmsField label="Locality line">
             <CmsTextInput value={landing.hero.locality} onChange={(v) => updateHero({ locality: v })} />
           </CmsField>
@@ -124,6 +137,10 @@ export function AdminLandingPage() {
           <CmsField label="Stats — locality sub">
             <CmsTextInput value={landing.hero.statLocalitySub} onChange={(v) => updateHero({ statLocalitySub: v })} />
           </CmsField>
+          <CmsTypographyControls
+            value={landing.typography.hero}
+            onChange={(patch) => updateTypography("hero", patch)}
+          />
         </CmsSectionPanel>
 
         <CmsSectionPanel title="Featured collections" description="Four fixed cards; shop links stay tied to category filters.">
@@ -152,6 +169,16 @@ export function AdminLandingPage() {
               multiline
             />
           </CmsField>
+          <CmsField label="View all link label" className="sm:col-span-2">
+            <CmsTextInput
+              value={landing.collectionsViewAllLabel}
+              onChange={updateCollectionsViewAllLabel}
+            />
+          </CmsField>
+          <CmsTypographyControls
+            value={landing.typography.collections}
+            onChange={(patch) => updateTypography("collections", patch)}
+          />
         </CmsSectionPanel>
 
         {landing.collections.map((card) => (
@@ -165,6 +192,7 @@ export function AdminLandingPage() {
                 value={card.image}
                 onChange={(v) => updateCollectionCard(card.id, { image: v })}
                 alt={card.title}
+                uploadSection={`collections-${card.id}`}
               />
             </CmsField>
             <CmsField label="Tag">
@@ -367,6 +395,10 @@ export function AdminLandingPage() {
           <CmsField label="Catalog link label" className="sm:col-span-2">
             <CmsTextInput value={landing.bestSellersShopLink} onChange={updateBestSellersShopLink} />
           </CmsField>
+          <CmsTypographyControls
+            value={landing.typography.bestSellers}
+            onChange={(patch) => updateTypography("bestSellers", patch)}
+          />
         </CmsSectionPanel>
 
         <CmsSectionPanel title="Brand story" description="Content for the About Us page (/about).">
@@ -375,6 +407,7 @@ export function AdminLandingPage() {
               value={landing.brandStory.image}
               onChange={(v) => updateBrandStory({ image: v })}
               alt="Brand story"
+              uploadSection="brand-story"
             />
           </CmsField>
           <CmsField label="Eyebrow">
@@ -439,6 +472,7 @@ export function AdminLandingPage() {
               value={landing.event.backgroundImage}
               onChange={(v) => updateEvent({ backgroundImage: v })}
               alt="Event"
+              uploadSection="event"
             />
           </CmsField>
           <CmsField label="Badge" className="sm:col-span-2">
@@ -471,6 +505,10 @@ export function AdminLandingPage() {
           <CmsField label="Secondary CTA">
             <CmsTextInput value={landing.event.ctaSecondary} onChange={(v) => updateEvent({ ctaSecondary: v })} />
           </CmsField>
+          <CmsTypographyControls
+            value={landing.typography.event}
+            onChange={(patch) => updateTypography("event", patch)}
+          />
         </CmsSectionPanel>
 
         <CmsSectionPanel title="Social proof" description="Community grid and three testimonial cards.">
@@ -486,9 +524,20 @@ export function AdminLandingPage() {
               onChange={(v) => updateSocialHeader({ titleLine2Italic: v })}
             />
           </CmsField>
+          <CmsField label="Caption" className="sm:col-span-2">
+            <CmsTextInput
+              value={landing.socialHeader.caption}
+              onChange={(v) => updateSocialHeader({ caption: v })}
+              multiline
+            />
+          </CmsField>
           <CmsField label="View all button" className="sm:col-span-2">
             <CmsTextInput value={landing.testimonialsViewAll} onChange={updateTestimonialsViewAll} />
           </CmsField>
+          <CmsTypographyControls
+            value={landing.typography.social}
+            onChange={(patch) => updateTypography("social", patch)}
+          />
         </CmsSectionPanel>
 
         {landing.ugcTiles.map((tile, index) => (
@@ -502,6 +551,7 @@ export function AdminLandingPage() {
                 value={tile.image}
                 onChange={(v) => updateUgcTile(index as 0 | 1 | 2 | 3 | 4, { image: v })}
                 alt={`UGC ${index + 1}`}
+                uploadSection={`ugc-${index + 1}`}
               />
             </CmsField>
             <CmsField label="Overlay label" className="sm:col-span-2">
@@ -542,6 +592,112 @@ export function AdminLandingPage() {
           </div>
         ))}
 
+        <CmsSectionPanel title="Team community" description="Community band with face chips, partner teams, and CTAs.">
+          <CmsField label="Badge" className="sm:col-span-2">
+            <CmsTextInput value={landing.teamCommunity.badge} onChange={(v) => updateTeamCommunity({ badge: v })} />
+          </CmsField>
+          <CmsField label="Headline part 1 (before face 1)">
+            <CmsTextInput
+              value={landing.teamCommunity.headlinePart1}
+              onChange={(v) => updateTeamCommunity({ headlinePart1: v })}
+            />
+          </CmsField>
+          <CmsField label="Headline part 2 (between faces)">
+            <CmsTextInput
+              value={landing.teamCommunity.headlinePart2}
+              onChange={(v) => updateTeamCommunity({ headlinePart2: v })}
+            />
+          </CmsField>
+          <CmsField label="Headline part 3 (after face 2)" className="sm:col-span-2">
+            <CmsTextInput
+              value={landing.teamCommunity.headlinePart3}
+              onChange={(v) => updateTeamCommunity({ headlinePart3: v })}
+              multiline
+            />
+          </CmsField>
+          {landing.teamCommunity.faces.map((face, index) => (
+            <div key={index} className="contents">
+              <CmsField label={`Face ${index + 1} — photo`} className="sm:col-span-2">
+                <CmsImageInput
+                  value={face.image}
+                  onChange={(v) => updateTeamFace(index as 0 | 1, { image: v })}
+                  alt={face.alt}
+                  uploadSection={`team-face-${index + 1}`}
+                />
+              </CmsField>
+              <CmsField label={`Face ${index + 1} — alt text`}>
+                <CmsTextInput
+                  value={face.alt}
+                  onChange={(v) => updateTeamFace(index as 0 | 1, { alt: v })}
+                />
+              </CmsField>
+              <CmsField label={`Face ${index + 1} — name`}>
+                <CmsTextInput
+                  value={face.name}
+                  onChange={(v) => updateTeamFace(index as 0 | 1, { name: v })}
+                />
+              </CmsField>
+              <CmsField label={`Face ${index + 1} — quote`} className="sm:col-span-2">
+                <CmsTextInput
+                  value={face.quote}
+                  onChange={(v) => updateTeamFace(index as 0 | 1, { quote: v })}
+                  multiline
+                />
+              </CmsField>
+            </div>
+          ))}
+          {landing.teamCommunity.teams.map((team, index) => (
+            <div key={index} className="contents">
+              <CmsField label={`Team ${index + 1} — name`}>
+                <CmsTextInput
+                  value={team.name}
+                  onChange={(v) => updateTeamChip(index as 0 | 1 | 2 | 3, { name: v })}
+                />
+              </CmsField>
+              <CmsField label={`Team ${index + 1} — sport`}>
+                <CmsTextInput
+                  value={team.sport}
+                  onChange={(v) => updateTeamChip(index as 0 | 1 | 2 | 3, { sport: v })}
+                />
+              </CmsField>
+            </div>
+          ))}
+          <CmsField label="Primary CTA label">
+            <CmsTextInput
+              value={landing.teamCommunity.primaryCtaLabel}
+              onChange={(v) => updateTeamCommunity({ primaryCtaLabel: v })}
+            />
+          </CmsField>
+          <CmsField label="Secondary CTA label">
+            <CmsTextInput
+              value={landing.teamCommunity.secondaryCtaLabel}
+              onChange={(v) => updateTeamCommunity({ secondaryCtaLabel: v })}
+            />
+          </CmsField>
+          <CmsField label="Social heading" className="sm:col-span-2">
+            <CmsTextInput
+              value={landing.teamCommunity.socialHeading}
+              onChange={(v) => updateTeamCommunity({ socialHeading: v })}
+            />
+          </CmsField>
+          <CmsField label="Instagram URL">
+            <CmsTextInput
+              value={landing.teamCommunity.instagramUrl}
+              onChange={(v) => updateTeamCommunity({ instagramUrl: v })}
+            />
+          </CmsField>
+          <CmsField label="Facebook URL">
+            <CmsTextInput
+              value={landing.teamCommunity.facebookUrl}
+              onChange={(v) => updateTeamCommunity({ facebookUrl: v })}
+            />
+          </CmsField>
+          <CmsTypographyControls
+            value={landing.typography.teamCommunity}
+            onChange={(patch) => updateTypography("teamCommunity", patch)}
+          />
+        </CmsSectionPanel>
+
         <CmsSectionPanel title="Closing CTA" description="Dark band before footer.">
           <CmsField label="Title line 1">
             <CmsTextInput value={landing.cta.titleLine1} onChange={(v) => updateCta({ titleLine1: v })} />
@@ -578,6 +734,10 @@ export function AdminLandingPage() {
           <CmsField label="Trust — checkout">
             <CmsTextInput value={landing.cta.trustCheckout} onChange={(v) => updateCta({ trustCheckout: v })} />
           </CmsField>
+          <CmsTypographyControls
+            value={landing.typography.cta}
+            onChange={(patch) => updateTypography("cta", patch)}
+          />
         </CmsSectionPanel>
 
         <CmsSectionPanel title="Footer" description="Tagline and copyright on homepage footer.">

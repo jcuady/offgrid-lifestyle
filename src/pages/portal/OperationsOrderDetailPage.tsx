@@ -30,6 +30,7 @@ import { Button } from "@/src/components/ui/Button";
 import { CustomOrderFileButton } from "@/src/components/custom-order/CustomOrderFileButton";
 import { OrderDeliveryDetails } from "@/src/components/portal/OrderDeliveryDetails";
 import { localOrderService } from "@/src/services";
+import { persistOrderPaymentUpdate, persistOrderStatusUpdate } from "@/src/lib/opsOrderUpdate";
 import { useOrderDetail } from "@/src/hooks/useOrderDetail";
 
 function PaymentProofAdminSection({
@@ -361,14 +362,24 @@ export function OperationsOrderDetailPage() {
               <select
                 value={retail.status}
                 onChange={(e) => {
-                  const next = e.target.value as (typeof retail)["status"];
-                  if (!canTransitionStatus(retail.status, next)) {
-                    setFeedback(`Invalid transition: ${formatOrderStatus(retail.status)} → ${formatOrderStatus(next)}.`);
-                    return;
-                  }
-                  setFeedback(`Order ${retail.id} → ${formatOrderStatus(next)}.`);
-                  updateRetailOrderStatus(retail.id, next);
-                  localOrderService.updateOrderField(retail.id, { status: next });
+                  void (async () => {
+                    const next = e.target.value as (typeof retail)["status"];
+                    if (!canTransitionStatus(retail.status, next)) {
+                      setFeedback(`Invalid transition: ${formatOrderStatus(retail.status)} → ${formatOrderStatus(next)}.`);
+                      return;
+                    }
+                    try {
+                      await persistOrderStatusUpdate({
+                        orderId: retail.id,
+                        previousStatus: retail.status,
+                        next,
+                        applyStore: (value) => updateRetailOrderStatus(retail.id, value),
+                      });
+                      setFeedback(`Order ${retail.id} → ${formatOrderStatus(next)}.`);
+                    } catch (err) {
+                      setFeedback(err instanceof Error ? err.message : "Could not update order status.");
+                    }
+                  })();
                 }}
                 className="mt-1 block rounded-xl border border-offgrid-green/20 px-3 py-2 text-sm"
               >
@@ -385,10 +396,20 @@ export function OperationsOrderDetailPage() {
                 <select
                   value={retail.paymentStatus}
                   onChange={(e) => {
-                    const next = e.target.value as (typeof retail)["paymentStatus"];
-                    setFeedback(`Payment → ${formatPaymentStatus(next)}.`);
-                    updateRetailPaymentStatus(retail.id, next);
-                    localOrderService.updateOrderField(retail.id, { payment_status: next });
+                    void (async () => {
+                      const next = e.target.value as (typeof retail)["paymentStatus"];
+                      try {
+                        await persistOrderPaymentUpdate({
+                          orderId: retail.id,
+                          previousStatus: retail.paymentStatus,
+                          next,
+                          applyStore: (value) => updateRetailPaymentStatus(retail.id, value),
+                        });
+                        setFeedback(`Payment → ${formatPaymentStatus(next)}.`);
+                      } catch (err) {
+                        setFeedback(err instanceof Error ? err.message : "Could not update payment status.");
+                      }
+                    })();
                   }}
                   className="mt-1 block rounded-xl border border-offgrid-green/20 px-3 py-2 text-sm"
                 >
@@ -580,14 +601,24 @@ export function OperationsOrderDetailPage() {
               <select
                 value={custom.status}
                 onChange={(e) => {
-                  const next = e.target.value as (typeof custom)["status"];
-                  if (!canTransitionStatus(custom.status, next)) {
-                    setFeedback(`Invalid transition: ${formatOrderStatus(custom.status)} → ${formatOrderStatus(next)}.`);
-                    return;
-                  }
-                  setFeedback(`Order ${custom.id} → ${formatOrderStatus(next)}.`);
-                  updateCustomOrderStatus(custom.id, next);
-                  localOrderService.updateOrderField(custom.id, { status: next });
+                  void (async () => {
+                    const next = e.target.value as (typeof custom)["status"];
+                    if (!canTransitionStatus(custom.status, next)) {
+                      setFeedback(`Invalid transition: ${formatOrderStatus(custom.status)} → ${formatOrderStatus(next)}.`);
+                      return;
+                    }
+                    try {
+                      await persistOrderStatusUpdate({
+                        orderId: custom.id,
+                        previousStatus: custom.status,
+                        next,
+                        applyStore: (value) => updateCustomOrderStatus(custom.id, value),
+                      });
+                      setFeedback(`Order ${custom.id} → ${formatOrderStatus(next)}.`);
+                    } catch (err) {
+                      setFeedback(err instanceof Error ? err.message : "Could not update order status.");
+                    }
+                  })();
                 }}
                 className="mt-1 block rounded-xl border border-offgrid-green/20 px-3 py-2 text-sm"
               >
@@ -604,10 +635,20 @@ export function OperationsOrderDetailPage() {
                 <select
                   value={custom.paymentStatus}
                   onChange={(e) => {
-                    const next = e.target.value as (typeof custom)["paymentStatus"];
-                    setFeedback(`Payment → ${formatPaymentStatus(next)}.`);
-                    updateCustomPaymentStatus(custom.id, next);
-                    localOrderService.updateOrderField(custom.id, { payment_status: next });
+                    void (async () => {
+                      const next = e.target.value as (typeof custom)["paymentStatus"];
+                      try {
+                        await persistOrderPaymentUpdate({
+                          orderId: custom.id,
+                          previousStatus: custom.paymentStatus,
+                          next,
+                          applyStore: (value) => updateCustomPaymentStatus(custom.id, value),
+                        });
+                        setFeedback(`Payment → ${formatPaymentStatus(next)}.`);
+                      } catch (err) {
+                        setFeedback(err instanceof Error ? err.message : "Could not update payment status.");
+                      }
+                    })();
                   }}
                   className="mt-1 block rounded-xl border border-offgrid-green/20 px-3 py-2 text-sm"
                 >

@@ -6,8 +6,10 @@ import { BestSellers } from "@/src/components/BestSellers";
 import { EventSection } from "@/src/components/EventSection";
 import { SocialProof } from "@/src/components/SocialProof";
 import { TeamCommunity } from "@/src/components/TeamCommunity";
+import { CTASection } from "@/src/components/CTASection";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { OffgridHero } from "@/src/components/ui/offgrid-hero";
+import { cmsTypographyStyle } from "@/src/lib/cmsTypography";
 import { hydrateProductsFromSupabase, hydrateSiteContentFromSupabase } from "@/src/services";
 
 export function HomePage() {
@@ -18,6 +20,7 @@ export function HomePage() {
     void hydrateProductsFromSupabase();
   }, []);
   const hero = useSiteContentStore((state) => state.landingContent.hero);
+  const heroTypography = useSiteContentStore((state) => state.landingContent.typography.hero);
 
   const scrollToCollections = () => {
     document.getElementById("collections")?.scrollIntoView({ behavior: "smooth" });
@@ -33,7 +36,9 @@ export function HomePage() {
         badge={hero.badge}
         title={titleText}
         mark={titleMark}
-        description="Premium Filipino sportswear engineered for movement — on the court, on the course, and everywhere off the grid."
+        description={hero.description}
+        titleStyle={cmsTypographyStyle(heroTypography, "heading")}
+        descriptionStyle={cmsTypographyStyle(heroTypography, "body")}
         primaryCta={{ label: hero.ctaShopLabel, onClick: () => navigate("/shop") }}
         secondaryCta={{ label: hero.ctaExploreLabel, onClick: scrollToCollections }}
       />
@@ -44,6 +49,7 @@ export function HomePage() {
         <EventSection />
         <SocialProof />
         <TeamCommunity />
+        <CTASection />
       </main>
     </>
   );

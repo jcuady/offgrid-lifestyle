@@ -3,6 +3,7 @@ import { Button } from "./ui/Button";
 import { ArrowRight, Instagram, Facebook } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
+import { cmsTypographyStyle } from "@/src/lib/cmsTypography";
 import { sectionPaddingDark, siteContainer } from "@/src/lib/brandLayout";
 import { cn } from "@/src/lib/utils";
 
@@ -15,6 +16,9 @@ export function CTASection() {
   const navigate = useNavigate();
   const cta = useSiteContentStore((state) => state.landingContent.cta);
   const tagline = useSiteContentStore((state) => state.landingContent.footer.taglineLine1);
+  const typography = useSiteContentStore((state) => state.landingContent.typography.cta);
+  const headingStyle = cmsTypographyStyle(typography, "heading");
+  const bodyStyle = cmsTypographyStyle(typography, "body");
 
   return (
     <section className={cn(sectionPaddingDark, "relative overflow-hidden bg-offgrid-dark text-offgrid-cream")}>
@@ -31,12 +35,12 @@ export function CTASection() {
         >
           <span className="mx-auto mb-8 block h-px w-16 bg-offgrid-lime" />
 
-          <h2 className="mb-7 font-display text-4xl font-black leading-[0.88] tracking-tight sm:text-5xl md:text-7xl lg:text-8xl xl:text-[9rem]">
+          <h2 className="mb-7 font-display text-4xl font-black leading-[0.88] tracking-tight sm:text-5xl md:text-7xl lg:text-8xl xl:text-[9rem]" style={headingStyle}>
             {cta.titleLine1} <br />
             {cta.titleLine2}
           </h2>
 
-          <p className="mx-auto mb-11 max-w-md font-display text-lg italic text-offgrid-cream/70 md:text-xl">
+          <p className="mx-auto mb-11 max-w-md font-display text-lg italic text-offgrid-cream/70 md:text-xl" style={bodyStyle}>
             {tagline}
           </p>
 
@@ -56,9 +60,9 @@ export function CTASection() {
               variant="outline"
               size="lg"
               className="h-14 w-full border-offgrid-cream/60 bg-offgrid-cream/10 px-10 text-base text-offgrid-cream backdrop-blur-sm hover:bg-offgrid-cream hover:text-offgrid-green sm:w-auto"
-              onClick={() => navigate("/contact")}
+              onClick={() => navigate("/about")}
             >
-              Contact Us
+              {cta.ctaStory}
             </Button>
           </div>
 

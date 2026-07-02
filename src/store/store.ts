@@ -146,6 +146,7 @@ export const useStore = create<StoreState>()(
     set({
       orderId,
       checkoutStep: 3,
+      cart: [],
     });
     return orderId;
   },

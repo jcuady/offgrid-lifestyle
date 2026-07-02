@@ -74,6 +74,8 @@ export interface OffgridHeroProps {
   secondaryCta?: OffgridHeroCta;
   /** Background video source. Defaults to the brand AI clip. */
   videoSrc?: string;
+  titleStyle?: CSSProperties;
+  descriptionStyle?: CSSProperties;
 }
 
 export function OffgridHero({
@@ -84,6 +86,8 @@ export function OffgridHero({
   primaryCta,
   secondaryCta,
   videoSrc = DEFAULT_HERO_VIDEO,
+  titleStyle,
+  descriptionStyle,
 }: OffgridHeroProps) {
   return (
     <section className="relative h-[100svh] w-full overflow-hidden bg-offgrid-dark" aria-label="OFF GRID hero">
@@ -126,7 +130,10 @@ export function OffgridHero({
       <div className="absolute bottom-0 left-0 right-0 px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-6 md:px-10 md:pb-8">
         <div className="grid grid-cols-12 items-end gap-4">
           <div className="col-span-12 lg:col-span-8">
-            <h1 className="font-display font-black uppercase leading-[0.82] tracking-[-0.05em] text-offgrid-cream text-[24vw] drop-shadow-[0_2px_40px_rgba(0,0,0,0.6)] sm:text-[22vw] md:text-[20vw] lg:text-[16vw] xl:text-[15vw]">
+            <h1
+              className="font-display font-black uppercase leading-[0.82] tracking-[-0.05em] text-offgrid-cream text-[24vw] drop-shadow-[0_2px_40px_rgba(0,0,0,0.6)] sm:text-[22vw] md:text-[20vw] lg:text-[16vw] xl:text-[15vw]"
+              style={titleStyle}
+            >
               <WordsPullUp text={title} mark={mark} />
             </h1>
           </div>
@@ -137,6 +144,7 @@ export function OffgridHero({
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
               className="max-w-md font-sans text-sm font-light leading-snug text-offgrid-cream/80 sm:text-base"
+              style={descriptionStyle}
             >
               {description}
             </motion.p>

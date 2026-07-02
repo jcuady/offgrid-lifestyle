@@ -16,6 +16,7 @@ import { usePortalStore, type CustomOrderQuoteUpdate, type ManagedCustomOrder, t
 import { logger } from "@/src/lib/logger";
 import { supabase } from "@/src/lib/supabase";
 import { finalizeCustomOrderFiles } from "@/src/lib/customOrderFiles";
+import { mergeCustomOrderDraftWithFiles } from "@/src/lib/customOrderSubmit";
 import { validateCustomOrderDraft, validateRetailCart, validateShippingInfo, sanitizeShippingInfo, normalizeShippingInfo, mergeCustomOrderShipping } from "@/src/lib/formValidation";
 import { checkoutPaymentConfigFromSettings, validateRetailPaymentMethod } from "@/src/types/payments";
 import { notifyStaffOrderEvent } from "@/src/lib/notifications";
@@ -140,9 +141,14 @@ function mergeOrderIntoStore(retail?: ManagedRetailOrder, custom?: ManagedCustom
   }
 }
 
+export interface SubmitCustomOrderResult {
+  orderId: string;
+  fileUploadWarnings: string[];
+}
+
 export interface OrderService {
   submitRetailOrder: (input: SubmitRetailOrderInput) => Promise<string>;
-  submitCustomOrder: (draft: CustomOrderDraft) => Promise<string>;
+  submitCustomOrder: (draft: CustomOrderDraft) => Promise<SubmitCustomOrderResult>;
   listOrders: () => Promise<{ retailOrders: ManagedRetailOrder[]; customOrders: ManagedCustomOrder[] }>;
   fetchOrderById: (orderId: string) => Promise<{ retail?: ManagedRetailOrder; custom?: ManagedCustomOrder } | null>;
   updateOrderField: (id: string, patch: { status?: string; payment_status?: string; payment_proof_url?: string }) => Promise<void>;
@@ -233,22 +239,8 @@ export const supabaseOrderService: OrderService = {
 
     const orderId =
       sanitizedDraft.id ?? `CO-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
-    const fileKeys = await finalizeCustomOrderFiles(orderId, sanitizedDraft.designFileKey, sanitizedDraft.orderSheetFileKey);
-    const finalDraft: CustomOrderDraft = {
-      ...sanitizedDraft,
-      id: orderId,
-      shippingInfo,
-      status: draft.status === "draft" ? "pending_deposit" : draft.status,
-      designFileKey: fileKeys.designFileKey ?? draft.designFileKey,
-      orderSheetFileKey: fileKeys.orderSheetFileKey ?? draft.orderSheetFileKey,
-      designFileUrl: fileKeys.designFileUrl ?? draft.designFileUrl ?? null,
-      orderSheetFileUrl: fileKeys.orderSheetFileUrl ?? draft.orderSheetFileUrl ?? null,
-      createdAt: draft.createdAt ?? new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
+    const orderStatus = draft.status === "draft" ? "pending_deposit" : draft.status;
     const currentUser = usePortalStore.getState().currentUser;
-    const orderStatus = finalDraft.status;
     const customerId = currentUser?.role === "customer" ? currentUser.id : null;
     const customerEmail =
       currentUser?.role === "customer" ? currentUser.email : (draft.contactEmail ?? null);
@@ -256,7 +248,16 @@ export const supabaseOrderService: OrderService = {
       currentUser?.role === "customer" ? currentUser.name : (draft.contactName ?? null);
     const customerPhone = draft.contactPhone ?? null;
 
-    const { error } = await supabase.from("og_orders").insert({
+    const initialPayload: CustomOrderDraft = {
+      ...sanitizedDraft,
+      id: orderId,
+      shippingInfo,
+      status: orderStatus,
+      createdAt: draft.createdAt ?? new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const { error: insertError } = await supabase.from("og_orders").insert({
       id: orderId,
       order_type: "custom",
       status: orderStatus,
@@ -267,16 +268,40 @@ export const supabaseOrderService: OrderService = {
       customer_phone: customerPhone,
       total_centavos: draft.estimatedTotal ? Math.round(draft.estimatedTotal.amount * 100) : null,
       shipping_info: shippingInfo as unknown as Json,
-      custom_payload: finalDraft as unknown as Json,
+      custom_payload: initialPayload as unknown as Json,
     });
 
-    if (error) {
-      throw new Error(`Could not save custom order: ${error.message}`);
+    if (insertError) {
+      throw new Error(`Could not save custom order: ${insertError.message}`);
+    }
+
+    const fileKeys = await finalizeCustomOrderFiles(
+      orderId,
+      sanitizedDraft.designFileKey,
+      sanitizedDraft.orderSheetFileKey,
+    );
+    const finalDraft = mergeCustomOrderDraftWithFiles(
+      sanitizedDraft,
+      orderId,
+      shippingInfo,
+      fileKeys,
+    );
+
+    const { error: patchError } = await supabase
+      .from("og_orders")
+      .update({
+        custom_payload: finalDraft as unknown as Json,
+        updated_at: finalDraft.updatedAt,
+      })
+      .eq("id", orderId);
+
+    if (patchError) {
+      throw new Error(`Order saved but file metadata could not be updated: ${patchError.message}`);
     }
 
     const customOrderId = usePortalStore.getState().recordCustomOrder(finalDraft);
     void notifyStaffOrderEvent(customOrderId, "new_custom_order");
-    return customOrderId;
+    return { orderId: customOrderId, fileUploadWarnings: fileKeys.warnings };
   },
 
   listOrders: async () => {

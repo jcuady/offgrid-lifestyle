@@ -4,11 +4,15 @@ import { Button } from "./ui/Button";
 import { ArrowRight, MapPin, Users } from "lucide-react";
 import { sectionPaddingDark, sectionTitleOnDark, siteContainer } from "@/src/lib/brandLayout";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
+import { cmsTypographyStyle } from "@/src/lib/cmsTypography";
 import { cn } from "@/src/lib/utils";
 
 export function EventSection() {
   const navigate = useNavigate();
   const event = useSiteContentStore((s) => s.landingContent.event);
+  const typography = useSiteContentStore((s) => s.landingContent.typography.event);
+  const headingStyle = cmsTypographyStyle(typography, "heading");
+  const bodyStyle = cmsTypographyStyle(typography, "body");
 
   return (
     <section
@@ -34,12 +38,15 @@ export function EventSection() {
               {event.badge}
             </div>
 
-            <h2 className={cn(sectionTitleOnDark, "mb-6")}>
+            <h2 className={cn(sectionTitleOnDark, "mb-6")} style={headingStyle}>
               {event.titleLine1} <br />
               <span className="italic font-normal text-white">{event.titleLine2Italic}</span>
             </h2>
 
-            <p className="max-w-xl whitespace-pre-line text-base leading-relaxed text-offgrid-cream/75 md:text-lg">
+            <p
+              className="max-w-xl whitespace-pre-line text-base leading-relaxed text-offgrid-cream/75 md:text-lg"
+              style={bodyStyle}
+            >
               {event.description}
             </p>
 

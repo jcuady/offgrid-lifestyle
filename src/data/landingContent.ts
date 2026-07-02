@@ -1,5 +1,25 @@
 /** Fixed homepage slots — admins may replace text/images only (no add/move/reorder). */
 
+export type CmsTextSize = "" | "sm" | "md" | "lg" | "xl";
+
+export interface CmsSectionTypography {
+  headingColor?: string;
+  headingSize?: CmsTextSize;
+  bodyColor?: string;
+  bodySize?: CmsTextSize;
+}
+
+export type LandingTypographySectionKey =
+  | "hero"
+  | "collections"
+  | "bestSellers"
+  | "event"
+  | "social"
+  | "teamCommunity"
+  | "cta";
+
+export type LandingTypography = Record<LandingTypographySectionKey, CmsSectionTypography>;
+
 export type LandingCollectionId = "pickleball" | "golf" | "og-pilipinas" | "everyday";
 
 export interface LandingHeroContent {
@@ -7,6 +27,8 @@ export interface LandingHeroContent {
   titleLine1: string;
   titleLine2: string;
   tagline: string;
+  /** Supporting paragraph below the hero title. */
+  description: string;
   locality: string;
   ctaShopLabel: string;
   ctaExploreLabel: string;
@@ -100,6 +122,32 @@ export interface LandingFooterContent {
   copyright: string;
 }
 
+export interface LandingTeamFaceContent {
+  image: string;
+  alt: string;
+  quote: string;
+  name: string;
+}
+
+export interface LandingTeamChipContent {
+  name: string;
+  sport: string;
+}
+
+export interface LandingTeamCommunityContent {
+  badge: string;
+  headlinePart1: string;
+  headlinePart2: string;
+  headlinePart3: string;
+  faces: [LandingTeamFaceContent, LandingTeamFaceContent];
+  teams: [LandingTeamChipContent, LandingTeamChipContent, LandingTeamChipContent, LandingTeamChipContent];
+  primaryCtaLabel: string;
+  secondaryCtaLabel: string;
+  socialHeading: string;
+  instagramUrl: string;
+  facebookUrl: string;
+}
+
 /** Featured spotlight band on homepage and /shop. */
 export type FeaturedSpotlightLayout = "bento" | "hero";
 export type FeaturedSpotlightSource = "best_sellers" | "manual";
@@ -131,11 +179,24 @@ export interface LandingFeaturedSpotlightContent {
 export const LANDING_COLLECTION_COUNT = 4;
 export const LANDING_UGC_COUNT = 5;
 export const LANDING_TESTIMONIAL_COUNT = 3;
+export const LANDING_TEAM_FACE_COUNT = 2;
+export const LANDING_TEAM_CHIP_COUNT = 4;
+
+export const emptyLandingTypography = (): LandingTypography => ({
+  hero: {},
+  collections: {},
+  bestSellers: {},
+  event: {},
+  social: {},
+  teamCommunity: {},
+  cta: {},
+});
 
 export interface LandingContent {
   hero: LandingHeroContent;
   collectionsHeader: LandingSectionHeaderContent;
   collections: LandingCollectionCardContent[];
+  collectionsViewAllLabel: string;
   bestSellersHeader: LandingSectionHeaderContent;
   bestSellersShopLink: string;
   brandStory: LandingBrandStoryContent;
@@ -144,9 +205,11 @@ export interface LandingContent {
   ugcTiles: LandingUgcTileContent[];
   testimonials: LandingTestimonialSlotContent[];
   testimonialsViewAll: string;
+  teamCommunity: LandingTeamCommunityContent;
   cta: LandingCtaContent;
   footer: LandingFooterContent;
   featuredSpotlight: LandingFeaturedSpotlightContent;
+  typography: LandingTypography;
 }
 
 export const FEATURED_SPOTLIGHT_SLOT_COUNT = 3;
@@ -180,6 +243,8 @@ export const initialLandingContent: LandingContent = {
     titleLine1: "OFF GRID®",
     titleLine2: "LIFESTYLE",
     tagline: "Play Different. Live Off Grid.",
+    description:
+      "Premium Filipino sportswear engineered for movement — on the court, on the course, and everywhere off the grid.",
     locality: "EST. MANILA, PH",
     ctaShopLabel: "Shop Collection",
     ctaExploreLabel: "Explore Sports",
@@ -228,6 +293,7 @@ export const initialLandingContent: LandingContent = {
       shopCategory: "Lifestyle / OG Vibe",
     },
   ],
+  collectionsViewAllLabel: "View all collections",
   bestSellersHeader: {
     eyebrow: "The Full Collection",
     titleLine1: "A complete expression of",
@@ -310,6 +376,39 @@ export const initialLandingContent: LandingContent = {
     },
   ],
   testimonialsViewAll: "View all testimonials",
+  teamCommunity: {
+    badge: "Our Community",
+    headlinePart1: "We make it easy for",
+    headlinePart2: "teams and their",
+    headlinePart3: "players to design, order, and rep custom gear.",
+    faces: [
+      {
+        image:
+          "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop&crop=faces",
+        alt: "OFF GRID community member",
+        quote: "Our whole pickleball crew reps OFF GRID now. The custom kits came out clean.",
+        name: "Marco D.",
+      },
+      {
+        image:
+          "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop&crop=faces",
+        alt: "OFF GRID team captain",
+        quote: "Easiest team order I've done — design help, sizing, and tracked delivery.",
+        name: "Bea R.",
+      },
+    ],
+    teams: [
+      { name: "Manila Smash", sport: "Pickleball" },
+      { name: "Fairway Co.", sport: "Golf" },
+      { name: "Takbo MNL", sport: "Running" },
+      { name: "Barangay Ball", sport: "Basketball" },
+    ],
+    primaryCtaLabel: "Shop the collection",
+    secondaryCtaLabel: "Start a team order",
+    socialHeading: "Follow the movement",
+    instagramUrl: "https://www.instagram.com/offgridlifestyle.ph/",
+    facebookUrl: "https://www.facebook.com/offgridlifestyleph/",
+  },
   cta: {
     titleLine1: "READY TO GO",
     titleLine2: "OFF GRID?",
@@ -327,4 +426,5 @@ export const initialLandingContent: LandingContent = {
     copyright: "© 2026 OffGrid Lifestyle. All rights reserved.",
   },
   featuredSpotlight: initialFeaturedSpotlightContent,
+  typography: emptyLandingTypography(),
 };

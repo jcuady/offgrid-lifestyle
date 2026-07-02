@@ -4,8 +4,10 @@ import type { Product } from "@/src/data/products";
 import { products as initialProducts } from "@/src/data/products";
 import type { SiteEvent } from "@/src/data/events";
 import { initialEvents } from "@/src/data/events";
-import type { LandingCollectionId, LandingContent } from "@/src/data/landingContent";
+import type { LandingCollectionId, LandingContent, LandingTypographySectionKey } from "@/src/data/landingContent";
 import { initialFeaturedSpotlightContent, initialLandingContent } from "@/src/data/landingContent";
+import type { CmsSectionTypography } from "@/src/data/landingContent";
+import { normalizeLandingContent } from "@/src/lib/normalizeLandingContent";
 import type { CustomPageContent } from "@/src/data/customPageContent";
 import { initialCustomPageContent, normalizeCustomPageContent } from "@/src/data/customPageContent";
 import type { CustomHeadwearOption } from "@/src/data/customHeadwearOptions";
@@ -249,6 +251,7 @@ interface SiteContentState {
   setLandingContent: (next: LandingContent) => void;
   updateLandingHero: (patch: Partial<LandingContent["hero"]>) => void;
   updateLandingCollectionsHeader: (patch: Partial<LandingContent["collectionsHeader"]>) => void;
+  updateLandingCollectionsViewAllLabel: (label: string) => void;
   updateLandingCollectionCard: (
     id: LandingCollectionId,
     patch: Partial<Pick<LandingContent["collections"][number], "title" | "subtitle" | "tag" | "image">>,
@@ -264,6 +267,19 @@ interface SiteContentState {
     patch: Partial<LandingContent["testimonials"][number]>,
   ) => void;
   updateLandingTestimonialsViewAll: (label: string) => void;
+  updateLandingTeamCommunity: (patch: Partial<LandingContent["teamCommunity"]>) => void;
+  updateLandingTeamFace: (
+    index: 0 | 1,
+    patch: Partial<LandingContent["teamCommunity"]["faces"][number]>,
+  ) => void;
+  updateLandingTeamChip: (
+    index: 0 | 1 | 2 | 3,
+    patch: Partial<LandingContent["teamCommunity"]["teams"][number]>,
+  ) => void;
+  updateLandingTypography: (
+    section: LandingTypographySectionKey,
+    patch: Partial<CmsSectionTypography>,
+  ) => void;
   updateLandingCta: (patch: Partial<LandingContent["cta"]>) => void;
   updateLandingFooter: (patch: Partial<LandingContent["footer"]>) => void;
   updateLandingFeaturedSpotlight: (patch: Partial<LandingContent["featuredSpotlight"]>) => void;
@@ -297,7 +313,7 @@ const initialCustomSections: CustomContentSection[] = getCanonicalGuideSectionSe
 const initialTemplates: CustomTemplateAsset[] = createCanonicalOgTemplates(nowIso());
 const initialHeadwearOptions: CustomHeadwearOption[] = createDefaultHeadwearOptions(nowIso());
 
-const SITE_CONTENT_PERSIST_VERSION = 14;
+const SITE_CONTENT_PERSIST_VERSION = 15;
 
 type PersistedSiteContentSlice = {
   products?: Product[];
@@ -456,7 +472,7 @@ export const useSiteContentStore = create<SiteContentState>()(
       resetHeadwearOptions: () =>
         set({ customHeadwearOptions: createDefaultHeadwearOptions(nowIso()) }),
 
-      setLandingContent: (next) => set({ landingContent: next }),
+      setLandingContent: (next) => set({ landingContent: normalizeLandingContent(next) }),
       updateLandingHero: (patch) =>
         set((state) => ({ landingContent: { ...state.landingContent, hero: { ...state.landingContent.hero, ...patch } } })),
       updateLandingCollectionsHeader: (patch) =>
@@ -466,6 +482,8 @@ export const useSiteContentStore = create<SiteContentState>()(
             collectionsHeader: { ...state.landingContent.collectionsHeader, ...patch },
           },
         })),
+      updateLandingCollectionsViewAllLabel: (label) =>
+        set((state) => ({ landingContent: { ...state.landingContent, collectionsViewAllLabel: label } })),
       updateLandingCollectionCard: (id, patch) =>
         set((state) => ({
           landingContent: {
@@ -522,6 +540,47 @@ export const useSiteContentStore = create<SiteContentState>()(
         })),
       updateLandingTestimonialsViewAll: (label) =>
         set((state) => ({ landingContent: { ...state.landingContent, testimonialsViewAll: label } })),
+      updateLandingTeamCommunity: (patch) =>
+        set((state) => ({
+          landingContent: {
+            ...state.landingContent,
+            teamCommunity: { ...state.landingContent.teamCommunity, ...patch },
+          },
+        })),
+      updateLandingTeamFace: (index, patch) =>
+        set((state) => ({
+          landingContent: {
+            ...state.landingContent,
+            teamCommunity: {
+              ...state.landingContent.teamCommunity,
+              faces: state.landingContent.teamCommunity.faces.map((face, i) =>
+                i === index ? { ...face, ...patch } : face,
+              ) as LandingContent["teamCommunity"]["faces"],
+            },
+          },
+        })),
+      updateLandingTeamChip: (index, patch) =>
+        set((state) => ({
+          landingContent: {
+            ...state.landingContent,
+            teamCommunity: {
+              ...state.landingContent.teamCommunity,
+              teams: state.landingContent.teamCommunity.teams.map((team, i) =>
+                i === index ? { ...team, ...patch } : team,
+              ) as LandingContent["teamCommunity"]["teams"],
+            },
+          },
+        })),
+      updateLandingTypography: (section, patch) =>
+        set((state) => ({
+          landingContent: {
+            ...state.landingContent,
+            typography: {
+              ...state.landingContent.typography,
+              [section]: { ...state.landingContent.typography[section], ...patch },
+            },
+          },
+        })),
       updateLandingCta: (patch) =>
         set((state) => ({
           landingContent: { ...state.landingContent, cta: { ...state.landingContent.cta, ...patch } },
@@ -790,8 +849,16 @@ export const useSiteContentStore = create<SiteContentState>()(
           };
         }
 
+        if (version < 15) {
+          next = {
+            ...next,
+            landingContent: normalizeLandingContent(next.landingContent),
+          };
+        }
+
         next = {
           ...next,
+          landingContent: normalizeLandingContent(next.landingContent),
           customPageContent: normalizeCustomPageContent(
             next.customPageContent ?? initialCustomPageContent,
           ),
@@ -807,7 +874,7 @@ export const useSiteContentStore = create<SiteContentState>()(
       partialize: (state) => ({
         products: state.products,
         events: state.events,
-        landingContent: state.landingContent,
+        landingContent: normalizeLandingContent(state.landingContent),
         customPageContent: normalizeCustomPageContent(state.customPageContent),
         customSections: resolveGuideSections(state.customSections),
         customTemplates: resolveCanonicalTemplates(state.customTemplates),

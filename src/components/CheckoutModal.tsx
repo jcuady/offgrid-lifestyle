@@ -653,7 +653,7 @@ export function CheckoutModal() {
                           <div>
                             <p className="font-bold text-offgrid-green text-sm">Tracking Information</p>
                             <p className="text-xs text-offgrid-green/60 mt-1">
-                              You'll receive an email with tracking details once your order ships
+                              Track this order anytime from My Orders after you sign in
                             </p>
                           </div>
                         </div>

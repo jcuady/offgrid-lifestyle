@@ -27,6 +27,7 @@ import {
 } from "@/src/lib/operationsOrderFlow";
 import { usePortalStore, type ManagedCustomOrder, type ManagedRetailOrder, type UserRole } from "@/src/store/usePortalStore";
 import { localOrderService } from "@/src/services";
+import { persistOrderPaymentUpdate, persistOrderStatusUpdate } from "@/src/lib/opsOrderUpdate";
 import { Button } from "@/src/components/ui/Button";
 import { useEnsureOrdersLoaded } from "@/src/hooks/useEnsureOrdersLoaded";
 
@@ -146,15 +147,27 @@ export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
         <select
           value={status}
           onChange={(event) => {
-            const next = event.target.value as OrderStatus;
-            if (!canTransitionStatus(status, next)) {
-              setFeedback(`Invalid transition: ${formatOrderStatus(status)} → ${formatOrderStatus(next)}.`);
-              return;
-            }
-            setFeedback(`Order ${id} → ${formatOrderStatus(next)}.`);
-            if (row.kind === "retail") updateRetailOrderStatus(id, next);
-            else updateCustomOrderStatus(id, next);
-            localOrderService.updateOrderField(id, { status: next });
+            void (async () => {
+              const next = event.target.value as OrderStatus;
+              if (!canTransitionStatus(status, next)) {
+                setFeedback(`Invalid transition: ${formatOrderStatus(status)} → ${formatOrderStatus(next)}.`);
+                return;
+              }
+              try {
+                await persistOrderStatusUpdate({
+                  orderId: id,
+                  previousStatus: status,
+                  next,
+                  applyStore: (value) => {
+                    if (row.kind === "retail") updateRetailOrderStatus(id, value);
+                    else updateCustomOrderStatus(id, value);
+                  },
+                });
+                setFeedback(`Order ${id} → ${formatOrderStatus(next)}.`);
+              } catch (err) {
+                setFeedback(err instanceof Error ? err.message : "Could not update order status.");
+              }
+            })();
           }}
           className="max-w-[10.5rem] rounded-xl border border-offgrid-green/18 bg-offgrid-cream/30 px-2.5 py-2 text-xs text-offgrid-green shadow-sm focus:border-offgrid-lime focus:outline-none focus:ring-2 focus:ring-offgrid-lime/35"
         >
@@ -168,11 +181,23 @@ export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
           <select
             value={payment}
             onChange={(event) => {
-              const next = event.target.value as PaymentStatus;
-              setFeedback(`Payment → ${formatPaymentStatus(next)}.`);
-              if (row.kind === "retail") updateRetailPaymentStatus(id, next);
-              else updateCustomPaymentStatus(id, next);
-              localOrderService.updateOrderField(id, { payment_status: next });
+              void (async () => {
+                const next = event.target.value as PaymentStatus;
+                try {
+                  await persistOrderPaymentUpdate({
+                    orderId: id,
+                    previousStatus: payment,
+                    next,
+                    applyStore: (value) => {
+                      if (row.kind === "retail") updateRetailPaymentStatus(id, value);
+                      else updateCustomPaymentStatus(id, value);
+                    },
+                  });
+                  setFeedback(`Payment → ${formatPaymentStatus(next)}.`);
+                } catch (err) {
+                  setFeedback(err instanceof Error ? err.message : "Could not update payment status.");
+                }
+              })();
             }}
             className="max-w-[9.5rem] rounded-xl border border-offgrid-green/18 bg-offgrid-cream/30 px-2.5 py-2 text-xs text-offgrid-green shadow-sm focus:border-offgrid-lime focus:outline-none focus:ring-2 focus:ring-offgrid-lime/35"
           >

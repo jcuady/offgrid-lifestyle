@@ -132,7 +132,7 @@ export function PortalLayout({ role }: PortalLayoutProps) {
       </button>
 
       <div className="mt-8 rounded-2xl border border-offgrid-cream/10 bg-offgrid-cream/[0.04] p-4">
-        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-lime">
+        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-cream/70">
           {labelsByRole[role]}
         </p>
         <div className="mt-3 flex items-center gap-3">

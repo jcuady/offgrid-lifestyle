@@ -195,7 +195,7 @@ export function ShopPage() {
         <div className="pointer-events-none absolute -right-16 -top-16 h-72 w-72 rounded-full bg-offgrid-lime/10 blur-3xl" />
         <div className="container relative mx-auto px-6 md:px-12">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <span className="mb-3 inline-block font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-lime sm:mb-4">
+            <span className="mb-3 inline-block font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-cream/80 sm:mb-4">
               Shop All · {products.length} pieces
             </span>
             <h1 className="mb-3 font-display text-3xl font-black leading-[0.9] sm:mb-4 sm:text-4xl md:text-6xl lg:text-7xl">

@@ -77,7 +77,7 @@ export function ContactPage() {
         <div className="pointer-events-none absolute -right-16 -top-10 h-72 w-72 rounded-full bg-offgrid-lime/15 blur-3xl" />
         <div className={cn(siteContainer, "relative")}>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <span className="mb-4 inline-flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-lime">
+            <span className="mb-4 inline-flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-cream/80">
               <span className="h-1.5 w-1.5 rounded-full bg-offgrid-lime" />
               Get in touch
             </span>
@@ -222,7 +222,7 @@ export function ContactPage() {
               }}
             />
             <div className="relative">
-              <span className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-offgrid-lime">
+              <span className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-offgrid-cream/80">
                 Off the grid, on the map
               </span>
               <p className="mt-3 font-display text-3xl font-black tracking-tight">Manila, PH</p>

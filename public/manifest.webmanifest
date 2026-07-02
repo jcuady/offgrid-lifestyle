@@ -9,7 +9,7 @@
   "display_override": ["standalone", "minimal-ui", "browser"],
   "orientation": "any",
   "theme_color": "#000000",
-  "background_color": "#F1F1F1",
+  "background_color": "#FFFFFF",
   "categories": ["shopping", "sports", "lifestyle"],
   "prefer_related_applications": false,
   "icons": [

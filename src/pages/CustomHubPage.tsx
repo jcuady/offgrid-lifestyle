@@ -120,7 +120,7 @@ function ProcessStepper({ steps }: { steps: ProcessStepMeta[] }) {
                 {String(active + 1).padStart(2, "0")}
               </div>
               <div className="min-w-0 flex-1">
-              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-lime">
+              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-cream/80">
                 Step {String(active + 1).padStart(2, "0")} / {String(count).padStart(2, "0")}
               </p>
               <h3 className="mt-1 font-display text-2xl font-black tracking-tight sm:text-3xl">{steps[active]?.label}</h3>
@@ -370,7 +370,7 @@ export function CustomHubPage() {
           <dl className="mt-10 grid max-w-3xl grid-cols-2 gap-px overflow-hidden rounded-xl border border-offgrid-cream/15 bg-offgrid-cream/15 sm:mt-12 sm:grid-cols-4 sm:rounded-2xl">
             {hub.heroFacts.map((fact) => (
               <div key={fact.label} className="bg-offgrid-green px-3 py-3.5 sm:px-5 sm:py-5">
-                <dt className="font-display text-lg font-black tracking-tight text-offgrid-lime sm:text-2xl">{fact.value}</dt>
+                <dt className="font-display text-lg font-black tracking-tight text-offgrid-cream sm:text-2xl">{fact.value}</dt>
                 <dd className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.14em] text-offgrid-cream/55">
                   {fact.label}
                 </dd>
@@ -463,7 +463,12 @@ export function CustomHubPage() {
                         : "border-offgrid-green/15 bg-white text-offgrid-green/70",
                     )}
                   >
-                    <span className="block font-mono text-[10px] font-bold text-offgrid-lime/80">
+                    <span
+                      className={cn(
+                        "block font-mono text-[10px] font-bold",
+                        isOpen ? "text-offgrid-cream/80" : "text-offgrid-lime/80",
+                      )}
+                    >
                       {String(i + 1).padStart(2, "0")}
                     </span>
                     <span className="block max-w-[9rem] truncate text-xs font-semibold">{section.title}</span>
@@ -609,7 +614,7 @@ export function CustomHubPage() {
                               {section.slug === "sizing-chart" && (
                                 <div className="mt-10 max-w-3xl overflow-hidden rounded-2xl border border-offgrid-green/10 bg-white">
                                   <div className="border-b border-offgrid-green/8 bg-offgrid-green px-5 py-3.5 sm:px-6">
-                                    <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-lime">
+                                    <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-cream/80">
                                       {hub.sizingPreviewTitle}
                                     </p>
                                     <p className="mt-1 font-sans text-xs text-offgrid-cream/60">

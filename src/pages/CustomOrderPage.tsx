@@ -62,7 +62,7 @@ export function CustomOrderPage() {
             <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
             {hero.backLink}
           </Link>
-          <span className="mb-5 inline-flex items-center gap-2 rounded-full border border-offgrid-lime/30 bg-offgrid-lime/10 px-3.5 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-lime backdrop-blur-md">
+          <span className="mb-5 inline-flex items-center gap-2 rounded-full border border-offgrid-cream/25 bg-offgrid-cream/10 px-3.5 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-cream backdrop-blur-md">
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-offgrid-lime" />
             {hero.badge}
           </span>

@@ -1,4 +1,4 @@
-/** Shared layout + typography tokens (brandbook digital palette). */
+/** Shared layout + typography tokens (Swiss 721 + TG Frekuent Mono). */
 
 /** Storefront sections — matches Tailwind `container` with consistent gutters. */
 export const siteContainer = "container mx-auto w-full max-w-7xl px-4 sm:px-6 md:px-12";

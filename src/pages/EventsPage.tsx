@@ -58,9 +58,9 @@ export function EventsPage() {
   const getCategoryColor = (category: SiteEvent["category"]) => {
     switch (category) {
       case "tournament": return "text-offgrid-lime";
-      case "community": return "text-blue-500";
+      case "community": return "text-offgrid-gold";
       case "launch": return "text-offgrid-gold";
-      case "workshop": return "text-purple-500";
+      case "workshop": return "text-offgrid-green/70";
       default: return "text-offgrid-green";
     }
   };

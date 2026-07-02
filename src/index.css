@@ -2,11 +2,11 @@
 
 /*
  * OFF GRID® brand tokens — Brand Guide (colors + type).
- * Palette: White #FFFFFF · Black #000000 · Electric Blue #000AFF + gray/blue ramps.
- * Type: Swiss 721 (headline/display) · TG Frekuent Mono (subhead/labels/metadata).
+ * Palette: White #FFFFFF · Black #000000 · Electric Blue #000AFF.
+ * Type: Swiss 721 (headline/body) · TG Frekuent Mono (subhead/labels) — no other families.
  * Self-host licensed webfonts in public/fonts/ — see @font-face below.
- * a11y rule: Electric Blue is a FILL with white text or an accent on light only —
- *            never blue-on-black or black-on-blue (both ≈2:1, fail WCAG).
+ * a11y: Electric blue is a fill with white/cream text, or an accent on light surfaces —
+ *       never blue body text on black (fails contrast).
  */
 
 /* Licensed brand fonts — drop woff2 files into public/fonts/ to activate */
@@ -64,22 +64,23 @@
 }
 
 @theme {
-  --font-sans: "Swiss 721", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --font-display: "Swiss 721", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --font-mono: "TG Frekuent Mono", ui-monospace, "Cascadia Code", monospace;
+  --font-sans: "Swiss 721", sans-serif;
+  --font-display: "Swiss 721", sans-serif;
+  --font-mono: "TG Frekuent Mono", monospace;
+  --font-heading: "Swiss 721", sans-serif;
 
   /* offgrid-green → Black: primary text, primary buttons, nav/dark surfaces */
   --color-offgrid-green: #000000;
-  /* offgrid-cream → near-white: page background, light cards, light text on dark */
-  --color-offgrid-cream: #F1F1F1;
+  /* offgrid-cream → White: page background, light cards, light text on dark */
+  --color-offgrid-cream: #FFFFFF;
   /* offgrid-lime → Electric Blue: brand accent per guide #000AFF */
   --color-offgrid-lime: #000AFF;
   /* offgrid-dark → Black: footer, deep overlays */
   --color-offgrid-dark: #000000;
-  /* offgrid-gold → deep brand blue: premium/special accents (events) */
+  /* offgrid-gold → deep brand blue: premium/special accents */
   --color-offgrid-gold: #00068D;
 
-  /* Guide secondary ramp — available for borders, muted UI, dividers */
+  /* Secondary ramp — borders, muted UI (not primary palette) */
   --color-og-gray-50: #F1F1F1;
   --color-og-gray-100: #E4E4E4;
   --color-og-gray-300: #A1A1A1;
@@ -89,25 +90,24 @@
   --color-og-blue-900: #00068D;
 
   /* shadcn-compatible semantic tokens (mapped to OFF GRID brand) */
-  --color-background: #F1F1F1;
+  --color-background: #FFFFFF;
   --color-foreground: #000000;
   --color-muted: #E4E4E4;
   --color-muted-foreground: #6A6A6A;
   --color-border: color-mix(in srgb, #000000 14%, transparent);
   --color-input: color-mix(in srgb, #000000 18%, transparent);
   --color-ring: #000AFF;
-  --color-ring-offset: #F1F1F1;
+  --color-ring-offset: #FFFFFF;
   --color-primary: #000000;
-  --color-primary-foreground: #F1F1F1;
+  --color-primary-foreground: #FFFFFF;
   --color-secondary: #E4E4E4;
   --color-secondary-foreground: #000000;
   --color-accent: #E4E4E4;
   --color-accent-foreground: #000000;
   --color-destructive: #dc2626;
   --color-destructive-foreground: #ffffff;
-  --font-heading: "Swiss 721", "Helvetica Neue", Helvetica, Arial, sans-serif;
 
-  /* Swiss 721 bold at 700 — guide headline weight without bloated 900 */
+  /* Swiss 721 bold at 700 — guide headline weight */
   --font-weight-black: 700;
 }
 

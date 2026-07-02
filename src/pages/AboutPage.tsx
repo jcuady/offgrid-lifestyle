@@ -104,7 +104,7 @@ export function AboutPage() {
           >
             <div className="flex items-center gap-3">
               <span className="h-px w-10 bg-offgrid-lime" aria-hidden />
-              <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.28em] text-offgrid-lime">
+              <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.28em] text-offgrid-cream/80">
                 About Us
               </span>
             </div>
@@ -181,7 +181,7 @@ export function AboutPage() {
             >
               <div className="flex items-center gap-3">
                 <span className="h-px w-10 bg-offgrid-lime" aria-hidden />
-                <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.28em] text-offgrid-lime">
+                <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.28em] text-offgrid-cream/80">
                   {story.eyebrow}
                 </span>
               </div>

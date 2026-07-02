@@ -88,7 +88,7 @@ export function TestimonialsPage() {
           <dl className="mt-10 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-offgrid-cream/15 bg-offgrid-cream/10 sm:grid-cols-4">
             {stats.map((stat) => (
               <div key={stat.label} className="bg-offgrid-green/40 px-5 py-5 backdrop-blur-sm">
-                <dt className="font-display text-3xl font-black tabular-nums text-offgrid-lime sm:text-4xl">
+                <dt className="font-display text-3xl font-black tabular-nums text-offgrid-cream sm:text-4xl">
                   {stat.value}
                 </dt>
                 <dd className="mt-1 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-cream/65">

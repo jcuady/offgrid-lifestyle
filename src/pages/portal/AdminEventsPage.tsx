@@ -38,6 +38,7 @@ export function AdminEventsPage() {
   const [query, setQuery] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const sorted = useMemo(() => [...events].sort((a, b) => a.title.localeCompare(b.title)), [events]);
   const filtered = sorted.filter((event) =>
@@ -65,7 +66,7 @@ export function AdminEventsPage() {
     setDrawerOpen(true);
   };
 
-  const submit = () => {
+  const submit = async () => {
     setFormError(null);
     if (!draft.title.trim()) {
       setFormError("Event title is required.");
@@ -84,24 +85,37 @@ export function AdminEventsPage() {
       highlights: draft.highlights.length ? draft.highlights : ["Community activations"],
     };
 
-    if (payload.featured) {
-      events.forEach((event) => {
-        if (event.id !== payload.id && event.featured) {
-          localContentService.updateEvent(event.id, { featured: false });
+    setSaving(true);
+    try {
+      if (payload.featured) {
+        for (const event of events) {
+          if (event.id !== payload.id && event.featured) {
+            const err = await localContentService.updateEvent(event.id, { featured: false });
+            if (err) throw new Error(err);
+          }
         }
-      });
-    }
+      }
 
-    if (editingId) localContentService.updateEvent(editingId, payload);
-    else localContentService.addEvent(payload);
-    closeDrawer();
+      const err = editingId
+        ? await localContentService.updateEvent(editingId, payload)
+        : await localContentService.addEvent(payload);
+      if (err) throw new Error(err);
+      closeDrawer();
+    } catch (error) {
+      setFormError(error instanceof Error ? error.message : "Could not save event.");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const removeEvent = (event: SiteEvent) => {
-    if (window.confirm(`Delete event "${event.title}"?`)) {
-      localContentService.removeEvent(event.id);
-      if (editingId === event.id) closeDrawer();
+  const removeEvent = async (event: SiteEvent) => {
+    if (!window.confirm(`Delete event "${event.title}"?`)) return;
+    const err = await localContentService.removeEvent(event.id);
+    if (err) {
+      window.alert(`Could not delete event: ${err}`);
+      return;
     }
+    if (editingId === event.id) closeDrawer();
   };
 
   return (
@@ -222,10 +236,11 @@ export function AdminEventsPage() {
         footer={
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <button
-              onClick={submit}
-              className="rounded-xl bg-offgrid-green px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-offgrid-cream transition-colors hover:bg-offgrid-dark"
+              onClick={() => void submit()}
+              disabled={saving}
+              className="rounded-xl bg-offgrid-green px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-offgrid-cream transition-colors hover:bg-offgrid-dark disabled:opacity-60"
             >
-              {editingId ? "Update event" : "Create event"}
+              {saving ? "Saving…" : editingId ? "Update event" : "Create event"}
             </button>
             <button
               onClick={closeDrawer}

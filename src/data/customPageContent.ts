@@ -252,7 +252,7 @@ export const initialCustomPageContent: CustomPageContent = {
     howItWorksTitle: "How it works",
     howItWorksHeading: "From idea to delivery in six steps",
     howItWorksDescription:
-      "Tap any step to see exactly what happens — so you always know what's next, from first brief to tracked shipment.",
+      "Expand any step for the full breakdown — the visual panel follows your phase from design through delivery.",
     processSteps: [
       { label: "Know the details", description: "Check the product catalog, size chart, lead time, and minimum order quantity." },
       { label: "Customize your gear", description: "Use your own design file or work with OffGrid to create your team design." },

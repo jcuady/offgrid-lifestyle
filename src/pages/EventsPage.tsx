@@ -15,9 +15,10 @@ import { hydrateSiteContentFromSupabase } from "@/src/services";
 export function EventsPage() {
   const navigate = useNavigate();
   const events = useSiteContentStore((state) => state.events);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    void hydrateSiteContentFromSupabase();
+    void hydrateSiteContentFromSupabase().finally(() => setHydrated(true));
   }, []);
   const [selectedEvent, setSelectedEvent] = useState<SiteEvent | null>(null);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
@@ -248,7 +249,12 @@ export function EventsPage() {
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-            {upcomingEvents.filter(e => !e.featured).map((event, index) => {
+            {!hydrated ? (
+              <p className="col-span-full text-sm text-offgrid-green/60">Loading events…</p>
+            ) : upcomingEvents.filter((e) => !e.featured).length === 0 ? (
+              <p className="col-span-full text-sm text-offgrid-green/60">No upcoming events right now. Check back soon.</p>
+            ) : (
+              upcomingEvents.filter((e) => !e.featured).map((event, index) => {
               const Icon = getCategoryIcon(event.category);
               
               return (
@@ -309,7 +315,8 @@ export function EventsPage() {
                   </div>
                 </motion.div>
               );
-            })}
+            })
+            )}
           </div>
         </div>
       </section>

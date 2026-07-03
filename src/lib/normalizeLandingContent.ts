@@ -19,6 +19,29 @@ export function normalizeLandingContent(partial?: Partial<LandingContent> | null
   const base = initialLandingContent;
   if (!partial) return base;
 
+  const legacyTeam = partial.teamCommunity as Partial<LandingContent["teamCommunity"]> & {
+    headlinePart1?: string;
+    headlinePart2?: string;
+    headlinePart3?: string;
+  };
+  const teamCommunity = {
+    ...base.teamCommunity,
+    ...partial.teamCommunity,
+    headlineLine1:
+      partial.teamCommunity?.headlineLine1 ??
+      (legacyTeam.headlinePart1
+        ? `${legacyTeam.headlinePart1} ${legacyTeam.headlinePart2 ?? ""}`.trim()
+        : base.teamCommunity.headlineLine1),
+    headlineLine2Italic:
+      partial.teamCommunity?.headlineLine2Italic ??
+      legacyTeam.headlinePart3 ??
+      base.teamCommunity.headlineLine2Italic,
+    teams: base.teamCommunity.teams.map((team, index) => ({
+      ...team,
+      ...(partial.teamCommunity?.teams?.[index] ?? {}),
+    })) as LandingContent["teamCommunity"]["teams"],
+  };
+
   return {
     ...base,
     ...partial,
@@ -55,18 +78,7 @@ export function normalizeLandingContent(partial?: Partial<LandingContent> | null
         ...(partial.featuredSpotlight?.slots?.[index] ?? {}),
       })) as LandingContent["featuredSpotlight"]["slots"],
     },
-    teamCommunity: {
-      ...base.teamCommunity,
-      ...partial.teamCommunity,
-      faces: base.teamCommunity.faces.map((face, index) => ({
-        ...face,
-        ...(partial.teamCommunity?.faces?.[index] ?? {}),
-      })) as LandingContent["teamCommunity"]["faces"],
-      teams: base.teamCommunity.teams.map((team, index) => ({
-        ...team,
-        ...(partial.teamCommunity?.teams?.[index] ?? {}),
-      })) as LandingContent["teamCommunity"]["teams"],
-    },
+    teamCommunity,
     typography: mergeTypography(base.typography, partial.typography),
   };
 }

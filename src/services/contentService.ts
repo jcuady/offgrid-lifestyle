@@ -102,9 +102,9 @@ function auditContent(action: ContentAuditAction, targetId: string, label: strin
 
 export interface ContentService {
   listEvents: () => SiteEvent[];
-  addEvent: (input: SiteEvent) => void;
-  updateEvent: (id: string, patch: Partial<SiteEvent>) => void;
-  removeEvent: (id: string) => void;
+  addEvent: (input: SiteEvent) => Promise<string | null>;
+  updateEvent: (id: string, patch: Partial<SiteEvent>) => Promise<string | null>;
+  removeEvent: (id: string) => Promise<string | null>;
   listCustomSections: () => CustomContentSection[];
   addCustomSection: (input: CustomContentSection) => void;
   updateCustomSection: (id: string, patch: Partial<CustomContentSection>) => void;
@@ -124,39 +124,47 @@ export interface ContentService {
  */
 export const supabaseContentService: ContentService = {
   listEvents: () => useSiteContentStore.getState().events,
-  addEvent: (input) => {
+  addEvent: async (input) => {
     useSiteContentStore.getState().addEvent(input);
-    supabase
-      .from("og_events")
-      .upsert(siteEventToRow(input))
-      .then(({ error }) => {
-        if (error) logContentError("events.upsert", error.message);
-        else auditContent("content.created", input.id, `event ${input.title}`, { kind: "event" });
-      });
+    const sortOrder = useSiteContentStore.getState().events.findIndex((e) => e.id === input.id);
+    const { error } = await supabase.from("og_events").upsert(siteEventToRow(input, sortOrder >= 0 ? sortOrder : 0));
+    if (error) {
+      useSiteContentStore.getState().removeEvent(input.id);
+      logContentError("events.upsert", error.message);
+      return error.message;
+    }
+    auditContent("content.created", input.id, `event ${input.title}`, { kind: "event" });
+    return null;
   },
-  updateEvent: (id, patch) => {
+  updateEvent: async (id, patch) => {
+    const previous = useSiteContentStore.getState().events.find((e) => e.id === id);
+    if (!previous) return "Event not found.";
     useSiteContentStore.getState().updateEvent(id, patch);
-    const current = useSiteContentStore.getState().events.find((e) => e.id === id);
-    if (!current) return;
-    const merged = { ...current, ...patch };
-    supabase
+    const merged = { ...previous, ...patch };
+    const sortOrder = useSiteContentStore.getState().events.findIndex((e) => e.id === id);
+    const { error } = await supabase
       .from("og_events")
-      .upsert(siteEventToRow(merged))
-      .then(({ error }) => {
-        if (error) logContentError("events.update", error.message);
-        else auditContent("content.updated", id, `event ${merged.title}`, { kind: "event", fields: Object.keys(patch) });
-      });
+      .upsert(siteEventToRow(merged, sortOrder >= 0 ? sortOrder : 0));
+    if (error) {
+      useSiteContentStore.getState().updateEvent(id, previous);
+      logContentError("events.update", error.message);
+      return error.message;
+    }
+    auditContent("content.updated", id, `event ${merged.title}`, { kind: "event", fields: Object.keys(patch) });
+    return null;
   },
-  removeEvent: (id) => {
+  removeEvent: async (id) => {
+    const previous = useSiteContentStore.getState().events.find((e) => e.id === id);
+    if (!previous) return null;
     useSiteContentStore.getState().removeEvent(id);
-    supabase
-      .from("og_events")
-      .delete()
-      .eq("id", id)
-      .then(({ error }) => {
-        if (error) logContentError("events.delete", error.message);
-        else auditContent("content.deleted", id, `event ${id}`, { kind: "event" });
-      });
+    const { error } = await supabase.from("og_events").delete().eq("id", id);
+    if (error) {
+      useSiteContentStore.getState().addEvent(previous);
+      logContentError("events.delete", error.message);
+      return error.message;
+    }
+    auditContent("content.deleted", id, `event ${id}`, { kind: "event" });
+    return null;
   },
 
   // Custom guide sections — backed by og_custom_guide_sections
@@ -422,8 +430,10 @@ export async function hydrateSiteContentFromSupabase(): Promise<void> {
     };
   }
 
-  if (eventsRes.data?.length) {
-    storePatch.events = eventsRes.data.map((row) => eventRowToSite(row as EventRow));
+  if (!eventsRes.error) {
+    storePatch.events = (eventsRes.data ?? []).map((row) => eventRowToSite(row as EventRow));
+  } else {
+    logContentError("events.hydrate", eventsRes.error.message);
   }
 
   if (Object.keys(storePatch).length > 0) {

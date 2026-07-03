@@ -41,7 +41,6 @@ export function AdminLandingPage() {
   const updateTestimonial = useSiteContentStore((s) => s.updateLandingTestimonial);
   const updateTestimonialsViewAll = useSiteContentStore((s) => s.updateLandingTestimonialsViewAll);
   const updateTeamCommunity = useSiteContentStore((s) => s.updateLandingTeamCommunity);
-  const updateTeamFace = useSiteContentStore((s) => s.updateLandingTeamFace);
   const updateTeamChip = useSiteContentStore((s) => s.updateLandingTeamChip);
   const updateTypography = useSiteContentStore((s) => s.updateLandingTypography);
   const updateCta = useSiteContentStore((s) => s.updateLandingCta);
@@ -592,60 +591,23 @@ export function AdminLandingPage() {
           </div>
         ))}
 
-        <CmsSectionPanel title="Team community" description="Community band with face chips, partner teams, and CTAs.">
+        <CmsSectionPanel title="Team community" description="Community band with partner teams and CTAs.">
           <CmsField label="Badge" className="sm:col-span-2">
             <CmsTextInput value={landing.teamCommunity.badge} onChange={(v) => updateTeamCommunity({ badge: v })} />
           </CmsField>
-          <CmsField label="Headline part 1 (before face 1)">
+          <CmsField label="Headline line 1">
             <CmsTextInput
-              value={landing.teamCommunity.headlinePart1}
-              onChange={(v) => updateTeamCommunity({ headlinePart1: v })}
+              value={landing.teamCommunity.headlineLine1}
+              onChange={(v) => updateTeamCommunity({ headlineLine1: v })}
             />
           </CmsField>
-          <CmsField label="Headline part 2 (between faces)">
+          <CmsField label="Headline line 2 (italic)">
             <CmsTextInput
-              value={landing.teamCommunity.headlinePart2}
-              onChange={(v) => updateTeamCommunity({ headlinePart2: v })}
-            />
-          </CmsField>
-          <CmsField label="Headline part 3 (after face 2)" className="sm:col-span-2">
-            <CmsTextInput
-              value={landing.teamCommunity.headlinePart3}
-              onChange={(v) => updateTeamCommunity({ headlinePart3: v })}
+              value={landing.teamCommunity.headlineLine2Italic}
+              onChange={(v) => updateTeamCommunity({ headlineLine2Italic: v })}
               multiline
             />
           </CmsField>
-          {landing.teamCommunity.faces.map((face, index) => (
-            <div key={index} className="contents">
-              <CmsField label={`Face ${index + 1} — photo`} className="sm:col-span-2">
-                <CmsImageInput
-                  value={face.image}
-                  onChange={(v) => updateTeamFace(index as 0 | 1, { image: v })}
-                  alt={face.alt}
-                  uploadSection={`team-face-${index + 1}`}
-                />
-              </CmsField>
-              <CmsField label={`Face ${index + 1} — alt text`}>
-                <CmsTextInput
-                  value={face.alt}
-                  onChange={(v) => updateTeamFace(index as 0 | 1, { alt: v })}
-                />
-              </CmsField>
-              <CmsField label={`Face ${index + 1} — name`}>
-                <CmsTextInput
-                  value={face.name}
-                  onChange={(v) => updateTeamFace(index as 0 | 1, { name: v })}
-                />
-              </CmsField>
-              <CmsField label={`Face ${index + 1} — quote`} className="sm:col-span-2">
-                <CmsTextInput
-                  value={face.quote}
-                  onChange={(v) => updateTeamFace(index as 0 | 1, { quote: v })}
-                  multiline
-                />
-              </CmsField>
-            </div>
-          ))}
           {landing.teamCommunity.teams.map((team, index) => (
             <div key={index} className="contents">
               <CmsField label={`Team ${index + 1} — name`}>

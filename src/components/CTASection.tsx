@@ -1,15 +1,23 @@
 import { motion } from "motion/react";
-import { Button } from "./ui/Button";
-import { ArrowRight, Instagram, Facebook } from "lucide-react";
+import { ArrowRight, Instagram, Facebook, Truck, RefreshCcw, MapPin, ShieldCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Button } from "@/src/components/ui/Button";
+import { GLSLHills } from "@/src/components/ui/glsl-hills";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { cmsTypographyStyle } from "@/src/lib/cmsTypography";
-import { sectionPaddingDark, siteContainer } from "@/src/lib/brandLayout";
 import { cn } from "@/src/lib/utils";
 
 const SOCIAL_LINKS = [
-  { label: "Instagram", href: "https://www.instagram.com/offgridlifestyle.ph/", icon: <Instagram className="h-4 w-4" /> },
-  { label: "Facebook", href: "https://www.facebook.com/offgridlifestyleph/", icon: <Facebook className="h-4 w-4" /> },
+  {
+    label: "Instagram",
+    href: "https://www.instagram.com/offgridlifestyle.ph/",
+    icon: <Instagram className="h-5 w-5" />,
+  },
+  {
+    label: "Facebook",
+    href: "https://www.facebook.com/offgridlifestyleph/",
+    icon: <Facebook className="h-5 w-5" />,
+  },
 ];
 
 export function CTASection() {
@@ -20,31 +28,71 @@ export function CTASection() {
   const headingStyle = cmsTypographyStyle(typography, "heading");
   const bodyStyle = cmsTypographyStyle(typography, "body");
 
+  const trustBadges = [
+    { label: cta.trustShipping, icon: <Truck className="h-6 w-6 text-offgrid-lime sm:h-7 sm:w-7" /> },
+    { label: cta.trustReturns, icon: <RefreshCcw className="h-6 w-6 text-offgrid-lime sm:h-7 sm:w-7" /> },
+    { label: cta.trustShips, icon: <MapPin className="h-6 w-6 text-offgrid-lime sm:h-7 sm:w-7" /> },
+    { label: cta.trustCheckout, icon: <ShieldCheck className="h-6 w-6 text-offgrid-lime sm:h-7 sm:w-7" /> },
+  ];
+
   return (
-    <section className={cn(sectionPaddingDark, "relative overflow-hidden bg-offgrid-dark text-offgrid-cream")}>
-      {/* Electric-blue brand glow */}
-      <div className="pointer-events-none absolute left-1/2 top-[44%] h-[640px] w-[640px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-offgrid-lime/15 blur-[140px]" />
+    <section className="relative min-h-[90vh] overflow-hidden bg-offgrid-dark text-offgrid-cream sm:min-h-screen">
+      {/* WebGL terrain — electric blue hills on black */}
+      <GLSLHills
+        className="absolute inset-0 z-0"
+        width="100%"
+        height="100%"
+        cameraZ={125}
+        speed={0.45}
+      />
 
-      <div className={cn(siteContainer, "relative z-10")}>
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7 }}
-          className="mx-auto max-w-5xl text-center"
-        >
-          <span className="mx-auto mb-8 block h-px w-16 bg-offgrid-lime" />
+      {/* Readability gradient — keeps headline legible over the hills */}
+      <div
+        className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-b from-offgrid-dark/90 via-offgrid-dark/50 to-offgrid-dark/80"
+        aria-hidden
+      />
 
-          <h2 className="mb-7 font-display text-4xl font-black leading-[0.88] tracking-tight sm:text-5xl md:text-7xl lg:text-8xl xl:text-[9rem]" style={headingStyle}>
-            {cta.titleLine1} <br />
-            {cta.titleLine2}
-          </h2>
+      <div className="relative z-10 flex min-h-[90vh] flex-col items-center justify-center px-6 py-20 sm:min-h-screen sm:py-28">
+        <div className="mx-auto w-full max-w-3xl text-center">
+          <motion.span
+            initial={{ scaleX: 0, opacity: 0 }}
+            whileInView={{ scaleX: 1, opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="mx-auto mb-8 block h-px w-16 bg-offgrid-lime"
+          />
 
-          <p className="mx-auto mb-11 max-w-md font-display text-lg italic text-offgrid-cream/70 md:text-xl" style={bodyStyle}>
+          <motion.h2
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.05 }}
+            className="font-display text-5xl font-black leading-[0.9] tracking-tight sm:text-6xl md:text-7xl lg:text-8xl"
+            style={headingStyle}
+          >
+            {cta.titleLine1}
+            <br />
+            <span className="text-offgrid-cream">{cta.titleLine2}</span>
+          </motion.h2>
+
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.12 }}
+            className="mx-auto mt-6 max-w-md font-display text-lg italic text-offgrid-cream/75 sm:text-xl"
+            style={bodyStyle}
+          >
             {tagline}
-          </p>
+          </motion.p>
 
-          <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row"
+          >
             <Button
               type="button"
               variant="secondary"
@@ -59,19 +107,44 @@ export function CTASection() {
               type="button"
               variant="outline"
               size="lg"
-              className="h-14 w-full border-offgrid-cream/60 bg-offgrid-cream/10 px-10 text-base text-offgrid-cream backdrop-blur-sm hover:bg-offgrid-cream hover:text-offgrid-green sm:w-auto"
+              className={cn(
+                "h-14 w-full border-offgrid-cream/50 bg-offgrid-cream/5 px-10 text-base text-offgrid-cream",
+                "backdrop-blur-sm hover:border-offgrid-cream hover:bg-offgrid-cream hover:text-offgrid-green sm:w-auto",
+              )}
               onClick={() => navigate("/about")}
             >
               {cta.ctaStory}
             </Button>
-          </div>
+          </motion.div>
 
-          {/* Follow the movement */}
-          <div className="mt-16 flex flex-col items-center gap-5 border-t border-offgrid-cream/12 pt-12">
-            <p className="font-mono text-[11px] font-bold uppercase tracking-[0.22em] text-offgrid-cream/55">
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.35 }}
+            className="mx-auto mt-16 grid max-w-2xl grid-cols-2 gap-6 border-t border-offgrid-cream/10 pt-12 sm:mt-20 sm:grid-cols-4 sm:gap-4 sm:pt-14"
+          >
+            {trustBadges.map((badge) => (
+              <div key={badge.label} className="flex flex-col items-center gap-2 text-center sm:gap-3">
+                {badge.icon}
+                <span className="font-mono text-[9px] font-bold uppercase leading-snug tracking-[0.14em] text-offgrid-cream/55 sm:text-[10px]">
+                  {badge.label}
+                </span>
+              </div>
+            ))}
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.45 }}
+            className="mt-14 flex flex-col items-center gap-4 sm:mt-16"
+          >
+            <p className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-offgrid-cream/45">
               Follow the movement
             </p>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               {SOCIAL_LINKS.map((social) => (
                 <a
                   key={social.label}
@@ -79,17 +152,17 @@ export function CTASection() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={`OffGrid Lifestyle on ${social.label}`}
-                  className="flex h-12 w-12 items-center justify-center rounded-full border border-offgrid-cream/25 text-offgrid-cream transition-colors hover:border-offgrid-lime hover:bg-offgrid-lime hover:text-offgrid-cream"
+                  className="flex h-11 w-11 items-center justify-center rounded-full border border-offgrid-cream/25 text-offgrid-cream transition-colors hover:border-offgrid-lime hover:bg-offgrid-lime hover:text-offgrid-cream"
                 >
                   {social.icon}
                 </a>
               ))}
             </div>
-            <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-offgrid-cream/40">
+            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-offgrid-cream/35">
               @offgridlifestyle.ph
             </p>
-          </div>
-        </motion.div>
+          </motion.div>
+        </div>
       </div>
     </section>
   );

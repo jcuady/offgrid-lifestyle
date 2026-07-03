@@ -122,13 +122,6 @@ export interface LandingFooterContent {
   copyright: string;
 }
 
-export interface LandingTeamFaceContent {
-  image: string;
-  alt: string;
-  quote: string;
-  name: string;
-}
-
 export interface LandingTeamChipContent {
   name: string;
   sport: string;
@@ -136,10 +129,8 @@ export interface LandingTeamChipContent {
 
 export interface LandingTeamCommunityContent {
   badge: string;
-  headlinePart1: string;
-  headlinePart2: string;
-  headlinePart3: string;
-  faces: [LandingTeamFaceContent, LandingTeamFaceContent];
+  headlineLine1: string;
+  headlineLine2Italic: string;
   teams: [LandingTeamChipContent, LandingTeamChipContent, LandingTeamChipContent, LandingTeamChipContent];
   primaryCtaLabel: string;
   secondaryCtaLabel: string;
@@ -179,7 +170,6 @@ export interface LandingFeaturedSpotlightContent {
 export const LANDING_COLLECTION_COUNT = 4;
 export const LANDING_UGC_COUNT = 5;
 export const LANDING_TESTIMONIAL_COUNT = 3;
-export const LANDING_TEAM_FACE_COUNT = 2;
 export const LANDING_TEAM_CHIP_COUNT = 4;
 
 export const emptyLandingTypography = (): LandingTypography => ({
@@ -378,25 +368,8 @@ export const initialLandingContent: LandingContent = {
   testimonialsViewAll: "View all testimonials",
   teamCommunity: {
     badge: "Our Community",
-    headlinePart1: "We make it easy for",
-    headlinePart2: "teams and their",
-    headlinePart3: "players to design, order, and rep custom gear.",
-    faces: [
-      {
-        image:
-          "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop&crop=faces",
-        alt: "OFF GRID community member",
-        quote: "Our whole pickleball crew reps OFF GRID now. The custom kits came out clean.",
-        name: "Marco D.",
-      },
-      {
-        image:
-          "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop&crop=faces",
-        alt: "OFF GRID team captain",
-        quote: "Easiest team order I've done — design help, sizing, and tracked delivery.",
-        name: "Bea R.",
-      },
-    ],
+    headlineLine1: "We make it easy for teams and their players",
+    headlineLine2Italic: "to design, order, and rep custom gear.",
     teams: [
       { name: "Manila Smash", sport: "Pickleball" },
       { name: "Fairway Co.", sport: "Golf" },

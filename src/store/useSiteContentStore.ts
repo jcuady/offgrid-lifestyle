@@ -268,10 +268,6 @@ interface SiteContentState {
   ) => void;
   updateLandingTestimonialsViewAll: (label: string) => void;
   updateLandingTeamCommunity: (patch: Partial<LandingContent["teamCommunity"]>) => void;
-  updateLandingTeamFace: (
-    index: 0 | 1,
-    patch: Partial<LandingContent["teamCommunity"]["faces"][number]>,
-  ) => void;
   updateLandingTeamChip: (
     index: 0 | 1 | 2 | 3,
     patch: Partial<LandingContent["teamCommunity"]["teams"][number]>,
@@ -545,18 +541,6 @@ export const useSiteContentStore = create<SiteContentState>()(
           landingContent: {
             ...state.landingContent,
             teamCommunity: { ...state.landingContent.teamCommunity, ...patch },
-          },
-        })),
-      updateLandingTeamFace: (index, patch) =>
-        set((state) => ({
-          landingContent: {
-            ...state.landingContent,
-            teamCommunity: {
-              ...state.landingContent.teamCommunity,
-              faces: state.landingContent.teamCommunity.faces.map((face, i) =>
-                i === index ? { ...face, ...patch } : face,
-              ) as LandingContent["teamCommunity"]["faces"],
-            },
           },
         })),
       updateLandingTeamChip: (index, patch) =>

@@ -5,15 +5,18 @@ import {
   ArrowDown,
   ArrowRight,
   ChevronDown,
-  ChevronLeft,
-  ChevronRight,
   Maximize2,
   Minimize2,
 } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
+import {
+  CUSTOM_ORDER_PHASE_TABS,
+  FeatureShowcase,
+  type ShowcaseStep,
+} from "@/src/components/ui/feature-showcase";
 import { hydrateSiteContentFromSupabase } from "@/src/services";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
-import { buildProcessSteps, type ProcessStepMeta } from "@/src/components/custom-order/customOrderFlowMeta";
+import { buildProcessSteps } from "@/src/components/custom-order/customOrderFlowMeta";
 import { GuideSectionProse } from "@/src/components/custom/GuideSectionProse";
 import { resolveGuideSections } from "@/src/lib/customGuideSections";
 import { followCmsCta } from "@/src/lib/cmsNavigation";
@@ -25,135 +28,6 @@ function scrollToId(id: string) {
   requestAnimationFrame(() => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
   });
-}
-
-/* ------------------------------------------------------------------ */
-/* Interactive 6-step process                                          */
-/* ------------------------------------------------------------------ */
-
-function ProcessStepper({ steps }: { steps: ProcessStepMeta[] }) {
-  const [active, setActive] = useState(0);
-  const count = steps.length;
-  const progress = count > 1 ? (active / (count - 1)) * 100 : 0;
-  // ponytail: caret centers on an even step distribution (ignores the small grid gaps) — close enough for a 1rem marker.
-  const caretLeft = count > 0 ? ((active + 0.5) / count) * 100 : 50;
-
-  return (
-    <div>
-      {/* Rail */}
-      <div className="relative" role="tablist" aria-label="Custom order process">
-        <div className="pointer-events-none absolute left-0 right-0 top-5 hidden h-px bg-offgrid-green/15 sm:block" aria-hidden>
-          <motion.span
-            className="absolute left-0 top-0 h-px bg-offgrid-lime"
-            initial={false}
-            animate={{ width: `${progress}%` }}
-            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-          />
-        </div>
-        <div className="flex gap-2 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] sm:grid sm:grid-cols-6 sm:gap-3 sm:overflow-visible sm:pb-0 [&::-webkit-scrollbar]:hidden">
-          {steps.map((step, i) => {
-            const isActive = i === active;
-            const isDone = i < active;
-            return (
-              <button
-                key={step.label}
-                type="button"
-                role="tab"
-                id={`process-tab-${i}`}
-                aria-selected={isActive}
-                aria-controls="process-panel"
-                onClick={() => setActive(i)}
-                className="group flex min-w-[100px] flex-1 snap-start flex-col items-center gap-2 outline-none sm:min-w-0"
-              >
-                <span
-                  className={cn(
-                    "relative z-10 flex h-10 w-10 items-center justify-center rounded-full border-2 font-mono text-xs font-bold tabular-nums transition-all duration-300",
-                    isActive
-                      ? "scale-110 border-offgrid-lime bg-offgrid-lime text-white shadow-[0_8px_24px_-6px_rgba(0,10,255,0.65)]"
-                      : isDone
-                        ? "border-offgrid-lime/40 bg-offgrid-lime/10 text-offgrid-lime"
-                        : "border-offgrid-green/20 bg-white text-offgrid-green/45 group-hover:border-offgrid-green/40 group-hover:scale-105",
-                  )}
-                >
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <span
-                  className={cn(
-                    "text-center text-[11px] font-semibold leading-tight transition-colors sm:text-xs",
-                    isActive ? "text-offgrid-green" : "text-offgrid-green/45 group-hover:text-offgrid-green/70",
-                  )}
-                >
-                  {step.label}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Active detail panel */}
-      <div className="relative mt-6">
-        {/* Caret points up to the active step so the eye follows the sequence */}
-        <motion.span
-          aria-hidden
-          className="absolute -top-1.5 hidden h-4 w-4 rotate-45 rounded-[3px] bg-offgrid-green sm:block"
-          initial={false}
-          animate={{ left: `calc(${caretLeft}% - 0.5rem)` }}
-          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        />
-        <div
-          id="process-panel"
-          role="tabpanel"
-          aria-labelledby={`process-tab-${active}`}
-          className="overflow-hidden rounded-3xl bg-offgrid-green text-offgrid-cream"
-        >
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={active}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-              className="flex flex-col gap-6 p-6 sm:flex-row sm:items-center sm:gap-8 sm:p-10"
-            >
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-offgrid-lime font-display text-2xl font-black tabular-nums text-white sm:h-20 sm:w-20 sm:text-3xl">
-                {String(active + 1).padStart(2, "0")}
-              </div>
-              <div className="min-w-0 flex-1">
-              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-cream/80">
-                Step {String(active + 1).padStart(2, "0")} / {String(count).padStart(2, "0")}
-              </p>
-              <h3 className="mt-1 font-display text-2xl font-black tracking-tight sm:text-3xl">{steps[active]?.label}</h3>
-              <p className="mt-2 max-w-xl text-sm leading-relaxed text-offgrid-cream/70 sm:text-base">
-                {steps[active]?.desc}
-              </p>
-            </div>
-            <div className="flex shrink-0 items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setActive((p) => Math.max(0, p - 1))}
-                disabled={active === 0}
-                aria-label="Previous step"
-                className="flex h-11 w-11 items-center justify-center rounded-full border border-offgrid-cream/25 text-offgrid-cream transition-colors hover:bg-offgrid-cream/10 disabled:opacity-30"
-              >
-                <ChevronLeft className="h-5 w-5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setActive((p) => Math.min(count - 1, p + 1))}
-                disabled={active === count - 1}
-                aria-label="Next step"
-                className="flex h-11 w-11 items-center justify-center rounded-full border border-offgrid-cream/25 text-offgrid-cream transition-colors hover:bg-offgrid-cream/10 disabled:opacity-30"
-              >
-                <ChevronRight className="h-5 w-5" />
-              </button>
-            </div>
-            </motion.div>
-          </AnimatePresence>
-        </div>
-      </div>
-    </div>
-  );
 }
 
 /* ------------------------------------------------------------------ */
@@ -259,6 +133,19 @@ export function CustomHubPage() {
     [customSectionsRaw],
   );
   const processSteps = useMemo(() => buildProcessSteps(hub.processSteps), [hub.processSteps]);
+  const showcaseSteps = useMemo<ShowcaseStep[]>(
+    () =>
+      processSteps.map((step, index) => ({
+        id: `step-${index + 1}`,
+        title: step.label,
+        text: step.desc,
+      })),
+    [processSteps],
+  );
+  const showcaseStats = useMemo(
+    () => hub.heroFacts.map((fact) => `${fact.value} ${fact.label.toLowerCase()}`),
+    [hub.heroFacts],
+  );
 
   const [openGuideSlugs, setOpenGuideSlugs] = useState<Set<string>>(() => new Set());
   const allOpen = sections.length > 0 && sections.every((s) => openGuideSlugs.has(s.slug));
@@ -389,20 +276,20 @@ export function CustomHubPage() {
         </div>
       </section>
 
-      {/* ---------------- Interactive process ---------------- */}
+      {/* ---------------- Custom order playbook ---------------- */}
       <section className="border-b border-offgrid-green/8 bg-offgrid-cream py-12 sm:py-16 md:py-20">
-        <div className={siteContainer}>
-          <div className="mb-6 max-w-2xl sm:mb-8">
-            <p className={sectionEyebrow}>{hub.howItWorksTitle}</p>
-            <h2 className="font-display text-2xl font-black tracking-tight text-offgrid-green sm:text-3xl md:text-4xl">
-              {hub.howItWorksHeading}
-            </h2>
-            <p className="mt-2 text-sm leading-relaxed text-offgrid-green/65 sm:mt-3 sm:text-base">
-              {hub.howItWorksDescription}
-            </p>
-          </div>
-          <ProcessStepper steps={processSteps} />
-        </div>
+        <FeatureShowcase
+          eyebrow={hub.howItWorksTitle}
+          title={hub.howItWorksHeading}
+          description={hub.howItWorksDescription}
+          stats={showcaseStats}
+          steps={showcaseSteps}
+          tabs={CUSTOM_ORDER_PHASE_TABS}
+          defaultTab="design"
+          panelMinHeight={560}
+          primaryAction={{ label: "Start custom order", href: hub.ctaPlaceOrderHref }}
+          secondaryAction={{ label: "Get templates", href: hub.ctaTemplatesHref }}
+        />
       </section>
 
       {/* ---------------- Design support ---------------- */}

@@ -8,6 +8,7 @@ import { normalizeLandingContent } from "@/src/lib/normalizeLandingContent";
 import { supabase } from "@/src/lib/supabase";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { usePortalStore } from "@/src/store/usePortalStore";
+import { isCanonicalTemplateId, resolveCanonicalTemplates } from "@/src/lib/canonicalTemplates";
 
 type EventRow = {
   id: string;
@@ -73,6 +74,58 @@ function siteEventToRow(event: SiteEvent, sortOrder = 0) {
   };
 }
 
+function templateAssetToRow(asset: CustomTemplateAsset) {
+  const storageKind = asset.storageKind ?? "static";
+  return {
+    id: asset.id,
+    category: asset.category,
+    name: asset.name,
+    description: asset.description ?? "",
+    file_name: asset.fileName,
+    file_url: asset.fileUrl ?? "",
+    storage_kind: storageKind === "storage" ? "storage" : "static",
+    format: asset.format ?? "",
+    preview_image_url: asset.previewImageUrl?.trim() || null,
+    is_published: asset.isPublished,
+    updated_at: new Date().toISOString(),
+  };
+}
+
+function templateRowToAsset(row: {
+  id: string;
+  category: string;
+  name: string;
+  description: string | null;
+  file_name: string;
+  file_url: string;
+  storage_kind: string;
+  format: string;
+  preview_image_url: string | null;
+  is_published: boolean;
+  updated_at: string;
+}): CustomTemplateAsset {
+  const storageKind =
+    row.storage_kind === "storage" ? "storage" : ("static" as const);
+  return {
+    id: row.id,
+    category: row.category as CustomTemplateAsset["category"],
+    name: row.name,
+    description: row.description ?? "",
+    fileName: row.file_name,
+    fileUrl: row.file_url ?? "",
+    format: row.format ?? "",
+    previewImageUrl: row.preview_image_url ?? "",
+    isPublished: row.is_published ?? false,
+    storageKind,
+    updatedAt: row.updated_at,
+  };
+}
+
+function getMergedTemplate(id: string): CustomTemplateAsset | undefined {
+  return resolveCanonicalTemplates(useSiteContentStore.getState().customTemplates).find((t) => t.id === id);
+}
+
+
 type ContentAuditAction = "content.created" | "content.updated" | "content.deleted";
 
 function logContentError(operation: string, error: string): void {
@@ -110,9 +163,9 @@ export interface ContentService {
   updateCustomSection: (id: string, patch: Partial<CustomContentSection>) => void;
   removeCustomSection: (id: string) => void;
   listTemplates: () => CustomTemplateAsset[];
-  addTemplate: (input: CustomTemplateAsset) => void;
-  updateTemplate: (id: string, patch: Partial<CustomTemplateAsset>) => void;
-  removeTemplate: (id: string) => void;
+  addTemplate: (input: CustomTemplateAsset) => Promise<string | null>;
+  updateTemplate: (id: string, patch: Partial<CustomTemplateAsset>) => Promise<string | null>;
+  removeTemplate: (id: string) => Promise<string | null>;
   listHeadwearOptions: () => CustomHeadwearOption[];
   addHeadwearOption: (input: Omit<CustomHeadwearOption, "updatedAt">) => void;
   updateHeadwearOption: (id: string, patch: Partial<Omit<CustomHeadwearOption, "id">>) => void;
@@ -227,57 +280,56 @@ export const supabaseContentService: ContentService = {
   },
 
   // Templates — backed by og_custom_template_slots
-  listTemplates: () => useSiteContentStore.getState().customTemplates,
-  addTemplate: (input) => {
+  listTemplates: () => resolveCanonicalTemplates(useSiteContentStore.getState().customTemplates),
+  addTemplate: async (input) => {
     useSiteContentStore.getState().addTemplate(input);
-    supabase
-      .from("og_custom_template_slots")
-      .upsert({
-        id: input.id,
-        category: input.category,
-        name: input.name,
-        description: input.description ?? "",
-        file_name: input.fileName,
-        file_url: input.fileUrl ?? "",
-        format: input.format ?? "",
-        preview_image_url: input.previewImageUrl ?? null,
-        is_published: input.isPublished,
-      })
-      .then(({ error }) => {
-        if (error) logContentError("templates.upsert", error.message);
-        else auditContent("content.created", input.id, `template ${input.name}`, { kind: "template" });
-      });
-  },
-  updateTemplate: (id, patch) => {
-    useSiteContentStore.getState().updateTemplate(id, patch);
-    type TemplateUpdate = Database["public"]["Tables"]["og_custom_template_slots"]["Update"];
-    const partial: TemplateUpdate = {};
-    if (patch.name !== undefined) partial.name = patch.name;
-    if (patch.description !== undefined) partial.description = patch.description;
-    if (patch.fileName !== undefined) partial.file_name = patch.fileName;
-    if (patch.fileUrl !== undefined) partial.file_url = patch.fileUrl;
-    if (patch.isPublished !== undefined) partial.is_published = patch.isPublished;
-    if (Object.keys(partial).length > 0) {
-      supabase
-        .from("og_custom_template_slots")
-        .update(partial)
-        .eq("id", id)
-        .then(({ error }) => {
-          if (error) logContentError("templates.update", error.message);
-          else auditContent("content.updated", id, `template ${id}`, { kind: "template", fields: Object.keys(patch) });
-        });
+    const merged = getMergedTemplate(input.id) ?? input;
+    const { error } = await supabase.from("og_custom_template_slots").upsert(templateAssetToRow(merged));
+    if (error) {
+      useSiteContentStore.getState().removeTemplate(input.id);
+      logContentError("templates.upsert", error.message);
+      return error.message;
     }
+    auditContent("content.created", input.id, `template ${merged.name}`, { kind: "template" });
+    return null;
   },
-  removeTemplate: (id) => {
+  updateTemplate: async (id, patch) => {
+    const previous = getMergedTemplate(id);
+    if (!previous) return "Template not found.";
+    useSiteContentStore.getState().updateTemplate(id, patch);
+    const merged = getMergedTemplate(id);
+    if (!merged) {
+      useSiteContentStore.getState().updateTemplate(id, previous);
+      return "Template not found.";
+    }
+    const { error } = await supabase.from("og_custom_template_slots").upsert(templateAssetToRow(merged));
+    if (error) {
+      useSiteContentStore.getState().updateTemplate(id, previous);
+      logContentError("templates.update", error.message);
+      return error.message;
+    }
+    auditContent("content.updated", id, `template ${merged.name}`, { kind: "template", fields: Object.keys(patch) });
+    return null;
+  },
+  removeTemplate: async (id) => {
+    const previous = getMergedTemplate(id);
+    if (!previous) return null;
+    const canonical = isCanonicalTemplateId(id);
     useSiteContentStore.getState().removeTemplate(id);
-    supabase
-      .from("og_custom_template_slots")
-      .delete()
-      .eq("id", id)
-      .then(({ error }) => {
-        if (error) logContentError("templates.delete", error.message);
-        else auditContent("content.deleted", id, `template ${id}`, { kind: "template" });
-      });
+
+    const { error } = canonical
+      ? await supabase
+          .from("og_custom_template_slots")
+          .upsert(templateAssetToRow(getMergedTemplate(id) ?? { ...previous, isPublished: false }))
+      : await supabase.from("og_custom_template_slots").delete().eq("id", id);
+
+    if (error) {
+      useSiteContentStore.getState().addTemplate(previous);
+      logContentError("templates.delete", error.message);
+      return error.message;
+    }
+    auditContent("content.deleted", id, `template ${id}`, { kind: "template", canonical });
+    return null;
   },
 
   // Headwear options — backed by og_custom_headwear_options
@@ -373,19 +425,11 @@ export async function hydrateCustomContentFromSupabase(): Promise<void> {
     }));
   }
 
-  if (templatesRes.data?.length) {
-    patch.customTemplates = templatesRes.data.map((row) => ({
-      id: row.id,
-      category: row.category,
-      name: row.name,
-      description: row.description ?? "",
-      fileName: row.file_name,
-      fileUrl: row.file_url ?? "",
-      format: row.format ?? "",
-      previewImageUrl: row.preview_image_url ?? null,
-      isPublished: row.is_published ?? true,
-      storageKind: "static" as const,
-    }));
+  if (!templatesRes.error) {
+    const persisted = (templatesRes.data ?? []).map((row) => templateRowToAsset(row));
+    patch.customTemplates = resolveCanonicalTemplates(persisted);
+  } else {
+    logContentError("templates.hydrate", templatesRes.error.message);
   }
 
   if (Object.keys(patch).length > 0) {

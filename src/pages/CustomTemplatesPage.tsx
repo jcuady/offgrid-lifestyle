@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Download, ImageIcon } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
@@ -7,6 +7,7 @@ import type { CustomTemplateAsset } from "@/src/store/useSiteContentStore";
 import { siteContainer, sectionEyebrow, sectionEyebrowOnDark } from "@/src/lib/brandLayout";
 import { resolveCanonicalTemplates } from "@/src/lib/canonicalTemplates";
 import { triggerTemplateDownload } from "@/src/lib/resolveTemplateDownload";
+import { hydrateSiteContentFromSupabase } from "@/src/services";
 import { cn } from "@/src/lib/utils";
 
 const TEMPLATE_CATEGORY_ORDER = ["jerseys", "headwear", "towels", "shorts"] as const;
@@ -20,6 +21,12 @@ const TEMPLATE_CATEGORY_LABELS: Record<(typeof TEMPLATE_CATEGORY_ORDER)[number],
 export function CustomTemplatesPage() {
   const page = useSiteContentStore((state) => state.customPageContent.templatesPage);
   const customTemplatesRaw = useSiteContentStore((state) => state.customTemplates);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    void hydrateSiteContentFromSupabase().finally(() => setHydrated(true));
+  }, []);
+
   const templates = useMemo(
     () => resolveCanonicalTemplates(customTemplatesRaw).filter((entry) => entry.isPublished),
     [customTemplatesRaw],
@@ -84,8 +91,12 @@ export function CustomTemplatesPage() {
           <p className="mt-2 max-w-2xl text-sm text-offgrid-green/60">{page.libraryDescription}</p>
           {templates.length === 0 ? (
             <div className="mt-10 rounded-2xl border border-offgrid-green/[0.09] bg-white p-10 text-center shadow-sm ring-1 ring-offgrid-green/[0.06]">
-              <p className="font-display text-lg font-semibold text-offgrid-green">{page.emptyTitle}</p>
-              <p className="mx-auto mt-2 max-w-md text-sm text-offgrid-green/60">{page.emptyDescription}</p>
+              <p className="font-display text-lg font-semibold text-offgrid-green">
+                {!hydrated ? "Loading templates…" : page.emptyTitle}
+              </p>
+              <p className="mx-auto mt-2 max-w-md text-sm text-offgrid-green/60">
+                {!hydrated ? "Fetching the latest template library." : page.emptyDescription}
+              </p>
               <Button className="mt-6" variant="outline" size="lg" asChild>
                 <Link to="/custom">{page.emptyCta}</Link>
               </Button>
@@ -103,7 +114,9 @@ export function CustomTemplatesPage() {
                     {group.items.map((template) => {
                 const busy = downloadingId === template.id;
                 const canTry =
-                  template.storageKind === "idb" || (template.fileUrl && template.fileUrl !== "#");
+                  template.storageKind === "idb" ||
+                  template.storageKind === "storage" ||
+                  (template.fileUrl && template.fileUrl !== "#");
 
                 return (
                   <article

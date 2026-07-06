@@ -36,3 +36,28 @@ export async function uploadCmsImage(file: File, section: string): Promise<CmsIm
   const { data: pub } = supabase.storage.from(CMS_IMAGE_BUCKET).getPublicUrl(data.path);
   return { ok: true, publicUrl: pub.publicUrl };
 }
+
+export async function uploadTemplateFile(file: File, templateId: string): Promise<CmsImageUploadResult> {
+  const check = validateUploadedFile(file, "templateAsset");
+  if (check.ok === false) return { ok: false, error: check.error };
+
+  const safeId =
+    templateId
+      .replace(/[^a-z0-9-]+/gi, "-")
+      .replace(/^-+|-+$/g, "")
+      .toLowerCase() || "template";
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]+/g, "-");
+  const path = `templates/files/${safeId}/${Date.now()}-${safeName}`;
+
+  const { data, error } = await supabase.storage.from(CMS_IMAGE_BUCKET).upload(path, file, {
+    upsert: true,
+    contentType: file.type || undefined,
+  });
+
+  if (error) {
+    return { ok: false, error: error.message || "Upload failed." };
+  }
+
+  const { data: pub } = supabase.storage.from(CMS_IMAGE_BUCKET).getPublicUrl(data.path);
+  return { ok: true, publicUrl: pub.publicUrl };
+}

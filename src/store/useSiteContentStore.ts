@@ -55,7 +55,7 @@ export interface CustomContentSection {
   updatedAt: string;
 }
 
-export type TemplateStorageKind = "static" | "idb";
+export type TemplateStorageKind = "static" | "idb" | "storage";
 export type TemplateCategory = "jerseys" | "headwear" | "towels" | "shorts";
 
 export interface CustomTemplateAsset {
@@ -636,24 +636,17 @@ export const useSiteContentStore = create<SiteContentState>()(
 
       /** MVP: no new template slots — only canonical IDs can be updated. */
       addTemplate: (input) => {
-        if (!isCanonicalTemplateId(input.id)) return;
-        set((state) => ({
-          customTemplates: resolveCanonicalTemplates(
-            state.customTemplates.map((entry) =>
-              entry.id === input.id ? { ...entry, ...input, updatedAt: nowIso() } : entry,
-            ),
-          ),
-        }));
+        set((state) => {
+          const without = state.customTemplates.filter((entry) => entry.id !== input.id);
+          return {
+            customTemplates: resolveCanonicalTemplates([
+              ...without,
+              { ...input, updatedAt: nowIso() },
+            ]),
+          };
+        });
       },
       updateTemplate: (id, patch) => {
-        if (!isCanonicalTemplateId(id)) {
-          set((state) => ({
-            customTemplates: state.customTemplates.map((entry) =>
-              entry.id === id ? { ...entry, ...patch, updatedAt: nowIso() } : entry,
-            ),
-          }));
-          return;
-        }
         set((state) => ({
           customTemplates: resolveCanonicalTemplates(
             state.customTemplates.map((entry) =>
@@ -663,12 +656,22 @@ export const useSiteContentStore = create<SiteContentState>()(
         }));
       },
       removeTemplate: (id) => {
-        if (isCanonicalTemplateId(id)) return;
-        set((state) => ({
-          customTemplates: resolveCanonicalTemplates(
-            state.customTemplates.filter((entry) => entry.id !== id),
-          ),
-        }));
+        set((state) => {
+          if (isCanonicalTemplateId(id)) {
+            return {
+              customTemplates: resolveCanonicalTemplates(
+                state.customTemplates.map((entry) =>
+                  entry.id === id ? { ...entry, isPublished: false, updatedAt: nowIso() } : entry,
+                ),
+              ),
+            };
+          }
+          return {
+            customTemplates: resolveCanonicalTemplates(
+              state.customTemplates.filter((entry) => entry.id !== id),
+            ),
+          };
+        });
       },
     }),
     {

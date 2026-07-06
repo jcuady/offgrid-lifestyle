@@ -15,7 +15,7 @@ function anchorDownload(href: string, fileName: string) {
 /** Primary shirt template id — matches order in canonical seed list (StepDesign default). */
 export const PRIMARY_DESIGN_TEMPLATE_ID = "tpl-ogl-shirt";
 
-export function getTemplateStorageKind(template: CustomTemplateAsset): "static" | "idb" {
+export function getTemplateStorageKind(template: CustomTemplateAsset): CustomTemplateAsset["storageKind"] {
   return template.storageKind ?? "static";
 }
 
@@ -38,6 +38,19 @@ export async function triggerTemplateDownload(template: CustomTemplateAsset): Pr
 
   if (!template.fileUrl || template.fileUrl === "#") {
     throw new Error("Download URL not available for this template.");
+  }
+
+  if (template.fileUrl.startsWith("http")) {
+    const response = await fetch(template.fileUrl);
+    if (!response.ok) throw new Error("Could not download this template file.");
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    try {
+      anchorDownload(url, template.fileName);
+    } finally {
+      window.setTimeout(() => URL.revokeObjectURL(url), 2500);
+    }
+    return;
   }
 
   anchorDownload(template.fileUrl, template.fileName);

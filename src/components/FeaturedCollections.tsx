@@ -71,7 +71,7 @@ export function FeaturedCollections() {
               <Link
                 to={`/shop?category=${encodeURIComponent(collection.shopCategory)}`}
                 className="absolute inset-0 z-20 p-6 md:p-8 flex flex-col justify-between"
-                aria-label={`Shop ${collection.title} collection`}
+                aria-label={`Shop ${collection.title} OG Signature`}
               >
                 <div className="flex justify-between items-start">
                   <span className="inline-block px-3 py-1 bg-offgrid-cream/90 backdrop-blur-sm text-offgrid-green text-[10px] font-bold tracking-[0.15em] uppercase rounded-full">

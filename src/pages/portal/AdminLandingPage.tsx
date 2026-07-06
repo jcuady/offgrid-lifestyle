@@ -124,7 +124,7 @@ export function AdminLandingPage() {
           <CmsField label="Stats — sold label">
             <CmsTextInput value={landing.hero.statItemsSoldLabel} onChange={(v) => updateHero({ statItemsSoldLabel: v })} />
           </CmsField>
-          <CmsField label="Stats — collections label">
+          <CmsField label="Stats — OG Signatures label">
             <CmsTextInput
               value={landing.hero.statCollectionsLabel}
               onChange={(v) => updateHero({ statCollectionsLabel: v })}
@@ -142,7 +142,7 @@ export function AdminLandingPage() {
           />
         </CmsSectionPanel>
 
-        <CmsSectionPanel title="Featured collections" description="Four fixed cards; shop links stay tied to category filters.">
+        <CmsSectionPanel title="OG Signatures" description="Four fixed signature cards; shop links stay tied to category filters.">
           <CmsField label="Eyebrow" className="sm:col-span-2">
             <CmsTextInput
               value={landing.collectionsHeader.eyebrow}

@@ -239,12 +239,12 @@ export const initialLandingContent: LandingContent = {
     ctaShopLabel: "Shop Collection",
     ctaExploreLabel: "Explore Sports",
     statItemsSoldLabel: "Items Sold",
-    statCollectionsLabel: "Collections",
+    statCollectionsLabel: "OG Signatures",
     statLocalityLine: "EST. MANILA, PH",
     statLocalitySub: "Proudly Pinoy",
   },
   collectionsHeader: {
-    eyebrow: "Collections",
+    eyebrow: "OG Signatures",
     titleLine1: "Find Your",
     titleLine2Italic: "Movement.",
     caption: "One lifestyle. Thoughtfully designed for every way you move.",
@@ -283,7 +283,7 @@ export const initialLandingContent: LandingContent = {
       shopCategory: "Lifestyle / OG Vibe",
     },
   ],
-  collectionsViewAllLabel: "View all collections",
+  collectionsViewAllLabel: "View all OG Signatures",
   bestSellersHeader: {
     eyebrow: "The Full Collection",
     titleLine1: "A complete expression of",

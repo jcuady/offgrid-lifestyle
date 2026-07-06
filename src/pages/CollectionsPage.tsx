@@ -63,7 +63,7 @@ export function CollectionsPage() {
 
           {/* Quick jump — collection names, no numbers */}
           {collections.length > 0 ? (
-            <nav aria-label="Jump to a collection" className="mt-10 flex flex-wrap gap-2.5">
+            <nav aria-label="Jump to an OG Signature" className="mt-10 flex flex-wrap gap-2.5">
               {collections.map((collection) => (
                 <Link
                   key={collection.id}
@@ -91,7 +91,7 @@ export function CollectionsPage() {
               >
                 <Link
                   to={shopHref(collection.shopCategory)}
-                  aria-label={`Shop the ${collection.title} collection`}
+                  aria-label={`Shop the ${collection.title} OG Signature`}
                   className={cn(
                     "group relative block aspect-[4/3] overflow-hidden rounded-3xl ring-1 ring-offgrid-green/10",
                     imageRight && "lg:order-2",
@@ -119,7 +119,7 @@ export function CollectionsPage() {
 
                 <div className={cn("min-w-0", imageRight && "lg:order-1")}>
                   <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-offgrid-green/45">
-                    Signature collection
+                    OG Signature
                   </p>
                   <h2 className="mt-3 font-display text-4xl font-black leading-[0.95] tracking-tight text-offgrid-green sm:text-5xl">
                     {collection.title}

@@ -117,7 +117,7 @@ export function Navbar() {
   };
 
   const navLinks = [
-    { name: "Collections", action: () => handleNavigate("/collections") },
+    { name: "OG Signatures", action: () => handleNavigate("/collections") },
     { name: "Shop", action: () => handleNavigate("/shop") },
     { name: "Events", action: () => handleNavigate("/events") },
     { name: "About", action: () => handleNavigate("/about") },

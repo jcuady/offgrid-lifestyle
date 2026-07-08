@@ -429,15 +429,15 @@ export const initialLandingContent: LandingContent = {
   testimonialsViewAll: "View all testimonials",
   teamCommunity: {
     badge: "Our Community",
-    headlineLine1: "We make it easy for teams and their players",
-    headlineLine2Italic: "to design, order, and rep custom gear.",
+    headlineLine1: "Built for teams.",
+    headlineLine2Italic: "Powered by connection.",
     teams: [
       { name: "Manila Smash", sport: "Pickleball" },
       { name: "Fairway Co.", sport: "Golf" },
       { name: "Takbo MNL", sport: "Running" },
       { name: "Barangay Ball", sport: "Basketball" },
     ],
-    primaryCtaLabel: "Shop the collection",
+    primaryCtaLabel: "View events",
     secondaryCtaLabel: "Start a team order",
     socialHeading: "Follow the movement",
     instagramUrl: "https://www.instagram.com/offgridlifestyle.ph/",

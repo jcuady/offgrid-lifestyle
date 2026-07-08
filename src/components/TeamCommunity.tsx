@@ -2,12 +2,29 @@ import { motion } from "motion/react";
 import { ArrowRight, Instagram, Facebook } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/src/components/ui/Button";
-import { sectionEyebrow, sectionTitle, siteContainer } from "@/src/lib/brandLayout";
+import { sectionTitleOnDark, siteContainer } from "@/src/lib/brandLayout";
 import { cmsTypographyStyle } from "@/src/lib/cmsTypography";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { cn } from "@/src/lib/utils";
 
-/** Compact community band — keeps page rhythm tight before FAQ. */
+const BRAND_STRIPE = "OFF GRID ®";
+
+function BrandStripe() {
+  const repeat = Array.from({ length: 12 }, (_, i) => (
+    <span key={i} className="mx-6">
+      {BRAND_STRIPE}
+    </span>
+  ));
+  return (
+    <div className="overflow-hidden border-b border-offgrid-cream/10 py-2.5" aria-hidden>
+      <div className="flex whitespace-nowrap font-mono text-[10px] font-semibold uppercase tracking-[0.28em] text-offgrid-cream/35">
+        {repeat}
+        {repeat}
+      </div>
+    </div>
+  );
+}
+
 export function TeamCommunity() {
   const navigate = useNavigate();
   const team = useSiteContentStore((s) => s.landingContent.teamCommunity);
@@ -21,48 +38,57 @@ export function TeamCommunity() {
   ];
 
   return (
-    <section className="border-y border-offgrid-green/10 bg-offgrid-cream py-12 sm:py-14">
-      <div className={siteContainer}>
+    <section className="bg-offgrid-green text-offgrid-cream">
+      <BrandStripe />
+
+      <div className={cn(siteContainer, "py-14 sm:py-16 md:py-20")}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="grid grid-cols-1 items-center gap-8 lg:grid-cols-12 lg:gap-10"
+          className="grid grid-cols-1 items-start gap-10 lg:grid-cols-12 lg:gap-12"
         >
-          <div className="lg:col-span-5">
-            <span className={sectionEyebrow} style={bodyStyle}>
+          <div className="lg:col-span-4">
+            <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-cream/50" style={bodyStyle}>
               {team.badge}
             </span>
-            <h2 className={cn(sectionTitle, "mt-2 text-balance")} style={headingStyle}>
+            <h2 className={cn(sectionTitleOnDark, "mt-3 text-balance")} style={headingStyle}>
               {team.headlineLine1}{" "}
-              <span className="font-normal italic">{team.headlineLine2Italic}</span>
+              <span className="font-normal italic text-white">{team.headlineLine2Italic}</span>
             </h2>
+            <p className="mt-4 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-offgrid-cream/40">
+              EST. MANILA, PH — GRITTY · IN MOTION · PRODUCT-FOCUSED
+            </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3 lg:col-span-4">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:col-span-5">
             {team.teams.map((entry) => (
               <div
                 key={entry.name}
-                className="flex flex-col items-center justify-center rounded-xl border border-offgrid-green/10 bg-white px-2 py-4 text-center transition-colors hover:border-offgrid-lime/35 sm:px-3 sm:py-5"
+                className="group flex min-h-[88px] flex-col justify-between rounded-xl border border-offgrid-cream/15 bg-offgrid-cream/[0.04] p-4 transition-colors hover:border-offgrid-lime/50 hover:bg-offgrid-cream/[0.08] sm:min-h-[96px] sm:p-5"
               >
-                <span className="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-offgrid-lime sm:text-[10px]">
+                <span className="font-mono text-[9px] font-bold uppercase tracking-[0.22em] text-offgrid-lime sm:text-[10px]">
                   {entry.sport}
                 </span>
-                <span className="mt-1.5 font-display text-xs font-black uppercase leading-tight tracking-tight text-offgrid-green sm:text-sm">
+                <span className="mt-3 font-display text-sm font-black uppercase leading-tight tracking-tight text-offgrid-cream sm:text-base">
                   {entry.name}
                 </span>
               </div>
             ))}
           </div>
 
-          <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center lg:col-span-3 lg:flex-col lg:items-end">
-            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row lg:w-full">
+          <div className="flex flex-col gap-5 lg:col-span-3 lg:items-end lg:text-right">
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-offgrid-cream/45">
+              {team.socialHeading}
+            </p>
+
+            <div className="flex flex-col gap-2 sm:flex-row lg:flex-col lg:items-end">
               <Button
                 type="button"
                 size="sm"
-                className="group w-full sm:w-auto"
-                onClick={() => navigate("/shop")}
+                className="group w-full border-offgrid-cream bg-offgrid-cream text-offgrid-green hover:bg-white sm:w-auto lg:w-full"
+                onClick={() => navigate("/events")}
               >
                 {team.primaryCtaLabel}
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -71,14 +97,14 @@ export function TeamCommunity() {
                 type="button"
                 variant="outline"
                 size="sm"
-                className="w-full sm:w-auto"
+                className="w-full border-offgrid-cream/40 text-offgrid-cream hover:bg-offgrid-cream hover:text-offgrid-green sm:w-auto lg:w-full"
                 onClick={() => navigate("/custom")}
               >
                 {team.secondaryCtaLabel}
               </Button>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 lg:justify-end">
               {socialLinks.map((social) => (
                 <a
                   key={social.label}
@@ -86,7 +112,7 @@ export function TeamCommunity() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={`OffGrid Lifestyle on ${social.label}`}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-offgrid-green/20 text-offgrid-green transition-colors hover:border-offgrid-lime hover:bg-offgrid-lime hover:text-white"
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-offgrid-cream/25 text-offgrid-cream transition-colors hover:border-offgrid-lime hover:bg-offgrid-lime hover:text-offgrid-cream"
                 >
                   {social.icon}
                 </a>
@@ -95,6 +121,8 @@ export function TeamCommunity() {
           </div>
         </motion.div>
       </div>
+
+      <BrandStripe />
     </section>
   );
 }

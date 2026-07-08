@@ -67,8 +67,8 @@ export function HomePage() {
         <BestSellers />
         <BrandBenefits />
         <EventSection />
-        <SocialProof />
         <TeamCommunity />
+        <SocialProof />
         <LandingFaq />
         <CTASection />
       </main>

@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useNavigate } from "react-router-dom";
-import { 
-  Calendar, MapPin, Clock, Users, ArrowRight, X, Check, 
-  Trophy, Music, Camera, ChevronRight, ExternalLink,
-  Ticket, Star, Heart
+import {
+  Calendar, MapPin, Clock, Users, ArrowRight, X, Check,
+  Trophy, Camera, ChevronRight, ExternalLink,
+  Star, Ticket, Heart,
 } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
+import { CommunityEventsHero } from "@/src/components/CommunityEventsHero";
+import { sectionEyebrow, sectionEyebrowOnDark, sectionPaddingCream, sectionTitle, sectionTitleOnDark, siteContainer } from "@/src/lib/brandLayout";
+import { cmsTypographyStyle } from "@/src/lib/cmsTypography";
 import { cn } from "@/src/lib/utils";
 import type { SiteEvent } from "@/src/data/events";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
@@ -15,6 +18,8 @@ import { hydrateSiteContentFromSupabase } from "@/src/services";
 export function EventsPage() {
   const navigate = useNavigate();
   const events = useSiteContentStore((state) => state.events);
+  const landingEvent = useSiteContentStore((state) => state.landingContent.event);
+  const eventTypography = useSiteContentStore((state) => state.landingContent.typography.event);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -56,57 +61,36 @@ export function EventsPage() {
     }
   };
 
-  const getCategoryColor = (category: SiteEvent["category"]) => {
-    switch (category) {
-      case "tournament": return "text-offgrid-lime";
-      case "community": return "text-offgrid-gold";
-      case "launch": return "text-offgrid-gold";
-      case "workshop": return "text-offgrid-green/70";
-      default: return "text-offgrid-green";
-    }
-  };
+  const categoryAccent = "text-offgrid-lime";
 
   const filteredEvents = filter === "all" 
     ? events 
     : events.filter(e => e.status === filter);
 
+  const heroImage = featuredEvent?.image ?? landingEvent.backgroundImage;
+
   return (
     <div className="min-h-screen bg-offgrid-cream">
-      {/* Hero Section */}
-      <section className="relative bg-offgrid-green text-offgrid-cream py-20 md:py-28 overflow-hidden">
-        {/* Decorative elements */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-10 w-64 h-64 bg-offgrid-lime rounded-full blur-3xl" />
-          <div className="absolute bottom-10 right-20 w-96 h-96 bg-offgrid-gold rounded-full blur-3xl" />
-        </div>
-
-        <div className="container mx-auto px-6 md:px-12 relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="max-w-3xl"
-          >
-            <span className="inline-block font-mono text-[10px] font-semibold tracking-[0.2em] uppercase text-offgrid-cream mb-4">
-              Community & Events
-            </span>
-            <h1 className="mb-3 text-5xl font-display font-black leading-[0.85] md:text-7xl lg:text-8xl">
-              More Than a Brand.
-            </h1>
-            <p className="mb-6 text-2xl font-display italic text-white md:text-3xl">
-              A shared space for connection.
-            </p>
-            <div className="max-w-2xl space-y-4 text-base leading-relaxed text-offgrid-cream/70 md:text-lg">
-              <p>
-                Off Grid Lifestyle exists beyond clothing. Through curated gatherings and experiences, we create
-                moments where people come together, connect, and share in something real.
-              </p>
-              <p>Because what we build is not just worn.</p>
-              <p>It&apos;s experienced.</p>
-            </div>
-          </motion.div>
-        </div>
-      </section>
+      <CommunityEventsHero
+        variant="page"
+        badge={landingEvent.badge}
+        date={featuredEvent?.date ?? landingEvent.date}
+        titleLine1={landingEvent.titleLine1}
+        titleLine2Italic={landingEvent.titleLine2Italic}
+        description={landingEvent.description}
+        image={heroImage}
+        imageAlt={`${landingEvent.titleLine1} ${landingEvent.titleLine2Italic}`}
+        location={featuredEvent?.location ?? landingEvent.location}
+        category={featuredEvent?.category ?? landingEvent.category}
+        headingStyle={cmsTypographyStyle(eventTypography, "heading")}
+        bodyStyle={cmsTypographyStyle(eventTypography, "body")}
+        primaryCta={
+          featuredEvent
+            ? { label: "Register", onClick: () => setSelectedEvent(featuredEvent) }
+            : { label: landingEvent.ctaPrimary, onClick: () => navigate("/shop") }
+        }
+        secondaryCta={{ label: landingEvent.ctaSecondary, onClick: () => document.getElementById("upcoming-events")?.scrollIntoView({ behavior: "smooth" }) }}
+      />
 
       {/* Featured Event */}
       {featuredEvent && featuredEvent.status === "upcoming" && (
@@ -119,11 +103,9 @@ export function EventsPage() {
               transition={{ duration: 0.6 }}
               className="mb-12"
             >
-              <span className="text-xs font-semibold tracking-[0.2em] uppercase text-offgrid-green/50 mb-3 block">
-                Featured Event
-              </span>
-              <h2 className="text-4xl md:text-5xl font-display font-black text-offgrid-green">
-                Don't Miss <span className="italic font-normal">This</span>
+              <span className={sectionEyebrow}>Featured</span>
+              <h2 className={sectionTitle}>
+                Don&apos;t Miss <span className="font-normal italic">This</span>
               </h2>
             </motion.div>
 
@@ -160,7 +142,7 @@ export function EventsPage() {
                 <div className="p-8 md:p-12 lg:p-16 flex flex-col justify-center">
                   <div className="flex items-center gap-3 mb-4">
                     {React.createElement(getCategoryIcon(featuredEvent.category), {
-                      className: cn("w-5 h-5", getCategoryColor(featuredEvent.category))
+                      className: cn("w-5 h-5", categoryAccent)
                     })}
                     <span className="text-xs font-semibold tracking-[0.2em] uppercase text-offgrid-cream/60">
                       {featuredEvent.category}
@@ -232,19 +214,17 @@ export function EventsPage() {
       )}
 
       {/* Upcoming Events Grid */}
-      <section className="py-16 md:py-20 bg-white">
-        <div className="container mx-auto px-6 md:px-12">
+      <section id="upcoming-events" className={cn(sectionPaddingCream, "bg-offgrid-cream")}>
+        <div className={siteContainer}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="mb-12"
           >
-            <span className="text-xs font-semibold tracking-[0.2em] uppercase text-offgrid-green/50 mb-3 block">
-              What's Next
-            </span>
-            <h2 className="text-4xl md:text-5xl font-display font-black text-offgrid-green">
-              Upcoming <span className="italic font-normal">Events</span>
+            <span className={sectionEyebrow}>What&apos;s Next</span>
+            <h2 className={sectionTitle}>
+              Upcoming <span className="font-normal italic">Events</span>
             </h2>
           </motion.div>
 
@@ -297,7 +277,7 @@ export function EventsPage() {
 
                   <div className="px-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <Icon className={cn("w-4 h-4", getCategoryColor(event.category))} />
+                      <Icon className={cn("w-4 h-4", categoryAccent)} />
                       <span className="text-[10px] font-semibold tracking-[0.2em] uppercase text-offgrid-green/50">
                         {event.category}
                       </span>
@@ -330,11 +310,9 @@ export function EventsPage() {
             viewport={{ once: true }}
             className="mb-12"
           >
-            <span className="font-mono text-xs font-semibold tracking-[0.2em] uppercase text-offgrid-cream mb-3 block">
-              Highlights
-            </span>
-            <h2 className="text-4xl md:text-5xl font-display font-black">
-              Past <span className="italic font-normal text-white">Events</span>
+            <span className={sectionEyebrowOnDark}>Highlights</span>
+            <h2 className={sectionTitleOnDark}>
+              Past <span className="font-normal italic text-white">Events</span>
             </h2>
           </motion.div>
 
@@ -360,7 +338,7 @@ export function EventsPage() {
                   <div className="p-6 sm:p-8 flex flex-col justify-center">
                     <div className="flex items-center gap-2 mb-3">
                       {React.createElement(getCategoryIcon(event.category), {
-                        className: cn("w-4 h-4", getCategoryColor(event.category))
+                        className: cn("w-4 h-4", categoryAccent)
                       })}
                       <span className="text-[10px] font-semibold tracking-[0.2em] uppercase text-offgrid-cream/50">
                         {event.category}
@@ -391,8 +369,9 @@ export function EventsPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 md:py-28 bg-offgrid-lime text-white">
-        <div className="container mx-auto px-6 md:px-12 text-center">
+      <section className="relative overflow-hidden bg-offgrid-lime py-20 text-offgrid-cream md:py-28">
+        <div className="pointer-events-none absolute -right-[15%] top-0 h-[130%] w-[65%] rotate-[-14deg] bg-gradient-to-b from-white/25 via-white/10 to-transparent" aria-hidden />
+        <div className={cn(siteContainer, "relative z-10 text-center")}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -459,7 +438,7 @@ export function EventsPage() {
                 <div className="p-6 sm:p-8 md:p-10">
                   <div className="flex items-center gap-3 mb-4">
                     {React.createElement(getCategoryIcon(selectedEvent.category), {
-                      className: cn("w-5 h-5", getCategoryColor(selectedEvent.category))
+                      className: cn("w-5 h-5", categoryAccent)
                     })}
                     <span className="text-xs font-semibold tracking-[0.2em] uppercase text-offgrid-green/50">
                       {selectedEvent.category}

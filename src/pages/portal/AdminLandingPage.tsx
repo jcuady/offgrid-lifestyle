@@ -509,14 +509,17 @@ export function AdminLandingPage() {
           </CmsField>
         </CmsSectionPanel>
 
-        <CmsSectionPanel title="Community & events" description="Evergreen homepage band (#events). Leave date/location empty — specific events live on /events.">
-          <CmsField label="Background image" className="sm:col-span-2">
+        <CmsSectionPanel title="Community & Events" description="General homepage band (#events) and /events page intro — not tied to a single event.">
+          <CmsField label="Image" className="sm:col-span-2">
             <CmsImageInput
               value={landing.event.backgroundImage}
               onChange={(v) => updateEvent({ backgroundImage: v })}
-              alt="Event"
+              alt="Community and events"
               uploadSection="event"
             />
+          </CmsField>
+          <CmsField label="Image caption (mono)" className="sm:col-span-2">
+            <CmsTextInput value={landing.event.imageCaption} onChange={(v) => updateEvent({ imageCaption: v })} />
           </CmsField>
           <CmsField label="Badge" className="sm:col-span-2">
             <CmsTextInput value={landing.event.badge} onChange={(v) => updateEvent({ badge: v })} />
@@ -530,16 +533,16 @@ export function AdminLandingPage() {
           <CmsField label="Description" className="sm:col-span-2">
             <CmsTextInput value={landing.event.description} onChange={(v) => updateEvent({ description: v })} multiline rows={4} />
           </CmsField>
-          <CmsField label="Date (display)" hint="Shown in UI and used for countdown (with year 2026).">
+          <CmsField label="Date (legacy)" hint="Not shown on the general community band. Specific dates live on the Events page list.">
             <CmsTextInput value={landing.event.date} onChange={(v) => updateEvent({ date: v })} />
           </CmsField>
-          <CmsField label="Countdown time">
+          <CmsField label="Countdown time (legacy)" hint="Reserved — not shown on the general community band.">
             <CmsTextInput value={landing.event.countdownTime} onChange={(v) => updateEvent({ countdownTime: v })} placeholder="09:00:00" />
           </CmsField>
-          <CmsField label="Location">
+          <CmsField label="Location (legacy)" hint="Not shown on the general community band.">
             <CmsTextInput value={landing.event.location} onChange={(v) => updateEvent({ location: v })} />
           </CmsField>
-          <CmsField label="Category">
+          <CmsField label="Category (legacy)" hint="Not shown on the general community band.">
             <CmsTextInput value={landing.event.category} onChange={(v) => updateEvent({ category: v })} />
           </CmsField>
           <CmsField label="Primary CTA">

@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { sectionPaddingDark, sectionTitleOnDark, siteContainer } from "@/src/lib/brandLayout";
@@ -12,6 +12,7 @@ export interface CommunityEventsHeroProps {
   description?: string;
   image: string;
   imageAlt: string;
+  imageCaption?: string;
   primaryCta?: { label: string; onClick: () => void };
   secondaryCta?: { label: string; onClick: () => void };
   headingStyle?: CSSProperties;
@@ -21,7 +22,6 @@ export interface CommunityEventsHeroProps {
   id?: string;
 }
 
-/** Evergreen community & events band — brand blue, no dated event metadata. */
 export function CommunityEventsHero({
   badge,
   titleLine1,
@@ -29,6 +29,7 @@ export function CommunityEventsHero({
   description,
   image,
   imageAlt,
+  imageCaption,
   primaryCta,
   secondaryCta,
   headingStyle,
@@ -38,6 +39,7 @@ export function CommunityEventsHero({
   id,
 }: CommunityEventsHeroProps) {
   const isPage = variant === "page";
+  const reduceMotion = useReducedMotion();
 
   return (
     <section
@@ -49,20 +51,20 @@ export function CommunityEventsHero({
       )}
     >
       <div
-        className="pointer-events-none absolute -right-[12%] top-0 h-[120%] w-[55%] rotate-[-12deg] bg-gradient-to-b from-white/22 via-white/8 to-transparent"
+        className="pointer-events-none absolute -right-[15%] top-0 h-[130%] w-[65%] rotate-[-14deg] bg-gradient-to-b from-white/30 via-white/10 to-transparent"
         aria-hidden
       />
 
       <div className={cn(siteContainer, "relative z-10")}>
         <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-12 lg:gap-14">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: reduceMotion ? 0 : 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-80px" }}
             transition={{ duration: 0.55 }}
             className="lg:col-span-5"
           >
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-offgrid-cream/35 px-4 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-cream">
+            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-offgrid-cream/40 px-3.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-cream">
               <span className="h-1.5 w-1.5 rounded-full bg-offgrid-cream" aria-hidden />
               {badge}
             </div>
@@ -70,19 +72,19 @@ export function CommunityEventsHero({
             <h2
               className={cn(
                 sectionTitleOnDark,
-                isPage ? "text-5xl sm:text-6xl md:text-7xl lg:text-8xl" : "mb-4",
+                isPage ? "text-4xl sm:text-5xl md:text-6xl lg:text-7xl" : "text-4xl sm:text-5xl md:text-6xl",
               )}
               style={headingStyle}
             >
-              {titleLine1}{" "}
-              <span className="block font-normal italic text-white sm:inline">{titleLine2Italic}</span>
+              <span className="block">{titleLine1}</span>
+              <span className="mt-1 block font-normal italic text-white">{titleLine2Italic}</span>
             </h2>
 
             {description ? (
               <p
                 className={cn(
-                  "max-w-md leading-relaxed text-offgrid-cream/85",
-                  isPage ? "mt-6 text-base md:text-lg" : "mt-4 text-sm md:text-base",
+                  "mt-5 max-w-md text-sm leading-relaxed text-offgrid-cream/80 md:text-base",
+                  isPage && "md:max-w-lg",
                 )}
                 style={bodyStyle}
               >
@@ -91,7 +93,7 @@ export function CommunityEventsHero({
             ) : null}
 
             {primaryCta || secondaryCta ? (
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <div className="mt-7 flex flex-col gap-2.5 sm:flex-row">
                 {primaryCta ? (
                   <Button
                     variant="secondary"
@@ -107,7 +109,7 @@ export function CommunityEventsHero({
                   <Button
                     variant="outline"
                     size="lg"
-                    className="w-full border-offgrid-cream/45 bg-transparent text-offgrid-cream hover:bg-offgrid-cream hover:text-offgrid-green sm:w-auto"
+                    className="w-full border-offgrid-cream/50 bg-transparent text-offgrid-cream hover:bg-offgrid-cream hover:text-offgrid-green sm:w-auto"
                     onClick={secondaryCta.onClick}
                   >
                     {secondaryCta.label}
@@ -118,13 +120,13 @@ export function CommunityEventsHero({
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, x: 24 }}
+            initial={{ opacity: 0, x: reduceMotion ? 0 : 24 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: "-80px" }}
             transition={{ duration: 0.55, delay: 0.08 }}
             className="lg:col-span-7"
           >
-            <div className="rounded-3xl bg-offgrid-cream p-3 sm:p-4 md:p-5">
+            <div className="rounded-3xl bg-offgrid-cream p-3 sm:p-4">
               <div className="overflow-hidden rounded-2xl">
                 <img
                   src={image}
@@ -135,6 +137,11 @@ export function CommunityEventsHero({
                 />
               </div>
             </div>
+            {imageCaption ? (
+              <p className="mt-3 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-offgrid-cream/70">
+                {imageCaption}
+              </p>
+            ) : null}
           </motion.div>
         </div>
       </div>

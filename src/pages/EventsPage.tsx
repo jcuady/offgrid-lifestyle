@@ -69,6 +69,10 @@ export function EventsPage() {
 
   const heroImage = landingEvent.backgroundImage;
 
+  const scrollToUpcoming = () => {
+    document.getElementById("upcoming-events")?.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
     <div className="min-h-screen bg-offgrid-cream">
       <CommunityEventsHero
@@ -78,13 +82,11 @@ export function EventsPage() {
         titleLine2Italic={landingEvent.titleLine2Italic}
         description={landingEvent.description}
         image={heroImage}
-        imageAlt="Off Grid community in motion"
+        imageAlt="Off Grid community and events"
+        imageCaption={landingEvent.imageCaption}
         headingStyle={cmsTypographyStyle(eventTypography, "heading")}
         bodyStyle={cmsTypographyStyle(eventTypography, "body")}
-        primaryCta={{
-          label: landingEvent.ctaPrimary,
-          onClick: () => document.getElementById("upcoming-events")?.scrollIntoView({ behavior: "smooth" }),
-        }}
+        primaryCta={{ label: landingEvent.ctaPrimary, onClick: scrollToUpcoming }}
         secondaryCta={{ label: landingEvent.ctaSecondary, onClick: () => navigate("/#community") }}
       />
 

@@ -65,12 +65,9 @@ export function AboutPage() {
         "Thoughtfully made apparel for athletes who play different and live off grid.",
     }));
 
+
   useEffect(() => {
     void hydrateSiteContentFromSupabase();
-    document.title = "About Us — OffGrid Lifestyle";
-    return () => {
-      document.title = "OffGrid Lifestyle";
-    };
   }, []);
 
   return (

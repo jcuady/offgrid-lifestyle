@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useShallow } from "zustand/react/shallow";
 import { motion } from "motion/react";
@@ -9,6 +9,8 @@ import { formatPrice } from "@/src/data/products";
 import { Button } from "@/src/components/ui/Button";
 import { cn } from "@/src/lib/utils";
 import { reviewService, type ProductReview } from "@/src/services/reviewService";
+import { usePageSeo } from "@/src/hooks/usePageSeo";
+import { productJsonLd, upsertJsonLd } from "@/src/lib/siteSeo";
 
 import { hydrateProductsFromSupabase } from "@/src/services";
 
@@ -23,6 +25,50 @@ export function ProductDetailPage() {
   }, []);
 
   const product = products.find((p) => p.slug === slug);
+
+  const pageSeo = useMemo(() => {
+    if (!product) {
+      if (!catalogReady) return null;
+      return {
+        title: "Product Not Found | OFF GRID® Lifestyle",
+        description: "This product is unavailable. Browse the OFF GRID Lifestyle shop for sportswear and teamwear.",
+        path: slug ? `/shop/${slug}` : "/shop",
+        noindex: true,
+      };
+    }
+    const description =
+      product.metaDescription?.trim() ||
+      product.description.slice(0, 155).trim() ||
+      `Shop ${product.name} from OFF GRID Lifestyle — premium Filipino sportswear.`;
+    return {
+      title: product.metaTitle?.trim() || `${product.name} | OFF GRID® Lifestyle`,
+      description,
+      path: `/shop/${product.slug}`,
+      imagePath: product.image,
+      type: "product" as const,
+    };
+  }, [product, catalogReady, slug]);
+
+  usePageSeo(pageSeo);
+
+  useEffect(() => {
+    if (!product) {
+      upsertJsonLd("jsonld-product", null);
+      return;
+    }
+    upsertJsonLd(
+      "jsonld-product",
+      productJsonLd({
+        name: product.name,
+        description: product.description,
+        slug: product.slug,
+        image: product.image,
+        price: product.price,
+        inStock: product.status === "active" && (product.stock === undefined || product.stock > 0),
+      }),
+    );
+    return () => upsertJsonLd("jsonld-product", null);
+  }, [product]);
 
   const { addToCart, toggleCart } = useStore(
     useShallow((state) => ({

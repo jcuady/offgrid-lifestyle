@@ -21,6 +21,11 @@ CREATE INDEX IF NOT EXISTS idx_og_testimonials_published_sort
 
 ALTER TABLE public.og_testimonials ENABLE ROW LEVEL SECURITY;
 
+DROP TRIGGER IF EXISTS og_testimonials_updated_at ON public.og_testimonials;
+CREATE TRIGGER og_testimonials_updated_at
+  BEFORE UPDATE ON public.og_testimonials
+  FOR EACH ROW EXECUTE FUNCTION public.og_set_updated_at();
+
 DO $$ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies WHERE tablename = 'og_testimonials' AND policyname = 'og_testimonials_public_read'

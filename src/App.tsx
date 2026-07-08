@@ -9,6 +9,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "r
 import { Navbar } from "./components/Navbar";
 import { Footer } from "./components/Footer";
 import { ScrollToTop } from "./components/ScrollToTop";
+import { RouteSeo } from "./components/seo/RouteSeo";
+import { GoogleAnalytics } from "./components/seo/GoogleAnalytics";
 import { CartDrawer } from "./components/CartDrawer";
 import { CheckoutModal } from "./components/CheckoutModal";
 import { isAuthScreen, PORTAL_LOGIN_PATH } from "@/src/lib/authRoutes";
@@ -169,6 +171,8 @@ function AppFrame() {
 
   return (
     <div className="min-h-screen bg-offgrid-cream font-sans text-offgrid-green overflow-x-hidden">
+      <RouteSeo />
+      <GoogleAnalytics />
       <ScrollToTop />
       {!hideStorefrontChrome && <Navbar />}
       <Suspense

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/src/components/ui/Button";
+import { initAnalytics, trackPageView } from "@/src/lib/analytics";
 import { getCookieConsent, setCookieConsent } from "@/src/lib/consent";
 
 export function CookieConsentBanner() {
@@ -20,8 +21,8 @@ export function CookieConsentBanner() {
     >
       <div className="mx-auto flex max-w-4xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm leading-relaxed text-offgrid-green/80">
-          We use essential cookies to keep you signed in and remember your cart. With your consent we may also store
-          preferences and enable push notifications. See our{" "}
+          We use essential cookies to keep you signed in and remember your cart. With your consent we may also use
+          analytics to improve the site and enable push notifications. See our{" "}
           <Link to="/legal/privacy" className="font-semibold text-offgrid-green underline">
             Privacy Policy
           </Link>
@@ -42,6 +43,8 @@ export function CookieConsentBanner() {
             size="sm"
             onClick={() => {
               setCookieConsent("accepted");
+              initAnalytics();
+              trackPageView(window.location.pathname);
               setVisible(false);
             }}
           >

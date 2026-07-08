@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+Disallow: /portal/
+Disallow: /account/
+Disallow: /login
+
+Sitemap: https://www.oglifestyleph.com/sitemap.xml

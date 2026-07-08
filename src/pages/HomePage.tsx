@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FeaturedCollections } from "@/src/components/FeaturedCollections";
 import { FeaturedSpotlight } from "@/src/components/FeaturedSpotlight";
@@ -16,7 +16,6 @@ import { hydrateProductsFromSupabase, hydrateSiteContentFromSupabase } from "@/s
 
 export function HomePage() {
   const navigate = useNavigate();
-  const products = useSiteContentStore((state) => state.products);
   const hero = useSiteContentStore((state) => state.landingContent.hero);
   const heroTypography = useSiteContentStore((state) => state.landingContent.typography.hero);
 
@@ -32,19 +31,6 @@ export function HomePage() {
   const titleMark = hero.titleLine1.match(/[®™]+$/)?.[0];
   const titleText = titleMark ? hero.titleLine1.slice(0, -titleMark.length).trim() : hero.titleLine1;
 
-  const stats = useMemo(() => {
-    const itemsSold = products.reduce((sum, item) => sum + item.sold, 0);
-    const collectionsCount = new Set(products.map((entry) => entry.category)).size;
-    return {
-      itemsSold: itemsSold > 0 ? itemsSold : 1200,
-      collectionsCount: collectionsCount > 0 ? collectionsCount : 4,
-      itemsSoldLabel: hero.statItemsSoldLabel,
-      collectionsLabel: hero.statCollectionsLabel,
-      localityLine: hero.statLocalityLine,
-      localitySub: hero.statLocalitySub,
-    };
-  }, [products, hero]);
-
   return (
     <>
       <OffgridHero
@@ -55,7 +41,6 @@ export function HomePage() {
         tagline={hero.tagline}
         locality={hero.locality}
         description={hero.description}
-        stats={stats}
         titleStyle={cmsTypographyStyle(heroTypography, "heading")}
         descriptionStyle={cmsTypographyStyle(heroTypography, "body")}
         primaryCta={{ label: hero.ctaShopLabel, onClick: () => navigate("/shop") }}

@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import { motion, useReducedMotion } from "motion/react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { sectionPaddingDark, sectionTitleOnDark, siteContainer } from "@/src/lib/brandLayout";
 import { cn } from "@/src/lib/utils";
@@ -21,6 +21,9 @@ export interface CommunityEventsHeroProps {
   className?: string;
   id?: string;
 }
+
+/** Evergreen gathering formats — kept general, never a single ongoing event. */
+const EVENT_FORMATS = ["Tournaments", "Community Play", "Capsule Launches", "Workshops"];
 
 export function CommunityEventsHero({
   badge,
@@ -50,13 +53,17 @@ export function CommunityEventsHero({
         className,
       )}
     >
-      <div
-        className="pointer-events-none absolute -right-[15%] top-0 h-[130%] w-[65%] rotate-[-14deg] bg-gradient-to-b from-white/30 via-white/10 to-transparent"
+      {/* Oversized brand watermark for editorial depth */}
+      <span
         aria-hidden
-      />
+        className="pointer-events-none absolute -right-6 -top-10 select-none font-display text-[7rem] font-black leading-none tracking-tighter text-white/[0.06] sm:text-[10rem] md:text-[13rem]"
+      >
+        OG®
+      </span>
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/15" />
 
       <div className={cn(siteContainer, "relative z-10")}>
-        <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-12 lg:gap-14">
+        <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-12 lg:gap-16">
           <motion.div
             initial={{ opacity: 0, y: reduceMotion ? 0 : 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -64,7 +71,7 @@ export function CommunityEventsHero({
             transition={{ duration: 0.55 }}
             className="lg:col-span-5"
           >
-            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-offgrid-cream/40 px-4 py-1.5 font-mono text-xs font-bold uppercase tracking-[0.2em] text-offgrid-cream">
+            <div className="inline-flex items-center gap-2 rounded-full border border-offgrid-cream/40 px-4 py-1.5 font-mono text-xs font-bold uppercase tracking-[0.2em] text-offgrid-cream">
               <span className="h-1.5 w-1.5 rounded-full bg-offgrid-cream" aria-hidden />
               {badge}
             </div>
@@ -72,6 +79,7 @@ export function CommunityEventsHero({
             <h2
               className={cn(
                 sectionTitleOnDark,
+                "mt-5",
                 isPage ? "text-4xl sm:text-5xl md:text-6xl lg:text-7xl" : "text-4xl sm:text-5xl md:text-6xl",
               )}
               style={headingStyle}
@@ -92,8 +100,19 @@ export function CommunityEventsHero({
               </p>
             ) : null}
 
+            <ul className="mt-7 flex flex-wrap gap-2">
+              {EVENT_FORMATS.map((format) => (
+                <li
+                  key={format}
+                  className="rounded-full border border-offgrid-cream/25 bg-offgrid-cream/[0.06] px-3.5 py-1.5 font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-offgrid-cream/80"
+                >
+                  {format}
+                </li>
+              ))}
+            </ul>
+
             {primaryCta || secondaryCta ? (
-              <div className="mt-7 flex flex-col gap-2.5 sm:flex-row">
+              <div className="mt-8 flex flex-col gap-2.5 sm:flex-row">
                 {primaryCta ? (
                   <Button
                     variant="secondary"
@@ -126,22 +145,29 @@ export function CommunityEventsHero({
             transition={{ duration: 0.55, delay: 0.08 }}
             className="lg:col-span-7"
           >
-            <div className="rounded-3xl bg-offgrid-cream p-3 sm:p-4">
-              <div className="overflow-hidden rounded-2xl">
+            <div className="group relative overflow-hidden rounded-2xl ring-1 ring-offgrid-cream/15 sm:rounded-3xl">
+              <div className="relative aspect-[4/3] lg:aspect-[16/11]">
                 <img
                   src={image}
                   alt={imageAlt}
-                  className="aspect-[4/3] w-full object-cover object-center lg:aspect-[16/10]"
+                  className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-[1.03]"
                   loading="lazy"
                   decoding="async"
                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent" />
+                <div className="absolute left-0 top-0 h-full w-1 bg-offgrid-cream/70" aria-hidden />
+
+                <span className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-offgrid-cream/15 text-offgrid-cream backdrop-blur-md sm:right-5 sm:top-5">
+                  <ArrowUpRight className="h-4 w-4" />
+                </span>
+
+                {imageCaption ? (
+                  <p className="absolute inset-x-4 bottom-4 font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-offgrid-cream/90 sm:inset-x-5 sm:bottom-5">
+                    {imageCaption}
+                  </p>
+                ) : null}
               </div>
             </div>
-            {imageCaption ? (
-              <p className="mt-3 font-mono text-xs font-bold uppercase tracking-[0.18em] text-offgrid-cream/80">
-                {imageCaption}
-              </p>
-            ) : null}
           </motion.div>
         </div>
       </div>

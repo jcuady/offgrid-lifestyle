@@ -7,15 +7,22 @@ import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { cmsTypographyStyle } from "@/src/lib/cmsTypography";
 import { cn } from "@/src/lib/utils";
 
-/** Asymmetric editorial grid — dominant first card, offset supporting cards. */
+/**
+ * Editorial bento that fills a clean 4×2 grid:
+ *  ┌───────────┬───────────┐
+ *  │           │   golf    │
+ *  │ pickleball├─────┬─────┤
+ *  │           │ pil │ evd │
+ *  └───────────┴─────┴─────┘
+ */
 const layoutById: Record<
   LandingCollectionId,
   { className: string; index: string }
 > = {
-  pickleball: { className: "md:col-span-2 md:row-span-2 md:min-h-[480px]", index: "01" },
-  golf: { className: "md:col-span-2 md:min-h-[220px]", index: "02" },
-  "og-pilipinas": { className: "md:col-span-1 md:min-h-[220px]", index: "03" },
-  everyday: { className: "md:col-span-3 md:min-h-[200px]", index: "04" },
+  pickleball: { className: "md:col-span-2 md:row-span-2", index: "01" },
+  golf: { className: "md:col-span-2 md:row-span-1", index: "02" },
+  "og-pilipinas": { className: "md:col-span-1 md:row-span-1", index: "03" },
+  everyday: { className: "md:col-span-1 md:row-span-1", index: "04" },
 };
 
 export function FeaturedCollections() {
@@ -55,9 +62,10 @@ export function FeaturedCollections() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-4 md:grid-rows-2 md:gap-5">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4 md:auto-rows-[236px] md:gap-5">
           {collections.map((collection, index) => {
             const layout = layoutById[collection.id];
+            const isFeature = collection.id === "pickleball";
             return (
               <motion.div
                 key={collection.id}
@@ -74,20 +82,20 @@ export function FeaturedCollections() {
                 <img
                   src={collection.image}
                   alt={collection.title}
-                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-offgrid-dark/85 via-offgrid-dark/20 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-offgrid-dark/90 via-offgrid-dark/30 to-offgrid-dark/5" />
 
                 <Link
                   to={`/shop?category=${encodeURIComponent(collection.shopCategory)}`}
-                  className="absolute inset-0 z-10 flex flex-col justify-between p-6 md:p-8"
+                  className="absolute inset-0 z-10 flex flex-col justify-between p-5 md:p-6"
                   aria-label={`Shop ${collection.title} OG Signature`}
                 >
-                  <div className="flex items-start justify-between">
-                    <span className="font-mono text-5xl font-black tabular-nums leading-none text-offgrid-cream/15 transition-colors group-hover:text-offgrid-lime/25 md:text-6xl">
+                  <div className="flex items-start justify-between gap-3">
+                    <span className="font-mono text-3xl font-black tabular-nums leading-none text-offgrid-cream/25 transition-colors group-hover:text-offgrid-lime/50 md:text-4xl">
                       {layout.index}
                     </span>
-                    <span className="rounded-full bg-offgrid-cream/90 px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-[0.15em] text-offgrid-green backdrop-blur-sm">
+                    <span className="shrink-0 rounded-full bg-offgrid-cream/90 px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-[0.15em] text-offgrid-green backdrop-blur-sm">
                       {collection.tag}
                     </span>
                   </div>
@@ -96,7 +104,14 @@ export function FeaturedCollections() {
                     <p className="mb-1 font-mono text-xs font-bold uppercase tracking-[0.2em] text-offgrid-cream/75">
                       {collection.subtitle}
                     </p>
-                    <h3 className="font-display text-2xl font-black text-offgrid-cream md:text-3xl">{collection.title}</h3>
+                    <h3
+                      className={cn(
+                        "font-display font-black leading-none text-offgrid-cream",
+                        isFeature ? "text-3xl md:text-4xl" : "text-2xl md:text-2xl",
+                      )}
+                    >
+                      {collection.title}
+                    </h3>
                     <span className="mt-3 inline-flex items-center gap-1.5 font-mono text-xs font-bold uppercase tracking-[0.14em] text-offgrid-lime opacity-0 transition-opacity group-hover:opacity-100">
                       Shop now
                       <ArrowRight className="h-3 w-3" />

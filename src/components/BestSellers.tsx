@@ -130,7 +130,7 @@ export function BestSellers() {
 
                 <div className="mt-4 px-0.5">
                   <div className="mb-1.5 flex items-baseline justify-between gap-3">
-                    <p className="min-w-0 truncate font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-offgrid-green/45">
+                    <p className="min-w-0 truncate font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-offgrid-green/50">
                       {product.category}
                     </p>
                     <p className="shrink-0 border-l-2 border-offgrid-lime pl-2 font-display text-sm font-black tabular-nums tracking-tight text-offgrid-green">
@@ -150,7 +150,7 @@ export function BestSellers() {
                         />
                       ))}
                     </div>
-                    <div className="flex items-center gap-1 font-mono text-[11px] text-offgrid-green/55">
+                    <div className="flex items-center gap-1 font-mono text-[11px] font-bold text-offgrid-green/60">
                       <Star className="h-3 w-3 fill-offgrid-green text-offgrid-green" />
                       <span className="font-bold text-offgrid-green">{product.sold}</span> sold
                     </div>

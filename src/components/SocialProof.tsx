@@ -134,7 +134,7 @@ export function SocialProof() {
               <div className="relative z-10 flex items-center justify-between border-t border-offgrid-green/8 pt-5">
                 <div>
                   <p className="font-display text-sm font-bold text-offgrid-green">{testimonial.author}</p>
-                  <p className="font-mono text-[10px] uppercase tracking-[0.1em] text-offgrid-green/50">
+                  <p className="font-mono text-[10px] font-bold uppercase tracking-[0.1em] text-offgrid-green/55">
                     {testimonial.handle} · {testimonial.location}
                   </p>
                 </div>

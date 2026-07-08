@@ -54,7 +54,7 @@ export function FeaturedSpotlight({ placement, className }: FeaturedSpotlightPro
       <div className={cn(siteContainer, "relative")}>
         <div className="mb-6 flex flex-col justify-between gap-4 border-b border-offgrid-cream/15 pb-6 sm:mb-12 sm:gap-5 sm:pb-8 md:flex-row md:items-end">
           <div className="min-w-0">
-            <span className="mb-3 flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-cream/80">
+            <span className="mb-3 flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-offgrid-cream/85">
               <span className="h-1.5 w-1.5 rounded-full bg-offgrid-cream" />
               {config.eyebrow}
             </span>
@@ -138,7 +138,7 @@ function FeaturedHeroTile({ item, onClick }: { item: FeaturedDisplayItem; onClic
           ) : null}
           {item.isProduct ? (
             <>
-              <p className="mb-1 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-offgrid-cream/65">
+              <p className="mb-1 font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-offgrid-cream/70">
                 {item.category}
               </p>
               <h3 className="font-display text-3xl font-bold leading-tight text-offgrid-cream sm:text-4xl md:text-5xl">
@@ -208,7 +208,7 @@ function FeaturedTile({ item, onClick, index, large = false, className }: Featur
 
       {item.isProduct ? (
         <div className="absolute inset-x-0 bottom-0 z-10 p-4 sm:p-5 md:p-6">
-          <p className="mb-1 font-mono text-[9px] font-semibold uppercase tracking-[0.18em] text-offgrid-cream/65 sm:text-[10px]">
+          <p className="mb-1 font-mono text-[9px] font-bold uppercase tracking-[0.18em] text-offgrid-cream/70 sm:text-[10px]">
             {item.category}
           </p>
           <h3

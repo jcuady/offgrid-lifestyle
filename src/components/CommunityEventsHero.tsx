@@ -64,7 +64,7 @@ export function CommunityEventsHero({
             transition={{ duration: 0.55 }}
             className="lg:col-span-5"
           >
-            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-offgrid-cream/40 px-3.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-cream">
+            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-offgrid-cream/40 px-3.5 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-offgrid-cream">
               <span className="h-1.5 w-1.5 rounded-full bg-offgrid-cream" aria-hidden />
               {badge}
             </div>
@@ -138,7 +138,7 @@ export function CommunityEventsHero({
               </div>
             </div>
             {imageCaption ? (
-              <p className="mt-3 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-offgrid-cream/70">
+              <p className="mt-3 font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-offgrid-cream/75">
                 {imageCaption}
               </p>
             ) : null}

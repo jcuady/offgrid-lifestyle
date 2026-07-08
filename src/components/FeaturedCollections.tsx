@@ -47,7 +47,7 @@ export function FeaturedCollections() {
             ) : null}
             <Link
               to="/og-signatures"
-              className="group inline-flex items-center gap-1.5 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/60 transition-colors hover:text-offgrid-lime"
+              className="group inline-flex items-center gap-1.5 font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-offgrid-green/60 transition-colors hover:text-offgrid-lime"
             >
               {viewAllLabel}
               <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
@@ -93,7 +93,7 @@ export function FeaturedCollections() {
                   </div>
 
                   <div>
-                    <p className="mb-1 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-cream/60">
+                    <p className="mb-1 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-offgrid-cream/65">
                       {collection.subtitle}
                     </p>
                     <h3 className="font-display text-2xl font-black text-offgrid-cream md:text-3xl">{collection.title}</h3>

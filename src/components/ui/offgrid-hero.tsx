@@ -66,7 +66,7 @@ export function OffgridHero({
               initial={{ opacity: reduceMotion ? 1 : 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.45 }}
-              className="inline-flex max-w-[70%] items-center gap-2 font-mono text-[9px] font-semibold uppercase leading-snug tracking-[0.2em] text-offgrid-cream/80 sm:max-w-none sm:text-[10px] sm:tracking-[0.24em]"
+              className="inline-flex max-w-[70%] items-center gap-2 font-mono text-[9px] font-bold uppercase leading-snug tracking-[0.2em] text-offgrid-cream/85 sm:max-w-none sm:text-[10px] sm:tracking-[0.24em]"
             >
               <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-offgrid-lime" />
               {badge}
@@ -79,7 +79,7 @@ export function OffgridHero({
               initial={{ opacity: reduceMotion ? 1 : 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.45, delay: 0.05 }}
-              className="shrink-0 font-mono text-[9px] font-semibold uppercase tracking-[0.18em] text-offgrid-cream/50 sm:text-[10px] sm:tracking-[0.22em]"
+              className="shrink-0 font-mono text-[9px] font-bold uppercase tracking-[0.18em] text-offgrid-cream/55 sm:text-[10px] sm:tracking-[0.22em]"
             >
               {locality}
             </motion.p>
@@ -106,7 +106,7 @@ export function OffgridHero({
               ) : null}
             </h1>
             {tagline ? (
-              <p className="mt-3 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-offgrid-cream/60 sm:mt-4 sm:text-[11px] sm:tracking-[0.2em]">
+              <p className="mt-3 font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-offgrid-cream/70 sm:mt-4 sm:text-[11px] sm:tracking-[0.2em]">
                 {tagline}
               </p>
             ) : null}
@@ -139,7 +139,7 @@ export function OffgridHero({
                 <button
                   type="button"
                   onClick={secondaryCta.onClick}
-                  className="inline-flex w-full items-center justify-center rounded-full border border-offgrid-cream/35 px-5 py-3 text-xs font-semibold uppercase tracking-[0.1em] text-offgrid-cream transition-colors hover:border-offgrid-cream hover:bg-offgrid-cream/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offgrid-lime sm:w-auto sm:py-2.5 sm:text-sm"
+                  className="inline-flex w-full items-center justify-center rounded-full border border-offgrid-cream/35 px-5 py-3 text-xs font-bold uppercase tracking-[0.1em] text-offgrid-cream transition-colors hover:border-offgrid-cream hover:bg-offgrid-cream/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offgrid-lime sm:w-auto sm:py-2.5 sm:text-sm"
                 >
                   {secondaryCta.label}
                 </button>

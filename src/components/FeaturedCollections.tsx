@@ -46,7 +46,7 @@ export function FeaturedCollections() {
               </p>
             ) : null}
             <Link
-              to="/collections"
+              to="/og-signatures"
               className="group inline-flex items-center gap-1.5 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/60 transition-colors hover:text-offgrid-lime"
             >
               {viewAllLabel}

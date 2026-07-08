@@ -177,7 +177,8 @@ function AppFrame() {
       >
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/collections" element={<CollectionsPage />} />
+        <Route path="/collections" element={<Navigate to="/og-signatures" replace />} />
+        <Route path="/og-signatures" element={<CollectionsPage />} />
         <Route path="/shop" element={<ShopPage />} />
         <Route path="/shop/:slug" element={<ProductDetailPage />} />
         <Route path="/events" element={<EventsPage />} />

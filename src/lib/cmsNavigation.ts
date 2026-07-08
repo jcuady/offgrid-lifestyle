@@ -8,7 +8,7 @@ export const CMS_ROUTE_OPTIONS: { value: string; label: string; group: string }[
   { value: "/custom#ordering-guide", label: "Ordering guide (scroll)", group: "Custom" },
   { value: "/custom", label: "Custom hub (top)", group: "Custom" },
   { value: "/shop", label: "Shop", group: "Store" },
-  { value: "/collections", label: "OG Signatures", group: "Store" },
+  { value: "/og-signatures", label: "OG Signatures", group: "Store" },
   { value: "/events", label: "Events", group: "Site" },
   { value: "/testimonials", label: "Testimonials", group: "Site" },
   { value: "/account/sign-in", label: "Customer sign in", group: "Account" },

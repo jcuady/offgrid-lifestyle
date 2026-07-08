@@ -11,7 +11,7 @@ const FOOTER_COLUMNS: { heading: string; links: FooterLink[] }[] = [
     heading: "Shop",
     links: [
       { label: "All Products", to: "/shop" },
-      { label: "OG Signatures", to: "/collections" },
+      { label: "OG Signatures", to: "/og-signatures" },
       { label: "Events", to: "/events" },
       { label: "Testimonials", to: "/testimonials" },
     ],

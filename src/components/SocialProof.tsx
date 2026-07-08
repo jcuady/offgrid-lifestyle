@@ -13,8 +13,6 @@ import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { cmsTypographyStyle } from "@/src/lib/cmsTypography";
 import { cn } from "@/src/lib/utils";
 
-const testimonialOffsets = ["md:translate-y-0", "md:translate-y-8", "md:-translate-y-4"];
-
 export function SocialProof() {
   const header = useSiteContentStore((s) => s.landingContent.socialHeader);
   const ugcTiles = useSiteContentStore((s) => s.landingContent.ugcTiles);
@@ -99,8 +97,8 @@ export function SocialProof() {
           ))}
         </div>
 
-        {/* Testimonial cards — oversized quotes, staggered offsets */}
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+        {/* Testimonial cards — oversized quotes, uniform aligned grid */}
+        <div className="grid grid-cols-1 items-stretch gap-5 md:grid-cols-3 md:gap-6">
           {testimonials.map((testimonial, index) => (
             <motion.div
               key={index}
@@ -108,10 +106,7 @@ export function SocialProof() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
-              className={cn(
-                "group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-offgrid-green/8 bg-white p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-offgrid-lime/30 hover:shadow-lg",
-                testimonialOffsets[index] ?? "",
-              )}
+              className="group relative flex h-full flex-col justify-between overflow-hidden rounded-2xl border border-offgrid-green/8 bg-white p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-offgrid-lime/30 hover:shadow-lg"
             >
               <span
                 aria-hidden
@@ -146,7 +141,7 @@ export function SocialProof() {
           ))}
         </div>
 
-        <div className="mt-8 flex justify-center">
+        <div className="mt-12 flex justify-center">
           <Button variant="outline" size="lg" asChild>
             <Link to="/testimonials">{viewAllLabel}</Link>
           </Button>

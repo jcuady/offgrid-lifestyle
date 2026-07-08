@@ -7,7 +7,7 @@ import {
   Star, Ticket, Heart,
 } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
-import { CommunityEventsHero } from "@/src/components/CommunityEventsHero";
+import { CommunityEventsSection } from "@/src/components/CommunityEventsSection";
 import { sectionEyebrow, sectionEyebrowOnDark, sectionPaddingCream, sectionTitle, sectionTitleOnDark, siteContainer } from "@/src/lib/brandLayout";
 import { cmsTypographyStyle } from "@/src/lib/cmsTypography";
 import { cn } from "@/src/lib/utils";
@@ -67,22 +67,18 @@ export function EventsPage() {
     ? events 
     : events.filter(e => e.status === filter);
 
-  const heroImage = landingEvent.backgroundImage;
-
   const scrollToUpcoming = () => {
     document.getElementById("upcoming-events")?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
     <div className="min-h-screen bg-offgrid-cream">
-      <CommunityEventsHero
+      <CommunityEventsSection
         variant="page"
         badge={landingEvent.badge}
         titleLine1={landingEvent.titleLine1}
         titleLine2Italic={landingEvent.titleLine2Italic}
         description={landingEvent.description}
-        image={heroImage}
-        imageAlt="Off Grid community and events"
         imageCaption={landingEvent.imageCaption}
         headingStyle={cmsTypographyStyle(eventTypography, "heading")}
         bodyStyle={cmsTypographyStyle(eventTypography, "body")}

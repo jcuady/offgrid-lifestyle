@@ -10,6 +10,9 @@ import { cn } from "@/src/lib/utils";
 
 const MAX_HOME_BEST_SELLERS = 4;
 
+/** Stagger offsets for editorial rhythm */
+const cardOffsets = ["md:translate-y-0", "md:translate-y-6", "md:-translate-y-2", "md:translate-y-4"];
+
 export function BestSellers() {
   const navigate = useNavigate();
   const products = useSiteContentStore((state) => state.products);
@@ -43,22 +46,24 @@ export function BestSellers() {
   return (
     <section id="shop" className={cn(sectionPaddingCream, "border-t border-offgrid-green/[0.06] bg-offgrid-cream")}>
       <div className={siteContainer}>
-        <div className="mb-10 flex flex-col justify-between gap-6 sm:mb-14 md:flex-row md:items-end">
+        <div className="mb-10 flex flex-col justify-between gap-6 border-b border-offgrid-green/10 pb-8 sm:mb-14 md:flex-row md:items-end">
           <div className="min-w-0">
-            <span className={sectionEyebrow} style={bodyStyle}>{header.eyebrow}</span>
+            <span className={sectionEyebrow} style={bodyStyle}>
+              {header.eyebrow}
+            </span>
             <h2 className={sectionTitle} style={headingStyle}>
               {header.titleLine1} <br />
-              <span className="italic font-normal">{header.titleLine2Italic}</span>
+              <span className="font-normal italic">{header.titleLine2Italic}</span>
             </h2>
           </div>
           <div className="shrink-0 md:text-right">
-            {priceCaption && (
-              <p className="text-offgrid-green/70 text-sm mb-2">{priceCaption}</p>
-            )}
+            {priceCaption ? (
+              <p className="mb-2 text-sm text-offgrid-green/70">{priceCaption}</p>
+            ) : null}
             <button
               type="button"
               onClick={() => navigate("/shop")}
-              className="inline-flex items-center text-sm font-bold uppercase tracking-[0.15em] text-offgrid-green hover:text-offgrid-lime transition-colors group cursor-pointer"
+              className="group inline-flex cursor-pointer items-center text-sm font-bold uppercase tracking-[0.15em] text-offgrid-green transition-colors hover:text-offgrid-lime"
             >
               {shopLinkLabel}
               <ArrowRight className="ml-2 h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
@@ -72,7 +77,7 @@ export function BestSellers() {
             items you want here.
           </p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-10 md:gap-x-8">
+          <div className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 md:gap-x-8 lg:grid-cols-4">
             {crowdFavorites.map((product, index) => (
               <motion.div
                 key={product.id}
@@ -83,7 +88,10 @@ export function BestSellers() {
                 role="button"
                 tabIndex={0}
                 aria-label={`View ${product.name}`}
-                className="group flex w-full cursor-pointer flex-col text-left outline-none"
+                className={cn(
+                  "group flex w-full cursor-pointer flex-col text-left outline-none",
+                  cardOffsets[index] ?? "",
+                )}
                 onClick={() => handleProductClick(product.slug)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
@@ -92,16 +100,18 @@ export function BestSellers() {
                   }
                 }}
               >
-                <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-white ring-1 ring-offgrid-green/[0.08] shadow-sm transition-all duration-500 group-hover:-translate-y-1 group-hover:shadow-xl group-hover:ring-offgrid-lime/40 group-focus-visible:ring-2 group-focus-visible:ring-offgrid-lime">
-                  <span className="absolute top-3 left-3 z-10 font-mono text-[11px] font-bold tabular-nums tracking-[0.1em] text-offgrid-green/35">
+                <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-offgrid-green/[0.08] transition-all duration-500 group-hover:-translate-y-1 group-hover:shadow-xl group-hover:ring-offgrid-lime/40 group-focus-visible:ring-2 group-focus-visible:ring-offgrid-lime">
+                  <span className="absolute left-0 top-0 z-10 h-full w-1 bg-offgrid-lime/0 transition-colors group-hover:bg-offgrid-lime" aria-hidden />
+
+                  <span className="absolute left-4 top-3 z-10 font-mono text-4xl font-black tabular-nums leading-none text-offgrid-green/10 transition-colors group-hover:text-offgrid-lime/25">
                     {String(index + 1).padStart(2, "0")}
                   </span>
 
-                  {product.tag && (
-                    <span className="absolute top-3 right-3 z-10 rounded-full bg-offgrid-lime px-2.5 py-1 font-mono text-[9px] font-bold uppercase tracking-[0.15em] text-white shadow-sm">
+                  {product.tag ? (
+                    <span className="absolute right-3 top-3 z-10 rounded-full bg-offgrid-lime px-2.5 py-1 font-mono text-[9px] font-bold uppercase tracking-[0.15em] text-white shadow-sm">
                       {product.tag}
                     </span>
-                  )}
+                  ) : null}
 
                   <img
                     src={product.image}
@@ -110,7 +120,7 @@ export function BestSellers() {
                     className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-[1.04]"
                   />
 
-                  <div className="absolute inset-x-0 bottom-0 z-10 translate-y-full bg-offgrid-green/95 px-4 py-3 text-center backdrop-blur-sm transition-transform duration-300 ease-out group-hover:translate-y-0 group-focus-visible:translate-y-0">
+                  <div className="absolute inset-x-0 bottom-0 z-10 translate-y-full bg-offgrid-lime/95 px-4 py-3 text-center backdrop-blur-sm transition-transform duration-300 ease-out group-hover:translate-y-0 group-focus-visible:translate-y-0">
                     <span className="inline-flex items-center font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-white">
                       View product
                       <ArrowRight className="ml-2 h-3 w-3 transition-transform group-hover:translate-x-1" />
@@ -123,7 +133,7 @@ export function BestSellers() {
                     <p className="min-w-0 truncate font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-offgrid-green/45">
                       {product.category}
                     </p>
-                    <p className="shrink-0 font-display text-sm font-black tabular-nums tracking-tight text-offgrid-green">
+                    <p className="shrink-0 border-l-2 border-offgrid-lime pl-2 font-display text-sm font-black tabular-nums tracking-tight text-offgrid-green">
                       {formatPrice(product.price)}
                     </p>
                   </div>

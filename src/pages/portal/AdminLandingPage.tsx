@@ -34,6 +34,10 @@ export function AdminLandingPage() {
   const updateCollectionCard = useSiteContentStore((s) => s.updateLandingCollectionCard);
   const updateBestSellersHeader = useSiteContentStore((s) => s.updateLandingBestSellersHeader);
   const updateBestSellersShopLink = useSiteContentStore((s) => s.updateLandingBestSellersShopLink);
+  const updateBenefits = useSiteContentStore((s) => s.updateLandingBenefits);
+  const updateBenefitItem = useSiteContentStore((s) => s.updateLandingBenefitItem);
+  const updateFaq = useSiteContentStore((s) => s.updateLandingFaq);
+  const updateFaqItem = useSiteContentStore((s) => s.updateLandingFaqItem);
   const updateBrandStory = useSiteContentStore((s) => s.updateLandingBrandStory);
   const updateEvent = useSiteContentStore((s) => s.updateLandingEvent);
   const updateSocialHeader = useSiteContentStore((s) => s.updateLandingSocialHeader);
@@ -400,6 +404,46 @@ export function AdminLandingPage() {
           />
         </CmsSectionPanel>
 
+        <CmsSectionPanel title="Brand benefits" description="Four benefit rows on the homepage (sticky heading + numbered list).">
+          <CmsField label="Eyebrow" className="sm:col-span-2">
+            <CmsTextInput value={landing.benefits.eyebrow} onChange={(v) => updateBenefits({ eyebrow: v })} />
+          </CmsField>
+          <CmsField label="Title line 1">
+            <CmsTextInput value={landing.benefits.titleLine1} onChange={(v) => updateBenefits({ titleLine1: v })} />
+          </CmsField>
+          <CmsField label="Title line 2 (italic)">
+            <CmsTextInput
+              value={landing.benefits.titleLine2Italic}
+              onChange={(v) => updateBenefits({ titleLine2Italic: v })}
+            />
+          </CmsField>
+          <CmsTypographyControls
+            value={landing.typography.benefits}
+            onChange={(patch) => updateTypography("benefits", patch)}
+          />
+        </CmsSectionPanel>
+
+        {landing.benefits.items.map((item, index) => (
+          <div key={index}>
+            <CmsSectionPanel title={`Benefit ${index + 1}`}>
+              <CmsField label="Title">
+                <CmsTextInput
+                  value={item.title}
+                  onChange={(v) => updateBenefitItem(index as 0 | 1 | 2 | 3, { title: v })}
+                />
+              </CmsField>
+              <CmsField label="Description" className="sm:col-span-2">
+                <CmsTextInput
+                  value={item.description}
+                  onChange={(v) => updateBenefitItem(index as 0 | 1 | 2 | 3, { description: v })}
+                  multiline
+                  rows={3}
+                />
+              </CmsField>
+            </CmsSectionPanel>
+          </div>
+        ))}
+
         <CmsSectionPanel title="Brand story" description="Content for the About Us page (/about).">
           <CmsField label="Hero image" className="sm:col-span-2">
             <CmsImageInput
@@ -659,6 +703,49 @@ export function AdminLandingPage() {
             onChange={(patch) => updateTypography("teamCommunity", patch)}
           />
         </CmsSectionPanel>
+
+        <CmsSectionPanel title="FAQ" description="Homepage accordion — five Q&A pairs with link to full custom guide.">
+          <CmsField label="Eyebrow" className="sm:col-span-2">
+            <CmsTextInput value={landing.faq.eyebrow} onChange={(v) => updateFaq({ eyebrow: v })} />
+          </CmsField>
+          <CmsField label="Title line 1">
+            <CmsTextInput value={landing.faq.titleLine1} onChange={(v) => updateFaq({ titleLine1: v })} />
+          </CmsField>
+          <CmsField label="Title line 2 (italic)">
+            <CmsTextInput value={landing.faq.titleLine2Italic} onChange={(v) => updateFaq({ titleLine2Italic: v })} />
+          </CmsField>
+          <CmsField label="Caption" className="sm:col-span-2">
+            <CmsTextInput value={landing.faq.caption} onChange={(v) => updateFaq({ caption: v })} multiline />
+          </CmsField>
+          <CmsField label="Full guide link label" className="sm:col-span-2">
+            <CmsTextInput value={landing.faq.ctaLabel} onChange={(v) => updateFaq({ ctaLabel: v })} />
+          </CmsField>
+          <CmsTypographyControls
+            value={landing.typography.faq}
+            onChange={(patch) => updateTypography("faq", patch)}
+          />
+        </CmsSectionPanel>
+
+        {landing.faq.items.map((item, index) => (
+          <div key={index}>
+            <CmsSectionPanel title={`FAQ ${index + 1}`}>
+              <CmsField label="Question" className="sm:col-span-2">
+                <CmsTextInput
+                  value={item.question}
+                  onChange={(v) => updateFaqItem(index as 0 | 1 | 2 | 3 | 4, { question: v })}
+                />
+              </CmsField>
+              <CmsField label="Answer" className="sm:col-span-2">
+                <CmsTextInput
+                  value={item.answer}
+                  onChange={(v) => updateFaqItem(index as 0 | 1 | 2 | 3 | 4, { answer: v })}
+                  multiline
+                  rows={4}
+                />
+              </CmsField>
+            </CmsSectionPanel>
+          </div>
+        ))}
 
         <CmsSectionPanel title="Closing CTA" description="Dark band before footer.">
           <CmsField label="Title line 1">

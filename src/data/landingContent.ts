@@ -13,9 +13,11 @@ export type LandingTypographySectionKey =
   | "hero"
   | "collections"
   | "bestSellers"
+  | "benefits"
   | "event"
   | "social"
   | "teamCommunity"
+  | "faq"
   | "cta";
 
 export type LandingTypography = Record<LandingTypographySectionKey, CmsSectionTypography>;
@@ -150,6 +152,32 @@ export interface FeaturedSpotlightSlot {
   imageOverride: string;
 }
 
+export interface LandingBenefitItem {
+  title: string;
+  description: string;
+}
+
+export interface LandingBenefitsContent {
+  eyebrow: string;
+  titleLine1: string;
+  titleLine2Italic: string;
+  items: [LandingBenefitItem, LandingBenefitItem, LandingBenefitItem, LandingBenefitItem];
+}
+
+export interface LandingFaqItem {
+  question: string;
+  answer: string;
+}
+
+export interface LandingFaqContent {
+  eyebrow: string;
+  titleLine1: string;
+  titleLine2Italic: string;
+  caption: string;
+  ctaLabel: string;
+  items: [LandingFaqItem, LandingFaqItem, LandingFaqItem, LandingFaqItem, LandingFaqItem];
+}
+
 export interface LandingFeaturedSpotlightContent {
   eyebrow: string;
   titleLine1: string;
@@ -171,14 +199,18 @@ export const LANDING_COLLECTION_COUNT = 4;
 export const LANDING_UGC_COUNT = 5;
 export const LANDING_TESTIMONIAL_COUNT = 3;
 export const LANDING_TEAM_CHIP_COUNT = 4;
+export const LANDING_BENEFIT_COUNT = 4;
+export const LANDING_FAQ_COUNT = 5;
 
 export const emptyLandingTypography = (): LandingTypography => ({
   hero: {},
   collections: {},
   bestSellers: {},
+  benefits: {},
   event: {},
   social: {},
   teamCommunity: {},
+  faq: {},
   cta: {},
 });
 
@@ -189,6 +221,7 @@ export interface LandingContent {
   collectionsViewAllLabel: string;
   bestSellersHeader: LandingSectionHeaderContent;
   bestSellersShopLink: string;
+  benefits: LandingBenefitsContent;
   brandStory: LandingBrandStoryContent;
   event: LandingEventSpotlightContent;
   socialHeader: LandingSectionHeaderContent;
@@ -196,6 +229,7 @@ export interface LandingContent {
   testimonials: LandingTestimonialSlotContent[];
   testimonialsViewAll: string;
   teamCommunity: LandingTeamCommunityContent;
+  faq: LandingFaqContent;
   cta: LandingCtaContent;
   footer: LandingFooterContent;
   featuredSpotlight: LandingFeaturedSpotlightContent;
@@ -292,6 +326,33 @@ export const initialLandingContent: LandingContent = {
       "Thoughtfully designed pieces inspired by sport, shaped by culture, and made for everyday movement.",
   },
   bestSellersShopLink: "Shop full catalog",
+  benefits: {
+    eyebrow: "Why Off Grid",
+    titleLine1: "Built for athletes.",
+    titleLine2Italic: "Made for everyday.",
+    items: [
+      {
+        title: "Premium fabric & fit",
+        description:
+          "Engineered for movement on court, course, and street — breathable, durable, and cut for real athletes.",
+      },
+      {
+        title: "Custom team orders",
+        description:
+          "From concept to delivery, we make it easy for teams to design, order, and rep gear that feels uniquely theirs.",
+      },
+      {
+        title: "Filipino craft",
+        description:
+          "Designed in Manila with local athletes in mind — proudly Pinoy sportswear built for how we play and live.",
+      },
+      {
+        title: "Versatile lifestyle",
+        description:
+          "Pieces that transition from competition to everyday wear without losing comfort, style, or performance.",
+      },
+    ],
+  },
   brandStory: {
     eyebrow: "Our Story",
     titleLine1: "Where Comfort",
@@ -381,6 +442,40 @@ export const initialLandingContent: LandingContent = {
     socialHeading: "Follow the movement",
     instagramUrl: "https://www.instagram.com/offgridlifestyle.ph/",
     facebookUrl: "https://www.facebook.com/offgridlifestyleph/",
+  },
+  faq: {
+    eyebrow: "FAQ",
+    titleLine1: "Questions",
+    titleLine2Italic: "answered.",
+    caption: "Quick answers on orders, artwork, and custom design support.",
+    ctaLabel: "View full ordering guide",
+    items: [
+      {
+        question: "What is the minimum order quantity?",
+        answer:
+          "Tops and bottoms minimum is 10 pieces per design. You can mix shirt types within that 10-piece run — tank tops, short sleeves, long sleeves, and sun hoodies.",
+      },
+      {
+        question: "What file format should I submit?",
+        answer:
+          "Place your design in OffGrid templates, then send the final file as Adobe Illustrator (.AI) in CMYK color mode for clean production output.",
+      },
+      {
+        question: "What if I don't use Illustrator?",
+        answer:
+          "You can still send any file format and an OffGrid rep will guide you through preparation so your artwork is production-ready.",
+      },
+      {
+        question: "Can OffGrid help with design?",
+        answer:
+          "Design assistance is free. Share your concept, colors, logos, references, and team style so we can build a production-ready layout faster.",
+      },
+      {
+        question: "How do I give design direction?",
+        answer:
+          "Review sample team looks from our channels and include pegs in your brief. The more context you share, the faster we match your direction.",
+      },
+    ],
   },
   cta: {
     titleLine1: "READY TO GO",

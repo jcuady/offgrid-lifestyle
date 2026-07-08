@@ -258,6 +258,8 @@ interface SiteContentState {
   ) => void;
   updateLandingBestSellersHeader: (patch: Partial<LandingContent["bestSellersHeader"]>) => void;
   updateLandingBestSellersShopLink: (label: string) => void;
+  updateLandingBenefits: (patch: Partial<Omit<LandingContent["benefits"], "items">>) => void;
+  updateLandingBenefitItem: (index: 0 | 1 | 2 | 3, patch: Partial<LandingContent["benefits"]["items"][number]>) => void;
   updateLandingBrandStory: (patch: Partial<LandingContent["brandStory"]>) => void;
   updateLandingEvent: (patch: Partial<LandingContent["event"]>) => void;
   updateLandingSocialHeader: (patch: Partial<LandingContent["socialHeader"]>) => void;
@@ -272,6 +274,8 @@ interface SiteContentState {
     index: 0 | 1 | 2 | 3,
     patch: Partial<LandingContent["teamCommunity"]["teams"][number]>,
   ) => void;
+  updateLandingFaq: (patch: Partial<Omit<LandingContent["faq"], "items">>) => void;
+  updateLandingFaqItem: (index: 0 | 1 | 2 | 3 | 4, patch: Partial<LandingContent["faq"]["items"][number]>) => void;
   updateLandingTypography: (
     section: LandingTypographySectionKey,
     patch: Partial<CmsSectionTypography>,
@@ -498,6 +502,25 @@ export const useSiteContentStore = create<SiteContentState>()(
         })),
       updateLandingBestSellersShopLink: (label) =>
         set((state) => ({ landingContent: { ...state.landingContent, bestSellersShopLink: label } })),
+      updateLandingBenefits: (patch) =>
+        set((state) => ({
+          landingContent: {
+            ...state.landingContent,
+            benefits: { ...state.landingContent.benefits, ...patch },
+          },
+        })),
+      updateLandingBenefitItem: (index, patch) =>
+        set((state) => ({
+          landingContent: {
+            ...state.landingContent,
+            benefits: {
+              ...state.landingContent.benefits,
+              items: state.landingContent.benefits.items.map((item, i) =>
+                i === index ? { ...item, ...patch } : item,
+              ) as LandingContent["benefits"]["items"],
+            },
+          },
+        })),
       updateLandingBrandStory: (patch) =>
         set((state) => ({
           landingContent: {
@@ -552,6 +575,25 @@ export const useSiteContentStore = create<SiteContentState>()(
               teams: state.landingContent.teamCommunity.teams.map((team, i) =>
                 i === index ? { ...team, ...patch } : team,
               ) as LandingContent["teamCommunity"]["teams"],
+            },
+          },
+        })),
+      updateLandingFaq: (patch) =>
+        set((state) => ({
+          landingContent: {
+            ...state.landingContent,
+            faq: { ...state.landingContent.faq, ...patch },
+          },
+        })),
+      updateLandingFaqItem: (index, patch) =>
+        set((state) => ({
+          landingContent: {
+            ...state.landingContent,
+            faq: {
+              ...state.landingContent.faq,
+              items: state.landingContent.faq.items.map((item, i) =>
+                i === index ? { ...item, ...patch } : item,
+              ) as LandingContent["faq"]["items"],
             },
           },
         })),

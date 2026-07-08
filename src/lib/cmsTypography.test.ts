@@ -31,6 +31,8 @@ describe("normalizeLandingContent", () => {
     expect(merged.hero.description).toBe(initialLandingContent.hero.description);
     expect(merged.teamCommunity.badge).toBe(initialLandingContent.teamCommunity.badge);
     expect(merged.collectionsViewAllLabel).toBe(initialLandingContent.collectionsViewAllLabel);
+    expect(merged.benefits.items).toHaveLength(initialLandingContent.benefits.items.length);
+    expect(merged.faq.items).toHaveLength(initialLandingContent.faq.items.length);
     expect(merged.typography.hero).toEqual({});
   });
 });

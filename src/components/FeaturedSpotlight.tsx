@@ -14,8 +14,7 @@ interface FeaturedSpotlightProps {
 }
 
 /**
- * Editorial featured band — CMS-driven layout (bento or hero banner) and
- * product source (best sellers or manual picks with image overrides).
+ * Editorial featured band — asymmetric bento or hero banner with blue accent rules.
  */
 export function FeaturedSpotlight({ placement, className }: FeaturedSpotlightProps) {
   const navigate = useNavigate();
@@ -39,7 +38,10 @@ export function FeaturedSpotlight({ placement, className }: FeaturedSpotlightPro
 
   return (
     <section
-      className={cn("relative overflow-hidden bg-offgrid-lime py-10 text-offgrid-cream sm:py-16 md:py-24", className)}
+      className={cn(
+        "relative overflow-hidden bg-offgrid-lime py-10 text-offgrid-cream sm:py-16 md:py-24",
+        className,
+      )}
     >
       <span
         aria-hidden
@@ -47,9 +49,10 @@ export function FeaturedSpotlight({ placement, className }: FeaturedSpotlightPro
       >
         OG®
       </span>
+      <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-offgrid-cream/20" aria-hidden />
 
       <div className={cn(siteContainer, "relative")}>
-        <div className="mb-6 flex flex-col justify-between gap-4 sm:mb-12 sm:gap-5 md:flex-row md:items-end">
+        <div className="mb-6 flex flex-col justify-between gap-4 border-b border-offgrid-cream/15 pb-6 sm:mb-12 sm:gap-5 sm:pb-8 md:flex-row md:items-end">
           <div className="min-w-0">
             <span className="mb-3 flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-cream/80">
               <span className="h-1.5 w-1.5 rounded-full bg-offgrid-cream" />
@@ -57,7 +60,7 @@ export function FeaturedSpotlight({ placement, className }: FeaturedSpotlightPro
             </span>
             <h2 className="font-display text-4xl font-black leading-[0.95] tracking-tight text-offgrid-cream sm:text-5xl md:text-6xl">
               {config.titleLine1}{" "}
-              <span className="italic font-normal text-offgrid-cream/85">{config.titleLine2Italic}</span>
+              <span className="font-normal italic text-offgrid-cream/85">{config.titleLine2Italic}</span>
             </h2>
             {config.subtitle ? (
               <p className="mt-4 max-w-md text-sm leading-relaxed text-offgrid-cream/75">{config.subtitle}</p>
@@ -114,8 +117,9 @@ function FeaturedHeroTile({ item, onClick }: { item: FeaturedDisplayItem; onClic
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-60px" }}
       transition={{ duration: 0.55 }}
-      className="group relative block w-full overflow-hidden rounded-2xl bg-offgrid-dark/40 text-left outline-none ring-1 ring-offgrid-cream/20 transition-shadow duration-300 hover:shadow-2xl hover:shadow-offgrid-dark/30 focus-visible:ring-2 focus-visible:ring-offgrid-cream sm:rounded-3xl"
+      className="group relative block w-full overflow-hidden rounded-2xl bg-offgrid-dark/40 text-left outline-none ring-1 ring-offgrid-cream/20 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-offgrid-dark/30 focus-visible:ring-2 focus-visible:ring-offgrid-cream sm:rounded-3xl"
     >
+      <div className="absolute left-0 top-0 z-20 h-full w-1 bg-offgrid-cream/0 transition-colors group-hover:bg-offgrid-cream" aria-hidden />
       <div className="relative aspect-[21/9] min-h-[220px] sm:min-h-[280px] md:min-h-[360px]">
         <img
           src={item.image}
@@ -140,7 +144,7 @@ function FeaturedHeroTile({ item, onClick }: { item: FeaturedDisplayItem; onClic
               <h3 className="font-display text-3xl font-bold leading-tight text-offgrid-cream sm:text-4xl md:text-5xl">
                 {item.name}
               </h3>
-              <p className="mt-3 font-display text-xl font-black tabular-nums tracking-tight text-offgrid-cream sm:text-2xl">
+              <p className="mt-3 inline-block border-l-2 border-offgrid-cream pl-3 font-display text-xl font-black tabular-nums tracking-tight text-offgrid-cream sm:text-2xl">
                 {formatPrice(item.price)}
               </p>
             </>
@@ -170,11 +174,16 @@ function FeaturedTile({ item, onClick, index, large = false, className }: Featur
       viewport={{ once: true, margin: "-60px" }}
       transition={{ duration: 0.5, delay: index * 0.08 }}
       className={cn(
-        "group relative block w-full overflow-hidden rounded-2xl bg-offgrid-dark/40 text-left outline-none ring-1 ring-offgrid-cream/20 transition-shadow duration-300 hover:shadow-2xl hover:shadow-offgrid-dark/30 focus-visible:ring-2 focus-visible:ring-offgrid-cream sm:rounded-3xl",
+        "group relative block w-full overflow-hidden rounded-2xl bg-offgrid-dark/40 text-left outline-none ring-1 ring-offgrid-cream/20 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-offgrid-dark/30 focus-visible:ring-2 focus-visible:ring-offgrid-cream sm:rounded-3xl",
         large ? "min-h-[300px] sm:min-h-[440px] md:min-h-[576px]" : "min-h-[170px] sm:min-h-[220px] md:min-h-[280px]",
         className,
       )}
     >
+      <span className="absolute left-3 top-3 z-20 font-mono text-3xl font-black tabular-nums text-offgrid-cream/20 transition-colors group-hover:text-offgrid-cream/40 sm:left-4 sm:top-4 sm:text-4xl">
+        {String(index + 1).padStart(2, "0")}
+      </span>
+      <div className="absolute left-0 top-0 z-20 h-full w-1 bg-offgrid-cream/0 transition-colors group-hover:bg-offgrid-cream" aria-hidden />
+
       <img
         src={item.image}
         alt={item.name}
@@ -212,7 +221,7 @@ function FeaturedTile({ item, onClick, index, large = false, className }: Featur
           </h3>
           <p
             className={cn(
-              "mt-2 font-display font-black tabular-nums tracking-tight text-offgrid-cream",
+              "mt-2 inline-block border-l-2 border-offgrid-cream/60 pl-2 font-display font-black tabular-nums tracking-tight text-offgrid-cream transition-colors group-hover:border-offgrid-cream",
               large ? "text-xl sm:text-2xl" : "text-base sm:text-lg",
             )}
           >

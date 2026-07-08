@@ -7,11 +7,15 @@ import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { cmsTypographyStyle } from "@/src/lib/cmsTypography";
 import { cn } from "@/src/lib/utils";
 
-const colSpanById: Record<LandingCollectionId, string> = {
-  pickleball: "md:col-span-2",
-  golf: "md:col-span-2",
-  "og-pilipinas": "md:col-span-1",
-  everyday: "md:col-span-3",
+/** Asymmetric editorial grid — dominant first card, offset supporting cards. */
+const layoutById: Record<
+  LandingCollectionId,
+  { className: string; index: string }
+> = {
+  pickleball: { className: "md:col-span-2 md:row-span-2 md:min-h-[480px]", index: "01" },
+  golf: { className: "md:col-span-2 md:min-h-[220px]", index: "02" },
+  "og-pilipinas": { className: "md:col-span-1 md:min-h-[220px]", index: "03" },
+  everyday: { className: "md:col-span-3 md:min-h-[200px]", index: "04" },
 };
 
 export function FeaturedCollections() {
@@ -25,12 +29,14 @@ export function FeaturedCollections() {
   return (
     <section id="collections" className={cn(sectionPaddingCream, "bg-offgrid-cream")}>
       <div className={siteContainer}>
-        <div className="mb-10 flex flex-col justify-between gap-6 sm:mb-12 md:flex-row md:items-end">
+        <div className="mb-10 flex flex-col justify-between gap-6 border-b border-offgrid-green/10 pb-8 sm:mb-12 md:flex-row md:items-end">
           <div className="min-w-0">
-            <span className={sectionEyebrow} style={bodyStyle}>{header.eyebrow}</span>
+            <span className={sectionEyebrow} style={bodyStyle}>
+              {header.eyebrow}
+            </span>
             <h2 className={sectionTitle} style={headingStyle}>
-              {header.titleLine1} <br />
-              <span className="italic font-normal">{header.titleLine2Italic}</span>
+              {header.titleLine1}{" "}
+              <span className="font-normal italic">{header.titleLine2Italic}</span>
             </h2>
           </div>
           <div className="flex flex-col gap-3 md:items-end">
@@ -41,7 +47,7 @@ export function FeaturedCollections() {
             ) : null}
             <Link
               to="/collections"
-              className="group inline-flex items-center gap-1.5 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/60 transition-colors hover:text-offgrid-green"
+              className="group inline-flex items-center gap-1.5 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/60 transition-colors hover:text-offgrid-lime"
             >
               {viewAllLabel}
               <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
@@ -49,48 +55,57 @@ export function FeaturedCollections() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-5">
-          {collections.map((collection, index) => (
-            <motion.div
-              key={collection.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              className={`group relative rounded-2xl overflow-hidden block ${colSpanById[collection.id]} aspect-[4/3] md:aspect-auto md:min-h-[380px]`}
-            >
-              <div className="absolute inset-0 bg-offgrid-green/20 group-hover:bg-transparent transition-colors duration-500 z-10" />
-              <div className="absolute inset-0 bg-gradient-to-t from-offgrid-dark/80 via-offgrid-dark/10 to-transparent z-10" />
-
-              <img
-                src={collection.image}
-                alt={collection.title}
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-              />
-
-              <Link
-                to={`/shop?category=${encodeURIComponent(collection.shopCategory)}`}
-                className="absolute inset-0 z-20 p-6 md:p-8 flex flex-col justify-between"
-                aria-label={`Shop ${collection.title} OG Signature`}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-4 md:grid-rows-2 md:gap-5">
+          {collections.map((collection, index) => {
+            const layout = layoutById[collection.id];
+            return (
+              <motion.div
+                key={collection.id}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.55, delay: index * 0.08 }}
+                className={cn(
+                  "group relative overflow-hidden rounded-2xl ring-1 ring-offgrid-green/10 transition-all duration-300 hover:-translate-y-0.5 hover:ring-offgrid-lime/40 hover:shadow-xl",
+                  layout.className,
+                  "aspect-[4/3] md:aspect-auto",
+                )}
               >
-                <div className="flex justify-between items-start">
-                  <span className="inline-block px-3 py-1 bg-offgrid-cream/90 backdrop-blur-sm text-offgrid-green text-[10px] font-bold tracking-[0.15em] uppercase rounded-full">
-                    {collection.tag}
-                  </span>
-                  <div className="w-10 h-10 rounded-full bg-offgrid-cream/15 backdrop-blur-md flex items-center justify-center opacity-0 -translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
-                    <ArrowRight className="w-5 h-5 text-offgrid-cream" />
-                  </div>
-                </div>
+                <img
+                  src={collection.image}
+                  alt={collection.title}
+                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-offgrid-dark/85 via-offgrid-dark/20 to-transparent" />
 
-                <div>
-                  <p className="text-offgrid-cream/70 text-xs font-medium tracking-[0.2em] uppercase mb-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-                    {collection.subtitle}
-                  </p>
-                  <h3 className="text-2xl md:text-3xl font-display font-bold text-offgrid-cream">{collection.title}</h3>
-                </div>
-              </Link>
-            </motion.div>
-          ))}
+                <Link
+                  to={`/shop?category=${encodeURIComponent(collection.shopCategory)}`}
+                  className="absolute inset-0 z-10 flex flex-col justify-between p-6 md:p-8"
+                  aria-label={`Shop ${collection.title} OG Signature`}
+                >
+                  <div className="flex items-start justify-between">
+                    <span className="font-mono text-5xl font-black tabular-nums leading-none text-offgrid-cream/15 transition-colors group-hover:text-offgrid-lime/25 md:text-6xl">
+                      {layout.index}
+                    </span>
+                    <span className="rounded-full bg-offgrid-cream/90 px-3 py-1 font-mono text-[9px] font-bold uppercase tracking-[0.15em] text-offgrid-green backdrop-blur-sm">
+                      {collection.tag}
+                    </span>
+                  </div>
+
+                  <div>
+                    <p className="mb-1 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-cream/60">
+                      {collection.subtitle}
+                    </p>
+                    <h3 className="font-display text-2xl font-black text-offgrid-cream md:text-3xl">{collection.title}</h3>
+                    <span className="mt-3 inline-flex items-center gap-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-offgrid-lime opacity-0 transition-opacity group-hover:opacity-100">
+                      Shop now
+                      <ArrowRight className="h-3 w-3" />
+                    </span>
+                  </div>
+                </Link>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </section>

@@ -19,22 +19,24 @@ export function normalizeLandingContent(partial?: Partial<LandingContent> | null
   const base = initialLandingContent;
   if (!partial) return base;
 
-  const legacyTeam = partial.teamCommunity as Partial<LandingContent["teamCommunity"]> & {
-    headlinePart1?: string;
-    headlinePart2?: string;
-    headlinePart3?: string;
-  };
+  const legacyTeam = partial.teamCommunity as
+    | (Partial<LandingContent["teamCommunity"]> & {
+        headlinePart1?: string;
+        headlinePart2?: string;
+        headlinePart3?: string;
+      })
+    | undefined;
   const teamCommunity = {
     ...base.teamCommunity,
     ...partial.teamCommunity,
     headlineLine1:
       partial.teamCommunity?.headlineLine1 ??
-      (legacyTeam.headlinePart1
+      (legacyTeam?.headlinePart1
         ? `${legacyTeam.headlinePart1} ${legacyTeam.headlinePart2 ?? ""}`.trim()
         : base.teamCommunity.headlineLine1),
     headlineLine2Italic:
       partial.teamCommunity?.headlineLine2Italic ??
-      legacyTeam.headlinePart3 ??
+      legacyTeam?.headlinePart3 ??
       base.teamCommunity.headlineLine2Italic,
     teams: base.teamCommunity.teams.map((team, index) => ({
       ...team,
@@ -55,6 +57,14 @@ export function normalizeLandingContent(partial?: Partial<LandingContent> | null
     })),
     bestSellersHeader: { ...base.bestSellersHeader, ...partial.bestSellersHeader },
     bestSellersShopLink: partial.bestSellersShopLink ?? base.bestSellersShopLink,
+    benefits: {
+      ...base.benefits,
+      ...partial.benefits,
+      items: base.benefits.items.map((item, index) => ({
+        ...item,
+        ...(partial.benefits?.items?.[index] ?? {}),
+      })) as LandingContent["benefits"]["items"],
+    },
     collectionsViewAllLabel: partial.collectionsViewAllLabel ?? base.collectionsViewAllLabel,
     brandStory: { ...base.brandStory, ...partial.brandStory },
     event: { ...base.event, ...partial.event },
@@ -68,6 +78,14 @@ export function normalizeLandingContent(partial?: Partial<LandingContent> | null
       ...(partial.testimonials?.[index] ?? {}),
     })),
     testimonialsViewAll: partial.testimonialsViewAll ?? base.testimonialsViewAll,
+    faq: {
+      ...base.faq,
+      ...partial.faq,
+      items: base.faq.items.map((item, index) => ({
+        ...item,
+        ...(partial.faq?.items?.[index] ?? {}),
+      })) as LandingContent["faq"]["items"],
+    },
     cta: { ...base.cta, ...partial.cta },
     footer: { ...base.footer, ...partial.footer },
     featuredSpotlight: {

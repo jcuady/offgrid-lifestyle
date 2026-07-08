@@ -1,4 +1,4 @@
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import { ArrowRight, Instagram, Facebook, Truck, RefreshCcw, MapPin, ShieldCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/src/components/ui/Button";
@@ -7,26 +7,20 @@ import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { cmsTypographyStyle } from "@/src/lib/cmsTypography";
 import { cn } from "@/src/lib/utils";
 
-const SOCIAL_LINKS = [
-  {
-    label: "Instagram",
-    href: "https://www.instagram.com/offgridlifestyle.ph/",
-    icon: <Instagram className="h-5 w-5" />,
-  },
-  {
-    label: "Facebook",
-    href: "https://www.facebook.com/offgridlifestyleph/",
-    icon: <Facebook className="h-5 w-5" />,
-  },
-];
-
 export function CTASection() {
   const navigate = useNavigate();
+  const reduceMotion = useReducedMotion();
   const cta = useSiteContentStore((state) => state.landingContent.cta);
+  const team = useSiteContentStore((state) => state.landingContent.teamCommunity);
   const tagline = useSiteContentStore((state) => state.landingContent.footer.taglineLine1);
   const typography = useSiteContentStore((state) => state.landingContent.typography.cta);
   const headingStyle = cmsTypographyStyle(typography, "heading");
   const bodyStyle = cmsTypographyStyle(typography, "body");
+
+  const socialLinks = [
+    { label: "Instagram", href: team.instagramUrl, icon: <Instagram className="h-5 w-5" /> },
+    { label: "Facebook", href: team.facebookUrl, icon: <Facebook className="h-5 w-5" /> },
+  ];
 
   const trustBadges = [
     { label: cta.trustShipping, icon: <Truck className="h-6 w-6 text-offgrid-lime sm:h-7 sm:w-7" /> },
@@ -35,18 +29,20 @@ export function CTASection() {
     { label: cta.trustCheckout, icon: <ShieldCheck className="h-6 w-6 text-offgrid-lime sm:h-7 sm:w-7" /> },
   ];
 
+  const motionProps = (delay: number) =>
+    reduceMotion
+      ? {}
+      : {
+          initial: { opacity: 0, y: 24 } as const,
+          whileInView: { opacity: 1, y: 0 } as const,
+          viewport: { once: true } as const,
+          transition: { duration: 0.6, delay } as const,
+        };
+
   return (
     <section className="relative min-h-[90vh] overflow-hidden bg-offgrid-dark text-offgrid-cream sm:min-h-screen">
-      {/* WebGL terrain — electric blue hills on black */}
-      <GLSLHills
-        className="absolute inset-0 z-0"
-        width="100%"
-        height="100%"
-        cameraZ={125}
-        speed={0.45}
-      />
+      <GLSLHills className="absolute inset-0 z-0" width="100%" height="100%" cameraZ={125} speed={0.45} />
 
-      {/* Readability gradient — keeps headline legible over the hills */}
       <div
         className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-b from-offgrid-dark/90 via-offgrid-dark/50 to-offgrid-dark/80"
         aria-hidden
@@ -55,19 +51,20 @@ export function CTASection() {
       <div className="relative z-10 flex min-h-[90vh] flex-col items-center justify-center px-6 py-20 sm:min-h-screen sm:py-28">
         <div className="mx-auto w-full max-w-3xl text-center">
           <motion.span
-            initial={{ scaleX: 0, opacity: 0 }}
-            whileInView={{ scaleX: 1, opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
+            {...(reduceMotion
+              ? {}
+              : {
+                  initial: { scaleX: 0, opacity: 0 },
+                  whileInView: { scaleX: 1, opacity: 1 },
+                  viewport: { once: true },
+                  transition: { duration: 0.6 },
+                })}
             className="mx-auto mb-8 block h-px w-16 bg-offgrid-lime"
           />
 
           <motion.h2
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.05 }}
-            className="font-display text-5xl font-black leading-[0.9] tracking-tight sm:text-6xl md:text-7xl lg:text-8xl"
+            {...motionProps(0.05)}
+            className="font-display text-5xl font-black leading-[0.9] tracking-tight sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl"
             style={headingStyle}
           >
             {cta.titleLine1}
@@ -76,10 +73,7 @@ export function CTASection() {
           </motion.h2>
 
           <motion.p
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.12 }}
+            {...motionProps(0.12)}
             className="mx-auto mt-6 max-w-md font-display text-lg italic text-offgrid-cream/75 sm:text-xl"
             style={bodyStyle}
           >
@@ -87,10 +81,7 @@ export function CTASection() {
           </motion.p>
 
           <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+            {...motionProps(0.2)}
             className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row"
           >
             <Button
@@ -118,10 +109,7 @@ export function CTASection() {
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.35 }}
+            {...motionProps(0.35)}
             className="mx-auto mt-16 grid max-w-2xl grid-cols-2 gap-6 border-t border-offgrid-cream/10 pt-12 sm:mt-20 sm:grid-cols-4 sm:gap-4 sm:pt-14"
           >
             {trustBadges.map((badge) => (
@@ -135,17 +123,14 @@ export function CTASection() {
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.45 }}
+            {...motionProps(0.45)}
             className="mt-14 flex flex-col items-center gap-4 sm:mt-16"
           >
             <p className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-offgrid-cream/45">
-              Follow the movement
+              {team.socialHeading}
             </p>
             <div className="flex items-center gap-3">
-              {SOCIAL_LINKS.map((social) => (
+              {socialLinks.map((social) => (
                 <a
                   key={social.label}
                   href={social.href}
@@ -158,9 +143,6 @@ export function CTASection() {
                 </a>
               ))}
             </div>
-            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-offgrid-cream/35">
-              @offgridlifestyle.ph
-            </p>
           </motion.div>
         </div>
       </div>

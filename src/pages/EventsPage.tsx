@@ -67,29 +67,25 @@ export function EventsPage() {
     ? events 
     : events.filter(e => e.status === filter);
 
-  const heroImage = featuredEvent?.image ?? landingEvent.backgroundImage;
+  const heroImage = landingEvent.backgroundImage;
 
   return (
     <div className="min-h-screen bg-offgrid-cream">
       <CommunityEventsHero
         variant="page"
         badge={landingEvent.badge}
-        date={featuredEvent?.date ?? landingEvent.date}
         titleLine1={landingEvent.titleLine1}
         titleLine2Italic={landingEvent.titleLine2Italic}
         description={landingEvent.description}
         image={heroImage}
-        imageAlt={`${landingEvent.titleLine1} ${landingEvent.titleLine2Italic}`}
-        location={featuredEvent?.location ?? landingEvent.location}
-        category={featuredEvent?.category ?? landingEvent.category}
+        imageAlt="Off Grid community in motion"
         headingStyle={cmsTypographyStyle(eventTypography, "heading")}
         bodyStyle={cmsTypographyStyle(eventTypography, "body")}
-        primaryCta={
-          featuredEvent
-            ? { label: "Register", onClick: () => setSelectedEvent(featuredEvent) }
-            : { label: landingEvent.ctaPrimary, onClick: () => navigate("/shop") }
-        }
-        secondaryCta={{ label: landingEvent.ctaSecondary, onClick: () => document.getElementById("upcoming-events")?.scrollIntoView({ behavior: "smooth" }) }}
+        primaryCta={{
+          label: landingEvent.ctaPrimary,
+          onClick: () => document.getElementById("upcoming-events")?.scrollIntoView({ behavior: "smooth" }),
+        }}
+        secondaryCta={{ label: landingEvent.ctaSecondary, onClick: () => navigate("/#community") }}
       />
 
       {/* Featured Event */}

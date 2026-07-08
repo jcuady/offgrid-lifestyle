@@ -38,7 +38,7 @@ export function TeamCommunity() {
   ];
 
   return (
-    <section className="bg-offgrid-green text-offgrid-cream">
+    <section id="community" className="bg-offgrid-green text-offgrid-cream">
       <BrandStripe />
 
       <div className={cn(siteContainer, "py-14 sm:py-16 md:py-20")}>

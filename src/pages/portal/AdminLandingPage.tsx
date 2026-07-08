@@ -509,7 +509,7 @@ export function AdminLandingPage() {
           </CmsField>
         </CmsSectionPanel>
 
-        <CmsSectionPanel title="Event spotlight" description="Homepage event band (#events) — separate from full Events page list.">
+        <CmsSectionPanel title="Community & events" description="Evergreen homepage band (#events). Leave date/location empty — specific events live on /events.">
           <CmsField label="Background image" className="sm:col-span-2">
             <CmsImageInput
               value={landing.event.backgroundImage}

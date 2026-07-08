@@ -95,7 +95,7 @@ export interface LandingEventSpotlightContent {
   titleLine2Italic: string;
   description: string;
   backgroundImage: string;
-  /** Display + countdown source, e.g. "15 Jun" */
+  /** Optional — leave empty for evergreen community band (not a dated event). */
   date: string;
   /** Countdown target time suffix, e.g. "09:00:00" */
   countdownTime: string;
@@ -377,14 +377,14 @@ export const initialLandingContent: LandingContent = {
     titleLine1: "More Than a Brand.",
     titleLine2Italic: "A shared space for connection.",
     description:
-      "Off Grid Lifestyle exists beyond clothing. Through curated gatherings and experiences, we create moments where people come together, connect, and share in something real.\n\nBecause what we build is not just worn.\n\nIt's experienced.",
-    backgroundImage: "/images/event-community.png",
-    date: "15 Jun",
-    countdownTime: "09:00:00",
-    location: "Manila",
-    category: "Pickleball",
-    ctaPrimary: "Join the Movement",
-    ctaSecondary: "Event Details",
+      "Off Grid Lifestyle exists beyond clothing. Through sport, gatherings, and shared experiences, we create room for people to connect — on and off the court.",
+    backgroundImage: "/images/brand-story-editorial.jpg",
+    date: "",
+    countdownTime: "",
+    location: "",
+    category: "",
+    ctaPrimary: "Explore Events",
+    ctaSecondary: "Our Community",
   },
   socialHeader: {
     eyebrow: "Testimonials",

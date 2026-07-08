@@ -4,16 +4,17 @@ import { motion, useReducedMotion } from "motion/react";
 import { ArrowLeft, ArrowRight, Star, Quote, BadgeCheck, MapPin, TrendingUp } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { testimonialEntries } from "@/src/data/testimonials";
+import { COMMUNITY_PHOTO_PATHS } from "@/src/lib/communityPhotos";
 import { siteContainer, sectionEyebrow, sectionEyebrowOnDark } from "@/src/lib/brandLayout";
 import { cn } from "@/src/lib/utils";
 
 /** Customer photos used for the "in the wild" social-proof strip. */
 const SHOWCASE_TILES = [
-  { image: "/images/community/community-ultimate-catch.jpg", label: "Community Play" },
-  { image: "/images/community/community-pilipinas-portrait.jpg", label: "OG Pilipinas" },
-  { image: "/images/community/product-pilipinas-duffel.jpg", label: "The Greatest x OG" },
-  { image: "/images/community/community-towels-walk.jpg", label: "Custom Towels" },
-  { image: "/images/community/community-laces.jpg", label: "In Motion" },
+  { image: COMMUNITY_PHOTO_PATHS.ultimateCatch, label: "Community Play" },
+  { image: COMMUNITY_PHOTO_PATHS.pilipinasPortrait, label: "OG Pilipinas" },
+  { image: COMMUNITY_PHOTO_PATHS.pilipinasDuffel, label: "The Greatest x OG" },
+  { image: COMMUNITY_PHOTO_PATHS.towelsWalk, label: "Custom Towels" },
+  { image: COMMUNITY_PHOTO_PATHS.laces, label: "In Motion" },
 ] as const;
 
 const FILLED_STARS = [0, 1, 2, 3, 4];

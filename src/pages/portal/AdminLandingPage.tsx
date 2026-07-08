@@ -750,7 +750,7 @@ export function AdminLandingPage() {
           </div>
         ))}
 
-        <CmsSectionPanel title="Closing CTA" description="Dark band before footer.">
+        <CmsSectionPanel title="Closing CTA" description="Photo-led final conversion band before the footer (UiUX Element 10).">
           <CmsField label="Title line 1">
             <CmsTextInput value={landing.cta.titleLine1} onChange={(v) => updateCta({ titleLine1: v })} />
           </CmsField>

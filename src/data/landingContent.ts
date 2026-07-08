@@ -1,5 +1,7 @@
 /** Fixed homepage slots — admins may replace text/images only (no add/move/reorder). */
 
+import { COMMUNITY_PHOTO_PATHS } from "@/src/lib/communityPhotos";
+
 export type CmsTextSize = "" | "sm" | "md" | "lg" | "xl";
 
 export interface CmsSectionTypography {
@@ -366,7 +368,7 @@ export const initialLandingContent: LandingContent = {
     paragraph3Prefix: "Because style isn't reserved for special occasions.",
     paragraph3Highlight: "It's found in the way we live, move, and make things our own.",
     closingQuote: "",
-    image: "/images/community/product-og-backpack.jpg",
+    image: COMMUNITY_PHOTO_PATHS.ogBackpack,
     badgeEst: "EST.",
     badgeLocality: "MANILA, PH",
     badgeGritty: "Gritty",
@@ -379,7 +381,7 @@ export const initialLandingContent: LandingContent = {
     titleLine2Italic: "A shared space for connection.",
     description:
       "Off Grid Lifestyle exists beyond clothing. Through gatherings and shared experiences, we create space for people to connect, move, and belong.",
-    backgroundImage: "/images/community/community-ultimate-skyball.jpg",
+    backgroundImage: COMMUNITY_PHOTO_PATHS.ultimateSkyball,
     imageCaption: "Gritty · In motion · Product-focused",
     date: "",
     countdownTime: "",
@@ -396,11 +398,11 @@ export const initialLandingContent: LandingContent = {
       "Off Grid Lifestyle is built on consistency and care. From custom pieces to everyday essentials, each experience reflects quality, clarity, and craftsmanship.",
   },
   ugcTiles: [
-    { image: "/images/community/community-ultimate-catch.jpg", label: "Community Play" },
-    { image: "/images/community/community-pilipinas-portrait.jpg", label: "OG Pilipinas" },
-    { image: "/images/community/product-pilipinas-duffel.jpg", label: "The Greatest x OG" },
-    { image: "/images/community/community-towels-walk.jpg", label: "Custom Towels" },
-    { image: "/images/community/community-laces.jpg", label: "In Motion" },
+    { image: COMMUNITY_PHOTO_PATHS.ultimateCatch, label: "Community Play" },
+    { image: COMMUNITY_PHOTO_PATHS.pilipinasPortrait, label: "OG Pilipinas" },
+    { image: COMMUNITY_PHOTO_PATHS.pilipinasDuffel, label: "The Greatest x OG" },
+    { image: COMMUNITY_PHOTO_PATHS.towelsWalk, label: "Custom Towels" },
+    { image: COMMUNITY_PHOTO_PATHS.laces, label: "In Motion" },
   ],
   testimonials: [
     {

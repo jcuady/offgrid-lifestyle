@@ -1,7 +1,9 @@
 import type { SiteEvent } from "@/src/data/events";
+import { initialEvents } from "@/src/data/events";
 import type { CustomContentSection, CustomTemplateAsset } from "@/src/store/useSiteContentStore";
 import type { CustomHeadwearOption } from "@/src/data/customHeadwearOptions";
 import type { Database } from "@/src/types/database";
+import { isLegacyPlaceholderImage } from "@/src/lib/communityPhotos";
 import { logger } from "@/src/lib/logger";
 import { loadFeaturedSpotlight, loadSiteCustomPages } from "@/src/lib/siteContentPersistence";
 import { normalizeLandingContent } from "@/src/lib/normalizeLandingContent";
@@ -220,7 +222,7 @@ export const supabaseContentService: ContentService = {
     return null;
   },
 
-  // Custom guide sections â€” backed by og_custom_guide_sections
+  // Custom guide sections — backed by og_custom_guide_sections
   listCustomSections: () => useSiteContentStore.getState().customSections,
   addCustomSection: (input) => {
     useSiteContentStore.getState().addCustomSection(input);
@@ -279,7 +281,7 @@ export const supabaseContentService: ContentService = {
       });
   },
 
-  // Templates â€” backed by og_custom_template_slots
+  // Templates — backed by og_custom_template_slots
   listTemplates: () => resolveCanonicalTemplates(useSiteContentStore.getState().customTemplates),
   addTemplate: async (input) => {
     useSiteContentStore.getState().addTemplate(input);
@@ -332,7 +334,7 @@ export const supabaseContentService: ContentService = {
     return null;
   },
 
-  // Headwear options â€” backed by og_custom_headwear_options
+  // Headwear options — backed by og_custom_headwear_options
   listHeadwearOptions: () => useSiteContentStore.getState().customHeadwearOptions,
   addHeadwearOption: (input) => {
     useSiteContentStore.getState().addHeadwearOption(input);
@@ -475,7 +477,15 @@ export async function hydrateSiteContentFromSupabase(): Promise<void> {
   }
 
   if (!eventsRes.error) {
-    storePatch.events = (eventsRes.data ?? []).map((row) => eventRowToSite(row as EventRow));
+    const seedById = new Map(initialEvents.map((e) => [e.id, e]));
+    storePatch.events = (eventsRes.data ?? []).map((row) => {
+      const event = eventRowToSite(row as EventRow);
+      const seed = seedById.get(event.id);
+      if (seed && isLegacyPlaceholderImage(event.image)) {
+        return { ...event, image: seed.image };
+      }
+      return event;
+    });
   } else {
     logContentError("events.hydrate", eventsRes.error.message);
   }

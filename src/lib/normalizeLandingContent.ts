@@ -1,5 +1,6 @@
 import type { LandingContent } from "@/src/data/landingContent";
 import { initialLandingContent } from "@/src/data/landingContent";
+import { isLegacyPlaceholderImage } from "@/src/lib/communityPhotos";
 
 function mergeTypography(
   base: LandingContent["typography"],
@@ -66,13 +67,31 @@ export function normalizeLandingContent(partial?: Partial<LandingContent> | null
       })) as LandingContent["benefits"]["items"],
     },
     collectionsViewAllLabel: partial.collectionsViewAllLabel ?? base.collectionsViewAllLabel,
-    brandStory: { ...base.brandStory, ...partial.brandStory },
-    event: { ...base.event, ...partial.event },
+    brandStory: {
+      ...base.brandStory,
+      ...partial.brandStory,
+      image: isLegacyPlaceholderImage(partial.brandStory?.image)
+        ? base.brandStory.image
+        : (partial.brandStory?.image ?? base.brandStory.image),
+    },
+    event: {
+      ...base.event,
+      ...partial.event,
+      backgroundImage: isLegacyPlaceholderImage(partial.event?.backgroundImage)
+        ? base.event.backgroundImage
+        : (partial.event?.backgroundImage ?? base.event.backgroundImage),
+    },
     socialHeader: { ...base.socialHeader, ...partial.socialHeader },
-    ugcTiles: base.ugcTiles.map((tile, index) => ({
-      ...tile,
-      ...(partial.ugcTiles?.[index] ?? {}),
-    })),
+    ugcTiles: base.ugcTiles.map((tile, index) => {
+      const persisted = partial.ugcTiles?.[index];
+      return {
+        ...tile,
+        ...(persisted ?? {}),
+        image: isLegacyPlaceholderImage(persisted?.image)
+          ? tile.image
+          : (persisted?.image ?? tile.image),
+      };
+    }),
     testimonials: base.testimonials.map((entry, index) => ({
       ...entry,
       ...(partial.testimonials?.[index] ?? {}),

@@ -1,3 +1,5 @@
+import { COMMUNITY_PHOTO_PATHS } from "@/src/lib/communityPhotos";
+
 export type EventCategory = "tournament" | "community" | "launch" | "workshop";
 export type EventStatus = "upcoming" | "past";
 
@@ -31,7 +33,7 @@ export const initialEvents: SiteEvent[] = [
     address: "Taguig, Metro Manila",
     description:
       "A full-day competitive and community-focused pickleball event featuring beginner to advanced brackets, exhibition matches, and product activations from OffGrid Lifestyle.",
-    image: "/images/event_barako.png",
+    image: COMMUNITY_PHOTO_PATHS.ultimateCatch,
     category: "tournament",
     status: "upcoming",
     featured: true,

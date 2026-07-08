@@ -55,8 +55,7 @@ export const initialEvents: SiteEvent[] = [
     address: "Makati, Metro Manila",
     description:
       "An open-play evening designed to connect players, teams, and creators in a relaxed but energetic atmosphere.",
-    image:
-      "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?q=80&w=1800&auto=format&fit=crop",
+    image: "/images/community/community-ultimate-field.jpg",
     category: "community",
     status: "upcoming",
     price: "Free",
@@ -78,8 +77,7 @@ export const initialEvents: SiteEvent[] = [
     address: "Mandaluyong, Metro Manila",
     description:
       "Exclusive launch of the latest OG Pilipinas capsule featuring limited pieces, athlete appearances, and a behind-the-design showcase.",
-    image:
-      "https://images.unsplash.com/photo-1522199710521-72d69614c702?q=80&w=1800&auto=format&fit=crop",
+    image: "/images/community/product-og-backpack.jpg",
     category: "launch",
     status: "upcoming",
     price: "Invite",
@@ -99,8 +97,7 @@ export const initialEvents: SiteEvent[] = [
     address: "Quezon City, Metro Manila",
     description:
       "Hands-on workshop on selecting the right fabric, cut, and print combination for teams and clubs.",
-    image:
-      "https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=1800&auto=format&fit=crop",
+    image: "/images/community/product-towel-bench.jpg",
     category: "workshop",
     status: "past",
     price: "₱850",

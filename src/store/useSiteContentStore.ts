@@ -313,7 +313,7 @@ const initialCustomSections: CustomContentSection[] = getCanonicalGuideSectionSe
 const initialTemplates: CustomTemplateAsset[] = createCanonicalOgTemplates(nowIso());
 const initialHeadwearOptions: CustomHeadwearOption[] = createDefaultHeadwearOptions(nowIso());
 
-const SITE_CONTENT_PERSIST_VERSION = 15;
+const SITE_CONTENT_PERSIST_VERSION = 16;
 
 type PersistedSiteContentSlice = {
   products?: Product[];
@@ -882,6 +882,57 @@ export const useSiteContentStore = create<SiteContentState>()(
           next = {
             ...next,
             landingContent: normalizeLandingContent(next.landingContent),
+          };
+        }
+
+        if (version < 16) {
+          // Swap placeholder/stock imagery for real community photography
+          // (Materials shoot). Only replaces known old defaults so
+          // admin-uploaded imagery is preserved.
+          const landing = normalizeLandingContent(next.landingContent);
+          const isOldDefault = (src: string | undefined) =>
+            !src ||
+            src.includes("unsplash.com") ||
+            src.startsWith("/images/ugc") ||
+            src === "/images/brand-story-editorial.jpg" ||
+            src === "/images/event-community.png";
+
+          const seedEventById = new Map(initialEvents.map((e) => [e.id, e]));
+          const migratedEvents = (next.events ?? initialEvents).map((entry) => {
+            const seed = seedEventById.get(entry.id);
+            if (!seed || !isOldDefault(entry.image)) return entry;
+            return { ...entry, image: seed.image };
+          });
+
+          const seedSectionBySlug = new Map(initialCustomSections.map((s) => [s.slug, s]));
+          const migratedSections = (next.customSections ?? initialCustomSections).map((section) => {
+            const seed = seedSectionBySlug.get(section.slug);
+            if (!seed || !isOldDefault(section.heroImage)) return section;
+            return { ...section, heroImage: seed.heroImage };
+          });
+
+          next = {
+            ...next,
+            events: migratedEvents,
+            customSections: migratedSections,
+            landingContent: {
+              ...landing,
+              brandStory: {
+                ...landing.brandStory,
+                image: isOldDefault(landing.brandStory.image)
+                  ? initialLandingContent.brandStory.image
+                  : landing.brandStory.image,
+              },
+              event: {
+                ...landing.event,
+                backgroundImage: isOldDefault(landing.event.backgroundImage)
+                  ? initialLandingContent.event.backgroundImage
+                  : landing.event.backgroundImage,
+              },
+              ugcTiles: landing.ugcTiles.every((tile) => isOldDefault(tile.image))
+                ? initialLandingContent.ugcTiles
+                : landing.ugcTiles,
+            },
           };
         }
 

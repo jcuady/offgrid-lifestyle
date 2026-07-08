@@ -58,7 +58,7 @@ export function BestSellers() {
           </div>
           <div className="shrink-0 md:text-right">
             {priceCaption ? (
-              <p className="mb-2 text-sm text-offgrid-green/70">{priceCaption}</p>
+              <p className="mb-2 text-base text-offgrid-green/75">{priceCaption}</p>
             ) : null}
             <button
               type="button"
@@ -108,7 +108,7 @@ export function BestSellers() {
                   </span>
 
                   {product.tag ? (
-                    <span className="absolute right-3 top-3 z-10 rounded-full bg-offgrid-lime px-2.5 py-1 font-mono text-[9px] font-bold uppercase tracking-[0.15em] text-white shadow-sm">
+                    <span className="absolute right-3 top-3 z-10 rounded-full bg-offgrid-lime px-2.5 py-1 font-mono text-[11px] font-bold uppercase tracking-[0.15em] text-white shadow-sm">
                       {product.tag}
                     </span>
                   ) : null}
@@ -121,7 +121,7 @@ export function BestSellers() {
                   />
 
                   <div className="absolute inset-x-0 bottom-0 z-10 translate-y-full bg-offgrid-lime/95 px-4 py-3 text-center backdrop-blur-sm transition-transform duration-300 ease-out group-hover:translate-y-0 group-focus-visible:translate-y-0">
-                    <span className="inline-flex items-center font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-white">
+                    <span className="inline-flex items-center font-mono text-xs font-bold uppercase tracking-[0.2em] text-white">
                       View product
                       <ArrowRight className="ml-2 h-3 w-3 transition-transform group-hover:translate-x-1" />
                     </span>
@@ -130,14 +130,14 @@ export function BestSellers() {
 
                 <div className="mt-4 px-0.5">
                   <div className="mb-1.5 flex items-baseline justify-between gap-3">
-                    <p className="min-w-0 truncate font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-offgrid-green/50">
+                    <p className="min-w-0 truncate font-mono text-xs font-bold uppercase tracking-[0.18em] text-offgrid-green/60">
                       {product.category}
                     </p>
-                    <p className="shrink-0 border-l-2 border-offgrid-lime pl-2 font-display text-sm font-black tabular-nums tracking-tight text-offgrid-green">
+                    <p className="shrink-0 border-l-2 border-offgrid-lime pl-2 font-display text-base font-black tabular-nums tracking-tight text-offgrid-green">
                       {formatPrice(product.price)}
                     </p>
                   </div>
-                  <h3 className="mb-3 font-display text-base font-bold leading-tight text-offgrid-green transition-colors group-hover:text-offgrid-lime">
+                  <h3 className="mb-3 font-display text-lg font-bold leading-tight text-offgrid-green transition-colors group-hover:text-offgrid-lime">
                     {product.name}
                   </h3>
 
@@ -150,7 +150,7 @@ export function BestSellers() {
                         />
                       ))}
                     </div>
-                    <div className="flex items-center gap-1 font-mono text-[11px] font-bold text-offgrid-green/60">
+                    <div className="flex items-center gap-1 font-mono text-xs font-bold text-offgrid-green/65">
                       <Star className="h-3 w-3 fill-offgrid-green text-offgrid-green" />
                       <span className="font-bold text-offgrid-green">{product.sold}</span> sold
                     </div>

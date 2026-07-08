@@ -7,18 +7,18 @@ export const siteContainer = "container mx-auto w-full max-w-7xl px-4 sm:px-6 md
 export const accountContainer = "mx-auto w-full max-w-6xl min-w-0 px-4 sm:px-6 md:px-8 lg:px-10";
 
 export const sectionEyebrow =
-  "mb-3 block font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-offgrid-green/55";
+  "mb-3 block font-mono text-xs font-bold uppercase tracking-[0.2em] text-offgrid-green/60";
 
 export const sectionEyebrowOnDark =
-  "mb-3 block font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-offgrid-cream/55";
+  "mb-3 block font-mono text-xs font-bold uppercase tracking-[0.2em] text-offgrid-cream/60";
 
 /** Small TG Frekuent Mono labels — eyebrows, badges, meta (always bold). */
 export const monoLabel =
-  "font-mono text-[10px] font-bold uppercase tracking-[0.2em]";
+  "font-mono text-xs font-bold uppercase tracking-[0.2em]";
 
-export const monoLabelOnDark = `${monoLabel} text-offgrid-cream/70`;
+export const monoLabelOnDark = `${monoLabel} text-offgrid-cream/75`;
 
-export const monoLabelOnLight = `${monoLabel} text-offgrid-green/55`;
+export const monoLabelOnLight = `${monoLabel} text-offgrid-green/60`;
 
 export const sectionTitle =
   "font-display font-black leading-[0.95] tracking-tight text-offgrid-green text-4xl sm:text-5xl md:text-6xl lg:text-7xl";

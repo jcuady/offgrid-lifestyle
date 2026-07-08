@@ -366,7 +366,7 @@ export const initialLandingContent: LandingContent = {
     paragraph3Prefix: "Because style isn't reserved for special occasions.",
     paragraph3Highlight: "It's found in the way we live, move, and make things our own.",
     closingQuote: "",
-    image: "/images/brand-story-editorial.jpg",
+    image: "/images/community/product-og-backpack.jpg",
     badgeEst: "EST.",
     badgeLocality: "MANILA, PH",
     badgeGritty: "Gritty",
@@ -379,7 +379,7 @@ export const initialLandingContent: LandingContent = {
     titleLine2Italic: "A shared space for connection.",
     description:
       "Off Grid Lifestyle exists beyond clothing. Through gatherings and shared experiences, we create space for people to connect, move, and belong.",
-    backgroundImage: "/images/brand-story-editorial.jpg",
+    backgroundImage: "/images/community/community-ultimate-skyball.jpg",
     imageCaption: "Gritty · In motion · Product-focused",
     date: "",
     countdownTime: "",
@@ -396,11 +396,11 @@ export const initialLandingContent: LandingContent = {
       "Off Grid Lifestyle is built on consistency and care. From custom pieces to everyday essentials, each experience reflects quality, clarity, and craftsmanship.",
   },
   ugcTiles: [
-    { image: "/images/ugc-1.png", label: "Pickleball" },
-    { image: "/images/ugc-2.jpg", label: "Moto Line" },
-    { image: "/images/ugc-3.png", label: "Golf" },
-    { image: "/images/ugc-4.png", label: "Running" },
-    { image: "/images/ugc-5.png", label: "OG Pickle Club" },
+    { image: "/images/community/community-ultimate-catch.jpg", label: "Community Play" },
+    { image: "/images/community/community-pilipinas-portrait.jpg", label: "OG Pilipinas" },
+    { image: "/images/community/product-pilipinas-duffel.jpg", label: "The Greatest x OG" },
+    { image: "/images/community/community-towels-walk.jpg", label: "Custom Towels" },
+    { image: "/images/community/community-laces.jpg", label: "In Motion" },
   ],
   testimonials: [
     {

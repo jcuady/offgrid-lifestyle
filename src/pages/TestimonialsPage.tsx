@@ -9,11 +9,11 @@ import { cn } from "@/src/lib/utils";
 
 /** Customer photos used for the "in the wild" social-proof strip. */
 const SHOWCASE_TILES = [
-  { image: "/images/ugc-1.png", label: "Pickleball" },
-  { image: "/images/ugc-2.jpg", label: "Golf" },
-  { image: "/images/ugc-3.png", label: "Running" },
-  { image: "/images/ugc-4.png", label: "Lifestyle" },
-  { image: "/images/ugc-5.png", label: "Community" },
+  { image: "/images/community/community-ultimate-catch.jpg", label: "Community Play" },
+  { image: "/images/community/community-pilipinas-portrait.jpg", label: "OG Pilipinas" },
+  { image: "/images/community/product-pilipinas-duffel.jpg", label: "The Greatest x OG" },
+  { image: "/images/community/community-towels-walk.jpg", label: "Custom Towels" },
+  { image: "/images/community/community-laces.jpg", label: "In Motion" },
 ] as const;
 
 const FILLED_STARS = [0, 1, 2, 3, 4];

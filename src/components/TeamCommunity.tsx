@@ -17,7 +17,7 @@ function BrandStripe() {
   ));
   return (
     <div className="overflow-hidden border-b border-offgrid-cream/10 py-2.5" aria-hidden>
-      <div className="flex whitespace-nowrap font-mono text-[10px] font-bold uppercase tracking-[0.28em] text-offgrid-cream/40">
+      <div className="flex whitespace-nowrap font-mono text-[11px] font-bold uppercase tracking-[0.28em] text-offgrid-cream/45">
         {repeat}
         {repeat}
       </div>
@@ -50,14 +50,14 @@ export function TeamCommunity() {
           className="grid grid-cols-1 items-start gap-10 lg:grid-cols-12 lg:gap-12"
         >
           <div className="lg:col-span-4">
-            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-offgrid-cream/55" style={bodyStyle}>
+            <span className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-offgrid-cream/60" style={bodyStyle}>
               {team.badge}
             </span>
             <h2 className={cn(sectionTitleOnDark, "mt-3 text-balance")} style={headingStyle}>
               {team.headlineLine1}{" "}
               <span className="font-normal italic text-white">{team.headlineLine2Italic}</span>
             </h2>
-            <p className="mt-4 font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-offgrid-cream/45">
+            <p className="mt-4 font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-offgrid-cream/55">
               EST. MANILA, PH — GRITTY · IN MOTION · PRODUCT-FOCUSED
             </p>
           </div>
@@ -68,10 +68,10 @@ export function TeamCommunity() {
                 key={entry.name}
                 className="group flex min-h-[88px] flex-col justify-between rounded-xl border border-offgrid-cream/15 bg-offgrid-cream/[0.04] p-4 transition-colors hover:border-offgrid-lime/50 hover:bg-offgrid-cream/[0.08] sm:min-h-[96px] sm:p-5"
               >
-                <span className="font-mono text-[9px] font-bold uppercase tracking-[0.22em] text-offgrid-lime sm:text-[10px]">
+                <span className="font-mono text-[11px] font-bold uppercase tracking-[0.22em] text-offgrid-lime sm:text-xs">
                   {entry.sport}
                 </span>
-                <span className="mt-3 font-display text-sm font-black uppercase leading-tight tracking-tight text-offgrid-cream sm:text-base">
+                <span className="mt-3 font-display text-base font-black uppercase leading-tight tracking-tight text-offgrid-cream sm:text-lg">
                   {entry.name}
                 </span>
               </div>
@@ -79,7 +79,7 @@ export function TeamCommunity() {
           </div>
 
           <div className="flex flex-col gap-5 lg:col-span-3 lg:items-end lg:text-right">
-            <p className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-offgrid-cream/50">
+            <p className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-offgrid-cream/60">
               {team.socialHeading}
             </p>
 

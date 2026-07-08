@@ -66,8 +66,7 @@ export function getCanonicalGuideSectionSeeds(): CustomContentSection[] {
       summary: "Upload design, confirm fit/material, approve quote, then production starts after deposit.",
       body:
         "1) Share your design brief or artwork.\n2) Select cut, material, and print method.\n3) Review quote and sample mockup.\n4) Confirm quantities and settle deposit.\n5) Production + quality check + delivery.",
-      heroImage:
-        "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?q=80&w=1600&auto=format&fit=crop",
+      heroImage: "/images/community/community-towels-walk.jpg",
       ctaLabel: "Start A Custom Order",
       isPublished: true,
     }),
@@ -79,8 +78,7 @@ export function getCanonicalGuideSectionSeeds(): CustomContentSection[] {
       summary: "Explore available custom jersey and lifestyle silhouettes.",
       body:
         "Available lines include game jerseys, training tops, warm-up layers, and casual teamwear. Choose from dri-fit, cotton, running mesh, and poly blend options with multiple print methods.",
-      heroImage:
-        "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=1600&auto=format&fit=crop",
+      heroImage: "/images/community/community-pilipinas-cap.jpg",
       ctaLabel: "View Shop",
       isPublished: true,
     }),
@@ -92,8 +90,7 @@ export function getCanonicalGuideSectionSeeds(): CustomContentSection[] {
       summary: "Get better pricing at higher quantities and bundled production runs.",
       body:
         "Starter package: 20-35 pcs.\nClub package: 36-80 pcs.\nLeague package: 81+ pcs.\nAsk for recurring season plans and rolling drop schedules.",
-      heroImage:
-        "https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1600&auto=format&fit=crop",
+      heroImage: "/images/community/community-ultimate-field.jpg",
       ctaLabel: "Request Team Quote",
       isPublished: true,
     }),
@@ -105,8 +102,7 @@ export function getCanonicalGuideSectionSeeds(): CustomContentSection[] {
       summary: "Measure chest, length, and waist using our standard OffGrid fitting guide.",
       body:
         "Tops: measure chest side seam to side seam and body length from neck base.\nShorts: measure waist relaxed and stretched, then outseam length.\nFor team runs, collect full roster sizes in one sheet before checkout.",
-      heroImage:
-        "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?q=80&w=1600&auto=format&fit=crop",
+      heroImage: "/images/community/community-pilipinas-portrait.jpg",
       ctaLabel: "Browse Templates",
       isPublished: true,
     }),
@@ -118,8 +114,7 @@ export function getCanonicalGuideSectionSeeds(): CustomContentSection[] {
       summary: "Seasonal promo mechanics for selected custom volume thresholds.",
       body:
         "Promo periods run on selected months. Minimum order quantity and design approval requirements apply. Promo availability and terms can be configured from the admin dashboard.",
-      heroImage:
-        "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=1600&auto=format&fit=crop",
+      heroImage: "/images/community/community-ultimate-catch.jpg",
       ctaLabel: "Check Eligibility",
       isPublished: true,
     }),
@@ -130,8 +125,7 @@ export function getCanonicalGuideSectionSeeds(): CustomContentSection[] {
       subtitle: "File Prep And Design Support",
       summary: OFFGRID_FAQS_SUMMARY,
       body: OFFGRID_FAQS_BODY,
-      heroImage:
-        "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=1600&auto=format&fit=crop",
+      heroImage: "/images/community/product-towel-bench.jpg",
       ctaLabel: "Start Inquiry",
       isPublished: true,
     }),
@@ -143,8 +137,7 @@ export function getCanonicalGuideSectionSeeds(): CustomContentSection[] {
       summary: "Standard production starts after deposit confirmation.",
       body:
         "Design validation: 1-2 business days.\nProduction: 5-10 business days depending on order size.\nShipping: 2-5 business days nationwide.",
-      heroImage:
-        "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?q=80&w=1600&auto=format&fit=crop",
+      heroImage: "/images/community/community-laces.jpg",
       ctaLabel: "Place Custom Order",
       isPublished: true,
     }),

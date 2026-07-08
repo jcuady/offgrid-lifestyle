@@ -41,13 +41,13 @@ export function FeaturedCollections() {
           </div>
           <div className="flex flex-col gap-3 md:items-end">
             {header.caption ? (
-              <p className="max-w-xs text-sm leading-relaxed text-offgrid-green/70 md:text-right" style={bodyStyle}>
+              <p className="max-w-xs text-base leading-relaxed text-offgrid-green/75 md:text-right" style={bodyStyle}>
                 {header.caption}
               </p>
             ) : null}
             <Link
               to="/og-signatures"
-              className="group inline-flex items-center gap-1.5 font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-offgrid-green/60 transition-colors hover:text-offgrid-lime"
+              className="group inline-flex items-center gap-1.5 font-mono text-xs font-bold uppercase tracking-[0.14em] text-offgrid-green/70 transition-colors hover:text-offgrid-lime"
             >
               {viewAllLabel}
               <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
@@ -87,17 +87,17 @@ export function FeaturedCollections() {
                     <span className="font-mono text-5xl font-black tabular-nums leading-none text-offgrid-cream/15 transition-colors group-hover:text-offgrid-lime/25 md:text-6xl">
                       {layout.index}
                     </span>
-                    <span className="rounded-full bg-offgrid-cream/90 px-3 py-1 font-mono text-[9px] font-bold uppercase tracking-[0.15em] text-offgrid-green backdrop-blur-sm">
+                    <span className="rounded-full bg-offgrid-cream/90 px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-[0.15em] text-offgrid-green backdrop-blur-sm">
                       {collection.tag}
                     </span>
                   </div>
 
                   <div>
-                    <p className="mb-1 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-offgrid-cream/65">
+                    <p className="mb-1 font-mono text-xs font-bold uppercase tracking-[0.2em] text-offgrid-cream/75">
                       {collection.subtitle}
                     </p>
                     <h3 className="font-display text-2xl font-black text-offgrid-cream md:text-3xl">{collection.title}</h3>
-                    <span className="mt-3 inline-flex items-center gap-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-offgrid-lime opacity-0 transition-opacity group-hover:opacity-100">
+                    <span className="mt-3 inline-flex items-center gap-1.5 font-mono text-xs font-bold uppercase tracking-[0.14em] text-offgrid-lime opacity-0 transition-opacity group-hover:opacity-100">
                       Shop now
                       <ArrowRight className="h-3 w-3" />
                     </span>

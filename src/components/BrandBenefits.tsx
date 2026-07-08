@@ -41,7 +41,7 @@ export function BrandBenefits() {
                   <h3 className="font-display text-xl font-black tracking-tight text-offgrid-green sm:text-2xl">
                     {item.title}
                   </h3>
-                  <p className="mt-2 max-w-lg text-sm leading-relaxed text-offgrid-green/65 sm:text-base" style={bodyStyle}>
+                  <p className="mt-2 max-w-lg text-base leading-relaxed text-offgrid-green/70 sm:text-lg" style={bodyStyle}>
                     {item.description}
                   </p>
                 </div>

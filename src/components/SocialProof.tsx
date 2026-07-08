@@ -39,7 +39,7 @@ export function SocialProof() {
           </h2>
           {header.caption ? (
             <p
-              className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-offgrid-green/70 md:text-base"
+              className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-offgrid-green/75 md:text-lg"
               style={bodyStyle}
             >
               {header.caption}
@@ -62,7 +62,7 @@ export function SocialProof() {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-offgrid-dark/50 via-transparent to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
             {hero.label ? (
-              <div className="absolute bottom-4 left-4 rounded-full bg-white/90 px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-offgrid-green backdrop-blur-sm">
+              <div className="absolute bottom-4 left-4 rounded-full bg-white/90 px-3.5 py-1.5 font-mono text-xs font-bold uppercase tracking-[0.12em] text-offgrid-green backdrop-blur-sm">
                 {hero.label}
               </div>
             ) : null}
@@ -88,7 +88,7 @@ export function SocialProof() {
               {tile.label ? (
                 <div
                   className={cn(
-                    "absolute rounded-full bg-white/90 px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-offgrid-green backdrop-blur-sm",
+                    "absolute rounded-full bg-white/90 px-3.5 py-1.5 font-mono text-xs font-bold uppercase tracking-[0.12em] text-offgrid-green backdrop-blur-sm",
                     index === 1 ? "bottom-3 right-3" : "bottom-3 left-3",
                   )}
                 >
@@ -126,19 +126,19 @@ export function SocialProof() {
                     <Star key={i} className="h-4 w-4 fill-offgrid-green text-offgrid-green" />
                   ))}
                 </div>
-                <p className="mb-7 text-sm font-medium leading-relaxed text-offgrid-green/85">
+                <p className="mb-7 text-base font-medium leading-relaxed text-offgrid-green/85">
                   {testimonial.quote}
                 </p>
               </div>
 
               <div className="relative z-10 flex items-center justify-between border-t border-offgrid-green/8 pt-5">
                 <div>
-                  <p className="font-display text-sm font-bold text-offgrid-green">{testimonial.author}</p>
-                  <p className="font-mono text-[10px] font-bold uppercase tracking-[0.1em] text-offgrid-green/55">
+                  <p className="font-display text-base font-bold text-offgrid-green">{testimonial.author}</p>
+                  <p className="font-mono text-[11px] font-bold uppercase tracking-[0.1em] text-offgrid-green/60">
                     {testimonial.handle} · {testimonial.location}
                   </p>
                 </div>
-                <span className="rounded-full bg-offgrid-cream px-3 py-1 font-mono text-[9px] font-bold uppercase tracking-[0.15em] text-offgrid-green">
+                <span className="rounded-full bg-offgrid-cream px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-[0.15em] text-offgrid-green">
                   {testimonial.tag}
                 </span>
               </div>

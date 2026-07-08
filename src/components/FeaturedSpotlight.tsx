@@ -54,7 +54,7 @@ export function FeaturedSpotlight({ placement, className }: FeaturedSpotlightPro
       <div className={cn(siteContainer, "relative")}>
         <div className="mb-6 flex flex-col justify-between gap-4 border-b border-offgrid-cream/15 pb-6 sm:mb-12 sm:gap-5 sm:pb-8 md:flex-row md:items-end">
           <div className="min-w-0">
-            <span className="mb-3 flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-offgrid-cream/85">
+            <span className="mb-3 flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-[0.2em] text-offgrid-cream/90">
               <span className="h-1.5 w-1.5 rounded-full bg-offgrid-cream" />
               {config.eyebrow}
             </span>
@@ -63,13 +63,13 @@ export function FeaturedSpotlight({ placement, className }: FeaturedSpotlightPro
               <span className="font-normal italic text-offgrid-cream/85">{config.titleLine2Italic}</span>
             </h2>
             {config.subtitle ? (
-              <p className="mt-4 max-w-md text-sm leading-relaxed text-offgrid-cream/75">{config.subtitle}</p>
+              <p className="mt-4 max-w-md text-base leading-relaxed text-offgrid-cream/85">{config.subtitle}</p>
             ) : null}
           </div>
           <button
             type="button"
             onClick={() => navigate(config.ctaHref)}
-            className="group inline-flex shrink-0 items-center gap-2 self-start rounded-full border border-offgrid-cream/40 bg-offgrid-cream/10 px-5 py-2.5 font-mono text-[11px] font-bold uppercase tracking-[0.15em] text-offgrid-cream backdrop-blur-sm transition-colors hover:bg-offgrid-cream hover:text-offgrid-lime md:self-auto"
+            className="group inline-flex shrink-0 items-center gap-2 self-start rounded-full border border-offgrid-cream/40 bg-offgrid-cream/10 px-5 py-2.5 font-mono text-xs font-bold uppercase tracking-[0.15em] text-offgrid-cream backdrop-blur-sm transition-colors hover:bg-offgrid-cream hover:text-offgrid-lime md:self-auto"
           >
             {config.ctaLabel}
             <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
@@ -132,13 +132,13 @@ function FeaturedHeroTile({ item, onClick }: { item: FeaturedDisplayItem; onClic
 
         <div className="absolute inset-0 z-10 flex flex-col justify-end p-6 sm:p-8 md:max-w-xl md:justify-center">
           {item.tag ? (
-            <span className="mb-3 inline-flex w-fit rounded-full bg-offgrid-cream px-2.5 py-1 font-mono text-[9px] font-bold uppercase tracking-[0.15em] text-offgrid-lime shadow-sm">
+            <span className="mb-3 inline-flex w-fit rounded-full bg-offgrid-cream px-2.5 py-1 font-mono text-[11px] font-bold uppercase tracking-[0.15em] text-offgrid-lime shadow-sm">
               {item.tag}
             </span>
           ) : null}
           {item.isProduct ? (
             <>
-              <p className="mb-1 font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-offgrid-cream/70">
+              <p className="mb-1 font-mono text-xs font-bold uppercase tracking-[0.18em] text-offgrid-cream/80">
                 {item.category}
               </p>
               <h3 className="font-display text-3xl font-bold leading-tight text-offgrid-cream sm:text-4xl md:text-5xl">
@@ -149,7 +149,7 @@ function FeaturedHeroTile({ item, onClick }: { item: FeaturedDisplayItem; onClic
               </p>
             </>
           ) : null}
-          <span className="mt-5 inline-flex w-fit items-center gap-2 rounded-full border border-offgrid-cream/35 bg-offgrid-cream/10 px-4 py-2 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-offgrid-cream backdrop-blur-sm transition-colors group-hover:bg-offgrid-cream group-hover:text-offgrid-lime">
+          <span className="mt-5 inline-flex w-fit items-center gap-2 rounded-full border border-offgrid-cream/35 bg-offgrid-cream/10 px-4 py-2 font-mono text-xs font-bold uppercase tracking-[0.14em] text-offgrid-cream backdrop-blur-sm transition-colors group-hover:bg-offgrid-cream group-hover:text-offgrid-lime">
             Shop now
             <ArrowRight className="h-3.5 w-3.5" />
           </span>
@@ -195,7 +195,7 @@ function FeaturedTile({ item, onClick, index, large = false, className }: Featur
 
       <div className="absolute inset-x-0 top-0 z-10 flex items-start justify-between p-4 sm:p-5">
         {item.tag ? (
-          <span className="rounded-full bg-offgrid-cream px-2.5 py-1 font-mono text-[9px] font-bold uppercase tracking-[0.15em] text-offgrid-lime shadow-sm">
+          <span className="rounded-full bg-offgrid-cream px-2.5 py-1 font-mono text-[11px] font-bold uppercase tracking-[0.15em] text-offgrid-lime shadow-sm">
             {item.tag}
           </span>
         ) : (
@@ -208,7 +208,7 @@ function FeaturedTile({ item, onClick, index, large = false, className }: Featur
 
       {item.isProduct ? (
         <div className="absolute inset-x-0 bottom-0 z-10 p-4 sm:p-5 md:p-6">
-          <p className="mb-1 font-mono text-[9px] font-bold uppercase tracking-[0.18em] text-offgrid-cream/70 sm:text-[10px]">
+          <p className="mb-1 font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-offgrid-cream/80 sm:text-xs">
             {item.category}
           </p>
           <h3

@@ -115,7 +115,7 @@ export function CTASection() {
             {trustBadges.map((badge) => (
               <div key={badge.label} className="flex flex-col items-center gap-2 text-center sm:gap-3">
                 {badge.icon}
-                <span className="font-mono text-[9px] font-bold uppercase leading-snug tracking-[0.14em] text-offgrid-cream/55 sm:text-[10px]">
+                <span className="font-mono text-[11px] font-bold uppercase leading-snug tracking-[0.14em] text-offgrid-cream/65 sm:text-xs">
                   {badge.label}
                 </span>
               </div>
@@ -126,7 +126,7 @@ export function CTASection() {
             {...motionProps(0.45)}
             className="mt-14 flex flex-col items-center gap-4 sm:mt-16"
           >
-            <p className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-offgrid-cream/45">
+            <p className="font-mono text-xs font-bold uppercase tracking-[0.22em] text-offgrid-cream/55">
               {team.socialHeading}
             </p>
             <div className="flex items-center gap-3">

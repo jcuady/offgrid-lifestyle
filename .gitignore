@@ -27,5 +27,6 @@ playwright-report/
 # Large local design-source assets (not used by the build; exceed GitHub size limits)
 og photos/
 Offgrid - Branding Guide/
+Materials-*/
 dist/OG logo/
 *.zip

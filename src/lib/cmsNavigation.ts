@@ -3,14 +3,17 @@ import type { CustomSectionSlug } from "@/src/store/useSiteContentStore";
 
 /** Internal routes admins can assign to CMS buttons. */
 export const CMS_ROUTE_OPTIONS: { value: string; label: string; group: string }[] = [
+  { value: "/#collections", label: "Home — OG Signatures (scroll)", group: "Home" },
+  { value: "/shop", label: "Shop", group: "Store" },
+  { value: "/og-signatures", label: "OG Signatures", group: "Store" },
   { value: "/custom/order", label: "Place custom order", group: "Custom" },
   { value: "/custom/templates", label: "Templates library", group: "Custom" },
   { value: "/custom#ordering-guide", label: "Ordering guide (scroll)", group: "Custom" },
   { value: "/custom", label: "Custom hub (top)", group: "Custom" },
-  { value: "/shop", label: "Shop", group: "Store" },
-  { value: "/og-signatures", label: "OG Signatures", group: "Store" },
   { value: "/events", label: "Events", group: "Site" },
   { value: "/testimonials", label: "Testimonials", group: "Site" },
+  { value: "/about", label: "About us", group: "Site" },
+  { value: "/contact", label: "Contact", group: "Site" },
   { value: "/account/sign-in", label: "Customer sign in", group: "Account" },
   { value: "/account/sign-up", label: "Create account", group: "Account" },
   { value: "/portal/login", label: "Team portal login", group: "Account" },
@@ -53,6 +56,14 @@ export function cmsHrefForGuideSlug(slug: CustomSectionSlug): string {
 /** Navigate to an admin-configured internal route. */
 export function followCmsCta(navigate: NavigateFunction, href: string) {
   const target = normalizeCmsHref(href);
+
+  if (target === "/#collections" || target === "#collections") {
+    navigate({ pathname: "/", hash: "collections" });
+    setTimeout(() => {
+      document.getElementById("collections")?.scrollIntoView({ behavior: "smooth" });
+    }, 50);
+    return;
+  }
 
   if (target === "/custom/order") {
     navigate("/custom/order");

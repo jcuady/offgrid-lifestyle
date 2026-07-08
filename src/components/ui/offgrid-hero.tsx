@@ -1,9 +1,9 @@
 import { motion, useReducedMotion } from "motion/react";
 import { ArrowRight } from "lucide-react";
+import { LANDING_HERO_VIDEO_DEFAULT } from "@/src/data/landingContent";
 import type { CSSProperties } from "react";
 
-const DEFAULT_HERO_VIDEO =
-  "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260405_170732_8a9ccda6-5cff-4628-b164-059c500a2b41.mp4";
+const DEFAULT_HERO_VIDEO = LANDING_HERO_VIDEO_DEFAULT;
 
 export interface OffgridHeroCta {
   label: string;

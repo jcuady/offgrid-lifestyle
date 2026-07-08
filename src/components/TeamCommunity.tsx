@@ -3,6 +3,7 @@ import { ArrowRight, Instagram, Facebook } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/src/components/ui/Button";
 import { sectionTitleOnDark, siteContainer } from "@/src/lib/brandLayout";
+import { followCmsCta } from "@/src/lib/cmsNavigation";
 import { cmsTypographyStyle } from "@/src/lib/cmsTypography";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { cn } from "@/src/lib/utils";
@@ -59,7 +60,7 @@ export function TeamCommunity() {
                 <span className="font-normal italic text-white">{team.headlineLine2Italic}</span>
               </h2>
               <p className="mt-4 font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-offgrid-cream/55">
-                EST. MANILA, PH — GRITTY · IN MOTION · PRODUCT-FOCUSED
+                {team.metaLine}
               </p>
             </div>
 
@@ -71,7 +72,7 @@ export function TeamCommunity() {
                 <Button
                   type="button"
                   className="group w-full border-offgrid-cream bg-offgrid-cream text-offgrid-green hover:bg-white sm:w-auto"
-                  onClick={() => navigate("/events")}
+                  onClick={() => followCmsCta(navigate, team.primaryCtaHref)}
                 >
                   {team.primaryCtaLabel}
                   <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -80,7 +81,7 @@ export function TeamCommunity() {
                   type="button"
                   variant="outline"
                   className="w-full border-offgrid-cream/40 text-offgrid-cream hover:bg-offgrid-cream hover:text-offgrid-green sm:w-auto"
-                  onClick={() => navigate("/custom")}
+                  onClick={() => followCmsCta(navigate, team.secondaryCtaHref)}
                 >
                   {team.secondaryCtaLabel}
                 </Button>

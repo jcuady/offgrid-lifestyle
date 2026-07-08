@@ -41,7 +41,7 @@ export function LandingFaq() {
               </p>
             ) : null}
             <Link
-              to="/custom#faqs"
+              to={faq.ctaHref}
               className="group mt-6 inline-flex items-center gap-1.5 font-mono text-xs font-bold uppercase tracking-[0.14em] text-offgrid-green transition-colors hover:text-offgrid-lime"
             >
               {faq.ctaLabel}

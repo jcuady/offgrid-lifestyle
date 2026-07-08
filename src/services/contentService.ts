@@ -1,5 +1,7 @@
 import type { SiteEvent } from "@/src/data/events";
 import { initialEvents } from "@/src/data/events";
+import type { TestimonialWallEntry } from "@/src/data/testimonialsPage";
+import { initialTestimonialWall } from "@/src/data/testimonialsPage";
 import type { CustomContentSection, CustomTemplateAsset } from "@/src/store/useSiteContentStore";
 import type { CustomHeadwearOption } from "@/src/data/customHeadwearOptions";
 import type { Database } from "@/src/types/database";
@@ -74,6 +76,64 @@ function siteEventToRow(event: SiteEvent, sortOrder = 0) {
     sort_order: sortOrder,
     updated_at: new Date().toISOString(),
   };
+}
+
+type TestimonialRow = {
+  id: string;
+  quote: string;
+  author: string;
+  handle: string;
+  location: string;
+  tag: string;
+  outcome: string;
+  image: string;
+  featured: boolean;
+  rating: number;
+  published: boolean;
+  sort_order: number;
+};
+
+function testimonialRowToEntry(row: TestimonialRow): TestimonialWallEntry {
+  return {
+    id: row.id,
+    quote: row.quote,
+    author: row.author,
+    handle: row.handle,
+    location: row.location,
+    tag: row.tag,
+    outcome: row.outcome,
+    image: row.image,
+    featured: row.featured,
+    rating: row.rating,
+    published: row.published,
+    sortOrder: row.sort_order,
+  };
+}
+
+function testimonialEntryToRow(entry: TestimonialWallEntry, sortOrder = entry.sortOrder) {
+  return {
+    id: entry.id,
+    quote: entry.quote,
+    author: entry.author,
+    handle: entry.handle,
+    location: entry.location,
+    tag: entry.tag,
+    outcome: entry.outcome,
+    image: entry.image,
+    featured: entry.featured,
+    rating: entry.rating,
+    published: entry.published,
+    sort_order: sortOrder,
+    updated_at: new Date().toISOString(),
+  };
+}
+
+async function clearOtherFeaturedTestimonials(keepId: string): Promise<void> {
+  const { error } = await supabase
+    .from("og_testimonials")
+    .update({ featured: false, updated_at: new Date().toISOString() })
+    .neq("id", keepId);
+  if (error) logContentError("testimonials.clearFeatured", error.message);
 }
 
 function templateAssetToRow(asset: CustomTemplateAsset) {
@@ -160,6 +220,10 @@ export interface ContentService {
   addEvent: (input: SiteEvent) => Promise<string | null>;
   updateEvent: (id: string, patch: Partial<SiteEvent>) => Promise<string | null>;
   removeEvent: (id: string) => Promise<string | null>;
+  listTestimonials: () => TestimonialWallEntry[];
+  addTestimonial: (input: TestimonialWallEntry) => Promise<string | null>;
+  updateTestimonial: (id: string, patch: Partial<TestimonialWallEntry>) => Promise<string | null>;
+  removeTestimonial: (id: string) => Promise<string | null>;
   listCustomSections: () => CustomContentSection[];
   addCustomSection: (input: CustomContentSection) => void;
   updateCustomSection: (id: string, patch: Partial<CustomContentSection>) => void;
@@ -222,7 +286,58 @@ export const supabaseContentService: ContentService = {
     return null;
   },
 
-  // Custom guide sections — backed by og_custom_guide_sections
+  // Custom guide sections  backed by og_custom_guide_sections
+  listTestimonials: () => useSiteContentStore.getState().testimonialWall,
+  addTestimonial: async (input) => {
+    useSiteContentStore.getState().addTestimonial(input);
+    if (input.featured) await clearOtherFeaturedTestimonials(input.id);
+    const sortOrder = useSiteContentStore.getState().testimonialWall.findIndex((t) => t.id === input.id);
+    const { error } = await supabase
+      .from("og_testimonials")
+      .upsert(testimonialEntryToRow(input, sortOrder >= 0 ? sortOrder : 0));
+    if (error) {
+      useSiteContentStore.getState().removeTestimonial(input.id);
+      logContentError("testimonials.upsert", error.message);
+      return error.message;
+    }
+    auditContent("content.created", input.id, `testimonial ${input.author}`, { kind: "testimonial" });
+    return null;
+  },
+  updateTestimonial: async (id, patch) => {
+    const previous = useSiteContentStore.getState().testimonialWall.find((t) => t.id === id);
+    if (!previous) return "Testimonial not found.";
+    useSiteContentStore.getState().updateTestimonial(id, patch);
+    const merged = { ...previous, ...patch };
+    if (merged.featured) await clearOtherFeaturedTestimonials(id);
+    const sortOrder = useSiteContentStore.getState().testimonialWall.findIndex((t) => t.id === id);
+    const { error } = await supabase
+      .from("og_testimonials")
+      .upsert(testimonialEntryToRow(merged, sortOrder >= 0 ? sortOrder : 0));
+    if (error) {
+      useSiteContentStore.getState().updateTestimonial(id, previous);
+      logContentError("testimonials.update", error.message);
+      return error.message;
+    }
+    auditContent("content.updated", id, `testimonial ${merged.author}`, {
+      kind: "testimonial",
+      fields: Object.keys(patch),
+    });
+    return null;
+  },
+  removeTestimonial: async (id) => {
+    const previous = useSiteContentStore.getState().testimonialWall.find((t) => t.id === id);
+    if (!previous) return null;
+    useSiteContentStore.getState().removeTestimonial(id);
+    const { error } = await supabase.from("og_testimonials").delete().eq("id", id);
+    if (error) {
+      useSiteContentStore.getState().addTestimonial(previous);
+      logContentError("testimonials.delete", error.message);
+      return error.message;
+    }
+    auditContent("content.deleted", id, `testimonial ${id}`, { kind: "testimonial" });
+    return null;
+  },
+
   listCustomSections: () => useSiteContentStore.getState().customSections,
   addCustomSection: (input) => {
     useSiteContentStore.getState().addCustomSection(input);
@@ -281,7 +396,7 @@ export const supabaseContentService: ContentService = {
       });
   },
 
-  // Templates — backed by og_custom_template_slots
+  // Templates  backed by og_custom_template_slots
   listTemplates: () => resolveCanonicalTemplates(useSiteContentStore.getState().customTemplates),
   addTemplate: async (input) => {
     useSiteContentStore.getState().addTemplate(input);
@@ -334,7 +449,7 @@ export const supabaseContentService: ContentService = {
     return null;
   },
 
-  // Headwear options — backed by og_custom_headwear_options
+  // Headwear options  backed by og_custom_headwear_options
   listHeadwearOptions: () => useSiteContentStore.getState().customHeadwearOptions,
   addHeadwearOption: (input) => {
     useSiteContentStore.getState().addHeadwearOption(input);
@@ -443,10 +558,11 @@ export async function hydrateCustomContentFromSupabase(): Promise<void> {
 export async function hydrateSiteContentFromSupabase(): Promise<void> {
   await hydrateCustomContentFromSupabase();
 
-  const [pagesPatch, spotlight, eventsRes] = await Promise.all([
+  const [pagesPatch, spotlight, eventsRes, testimonialsRes] = await Promise.all([
     loadSiteCustomPages(),
     loadFeaturedSpotlight(),
     supabase.from("og_events").select("*").order("sort_order"),
+    supabase.from("og_testimonials").select("*").order("sort_order"),
   ]);
 
   const storePatch: Record<string, unknown> = {};
@@ -488,6 +604,17 @@ export async function hydrateSiteContentFromSupabase(): Promise<void> {
     });
   } else {
     logContentError("events.hydrate", eventsRes.error.message);
+  }
+
+  if (!testimonialsRes.error && (testimonialsRes.data?.length ?? 0) > 0) {
+    storePatch.testimonialWall = testimonialsRes.data.map((row) =>
+      testimonialRowToEntry(row as TestimonialRow),
+    );
+  } else if (testimonialsRes.error) {
+    logContentError("testimonials.hydrate", testimonialsRes.error.message);
+    storePatch.testimonialWall = useSiteContentStore.getState().testimonialWall.length
+      ? useSiteContentStore.getState().testimonialWall
+      : initialTestimonialWall;
   }
 
   if (Object.keys(storePatch).length > 0) {

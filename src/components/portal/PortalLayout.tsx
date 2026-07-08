@@ -17,6 +17,7 @@ import {
   Users,
   ScrollText,
   Settings,
+  Quote,
 } from "lucide-react";
 import { LOGO_WORDMARK_WHITE } from "@/src/lib/brandAssets";
 import { cn } from "@/src/lib/utils";
@@ -68,6 +69,7 @@ const navByRole: Record<Exclude<UserRole, "customer">, NavSection[]> = {
       label: "Content",
       items: [
         { name: "Homepage", to: "/portal/admin/homepage", icon: Home },
+        { name: "Testimonials", to: "/portal/admin/testimonials", icon: Quote },
         { name: "Custom pages", to: "/portal/admin/custom-pages", icon: Palette },
       ],
     },

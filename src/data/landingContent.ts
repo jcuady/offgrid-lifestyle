@@ -1,6 +1,10 @@
 /** Fixed homepage slots — admins may replace text/images only (no add/move/reorder). */
 
-import { COMMUNITY_PHOTO_PATHS } from "@/src/lib/communityPhotos";
+import { COMMUNITY_COLLECTIONS, COMMUNITY_PHOTO_PATHS } from "@/src/lib/communityPhotos";
+import {
+  initialTestimonialsPageContent,
+  type TestimonialsPageContent,
+} from "@/src/data/testimonialsPage";
 
 export type CmsTextSize = "" | "sm" | "md" | "lg" | "xl";
 
@@ -15,7 +19,7 @@ export type LandingTypographySectionKey =
   | "hero"
   | "collections"
   | "bestSellers"
-  | "benefits"
+  | "gallery"
   | "event"
   | "social"
   | "teamCommunity"
@@ -34,8 +38,11 @@ export interface LandingHeroContent {
   /** Supporting paragraph below the hero title. */
   description: string;
   locality: string;
+  videoSrc: string;
   ctaShopLabel: string;
+  ctaShopHref: string;
   ctaExploreLabel: string;
+  ctaExploreHref: string;
   statItemsSoldLabel: string;
   statCollectionsLabel: string;
   statLocalityLine: string;
@@ -109,12 +116,19 @@ export interface LandingEventSpotlightContent {
 }
 
 export interface LandingCtaContent {
+  eyebrow: string;
   titleLine1: string;
   titleLine2: string;
-  /** Used when product catalog is empty */
+  /** Supporting line under the closing headline */
   priceFallback: string;
+  contactEmail: string;
+  contactLinkLabel: string;
+  contactHref: string;
+  localityLine: string;
   ctaShop: string;
+  ctaShopHref: string;
   ctaStory: string;
+  ctaStoryHref: string;
   trustShipping: string;
   trustReturns: string;
   trustShips: string;
@@ -136,9 +150,12 @@ export interface LandingTeamCommunityContent {
   badge: string;
   headlineLine1: string;
   headlineLine2Italic: string;
+  metaLine: string;
   teams: [LandingTeamChipContent, LandingTeamChipContent, LandingTeamChipContent, LandingTeamChipContent];
   primaryCtaLabel: string;
+  primaryCtaHref: string;
   secondaryCtaLabel: string;
+  secondaryCtaHref: string;
   socialHeading: string;
   instagramUrl: string;
   facebookUrl: string;
@@ -155,16 +172,23 @@ export interface FeaturedSpotlightSlot {
   imageOverride: string;
 }
 
-export interface LandingBenefitItem {
-  title: string;
-  description: string;
+export interface LandingGalleryTile {
+  image: string;
+  alt: string;
+  label: string;
+  tag: string;
+  variant: "feature" | "tile";
 }
 
-export interface LandingBenefitsContent {
+export interface LandingGalleryContent {
   eyebrow: string;
   titleLine1: string;
   titleLine2Italic: string;
-  items: [LandingBenefitItem, LandingBenefitItem, LandingBenefitItem, LandingBenefitItem];
+  caption: string;
+  footnote: string;
+  ctaLabel: string;
+  ctaHref: string;
+  tiles: LandingGalleryTile[];
 }
 
 export interface LandingFaqItem {
@@ -178,6 +202,7 @@ export interface LandingFaqContent {
   titleLine2Italic: string;
   caption: string;
   ctaLabel: string;
+  ctaHref: string;
   items: [LandingFaqItem, LandingFaqItem, LandingFaqItem, LandingFaqItem, LandingFaqItem];
 }
 
@@ -202,14 +227,14 @@ export const LANDING_COLLECTION_COUNT = 4;
 export const LANDING_UGC_COUNT = 5;
 export const LANDING_TESTIMONIAL_COUNT = 3;
 export const LANDING_TEAM_CHIP_COUNT = 4;
-export const LANDING_BENEFIT_COUNT = 4;
+export const LANDING_GALLERY_TILE_COUNT = 5;
 export const LANDING_FAQ_COUNT = 5;
 
 export const emptyLandingTypography = (): LandingTypography => ({
   hero: {},
   collections: {},
   bestSellers: {},
-  benefits: {},
+  gallery: {},
   event: {},
   social: {},
   teamCommunity: {},
@@ -224,7 +249,7 @@ export interface LandingContent {
   collectionsViewAllLabel: string;
   bestSellersHeader: LandingSectionHeaderContent;
   bestSellersShopLink: string;
-  benefits: LandingBenefitsContent;
+  gallery: LandingGalleryContent;
   brandStory: LandingBrandStoryContent;
   event: LandingEventSpotlightContent;
   socialHeader: LandingSectionHeaderContent;
@@ -236,6 +261,7 @@ export interface LandingContent {
   cta: LandingCtaContent;
   footer: LandingFooterContent;
   featuredSpotlight: LandingFeaturedSpotlightContent;
+  testimonialsPage: TestimonialsPageContent;
   typography: LandingTypography;
 }
 
@@ -257,6 +283,18 @@ export const initialFeaturedSpotlightContent: LandingFeaturedSpotlightContent = 
   showOnShop: true,
 };
 
+export const LANDING_HERO_VIDEO_DEFAULT =
+  "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260405_170732_8a9ccda6-5cff-4628-b164-059c500a2b41.mp4";
+
+const initialGalleryTiles = (): LandingGalleryTile[] =>
+  COMMUNITY_COLLECTIONS.map((item) => ({
+    image: item.image,
+    alt: item.alt,
+    label: item.label,
+    tag: item.tag,
+    variant: item.layout === "feature" ? "feature" : "tile",
+  }));
+
 export const LANDING_COLLECTION_IDS: LandingCollectionId[] = [
   "pickleball",
   "golf",
@@ -273,8 +311,11 @@ export const initialLandingContent: LandingContent = {
     description:
       "Premium Filipino sportswear engineered for movement — on the court, on the course, and everywhere off the grid.",
     locality: "EST. MANILA, PH",
+    videoSrc: LANDING_HERO_VIDEO_DEFAULT,
     ctaShopLabel: "Shop Collection",
+    ctaShopHref: "/shop",
     ctaExploreLabel: "Explore Sports",
+    ctaExploreHref: "/#collections",
     statItemsSoldLabel: "Items Sold",
     statCollectionsLabel: "OG Signatures",
     statLocalityLine: "EST. MANILA, PH",
@@ -329,32 +370,16 @@ export const initialLandingContent: LandingContent = {
       "Thoughtfully designed pieces inspired by sport, shaped by culture, and made for everyday movement.",
   },
   bestSellersShopLink: "Shop full catalog",
-  benefits: {
-    eyebrow: "Why Off Grid",
-    titleLine1: "Built for athletes.",
-    titleLine2Italic: "Made for everyday.",
-    items: [
-      {
-        title: "Premium fabric & fit",
-        description:
-          "Engineered for movement on court, course, and street — breathable, durable, and cut for real athletes.",
-      },
-      {
-        title: "Custom team orders",
-        description:
-          "From concept to delivery, we make it easy for teams to design, order, and rep gear that feels uniquely theirs.",
-      },
-      {
-        title: "Filipino craft",
-        description:
-          "Designed in Manila with local athletes in mind — proudly Pinoy sportswear built for how we play and live.",
-      },
-      {
-        title: "Versatile lifestyle",
-        description:
-          "Pieces that transition from competition to everyday wear without losing comfort, style, or performance.",
-      },
-    ],
+  gallery: {
+    eyebrow: "OG in the wild",
+    titleLine1: "Real moments.",
+    titleLine2Italic: "Real community.",
+    caption:
+      "From Discfest to Pickle Project — Filipino sportswear tested on court, course, and everywhere off the grid.",
+    footnote: "Discfest · Mixed Masters · Towels · Pickle · The Greatest x OG",
+    ctaLabel: "Explore events",
+    ctaHref: "/events",
+    tiles: initialGalleryTiles(),
   },
   brandStory: {
     eyebrow: "Our Story",
@@ -435,6 +460,7 @@ export const initialLandingContent: LandingContent = {
     badge: "Our Community",
     headlineLine1: "Built for teams.",
     headlineLine2Italic: "Powered by connection.",
+    metaLine: "EST. MANILA, PH — GRITTY · IN MOTION · PRODUCT-FOCUSED",
     teams: [
       { name: "Manila Smash", sport: "Pickleball" },
       { name: "Fairway Co.", sport: "Golf" },
@@ -442,7 +468,9 @@ export const initialLandingContent: LandingContent = {
       { name: "Barangay Ball", sport: "Basketball" },
     ],
     primaryCtaLabel: "View events",
+    primaryCtaHref: "/events",
     secondaryCtaLabel: "Start a team order",
+    secondaryCtaHref: "/custom",
     socialHeading: "Follow the movement",
     instagramUrl: "https://www.instagram.com/offgridlifestyle.ph/",
     facebookUrl: "https://www.facebook.com/offgridlifestyleph/",
@@ -453,6 +481,7 @@ export const initialLandingContent: LandingContent = {
     titleLine2Italic: "answered.",
     caption: "Quick answers on orders, artwork, and custom design support.",
     ctaLabel: "View full ordering guide",
+    ctaHref: "/custom#faqs",
     items: [
       {
         question: "What is the minimum order quantity?",
@@ -482,11 +511,18 @@ export const initialLandingContent: LandingContent = {
     ],
   },
   cta: {
+    eyebrow: "Stay connected",
     titleLine1: "READY TO GO",
     titleLine2: "OFF GRID?",
     priceFallback: "Premium pieces for athletes who play different.",
+    contactEmail: "hello@offgridlifestyle.ph",
+    contactLinkLabel: "Send a message",
+    contactHref: "/contact",
+    localityLine: "Est. Manila, PH · 14.5995° N, 120.9842° E",
     ctaShop: "Shop Now",
+    ctaShopHref: "/shop",
     ctaStory: "Our Story",
+    ctaStoryHref: "/about",
     trustShipping: "Free shipping ₱2,000+",
     trustReturns: "14-day returns",
     trustShips: "Ships nationwide",
@@ -498,5 +534,6 @@ export const initialLandingContent: LandingContent = {
     copyright: "© 2026 OffGrid Lifestyle. All rights reserved.",
   },
   featuredSpotlight: initialFeaturedSpotlightContent,
+  testimonialsPage: initialTestimonialsPageContent,
   typography: emptyLandingTypography(),
 };

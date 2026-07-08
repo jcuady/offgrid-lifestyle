@@ -1,8 +1,6 @@
 import { motion, useReducedMotion } from "motion/react";
-import { ArrowRight, Truck, RefreshCcw, MapPin, ShieldCheck } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/src/components/ui/Button";
-import { COMMUNITY_PHOTO_PATHS } from "@/src/lib/communityPhotos";
+import { ArrowRight, ArrowUpRight, Instagram, Facebook, Mail } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   monoLabelOnDark,
   sectionPaddingDark,
@@ -11,68 +9,48 @@ import {
 } from "@/src/lib/brandLayout";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { cmsTypographyStyle } from "@/src/lib/cmsTypography";
+import { followCmsCta } from "@/src/lib/cmsNavigation";
 import { cn } from "@/src/lib/utils";
 
-/** UiUX Element 10 — photo-led closing CTA (Discfest, Greatest x OG, Towels). */
-const CLOSING_PHOTOS = [
-  {
-    src: COMMUNITY_PHOTO_PATHS.ultimateSkyball,
-    alt: "Off Grid community at Discfest",
-    className: "col-span-7 row-span-2",
-  },
-  {
-    src: COMMUNITY_PHOTO_PATHS.ogBackpack,
-    alt: "OFF GRID Pilipinas backpack on the field",
-    className: "col-span-5 row-span-1",
-  },
-  {
-    src: COMMUNITY_PHOTO_PATHS.towelsWalk,
-    alt: "Custom OG lifestyle towels on the pitch",
-    className: "col-span-5 row-span-1",
-  },
-] as const;
-
+/** UiUX Element 10 — minimal closing band: typography, contact, socials. */
 export function CTASection() {
   const navigate = useNavigate();
   const reduceMotion = useReducedMotion();
   const cta = useSiteContentStore((state) => state.landingContent.cta);
-  const tagline = useSiteContentStore((state) => state.landingContent.footer.taglineLine1);
+  const footer = useSiteContentStore((state) => state.landingContent.footer);
+  const team = useSiteContentStore((state) => state.landingContent.teamCommunity);
   const typography = useSiteContentStore((state) => state.landingContent.typography.cta);
   const headingStyle = cmsTypographyStyle(typography, "heading");
   const bodyStyle = cmsTypographyStyle(typography, "body");
 
-  const trustBadges = [
-    { label: cta.trustShipping, icon: <Truck className="h-5 w-5" /> },
-    { label: cta.trustReturns, icon: <RefreshCcw className="h-5 w-5" /> },
-    { label: cta.trustShips, icon: <MapPin className="h-5 w-5" /> },
-    { label: cta.trustCheckout, icon: <ShieldCheck className="h-5 w-5" /> },
-  ];
+  const socials = [
+    { label: "Instagram", href: team.instagramUrl, icon: Instagram },
+    { label: "Facebook", href: team.facebookUrl, icon: Facebook },
+  ] as const;
 
   const motionProps = (delay: number) =>
     reduceMotion
       ? {}
       : {
-          initial: { opacity: 0, y: 20 } as const,
+          initial: { opacity: 0, y: 16 } as const,
           whileInView: { opacity: 1, y: 0 } as const,
           viewport: { once: true, margin: "-60px" } as const,
-          transition: { duration: 0.55, delay } as const,
+          transition: { duration: 0.5, delay } as const,
         };
 
   return (
     <section
-      id="final-cta"
-      aria-labelledby="final-cta-heading"
-      className="relative overflow-hidden bg-offgrid-dark text-offgrid-cream"
+      id="connect"
+      aria-labelledby="connect-heading"
+      className="relative border-t border-offgrid-cream/10 bg-offgrid-dark text-offgrid-cream"
     >
-      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-offgrid-cream/10" />
-
-      <div className={cn(siteContainer, sectionPaddingDark)}>
-        <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-12 lg:gap-14">
-          <motion.div {...motionProps(0)} className="lg:col-span-5">
-            <span className={cn(monoLabelOnDark, "text-offgrid-cream/60")}>Final call</span>
+      <div className={cn(siteContainer, sectionPaddingDark, "pb-14 sm:pb-16 md:pb-20")}>
+        <div className="grid gap-12 lg:grid-cols-12 lg:items-end lg:gap-16">
+          <motion.div {...motionProps(0)} className="lg:col-span-7">
+            <span className={cn(monoLabelOnDark, "text-offgrid-cream/55")}>{cta.eyebrow}</span>
 
             <h2
-              id="final-cta-heading"
+              id="connect-heading"
               className={cn(sectionTitleOnDark, "mt-4")}
               style={headingStyle}
             >
@@ -82,81 +60,90 @@ export function CTASection() {
             </h2>
 
             <p
-              className="mt-5 max-w-md text-base leading-relaxed text-offgrid-cream/80 md:text-lg"
+              className="mt-5 max-w-lg text-base leading-relaxed text-offgrid-cream/75 md:text-lg"
               style={bodyStyle}
             >
               {cta.priceFallback}
             </p>
 
-            <p className="mt-4 font-mono text-sm font-bold uppercase tracking-[0.2em] text-offgrid-cream/65">
-              {tagline}
+            <p className="mt-4 font-mono text-sm font-bold uppercase tracking-[0.2em] text-offgrid-cream/60">
+              {footer.taglineLine1}
             </p>
-
-            <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              <Button
-                type="button"
-                variant="secondary"
-                size="lg"
-                className="group h-16 w-full px-12 text-lg font-bold sm:w-auto"
-                onClick={() => navigate("/shop")}
-              >
-                {cta.ctaShop}
-                <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="lg"
-                className="h-16 w-full border-offgrid-cream/40 bg-transparent px-12 text-lg text-offgrid-cream hover:border-offgrid-cream hover:bg-offgrid-cream hover:text-offgrid-green sm:w-auto"
-                onClick={() => navigate("/about")}
-              >
-                {cta.ctaStory}
-              </Button>
-            </div>
-
-            <ul className="mt-10 grid grid-cols-2 gap-x-4 gap-y-5 border-t border-offgrid-cream/10 pt-8 sm:grid-cols-4">
-              {trustBadges.map((badge) => (
-                <li key={badge.label} className="flex flex-col items-start gap-2 sm:items-center sm:text-center">
-                  <span className="text-offgrid-lime">{badge.icon}</span>
-                  <span className="font-mono text-[11px] font-bold uppercase leading-snug tracking-[0.12em] text-offgrid-cream/70 sm:text-xs">
-                    {badge.label}
-                  </span>
-                </li>
-              ))}
-            </ul>
           </motion.div>
 
           <motion.div
-            {...motionProps(0.08)}
-            className="lg:col-span-7"
+            {...motionProps(0.06)}
+            className="flex flex-col gap-10 sm:flex-row sm:gap-12 lg:col-span-5 lg:flex-col lg:items-end lg:gap-10 lg:text-right"
           >
-            <div className="grid grid-cols-12 grid-rows-2 gap-3 sm:gap-4">
-              {CLOSING_PHOTOS.map((photo) => (
-                <div
-                  key={photo.src}
-                  className={cn(
-                    "group relative overflow-hidden rounded-2xl ring-1 ring-offgrid-cream/10",
-                    photo.className,
-                    "min-h-[140px] sm:min-h-[180px]",
-                  )}
-                >
-                  <img
-                    src={photo.src}
-                    alt={photo.alt}
-                    loading="lazy"
-                    decoding="async"
-                    className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-[1.03]"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
-                  <div className="absolute left-0 top-0 h-full w-1 bg-offgrid-lime/80" aria-hidden />
-                </div>
-              ))}
+            <div className="min-w-0">
+              <p className={cn(monoLabelOnDark, "mb-4 text-offgrid-cream/50")}>Contact</p>
+              <a
+                href={`mailto:${cta.contactEmail}`}
+                className="group inline-flex items-center gap-2 font-display text-xl font-black tracking-tight text-offgrid-cream transition-colors hover:text-white sm:text-2xl"
+              >
+                <Mail className="h-5 w-5 shrink-0 text-offgrid-lime" strokeWidth={1.75} aria-hidden />
+                {cta.contactEmail}
+                <ArrowUpRight className="h-4 w-4 opacity-0 transition-opacity group-hover:opacity-100" />
+              </a>
+              <Link
+                to={cta.contactHref}
+                className="mt-3 inline-flex items-center gap-1.5 font-mono text-xs font-bold uppercase tracking-[0.16em] text-offgrid-cream/60 transition-colors hover:text-offgrid-lime"
+              >
+                {cta.contactLinkLabel}
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+
+            <div>
+              <p className={cn(monoLabelOnDark, "mb-4 text-offgrid-cream/50")}>
+                {team.socialHeading}
+              </p>
+              <ul className="flex flex-wrap gap-3 lg:justify-end">
+                {socials.map(({ label, href, icon: Icon }) => (
+                  <li key={label}>
+                    <a
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`${label} (opens in new tab)`}
+                      className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-offgrid-cream/20 text-offgrid-cream/80 transition-colors hover:border-offgrid-lime hover:bg-offgrid-lime/10 hover:text-offgrid-lime"
+                    >
+                      <Icon className="h-4 w-4" strokeWidth={1.75} />
+                    </a>
+                  </li>
+                ))}
+              </ul>
             </div>
           </motion.div>
         </div>
-      </div>
 
-      <div aria-hidden className="h-px bg-gradient-to-r from-transparent via-offgrid-cream/20 to-transparent" />
+        <motion.div
+          {...motionProps(0.1)}
+          className="mt-14 flex flex-col gap-6 border-t border-offgrid-cream/10 pt-8 sm:flex-row sm:items-center sm:justify-between"
+        >
+          <p className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-offgrid-cream/45">
+            {cta.localityLine}
+          </p>
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+            <button
+              type="button"
+              onClick={() => followCmsCta(navigate, cta.ctaShopHref)}
+              className="group inline-flex items-center justify-center gap-2 rounded-full bg-offgrid-lime px-6 py-3 text-sm font-bold uppercase tracking-[0.1em] text-offgrid-cream transition-colors hover:bg-white hover:text-offgrid-green"
+            >
+              {cta.ctaShop}
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => followCmsCta(navigate, cta.ctaStoryHref)}
+              className="inline-flex items-center justify-center rounded-full border border-offgrid-cream/25 px-6 py-3 text-sm font-bold uppercase tracking-[0.1em] text-offgrid-cream transition-colors hover:border-offgrid-cream hover:text-white"
+            >
+              {cta.ctaStory}
+            </button>
+          </div>
+        </motion.div>
+      </div>
     </section>
   );
 }

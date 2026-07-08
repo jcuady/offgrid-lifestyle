@@ -5,12 +5,16 @@ import { isLegacyPlaceholderImage } from "@/src/lib/communityPhotos";
 function mergeTypography(
   base: LandingContent["typography"],
   patch: LandingContent["typography"] | undefined,
+  legacyPatch?: { benefits?: LandingContent["typography"]["gallery"] },
 ): LandingContent["typography"] {
-  if (!patch) return base;
+  if (!patch && !legacyPatch?.benefits) return base;
   const keys = Object.keys(base) as (keyof LandingContent["typography"])[];
   const merged = { ...base };
   for (const key of keys) {
-    merged[key] = { ...base[key], ...(patch[key] ?? {}) };
+    merged[key] = { ...base[key], ...(patch?.[key] ?? {}) };
+  }
+  if (legacyPatch?.benefits) {
+    merged.gallery = { ...base.gallery, ...legacyPatch.benefits, ...merged.gallery };
   }
   return merged;
 }
@@ -58,14 +62,34 @@ export function normalizeLandingContent(partial?: Partial<LandingContent> | null
     })),
     bestSellersHeader: { ...base.bestSellersHeader, ...partial.bestSellersHeader },
     bestSellersShopLink: partial.bestSellersShopLink ?? base.bestSellersShopLink,
-    benefits: {
-      ...base.benefits,
-      ...partial.benefits,
-      items: base.benefits.items.map((item, index) => ({
-        ...item,
-        ...(partial.benefits?.items?.[index] ?? {}),
-      })) as LandingContent["benefits"]["items"],
-    },
+    gallery: (() => {
+      const legacyBenefits = partial.benefits as
+        | { eyebrow?: string; titleLine1?: string; titleLine2Italic?: string }
+        | undefined;
+      const gallery = partial.gallery;
+      return {
+        ...base.gallery,
+        ...gallery,
+        eyebrow: gallery?.eyebrow ?? legacyBenefits?.eyebrow ?? base.gallery.eyebrow,
+        titleLine1: gallery?.titleLine1 ?? legacyBenefits?.titleLine1 ?? base.gallery.titleLine1,
+        titleLine2Italic:
+          gallery?.titleLine2Italic ?? legacyBenefits?.titleLine2Italic ?? base.gallery.titleLine2Italic,
+        caption: gallery?.caption ?? base.gallery.caption,
+        footnote: gallery?.footnote ?? base.gallery.footnote,
+        ctaLabel: gallery?.ctaLabel ?? base.gallery.ctaLabel,
+        ctaHref: gallery?.ctaHref ?? base.gallery.ctaHref,
+        tiles: base.gallery.tiles.map((tile, index) => {
+          const persisted = gallery?.tiles?.[index];
+          return {
+            ...tile,
+            ...(persisted ?? {}),
+            image: isLegacyPlaceholderImage(persisted?.image)
+              ? tile.image
+              : (persisted?.image ?? tile.image),
+          };
+        }),
+      };
+    })(),
     collectionsViewAllLabel: partial.collectionsViewAllLabel ?? base.collectionsViewAllLabel,
     brandStory: {
       ...base.brandStory,
@@ -115,7 +139,26 @@ export function normalizeLandingContent(partial?: Partial<LandingContent> | null
         ...(partial.featuredSpotlight?.slots?.[index] ?? {}),
       })) as LandingContent["featuredSpotlight"]["slots"],
     },
+    testimonialsPage: {
+      ...base.testimonialsPage,
+      ...partial.testimonialsPage,
+      hero: { ...base.testimonialsPage.hero, ...partial.testimonialsPage?.hero },
+      showcase: {
+        ...base.testimonialsPage.showcase,
+        ...partial.testimonialsPage?.showcase,
+        tiles: base.testimonialsPage.showcase.tiles.map((tile, index) => ({
+          ...tile,
+          ...(partial.testimonialsPage?.showcase?.tiles?.[index] ?? {}),
+        })),
+      },
+      wall: { ...base.testimonialsPage.wall, ...partial.testimonialsPage?.wall },
+      cta: { ...base.testimonialsPage.cta, ...partial.testimonialsPage?.cta },
+    },
     teamCommunity,
-    typography: mergeTypography(base.typography, partial.typography),
+    typography: mergeTypography(
+      base.typography,
+      partial.typography,
+      partial.typography as { benefits?: LandingContent["typography"]["gallery"] } | undefined,
+    ),
   };
 }

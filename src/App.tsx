@@ -130,6 +130,9 @@ const AdminSettingsPage = lazy(() =>
 const AdminReviewsPage = lazy(() =>
   import("./pages/portal/AdminReviewsPage").then((m) => ({ default: m.AdminReviewsPage })),
 );
+const AdminTestimonialsPage = lazy(() =>
+  import("./pages/portal/AdminTestimonialsPage").then((m) => ({ default: m.AdminTestimonialsPage })),
+);
 const TermsPage = lazy(() =>
   import("./pages/LegalPages").then((m) => ({ default: m.TermsPage })),
 );
@@ -250,6 +253,7 @@ function AppFrame() {
           <Route path="settings" element={<AdminSettingsPage />} />
           <Route path="custom-content" element={<AdminCustomContentPage />} />
           <Route path="reviews" element={<AdminReviewsPage />} />
+          <Route path="testimonials" element={<AdminTestimonialsPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
 

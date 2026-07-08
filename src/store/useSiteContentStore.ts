@@ -7,6 +7,8 @@ import { initialEvents } from "@/src/data/events";
 import type { LandingCollectionId, LandingContent, LandingTypographySectionKey } from "@/src/data/landingContent";
 import { initialFeaturedSpotlightContent, initialLandingContent } from "@/src/data/landingContent";
 import type { CmsSectionTypography } from "@/src/data/landingContent";
+import type { TestimonialWallEntry } from "@/src/data/testimonialsPage";
+import { initialTestimonialWall } from "@/src/data/testimonialsPage";
 import { normalizeLandingContent } from "@/src/lib/normalizeLandingContent";
 import type { CustomPageContent } from "@/src/data/customPageContent";
 import { initialCustomPageContent, normalizeCustomPageContent } from "@/src/data/customPageContent";
@@ -258,8 +260,11 @@ interface SiteContentState {
   ) => void;
   updateLandingBestSellersHeader: (patch: Partial<LandingContent["bestSellersHeader"]>) => void;
   updateLandingBestSellersShopLink: (label: string) => void;
-  updateLandingBenefits: (patch: Partial<Omit<LandingContent["benefits"], "items">>) => void;
-  updateLandingBenefitItem: (index: 0 | 1 | 2 | 3, patch: Partial<LandingContent["benefits"]["items"][number]>) => void;
+  updateLandingGallery: (patch: Partial<LandingContent["gallery"]>) => void;
+  updateLandingGalleryTile: (
+    index: 0 | 1 | 2 | 3 | 4,
+    patch: Partial<LandingContent["gallery"]["tiles"][number]>,
+  ) => void;
   updateLandingBrandStory: (patch: Partial<LandingContent["brandStory"]>) => void;
   updateLandingEvent: (patch: Partial<LandingContent["event"]>) => void;
   updateLandingSocialHeader: (patch: Partial<LandingContent["socialHeader"]>) => void;
@@ -287,7 +292,20 @@ interface SiteContentState {
     index: 0 | 1 | 2,
     patch: Partial<LandingContent["featuredSpotlight"]["slots"][number]>,
   ) => void;
+  updateLandingTestimonialsHero: (patch: Partial<LandingContent["testimonialsPage"]["hero"]>) => void;
+  updateLandingTestimonialsShowcase: (patch: Partial<Omit<LandingContent["testimonialsPage"]["showcase"], "tiles">>) => void;
+  updateLandingTestimonialsShowcaseTile: (
+    index: number,
+    patch: Partial<LandingContent["testimonialsPage"]["showcase"]["tiles"][number]>,
+  ) => void;
+  updateLandingTestimonialsWall: (patch: Partial<LandingContent["testimonialsPage"]["wall"]>) => void;
+  updateLandingTestimonialsCta: (patch: Partial<LandingContent["testimonialsPage"]["cta"]>) => void;
   resetLandingContent: () => void;
+
+  testimonialWall: TestimonialWallEntry[];
+  addTestimonial: (input: TestimonialWallEntry) => void;
+  updateTestimonial: (id: string, patch: Partial<TestimonialWallEntry>) => void;
+  removeTestimonial: (id: string) => void;
 
   addProduct: (input: Product) => void;
   updateProduct: (id: string, patch: Partial<Product>) => void;
@@ -313,11 +331,12 @@ const initialCustomSections: CustomContentSection[] = getCanonicalGuideSectionSe
 const initialTemplates: CustomTemplateAsset[] = createCanonicalOgTemplates(nowIso());
 const initialHeadwearOptions: CustomHeadwearOption[] = createDefaultHeadwearOptions(nowIso());
 
-const SITE_CONTENT_PERSIST_VERSION = 16;
+const SITE_CONTENT_PERSIST_VERSION = 19;
 
 type PersistedSiteContentSlice = {
   products?: Product[];
   events?: SiteEvent[];
+  testimonialWall?: TestimonialWallEntry[];
   landingContent?: LandingContent;
   customPageContent?: CustomPageContent;
   customSections?: CustomContentSection[];
@@ -330,6 +349,7 @@ export const useSiteContentStore = create<SiteContentState>()(
     (set) => ({
       products: initialProducts,
       events: initialEvents,
+      testimonialWall: initialTestimonialWall,
       landingContent: initialLandingContent,
       customPageContent: normalizeCustomPageContent(initialCustomPageContent),
       customSections: initialCustomSections,
@@ -502,22 +522,22 @@ export const useSiteContentStore = create<SiteContentState>()(
         })),
       updateLandingBestSellersShopLink: (label) =>
         set((state) => ({ landingContent: { ...state.landingContent, bestSellersShopLink: label } })),
-      updateLandingBenefits: (patch) =>
+      updateLandingGallery: (patch) =>
         set((state) => ({
           landingContent: {
             ...state.landingContent,
-            benefits: { ...state.landingContent.benefits, ...patch },
+            gallery: { ...state.landingContent.gallery, ...patch },
           },
         })),
-      updateLandingBenefitItem: (index, patch) =>
+      updateLandingGalleryTile: (index, patch) =>
         set((state) => ({
           landingContent: {
             ...state.landingContent,
-            benefits: {
-              ...state.landingContent.benefits,
-              items: state.landingContent.benefits.items.map((item, i) =>
-                i === index ? { ...item, ...patch } : item,
-              ) as LandingContent["benefits"]["items"],
+            gallery: {
+              ...state.landingContent.gallery,
+              tiles: state.landingContent.gallery.tiles.map((tile, i) =>
+                i === index ? { ...tile, ...patch } : tile,
+              ),
             },
           },
         })),
@@ -634,6 +654,61 @@ export const useSiteContentStore = create<SiteContentState>()(
             },
           },
         })),
+      updateLandingTestimonialsHero: (patch) =>
+        set((state) => ({
+          landingContent: {
+            ...state.landingContent,
+            testimonialsPage: {
+              ...state.landingContent.testimonialsPage,
+              hero: { ...state.landingContent.testimonialsPage.hero, ...patch },
+            },
+          },
+        })),
+      updateLandingTestimonialsShowcase: (patch) =>
+        set((state) => ({
+          landingContent: {
+            ...state.landingContent,
+            testimonialsPage: {
+              ...state.landingContent.testimonialsPage,
+              showcase: { ...state.landingContent.testimonialsPage.showcase, ...patch },
+            },
+          },
+        })),
+      updateLandingTestimonialsShowcaseTile: (index, patch) =>
+        set((state) => ({
+          landingContent: {
+            ...state.landingContent,
+            testimonialsPage: {
+              ...state.landingContent.testimonialsPage,
+              showcase: {
+                ...state.landingContent.testimonialsPage.showcase,
+                tiles: state.landingContent.testimonialsPage.showcase.tiles.map((tile, i) =>
+                  i === index ? { ...tile, ...patch } : tile,
+                ),
+              },
+            },
+          },
+        })),
+      updateLandingTestimonialsWall: (patch) =>
+        set((state) => ({
+          landingContent: {
+            ...state.landingContent,
+            testimonialsPage: {
+              ...state.landingContent.testimonialsPage,
+              wall: { ...state.landingContent.testimonialsPage.wall, ...patch },
+            },
+          },
+        })),
+      updateLandingTestimonialsCta: (patch) =>
+        set((state) => ({
+          landingContent: {
+            ...state.landingContent,
+            testimonialsPage: {
+              ...state.landingContent.testimonialsPage,
+              cta: { ...state.landingContent.testimonialsPage.cta, ...patch },
+            },
+          },
+        })),
       resetLandingContent: () => set({ landingContent: initialLandingContent }),
 
       addProduct: (input) => set((state) => ({ products: [input, ...state.products] })),
@@ -653,6 +728,31 @@ export const useSiteContentStore = create<SiteContentState>()(
         })),
       removeEvent: (id) =>
         set((state) => ({ events: state.events.filter((entry) => entry.id !== id) })),
+
+      addTestimonial: (input) =>
+        set((state) => {
+          const cleared = input.featured
+            ? state.testimonialWall.map((entry) => ({ ...entry, featured: false }))
+            : state.testimonialWall;
+          return { testimonialWall: [input, ...cleared] };
+        }),
+      updateTestimonial: (id, patch) =>
+        set((state) => {
+          const shouldClearFeatured = patch.featured === true;
+          return {
+            testimonialWall: state.testimonialWall.map((entry) => {
+              if (shouldClearFeatured && entry.id !== id) {
+                return { ...entry, featured: false };
+              }
+              if (entry.id === id) return { ...entry, ...patch };
+              return entry;
+            }),
+          };
+        }),
+      removeTestimonial: (id) =>
+        set((state) => ({
+          testimonialWall: state.testimonialWall.filter((entry) => entry.id !== id),
+        })),
 
       addCustomSection: (input) =>
         set((state) => ({ customSections: [input, ...state.customSections] })),
@@ -936,6 +1036,55 @@ export const useSiteContentStore = create<SiteContentState>()(
           };
         }
 
+        if (version < 17) {
+          const landing = next.landingContent ?? initialLandingContent;
+          const legacyBenefits = (landing as LandingContent & { benefits?: typeof landing.gallery }).benefits;
+          const legacyTypography = landing.typography as LandingContent["typography"] & {
+            benefits?: LandingContent["typography"]["gallery"];
+          };
+
+          next = {
+            ...next,
+            landingContent: normalizeLandingContent({
+              ...landing,
+              gallery: {
+                ...initialLandingContent.gallery,
+                ...(legacyBenefits ?? {}),
+                ...landing.gallery,
+              },
+              typography: {
+                ...landing.typography,
+                gallery: {
+                  ...initialLandingContent.typography.gallery,
+                  ...legacyTypography.benefits,
+                  ...landing.typography.gallery,
+                },
+              },
+            }),
+          };
+        }
+
+        if (version < 18) {
+          next = {
+            ...next,
+            testimonialWall: next.testimonialWall ?? initialTestimonialWall,
+            landingContent: normalizeLandingContent({
+              ...(next.landingContent ?? initialLandingContent),
+              testimonialsPage: {
+                ...initialLandingContent.testimonialsPage,
+                ...(next.landingContent?.testimonialsPage ?? {}),
+              },
+            }),
+          };
+        }
+
+        if (version < 19) {
+          next = {
+            ...next,
+            landingContent: normalizeLandingContent(next.landingContent ?? initialLandingContent),
+          };
+        }
+
         next = {
           ...next,
           landingContent: normalizeLandingContent(next.landingContent),
@@ -947,6 +1096,7 @@ export const useSiteContentStore = create<SiteContentState>()(
           customHeadwearOptions: resolveHeadwearOptions(
             next.customHeadwearOptions ?? initialHeadwearOptions,
           ),
+          testimonialWall: next.testimonialWall ?? initialTestimonialWall,
         };
 
         return next;
@@ -954,6 +1104,7 @@ export const useSiteContentStore = create<SiteContentState>()(
       partialize: (state) => ({
         products: state.products,
         events: state.events,
+        testimonialWall: state.testimonialWall,
         landingContent: normalizeLandingContent(state.landingContent),
         customPageContent: normalizeCustomPageContent(state.customPageContent),
         customSections: resolveGuideSections(state.customSections),

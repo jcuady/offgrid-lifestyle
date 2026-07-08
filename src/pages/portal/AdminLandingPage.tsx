@@ -34,8 +34,8 @@ export function AdminLandingPage() {
   const updateCollectionCard = useSiteContentStore((s) => s.updateLandingCollectionCard);
   const updateBestSellersHeader = useSiteContentStore((s) => s.updateLandingBestSellersHeader);
   const updateBestSellersShopLink = useSiteContentStore((s) => s.updateLandingBestSellersShopLink);
-  const updateBenefits = useSiteContentStore((s) => s.updateLandingBenefits);
-  const updateBenefitItem = useSiteContentStore((s) => s.updateLandingBenefitItem);
+  const updateGallery = useSiteContentStore((s) => s.updateLandingGallery);
+  const updateGalleryTile = useSiteContentStore((s) => s.updateLandingGalleryTile);
   const updateFaq = useSiteContentStore((s) => s.updateLandingFaq);
   const updateFaqItem = useSiteContentStore((s) => s.updateLandingFaqItem);
   const updateBrandStory = useSiteContentStore((s) => s.updateLandingBrandStory);
@@ -119,11 +119,27 @@ export function AdminLandingPage() {
           <CmsField label="Locality line">
             <CmsTextInput value={landing.hero.locality} onChange={(v) => updateHero({ locality: v })} />
           </CmsField>
-          <CmsField label="Shop CTA">
+          <CmsField label="Background video URL" className="sm:col-span-2">
+            <CmsTextInput
+              value={landing.hero.videoSrc}
+              onChange={(v) => updateHero({ videoSrc: v })}
+              placeholder="https://… .mp4"
+            />
+          </CmsField>
+          <CmsField label="Shop CTA label">
             <CmsTextInput value={landing.hero.ctaShopLabel} onChange={(v) => updateHero({ ctaShopLabel: v })} />
           </CmsField>
-          <CmsField label="Explore CTA">
+          <CmsField label="Shop CTA link">
+            <CmsRouteSelect value={landing.hero.ctaShopHref} onChange={(v) => updateHero({ ctaShopHref: v })} />
+          </CmsField>
+          <CmsField label="Explore CTA label">
             <CmsTextInput value={landing.hero.ctaExploreLabel} onChange={(v) => updateHero({ ctaExploreLabel: v })} />
+          </CmsField>
+          <CmsField label="Explore CTA link">
+            <CmsRouteSelect
+              value={landing.hero.ctaExploreHref}
+              onChange={(v) => updateHero({ ctaExploreHref: v })}
+            />
           </CmsField>
           <CmsField label="Stats — sold label">
             <CmsTextInput value={landing.hero.statItemsSoldLabel} onChange={(v) => updateHero({ statItemsSoldLabel: v })} />
@@ -404,40 +420,75 @@ export function AdminLandingPage() {
           />
         </CmsSectionPanel>
 
-        <CmsSectionPanel title="Brand benefits" description="Four benefit rows on the homepage (sticky heading + numbered list).">
+        <CmsSectionPanel
+          title="Photo gallery"
+          description="Dark media band on the homepage — highlights Materials photography (Discfest, Mixed Masters, Towels, Pickle, Greatest x OG)."
+        >
           <CmsField label="Eyebrow" className="sm:col-span-2">
-            <CmsTextInput value={landing.benefits.eyebrow} onChange={(v) => updateBenefits({ eyebrow: v })} />
+            <CmsTextInput value={landing.gallery.eyebrow} onChange={(v) => updateGallery({ eyebrow: v })} />
           </CmsField>
           <CmsField label="Title line 1">
-            <CmsTextInput value={landing.benefits.titleLine1} onChange={(v) => updateBenefits({ titleLine1: v })} />
+            <CmsTextInput value={landing.gallery.titleLine1} onChange={(v) => updateGallery({ titleLine1: v })} />
           </CmsField>
           <CmsField label="Title line 2 (italic)">
             <CmsTextInput
-              value={landing.benefits.titleLine2Italic}
-              onChange={(v) => updateBenefits({ titleLine2Italic: v })}
+              value={landing.gallery.titleLine2Italic}
+              onChange={(v) => updateGallery({ titleLine2Italic: v })}
             />
           </CmsField>
+          <CmsField label="Caption" className="sm:col-span-2">
+            <CmsTextInput
+              value={landing.gallery.caption}
+              onChange={(v) => updateGallery({ caption: v })}
+              multiline
+              rows={3}
+            />
+          </CmsField>
+          <CmsField label="Footnote">
+            <CmsTextInput value={landing.gallery.footnote} onChange={(v) => updateGallery({ footnote: v })} />
+          </CmsField>
+          <CmsField label="CTA label">
+            <CmsTextInput value={landing.gallery.ctaLabel} onChange={(v) => updateGallery({ ctaLabel: v })} />
+          </CmsField>
+          <CmsField label="CTA link">
+            <CmsRouteSelect value={landing.gallery.ctaHref} onChange={(v) => updateGallery({ ctaHref: v })} />
+          </CmsField>
           <CmsTypographyControls
-            value={landing.typography.benefits}
-            onChange={(patch) => updateTypography("benefits", patch)}
+            value={landing.typography.gallery}
+            onChange={(patch) => updateTypography("gallery", patch)}
           />
         </CmsSectionPanel>
 
-        {landing.benefits.items.map((item, index) => (
+        {landing.gallery.tiles.map((tile, index) => (
           <div key={index}>
-            <CmsSectionPanel title={`Benefit ${index + 1}`}>
-              <CmsField label="Title">
-                <CmsTextInput
-                  value={item.title}
-                  onChange={(v) => updateBenefitItem(index as 0 | 1 | 2 | 3, { title: v })}
+            <CmsSectionPanel
+              title={`Gallery tile ${index + 1}${tile.variant === "feature" ? " (feature)" : ""}`}
+              description="Fixed slot in the homepage photo mosaic — replace image and labels only."
+            >
+              <CmsField label="Image" className="sm:col-span-2">
+                <CmsImageInput
+                  value={tile.image}
+                  onChange={(v) => updateGalleryTile(index as 0 | 1 | 2 | 3 | 4, { image: v })}
+                  alt={tile.alt}
+                  uploadSection={`gallery-tile-${index}`}
                 />
               </CmsField>
-              <CmsField label="Description" className="sm:col-span-2">
+              <CmsField label="Alt text" className="sm:col-span-2">
                 <CmsTextInput
-                  value={item.description}
-                  onChange={(v) => updateBenefitItem(index as 0 | 1 | 2 | 3, { description: v })}
-                  multiline
-                  rows={3}
+                  value={tile.alt}
+                  onChange={(v) => updateGalleryTile(index as 0 | 1 | 2 | 3 | 4, { alt: v })}
+                />
+              </CmsField>
+              <CmsField label="Tag">
+                <CmsTextInput
+                  value={tile.tag}
+                  onChange={(v) => updateGalleryTile(index as 0 | 1 | 2 | 3 | 4, { tag: v })}
+                />
+              </CmsField>
+              <CmsField label="Label">
+                <CmsTextInput
+                  value={tile.label}
+                  onChange={(v) => updateGalleryTile(index as 0 | 1 | 2 | 3 | 4, { label: v })}
                 />
               </CmsField>
             </CmsSectionPanel>
@@ -655,6 +706,12 @@ export function AdminLandingPage() {
               multiline
             />
           </CmsField>
+          <CmsField label="Meta line" className="sm:col-span-2">
+            <CmsTextInput
+              value={landing.teamCommunity.metaLine}
+              onChange={(v) => updateTeamCommunity({ metaLine: v })}
+            />
+          </CmsField>
           {landing.teamCommunity.teams.map((team, index) => (
             <div key={index} className="contents">
               <CmsField label={`Team ${index + 1} — name`}>
@@ -677,10 +734,22 @@ export function AdminLandingPage() {
               onChange={(v) => updateTeamCommunity({ primaryCtaLabel: v })}
             />
           </CmsField>
+          <CmsField label="Primary CTA link">
+            <CmsRouteSelect
+              value={landing.teamCommunity.primaryCtaHref}
+              onChange={(v) => updateTeamCommunity({ primaryCtaHref: v })}
+            />
+          </CmsField>
           <CmsField label="Secondary CTA label">
             <CmsTextInput
               value={landing.teamCommunity.secondaryCtaLabel}
               onChange={(v) => updateTeamCommunity({ secondaryCtaLabel: v })}
+            />
+          </CmsField>
+          <CmsField label="Secondary CTA link">
+            <CmsRouteSelect
+              value={landing.teamCommunity.secondaryCtaHref}
+              onChange={(v) => updateTeamCommunity({ secondaryCtaHref: v })}
             />
           </CmsField>
           <CmsField label="Social heading" className="sm:col-span-2">
@@ -723,6 +792,9 @@ export function AdminLandingPage() {
           <CmsField label="Full guide link label" className="sm:col-span-2">
             <CmsTextInput value={landing.faq.ctaLabel} onChange={(v) => updateFaq({ ctaLabel: v })} />
           </CmsField>
+          <CmsField label="Full guide link" className="sm:col-span-2">
+            <CmsRouteSelect value={landing.faq.ctaHref} onChange={(v) => updateFaq({ ctaHref: v })} />
+          </CmsField>
           <CmsTypographyControls
             value={landing.typography.faq}
             onChange={(patch) => updateTypography("faq", patch)}
@@ -750,41 +822,52 @@ export function AdminLandingPage() {
           </div>
         ))}
 
-        <CmsSectionPanel title="Closing CTA" description="Photo-led final conversion band before the footer (UiUX Element 10).">
+        <CmsSectionPanel
+          title="Closing band"
+          description="Minimal contact and socials section before the footer (UiUX Element 10). Social URLs are managed under Team & Community."
+        >
+          <CmsField label="Eyebrow" className="sm:col-span-2">
+            <CmsTextInput value={landing.cta.eyebrow} onChange={(v) => updateCta({ eyebrow: v })} />
+          </CmsField>
           <CmsField label="Title line 1">
             <CmsTextInput value={landing.cta.titleLine1} onChange={(v) => updateCta({ titleLine1: v })} />
           </CmsField>
           <CmsField label="Title line 2">
             <CmsTextInput value={landing.cta.titleLine2} onChange={(v) => updateCta({ titleLine2: v })} />
           </CmsField>
-          <CmsField
-            label="Price fallback"
-            className="sm:col-span-2"
-            hint="Used when no products exist; otherwise prices are built from the catalog."
-          >
+          <CmsField label="Supporting line" className="sm:col-span-2">
             <CmsTextInput
               value={landing.cta.priceFallback}
               onChange={(v) => updateCta({ priceFallback: v })}
               multiline
             />
           </CmsField>
-          <CmsField label="Shop CTA">
+          <CmsField label="Contact email">
+            <CmsTextInput value={landing.cta.contactEmail} onChange={(v) => updateCta({ contactEmail: v })} />
+          </CmsField>
+          <CmsField label="Contact link label">
+            <CmsTextInput
+              value={landing.cta.contactLinkLabel}
+              onChange={(v) => updateCta({ contactLinkLabel: v })}
+            />
+          </CmsField>
+          <CmsField label="Contact link">
+            <CmsRouteSelect value={landing.cta.contactHref} onChange={(v) => updateCta({ contactHref: v })} />
+          </CmsField>
+          <CmsField label="Locality line" className="sm:col-span-2">
+            <CmsTextInput value={landing.cta.localityLine} onChange={(v) => updateCta({ localityLine: v })} />
+          </CmsField>
+          <CmsField label="Shop CTA label">
             <CmsTextInput value={landing.cta.ctaShop} onChange={(v) => updateCta({ ctaShop: v })} />
           </CmsField>
-          <CmsField label="Story CTA">
+          <CmsField label="Shop CTA link">
+            <CmsRouteSelect value={landing.cta.ctaShopHref} onChange={(v) => updateCta({ ctaShopHref: v })} />
+          </CmsField>
+          <CmsField label="Story CTA label">
             <CmsTextInput value={landing.cta.ctaStory} onChange={(v) => updateCta({ ctaStory: v })} />
           </CmsField>
-          <CmsField label="Trust — shipping">
-            <CmsTextInput value={landing.cta.trustShipping} onChange={(v) => updateCta({ trustShipping: v })} />
-          </CmsField>
-          <CmsField label="Trust — returns">
-            <CmsTextInput value={landing.cta.trustReturns} onChange={(v) => updateCta({ trustReturns: v })} />
-          </CmsField>
-          <CmsField label="Trust — ships">
-            <CmsTextInput value={landing.cta.trustShips} onChange={(v) => updateCta({ trustShips: v })} />
-          </CmsField>
-          <CmsField label="Trust — checkout">
-            <CmsTextInput value={landing.cta.trustCheckout} onChange={(v) => updateCta({ trustCheckout: v })} />
+          <CmsField label="Story CTA link">
+            <CmsRouteSelect value={landing.cta.ctaStoryHref} onChange={(v) => updateCta({ ctaStoryHref: v })} />
           </CmsField>
           <CmsTypographyControls
             value={landing.typography.cta}

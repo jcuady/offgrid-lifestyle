@@ -19,6 +19,21 @@ __MACOSX/
 # Local security review notes (not for git)
 Security (1).md
 
+# Local dev memory with secrets — never commit
+.dev-memory*.md
+
+# Deploy/MCP scratch artifacts (may contain function source)
+call-*.json
+mcp-*.json
+mcp-invoke-*.json
+deploy-result-*.json
+deploy-out-*.json
+deploy-submit.json
+.hook-secret.tmp
+
+# Supabase CLI temp
+supabase/.temp/
+
 # Playwright e2e artifacts
 test-results/
 playwright-report/

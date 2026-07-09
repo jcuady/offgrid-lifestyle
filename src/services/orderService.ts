@@ -21,6 +21,7 @@ import { validateCustomOrderDraft, validateRetailCart, validateShippingInfo, san
 import { checkoutPaymentConfigFromSettings, validateRetailPaymentMethod } from "@/src/types/payments";
 import { notifyStaffOrderEvent } from "@/src/lib/notifications";
 import { resolveStorageReference } from "@/src/lib/storageAccess";
+import { sendOrderReceiptEmail } from "@/src/services/emailService";
 
 export interface RetailCartLineInput {
   productId: string;
@@ -213,6 +214,11 @@ export const supabaseOrderService: OrderService = {
 
     usePortalStore.getState().recordRetailOrder(retailOrderPayload, fallbackName, fallbackEmail);
     void notifyStaffOrderEvent(orderId, "new_retail_order");
+    void sendOrderReceiptEmail({
+      orderId,
+      email: fallbackEmail,
+      orderType: "retail",
+    });
     return orderId;
   },
 
@@ -301,6 +307,11 @@ export const supabaseOrderService: OrderService = {
 
     const customOrderId = usePortalStore.getState().recordCustomOrder(finalDraft);
     void notifyStaffOrderEvent(customOrderId, "new_custom_order");
+    void sendOrderReceiptEmail({
+      orderId: customOrderId,
+      email: customerEmail ?? draft.contactEmail,
+      orderType: "custom",
+    });
     return { orderId: customOrderId, fileUploadWarnings: fileKeys.warnings };
   },
 

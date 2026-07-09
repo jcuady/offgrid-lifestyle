@@ -1,7 +1,7 @@
 import type { FormEvent, ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
-import { AtSignIcon, ChevronLeftIcon, LockKeyhole, UserRound } from "lucide-react";
+import { AtSignIcon, ChevronLeftIcon, LockKeyhole, Phone, UserRound } from "lucide-react";
 import { Button } from "./Button";
 import { Input } from "./input";
 import { cn } from "@/src/lib/utils";
@@ -25,11 +25,13 @@ export interface AuthPageProps {
   onPasswordChange: (value: string) => void;
   onSubmit: () => void;
   name?: string;
+  phone?: string;
   confirmPassword?: string;
   onNameChange?: (value: string) => void;
+  onPhoneChange?: (value: string) => void;
   onConfirmPasswordChange?: (value: string) => void;
   error?: string | null;
-  fieldErrors?: Partial<Record<"name" | "email" | "password" | "confirmPassword" | "acceptedTerms" | "form", string>>;
+  fieldErrors?: Partial<Record<"name" | "phone" | "email" | "password" | "confirmPassword" | "acceptedTerms" | "form", string>>;
   alternateLink?: { prompt: string; label: string; href: string };
   homeHref?: string;
   badge?: ReactNode;
@@ -53,8 +55,10 @@ export function AuthPage({
   onPasswordChange,
   onSubmit,
   name = "",
+  phone = "",
   confirmPassword = "",
   onNameChange,
+  onPhoneChange,
   onConfirmPasswordChange,
   error,
   fieldErrors = {},
@@ -170,6 +174,25 @@ export function AuthPage({
                   />
                   <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3 text-muted-foreground">
                     <UserRound className="size-4" aria-hidden />
+                  </div>
+                </div>
+              </Field>
+            ) : null}
+
+            {mode === "sign-up" && onPhoneChange ? (
+              <Field label="Mobile number" error={fieldErrors.phone}>
+                <div className="relative">
+                  <Input
+                    placeholder="+63 917 000 0000"
+                    className="peer ps-9"
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    value={phone}
+                    onChange={(e) => onPhoneChange(e.target.value)}
+                  />
+                  <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3 text-muted-foreground">
+                    <Phone className="size-4" aria-hidden />
                   </div>
                 </div>
               </Field>

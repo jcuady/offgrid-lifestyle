@@ -1,5 +1,6 @@
 import { notifyUser } from "@/src/lib/notifications";
 import { logger } from "@/src/lib/logger";
+import { sendOrderUpdateEmail } from "@/src/services/emailService";
 
 export type CustomerOrderEvent =
   | "payment_confirmed"
@@ -26,35 +27,38 @@ const MESSAGES: Record<CustomerOrderEvent, (orderId: string) => { title: string;
   }),
 };
 
-/** In-app + push notification for a customer portal user. */
+/** In-app + push + email notification for a customer order event. */
 export async function notifyCustomerOrderEvent(
   customerId: string | null | undefined,
   orderId: string,
   event: CustomerOrderEvent,
 ): Promise<void> {
-  if (!customerId) return;
-
   const { title, body } = MESSAGES[event](orderId);
-  try {
-    await notifyUser(customerId, {
-      title,
-      body,
-      url: `/account/orders/${orderId}`,
-      category: "order",
-    });
-    logger.info("Customer notification sent", {
-      operation: "notifyCustomerOrderEvent",
-      userId: customerId,
-      orderId,
-      event,
-    });
-  } catch (err) {
-    logger.warn("Customer notification failed", {
-      operation: "notifyCustomerOrderEvent",
-      userId: customerId,
-      orderId,
-      event,
-      error: err instanceof Error ? err.message : String(err),
-    });
+
+  if (customerId) {
+    try {
+      await notifyUser(customerId, {
+        title,
+        body,
+        url: `/account/orders/${orderId}`,
+        category: "order",
+      });
+      logger.info("Customer notification sent", {
+        operation: "notifyCustomerOrderEvent",
+        userId: customerId,
+        orderId,
+        event,
+      });
+    } catch (err) {
+      logger.warn("Customer notification failed", {
+        operation: "notifyCustomerOrderEvent",
+        userId: customerId,
+        orderId,
+        event,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
   }
+
+  void sendOrderUpdateEmail({ orderId, event });
 }

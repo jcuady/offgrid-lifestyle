@@ -15,6 +15,7 @@ import {
 import { Button } from "@/src/components/ui/Button";
 import { siteContainer } from "@/src/lib/brandLayout";
 import { isValidEmail } from "@/src/lib/formValidation";
+import { submitContactForm } from "@/src/services/emailService";
 import { cn } from "@/src/lib/utils";
 
 const CONTACT_EMAIL = "hello@offgridlifestyle.ph";
@@ -44,8 +45,10 @@ export function ContactPage() {
   const [message, setMessage] = useState("");
   const [errors, setErrors] = useState<{ name?: string; email?: string; message?: string }>({});
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const next: typeof errors = {};
     if (!name.trim()) next.name = "Please enter your name.";
@@ -54,11 +57,22 @@ export function ContactPage() {
     setErrors(next);
     if (Object.keys(next).length > 0) return;
 
-    const purposeLabel = PURPOSES.find((p) => p.id === purpose)?.label ?? "General";
-    const subject = `[${purposeLabel}] Message from ${name.trim()}`;
-    const body = `Name: ${name.trim()}\nEmail: ${email.trim()}\nTopic: ${purposeLabel}\n\n${message.trim()}`;
-    window.location.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    setSubmitted(true);
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      const purposeLabel = PURPOSES.find((p) => p.id === purpose)?.label ?? "General";
+      await submitContactForm({
+        name: name.trim(),
+        email: email.trim(),
+        topic: purpose,
+        message: message.trim(),
+      });
+      setSubmitted(true);
+    } catch {
+      setSubmitError("We couldn't send your message. Please try again or email us directly.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const resetForm = () => {
@@ -68,6 +82,7 @@ export function ContactPage() {
     setPurpose("general");
     setErrors({});
     setSubmitted(false);
+    setSubmitError(null);
   };
 
   return (
@@ -109,13 +124,10 @@ export function ContactPage() {
               <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-offgrid-lime/10">
                 <Check className="h-8 w-8 text-offgrid-lime" />
               </div>
-              <h2 className="mb-2 font-display text-2xl font-black text-offgrid-green">Message ready to send</h2>
+              <h2 className="mb-2 font-display text-2xl font-black text-offgrid-green">Message sent</h2>
               <p className="mb-7 max-w-sm text-sm leading-relaxed text-offgrid-green/65">
-                Your email app should have opened with the details filled in. Didn't open? Reach us directly at{" "}
-                <a href={`mailto:${CONTACT_EMAIL}`} className="font-semibold text-offgrid-green underline underline-offset-2">
-                  {CONTACT_EMAIL}
-                </a>
-                .
+                Thanks for reaching out. We received your message and sent a confirmation to your inbox. We usually
+                reply within one business day.
               </p>
               <Button variant="outline" onClick={resetForm}>
                 Send another message
@@ -191,12 +203,15 @@ export function ContactPage() {
                 </Field>
               </div>
 
-              <Button type="submit" size="lg" className="group mt-7 w-full">
-                Send message
+              <Button type="submit" size="lg" className="group mt-7 w-full" disabled={submitting}>
+                {submitting ? "Sending…" : "Send message"}
                 <Send className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
               </Button>
+              {submitError && (
+                <p className="mt-3 text-center text-xs font-medium text-red-600">{submitError}</p>
+              )}
               <p className="mt-3 text-center text-[11px] text-offgrid-green/45">
-                This opens your email app with the details pre-filled.
+                We'll email you a confirmation and route your message to our team.
               </p>
             </form>
           )}

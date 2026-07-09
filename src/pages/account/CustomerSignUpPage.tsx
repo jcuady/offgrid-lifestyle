@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { isValidEmail, validatePassword, validateTermsAccepted } from "@/src/lib/formValidation";
+import {
+  formatPhilippinePhoneInput,
+  isValidEmail,
+  isValidPhone,
+  normalizePhilippinePhone,
+  validatePassword,
+  validateTermsAccepted,
+} from "@/src/lib/formValidation";
 import { CUSTOMER_SIGN_IN_PATH } from "@/src/lib/authRoutes";
 import { usePortalStore } from "@/src/store/usePortalStore";
 import { localAuthService } from "@/src/services";
@@ -11,6 +18,7 @@ export function CustomerSignUpPage() {
   const currentUser = usePortalStore((state) => state.currentUser);
 
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -18,6 +26,7 @@ export function CustomerSignUpPage() {
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
   const [errors, setErrors] = useState<{
     name?: string;
+    phone?: string;
     email?: string;
     password?: string;
     confirmPassword?: string;
@@ -34,6 +43,7 @@ export function CustomerSignUpPage() {
   const validate = (): boolean => {
     const next: typeof errors = {};
     if (!name.trim()) next.name = "Full name is required.";
+    if (!isValidPhone(phone)) next.phone = "Enter a valid Philippine mobile number (e.g. +63 917 000 0000).";
     if (!isValidEmail(email)) next.email = "Enter a valid email address.";
     const passwordError = validatePassword(password);
     if (passwordError) next.password = passwordError;
@@ -47,14 +57,18 @@ export function CustomerSignUpPage() {
   const handleSubmit = async () => {
     if (!validate()) return;
 
-    const result = await localAuthService.registerCustomer({ name, email, password });
+    const result = await localAuthService.registerCustomer({
+      name: name.trim(),
+      phone: normalizePhilippinePhone(phone),
+      email: email.trim().toLowerCase(),
+      password,
+    });
     if (!result.ok) {
       setErrors({ form: result.message ?? "Unable to create account." });
       return;
     }
 
     if (result.emailConfirmationRequired) {
-      // Email confirmation required — show confirmation message, don't redirect
       setPendingEmail(email);
       return;
     }
@@ -62,13 +76,12 @@ export function CustomerSignUpPage() {
     navigate("/account/orders", { replace: true });
   };
 
-  // Email confirmation pending state
   if (pendingEmail) {
     return (
       <AuthPage
         mode="sign-in"
         title="Check your email"
-        description={`We sent a confirmation link to ${pendingEmail}. Click it to activate your account, then sign in here.`}
+        description={`We sent a confirmation link to ${pendingEmail}. Open it to activate your account, then sign in.`}
         email={pendingEmail}
         password=""
         onEmailChange={() => {}}
@@ -90,10 +103,12 @@ export function CustomerSignUpPage() {
       title="Create your account"
       description="Register to track shop orders, custom requests, and delivery status."
       name={name}
+      phone={phone}
       email={email}
       password={password}
       confirmPassword={confirmPassword}
       onNameChange={setName}
+      onPhoneChange={(value) => setPhone(formatPhilippinePhoneInput(value))}
       onEmailChange={setEmail}
       onPasswordChange={setPassword}
       onConfirmPasswordChange={setConfirmPassword}

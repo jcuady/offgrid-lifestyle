@@ -41,6 +41,7 @@ async function ensurePortalUserRow(user: User): Promise<PortalUser | null> {
 
   const name = (user.user_metadata?.name as string) ?? user.email?.split("@")[0] ?? "Customer";
   const email = user.email ?? "";
+  const phone = (user.user_metadata?.phone as string) ?? null;
 
   const { data: inserted, error: insertErr } = await supabase
     .from("og_portal_users")
@@ -48,6 +49,7 @@ async function ensurePortalUserRow(user: User): Promise<PortalUser | null> {
       auth_user_id: user.id,
       name,
       email,
+      phone,
       role: "customer",
       status: "active",
     })
@@ -122,11 +124,13 @@ export const supabaseAuthService: AuthService = {
   },
 
   registerCustomer: async (input) => {
+    const redirectTo = `${window.location.origin}/account/sign-in?confirmed=1`;
     const { data, error } = await supabase.auth.signUp({
       email: input.email,
       password: input.password,
       options: {
-        data: { name: input.name },
+        data: { name: input.name, phone: input.phone },
+        emailRedirectTo: redirectTo,
       },
     });
 

@@ -24,6 +24,23 @@ export function isValidPhone(phone: string): boolean {
   return digits.length >= 10 && PHONE_RE.test(phone.trim());
 }
 
+/** Format Philippine mobile numbers as +63 9XX XXX XXXX while typing. */
+export function formatPhilippinePhoneInput(raw: string): string {
+  const digits = raw.replace(/\D/g, "");
+  let local = digits;
+  if (local.startsWith("63")) local = local.slice(2);
+  if (local.startsWith("0")) local = local.slice(1);
+  local = local.slice(0, 10);
+  if (local.length === 0) return "";
+  const parts = [local.slice(0, 3), local.slice(3, 6), local.slice(6, 10)].filter(Boolean);
+  return `+63 ${parts.join(" ")}`.trim();
+}
+
+export function normalizePhilippinePhone(phone: string): string {
+  const formatted = formatPhilippinePhoneInput(phone);
+  return formatted || phone.trim();
+}
+
 export function normalizeShippingInfo(info: Partial<ShippingInfo> | null | undefined): ShippingInfo {
   return {
     ...EMPTY_SHIPPING_INFO,

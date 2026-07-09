@@ -1,22 +1,16 @@
+import { buildEdgeFunctionHeaders } from "@/src/lib/edgeRequest";
+
 /** Build Supabase Edge Function headers for send-push (requires apikey + bearer). */
 export function buildSendPushHeaders(
   sessionToken: string | undefined,
   anonKey: string | undefined,
   hasOperationalAlert: boolean,
 ): Record<string, string> {
-  const bearer =
-    sessionToken ?? (hasOperationalAlert && anonKey ? anonKey : "");
-
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${bearer}`,
-  };
-
-  if (anonKey) {
-    headers.apikey = anonKey;
-  }
-
-  return headers;
+  return buildEdgeFunctionHeaders(
+    sessionToken ?? (hasOperationalAlert ? anonKey : undefined),
+    hasOperationalAlert,
+    anonKey,
+  );
 }
 
 export async function readPushSendError(response: Response): Promise<string> {

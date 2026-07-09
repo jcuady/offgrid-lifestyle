@@ -32,4 +32,9 @@ await sharp(source)
   .resize(32, 32, { fit: "contain", background: transparent })
   .toFile(path.join(outDir, "favicon.ico"));
 
+await sharp(source)
+  .resize(32, 32, { fit: "contain", background: transparent })
+  .toFile(path.join(root, "public/favicon.ico"));
+
 console.log("wrote favicon.ico");
+console.log("wrote public/favicon.ico");

@@ -3,6 +3,8 @@ import { buildEdgeFunctionHeaders, readEdgeFunctionError } from "@/src/lib/edgeR
 import { supabase } from "@/src/lib/supabase";
 
 export type CustomerOrderEmailEvent =
+  | "order_confirmed"
+  | "in_production"
   | "payment_confirmed"
   | "quote_ready"
   | "shipped"

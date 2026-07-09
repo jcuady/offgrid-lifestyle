@@ -3,12 +3,22 @@ import { logger } from "@/src/lib/logger";
 import { sendOrderUpdateEmail } from "@/src/services/emailService";
 
 export type CustomerOrderEvent =
+  | "order_confirmed"
+  | "in_production"
   | "payment_confirmed"
   | "quote_ready"
   | "shipped"
   | "delivered";
 
 const MESSAGES: Record<CustomerOrderEvent, (orderId: string) => { title: string; body: string }> = {
+  order_confirmed: (id) => ({
+    title: "Order confirmed",
+    body: `Order ${id} is confirmed and queued for processing.`,
+  }),
+  in_production: (id) => ({
+    title: "Order in production",
+    body: `Order ${id} is now in production. We'll notify you when it ships.`,
+  }),
   payment_confirmed: (id) => ({
     title: "Payment confirmed",
     body: `We received your payment for order ${id}. Production will begin soon.`,

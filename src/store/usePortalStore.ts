@@ -556,7 +556,11 @@ export const usePortalStore = create<PortalState>()(
               : state.auditLogs,
         }));
         if (previous && previous.status !== status) {
-          if (status === "shipped") {
+          if (status === "confirmed") {
+            void notifyCustomerOrderEvent(previous.customerId, orderId, "order_confirmed");
+          } else if (status === "in_production") {
+            void notifyCustomerOrderEvent(previous.customerId, orderId, "in_production");
+          } else if (status === "shipped") {
             void notifyCustomerOrderEvent(previous.customerId, orderId, "shipped");
           } else if (status === "delivered") {
             void notifyCustomerOrderEvent(previous.customerId, orderId, "delivered");
@@ -618,7 +622,11 @@ export const usePortalStore = create<PortalState>()(
               : state.auditLogs,
         }));
         if (previous && previous.status !== status) {
-          if (status === "shipped") {
+          if (status === "confirmed") {
+            void notifyCustomerOrderEvent(previous.customerId, orderId, "order_confirmed");
+          } else if (status === "in_production") {
+            void notifyCustomerOrderEvent(previous.customerId, orderId, "in_production");
+          } else if (status === "shipped") {
             void notifyCustomerOrderEvent(previous.customerId, orderId, "shipped");
           } else if (status === "delivered") {
             void notifyCustomerOrderEvent(previous.customerId, orderId, "delivered");

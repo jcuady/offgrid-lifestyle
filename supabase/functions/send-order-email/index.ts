@@ -1,12 +1,15 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { corsHeadersFor } from "../_shared/cors.ts";
-import { formatPhp, orderReceiptEmail, orderUpdateEmail } from "../_shared/emailTemplates.ts";
+import { orderReceiptEmail, orderUpdateEmail } from "../_shared/emailTemplates.ts";
+import { buildOrderEmailContextFromRow, escapeHtml } from "../_shared/orderEmail.ts";
 import { sendViaResend } from "../_shared/resend.ts";
 
 const ORDER_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 const RECEIPT_EVENTS = new Set(["order_receipt_retail", "order_receipt_custom"]);
 const UPDATE_EVENTS = new Set([
+  "order_confirmed",
+  "in_production",
   "payment_confirmed",
   "quote_ready",
   "shipped",
@@ -16,6 +19,8 @@ const UPDATE_EVENTS = new Set([
 type OrderEvent =
   | "order_receipt_retail"
   | "order_receipt_custom"
+  | "order_confirmed"
+  | "in_production"
   | "payment_confirmed"
   | "quote_ready"
   | "shipped"
@@ -26,10 +31,15 @@ type OrderRow = {
   order_type: string;
   status: string;
   payment_status: string;
+  payment_method: string | null;
   customer_email: string | null;
   customer_name: string | null;
   total_centavos: number | null;
+  subtotal_centavos: number | null;
+  shipping_centavos: number | null;
+  tax_centavos: number | null;
   line_items: unknown;
+  shipping_info: unknown;
   custom_payload: Record<string, unknown> | null;
   created_at: string;
 };
@@ -38,6 +48,14 @@ const UPDATE_COPY: Record<
   Exclude<OrderEvent, "order_receipt_retail" | "order_receipt_custom">,
   { title: string; message: string }
 > = {
+  order_confirmed: {
+    title: "Order confirmed",
+    message: "Your order is confirmed and queued for processing.",
+  },
+  in_production: {
+    title: "Order in production",
+    message: "Your order is now in production. We'll notify you when it ships.",
+  },
   payment_confirmed: {
     title: "Payment confirmed",
     message: "We received your payment. Production will begin soon.",
@@ -96,25 +114,28 @@ Deno.serve(async (req: Request) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const siteUrl = (Deno.env.get("SITE_URL") ?? "https://www.oglifestyleph.com").replace(/\/$/, "");
+    const token = authHeader.replace("Bearer ", "");
+    const isServiceRole = token === serviceRoleKey || getJwtRole(token) === "service_role";
 
     const adminClient = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    const userClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: authHeader } },
-      auth: { autoRefreshToken: false, persistSession: false },
-    });
-    const token = authHeader.replace("Bearer ", "");
-    const { data: authData } = await userClient.auth.getUser(token);
-    const authUser = authData.user ?? null;
-    const role = authUser?.app_metadata?.portal_role as string | undefined;
-    const isStaffOrAdmin = role === "admin" || role === "staff";
+    let isStaffOrAdmin = isServiceRole;
+    if (!isServiceRole) {
+      const userClient = createClient(supabaseUrl, anonKey, {
+        global: { headers: { Authorization: authHeader } },
+        auth: { autoRefreshToken: false, persistSession: false },
+      });
+      const { data: authData } = await userClient.auth.getUser(token);
+      const role = authData.user?.app_metadata?.portal_role as string | undefined;
+      isStaffOrAdmin = role === "admin" || role === "staff";
+    }
 
     const { data: order, error: orderErr } = await adminClient
       .from("og_orders")
       .select(
-        "id, order_type, status, payment_status, customer_email, customer_name, total_centavos, line_items, custom_payload, created_at",
+        "id, order_type, status, payment_status, payment_method, customer_email, customer_name, total_centavos, subtotal_centavos, shipping_centavos, tax_centavos, line_items, shipping_info, custom_payload, created_at",
       )
       .eq("id", orderId)
       .maybeSingle();
@@ -128,7 +149,6 @@ Deno.serve(async (req: Request) => {
 
     const row = order as OrderRow;
     const orderEmail = (row.customer_email ?? "").trim().toLowerCase();
-    const payload = row.custom_payload ?? {};
 
     if (RECEIPT_EVENTS.has(event)) {
       const orderAgeMs = Date.now() - new Date(row.created_at).getTime();
@@ -175,49 +195,19 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const customerName = row.customer_name ?? (payload.contactName as string) ?? "there";
-
+    const ctx = buildOrderEmailContextFromRow(row);
     let mail: { subject: string; html: string; text: string };
 
-    if (event === "order_receipt_retail") {
-      mail = orderReceiptEmail({
-        orderId,
-        orderType: "retail",
-        customerName,
-        siteUrl,
-        totalCentavos: row.total_centavos,
-        lineItems: (row.line_items as { name?: string; quantity?: number; size?: string; color?: string }[]) ?? [],
-      });
-    } else if (event === "order_receipt_custom") {
-      mail = orderReceiptEmail({
-        orderId,
-        orderType: "custom",
-        customerName,
-        siteUrl,
-        totalCentavos: row.total_centavos,
-        teamOrOrg: (payload.teamOrOrg as string) ?? "",
-        quantity: (payload.quantity as number) ?? undefined,
-      });
+    if (event === "order_receipt_retail" || event === "order_receipt_custom") {
+      mail = orderReceiptEmail({ ...ctx, siteUrl });
     } else {
       const copy = UPDATE_COPY[event as keyof typeof UPDATE_COPY];
       let extraHtml = "";
-      if (event === "quote_ready") {
-        const officialTotal = payload.officialTotal as { amount?: number } | null;
-        const officialDeposit = payload.officialDeposit as { amount?: number } | null;
-        const notes = (payload.quoteCustomerNotes as string) ?? "";
-        if (officialTotal?.amount) {
-          extraHtml += `<p style="margin-top:16px;font-size:16px;font-weight:800;">Total: ${formatPhp(Math.round(officialTotal.amount * 100))}</p>`;
-        }
-        if (officialDeposit?.amount) {
-          extraHtml += `<p style="color:#4a4a4a;font-size:14px;">Deposit due: ${formatPhp(Math.round(officialDeposit.amount * 100))}</p>`;
-        }
-        if (notes.trim()) {
-          extraHtml += `<p style="margin-top:12px;padding:14px 16px;background:#f5f0e6;border-radius:12px;font-size:14px;color:#4a4a4a;white-space:pre-wrap;">${escapeHtml(notes.trim())}</p>`;
-        }
+      if (event === "quote_ready" && ctx.quoteNotes?.trim()) {
+        extraHtml = `<p style="margin-top:12px;padding:14px 16px;background:#F1F1F1;border-radius:8px;font-size:14px;color:#6A6A6A;white-space:pre-wrap;">${escapeHtml(ctx.quoteNotes.trim())}</p>`;
       }
       mail = orderUpdateEmail({
-        orderId,
-        customerName,
+        ctx,
         title: copy.title,
         message: copy.message,
         siteUrl,
@@ -244,10 +234,11 @@ Deno.serve(async (req: Request) => {
   }
 });
 
-function escapeHtml(value: string): string {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;");
+function getJwtRole(token: string): string | null {
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1] ?? ""));
+    return typeof payload.role === "string" ? payload.role : null;
+  } catch {
+    return null;
+  }
 }

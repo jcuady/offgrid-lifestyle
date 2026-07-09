@@ -1,7 +1,20 @@
-const BRAND = "OFF GRID® Lifestyle";
-const ACCENT = "#c8f542";
-const DARK = "#000000";
-const MUTED = "#4a4a4a";
+import {
+  buildOrderSummaryHtml,
+  buildOrderSummaryText,
+  statusBadgeHtml,
+  type OrderEmailContext,
+} from "./orderEmail.ts";
+import {
+  EMAIL_BRAND,
+  emailCallout,
+  emailCta,
+  emailLayout,
+  emailTextFooter,
+  escapeHtml,
+  resolveSiteUrl,
+} from "./emailBrand.ts";
+
+export type { OrderEmailContext };
 
 function formatPhp(amountCentavos: number | null | undefined): string {
   if (amountCentavos == null) return "—";
@@ -11,141 +24,106 @@ function formatPhp(amountCentavos: number | null | undefined): string {
   }).format(amountCentavos / 100);
 }
 
-function layout(title: string, bodyHtml: string): string {
-  return `<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#f5f0e6;font-family:Helvetica,Arial,sans-serif;color:${DARK};">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f0e6;padding:32px 16px;">
-    <tr><td align="center">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e8e0d0;">
-        <tr><td style="background:${DARK};padding:24px 28px;">
-          <p style="margin:0;font-size:18px;font-weight:800;letter-spacing:0.04em;color:#ffffff;">${BRAND}</p>
-        </td></tr>
-        <tr><td style="padding:28px;">
-          <h1 style="margin:0 0 12px;font-size:22px;line-height:1.2;">${title}</h1>
-          ${bodyHtml}
-        </td></tr>
-        <tr><td style="padding:0 28px 28px;">
-          <p style="margin:0;font-size:12px;color:${MUTED};">Manila, Philippines · <a href="https://www.oglifestyleph.com" style="color:${DARK};">oglifestyleph.com</a></p>
-        </td></tr>
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>`;
-}
-
-function cta(href: string, label: string): string {
-  return `<p style="margin:24px 0 0;"><a href="${href}" style="display:inline-block;background:${DARK};color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;padding:12px 22px;border-radius:999px;">${label}</a></p>`;
-}
+const { muted } = EMAIL_BRAND;
 
 export function contactStaffEmail(params: {
   name: string;
   email: string;
   topic: string;
   message: string;
+  siteUrl?: string;
 }): { subject: string; html: string; text: string } {
+  const siteUrl = resolveSiteUrl(params.siteUrl);
   const subject = `[${params.topic}] Message from ${params.name}`;
-  const text = `Name: ${params.name}\nEmail: ${params.email}\nTopic: ${params.topic}\n\n${params.message}`;
-  const html = layout(
-    "New contact message",
-    `<p style="color:${MUTED};line-height:1.6;">You received a message from the contact form.</p>
-     <table role="presentation" width="100%" style="margin-top:16px;font-size:14px;line-height:1.6;">
-       <tr><td style="padding:6px 0;color:${MUTED};width:90px;">Name</td><td><strong>${escapeHtml(params.name)}</strong></td></tr>
-       <tr><td style="padding:6px 0;color:${MUTED};">Email</td><td><a href="mailto:${escapeHtml(params.email)}">${escapeHtml(params.email)}</a></td></tr>
-       <tr><td style="padding:6px 0;color:${MUTED};">Topic</td><td>${escapeHtml(params.topic)}</td></tr>
+  const text = `Name: ${params.name}\nEmail: ${params.email}\nTopic: ${params.topic}\n\n${params.message}${emailTextFooter(siteUrl)}`;
+  const html = emailLayout({
+    title: "New contact message",
+    siteUrl,
+    preheader: `New ${params.topic} inquiry from ${params.name}`,
+    bodyHtml: `<p style="color:${muted};line-height:1.65;margin:0 0 16px;">You received a message from the contact form.</p>
+     <table role="presentation" width="100%" style="font-size:14px;line-height:1.65;">
+       <tr><td style="padding:6px 0;color:${muted};width:90px;vertical-align:top;">Name</td><td style="padding:6px 0;"><strong>${escapeHtml(params.name)}</strong></td></tr>
+       <tr><td style="padding:6px 0;color:${muted};vertical-align:top;">Email</td><td style="padding:6px 0;"><a href="mailto:${escapeHtml(params.email)}" style="color:${EMAIL_BRAND.dark};">${escapeHtml(params.email)}</a></td></tr>
+       <tr><td style="padding:6px 0;color:${muted};vertical-align:top;">Topic</td><td style="padding:6px 0;">${escapeHtml(params.topic)}</td></tr>
      </table>
-     <div style="margin-top:20px;padding:16px;background:#f5f0e6;border-radius:12px;white-space:pre-wrap;font-size:14px;line-height:1.6;">${escapeHtml(params.message)}</div>`,
-  );
+     <div style="margin-top:20px;padding:16px;background:${EMAIL_BRAND.surface};border-radius:8px;white-space:pre-wrap;font-size:14px;line-height:1.65;color:${EMAIL_BRAND.dark};">${escapeHtml(params.message)}</div>`,
+  });
   return { subject, html, text };
 }
 
-export function contactAutoReplyEmail(params: { name: string; topic: string }): {
-  subject: string;
-  html: string;
-  text: string;
-} {
-  const subject = "We received your message — OFF GRID® Lifestyle";
-  const text = `Hi ${params.name},\n\nThanks for reaching out about ${params.topic}. Our team usually replies within one business day.\n\n— OFF GRID® Lifestyle`;
-  const html = layout(
-    "Message received",
-    `<p style="color:${MUTED};line-height:1.6;">Hi ${escapeHtml(params.name)},</p>
-     <p style="color:${MUTED};line-height:1.6;">Thanks for reaching out about <strong>${escapeHtml(params.topic)}</strong>. We received your message and will get back to you within one business day.</p>
-     <p style="margin-top:20px;padding:14px 16px;border-left:4px solid ${ACCENT};background:#f5f0e6;font-size:13px;color:${MUTED};">Team kits, wholesale, and custom orders — we’re on it.</p>`,
-  );
-  return { subject, html, text };
-}
-
-type LineItem = { name?: string; quantity?: number; size?: string; color?: string; price?: number };
-
-export function orderReceiptEmail(params: {
-  orderId: string;
-  orderType: "retail" | "custom";
-  customerName: string;
-  siteUrl: string;
-  totalCentavos: number | null;
-  lineItems?: LineItem[];
-  teamOrOrg?: string;
-  quantity?: number;
+export function contactAutoReplyEmail(params: {
+  name: string;
+  topic: string;
+  siteUrl?: string;
 }): { subject: string; html: string; text: string } {
-  const isRetail = params.orderType === "retail";
+  const siteUrl = resolveSiteUrl(params.siteUrl);
+  const subject = "We received your message — OFF GRID® Lifestyle";
+  const text = `Hi ${params.name},\n\nThanks for reaching out about ${params.topic}. Our team usually replies within one business day.${emailTextFooter(siteUrl)}`;
+  const html = emailLayout({
+    title: "Message received",
+    siteUrl,
+    preheader: `We received your ${params.topic} inquiry and will reply soon.`,
+    bodyHtml: `<p style="color:${muted};line-height:1.65;margin:0 0 12px;">Hi ${escapeHtml(params.name)},</p>
+     <p style="color:${muted};line-height:1.65;margin:0;">Thanks for reaching out about <strong style="color:${EMAIL_BRAND.dark};">${escapeHtml(params.topic)}</strong>. We received your message and will get back to you within one business day.</p>
+     ${emailCallout("Team kits, wholesale, and custom orders — we&rsquo;re on it.")}`,
+  });
+  return { subject, html, text };
+}
+
+export function orderReceiptEmail(
+  ctx: OrderEmailContext & { siteUrl: string },
+): { subject: string; html: string; text: string } {
+  const isRetail = ctx.orderType === "retail";
   const subject = isRetail
-    ? `Order confirmed — ${params.orderId}`
-    : `Custom order received — ${params.orderId}`;
-  const ordersUrl = `${params.siteUrl}/account/orders/${params.orderId}`;
+    ? `Order confirmed — ${ctx.orderId}`
+    : `Custom order received — ${ctx.orderId}`;
+  const ordersUrl = `${ctx.siteUrl}/account/orders/${ctx.orderId}`;
+  const intro = isRetail
+    ? "Thanks for your shop order. Here is your receipt."
+    : "We received your custom order request. Our team will review your files and send an official quote.";
+  const title = isRetail ? "Order confirmed" : "Custom order received";
 
-  let details = "";
-  if (isRetail && params.lineItems?.length) {
-    const rows = params.lineItems
-      .map(
-        (line) =>
-          `<tr><td style="padding:8px 0;border-bottom:1px solid #eee;">${escapeHtml(line.name ?? "Item")} · ${escapeHtml(line.size ?? "")} · ${escapeHtml(line.color ?? "")}</td><td align="right" style="padding:8px 0;border-bottom:1px solid #eee;">×${line.quantity ?? 1}</td></tr>`,
-      )
-      .join("");
-    details = `<table role="presentation" width="100%" style="margin-top:16px;font-size:14px;">${rows}</table>`;
-  } else if (!isRetail) {
-    details = `<p style="color:${MUTED};font-size:14px;line-height:1.6;margin-top:12px;">
-      ${params.teamOrOrg ? `Team / org: <strong>${escapeHtml(params.teamOrOrg)}</strong><br>` : ""}
-      ${params.quantity ? `Quantity: <strong>${params.quantity}</strong><br>` : ""}
-      Our team will review your files and send an official quote soon.
-    </p>`;
-  }
+  const text = `Hi ${ctx.customerName},\n\n${intro}\n\n${buildOrderSummaryText(ctx)}\n\nView: ${ordersUrl}${emailTextFooter(ctx.siteUrl)}`;
 
-  const text = isRetail
-    ? `Hi ${params.customerName},\n\nYour shop order ${params.orderId} is confirmed. Total: ${formatPhp(params.totalCentavos)}.\nView: ${ordersUrl}`
-    : `Hi ${params.customerName},\n\nWe received your custom order ${params.orderId}. Our team will send a quote soon.\nView: ${ordersUrl}`;
-
-  const html = layout(
-    isRetail ? "Order confirmed" : "Custom order received",
-    `<p style="color:${MUTED};line-height:1.6;">Hi ${escapeHtml(params.customerName)},</p>
-     <p style="color:${MUTED};line-height:1.6;">${isRetail ? "Thanks for your order." : "Thanks for submitting your custom order request."} Reference: <strong>${escapeHtml(params.orderId)}</strong></p>
-     ${params.totalCentavos != null ? `<p style="font-size:18px;font-weight:800;margin:16px 0 0;">${formatPhp(params.totalCentavos)}</p>` : ""}
-     ${details}
-     ${cta(ordersUrl, "View order")}`,
-  );
+  const html = emailLayout({
+    title,
+    siteUrl: ctx.siteUrl,
+    preheader: isRetail
+      ? `Your shop order ${ctx.orderId} is confirmed.`
+      : `We received your custom order ${ctx.orderId}.`,
+    bodyHtml: `<p style="color:${muted};line-height:1.65;margin:0 0 12px;">Hi ${escapeHtml(ctx.customerName)},</p>
+     <p style="color:${muted};line-height:1.65;margin:0 0 8px;">${intro}</p>
+     ${statusBadgeHtml(ctx.status)}
+     ${buildOrderSummaryHtml(ctx)}
+     ${emailCta(ordersUrl, "View order")}`,
+  });
 
   return { subject, html, text };
 }
 
 export function orderUpdateEmail(params: {
-  orderId: string;
-  customerName: string;
+  ctx: OrderEmailContext;
+  siteUrl: string;
   title: string;
   message: string;
-  siteUrl: string;
   extraHtml?: string;
 }): { subject: string; html: string; text: string } {
-  const ordersUrl = `${params.siteUrl}/account/orders/${params.orderId}`;
-  const subject = `${params.title} — ${params.orderId}`;
-  const text = `Hi ${params.customerName},\n\n${params.message}\n\nView order: ${ordersUrl}`;
-  const html = layout(
-    params.title,
-    `<p style="color:${MUTED};line-height:1.6;">Hi ${escapeHtml(params.customerName)},</p>
-     <p style="color:${MUTED};line-height:1.6;">${escapeHtml(params.message)}</p>
+  const ordersUrl = `${params.siteUrl}/account/orders/${params.ctx.orderId}`;
+  const subject = `${params.title} — ${params.ctx.orderId}`;
+  const text = `Hi ${params.ctx.customerName},\n\n${params.message}\n\n${buildOrderSummaryText(params.ctx)}\n\nView: ${ordersUrl}${emailTextFooter(params.siteUrl)}`;
+
+  const html = emailLayout({
+    title: params.title,
+    siteUrl: params.siteUrl,
+    preheader: `${params.message} Order ${params.ctx.orderId}.`,
+    bodyHtml: `<p style="color:${muted};line-height:1.65;margin:0 0 12px;">Hi ${escapeHtml(params.ctx.customerName)},</p>
+     <p style="color:${muted};line-height:1.65;margin:0 0 8px;">${escapeHtml(params.message)}</p>
+     ${statusBadgeHtml(params.ctx.status)}
+     ${buildOrderSummaryHtml(params.ctx)}
      ${params.extraHtml ?? ""}
-     ${cta(ordersUrl, "View order")}`,
-  );
+     ${emailCta(ordersUrl, "View order")}`,
+  });
+
   return { subject, html, text };
 }
 
@@ -163,53 +141,53 @@ export function authActionEmail(params: {
   name: string;
   verifyUrl: string;
   otp?: string;
+  siteUrl?: string;
 }): { subject: string; html: string; text: string } {
+  const siteUrl = resolveSiteUrl(params.siteUrl);
   const subject = AUTH_SUBJECTS[params.actionType] ?? "OFF GRID® Lifestyle";
   const greeting = params.name ? `Hi ${escapeHtml(params.name)},` : "Hi there,";
 
   let body = "";
   let textBody = "";
+  let preheader = "";
+  let title = "Account action";
 
   if (params.actionType === "signup") {
-    body = `<p style="color:${MUTED};line-height:1.6;">${greeting}</p>
-      <p style="color:${MUTED};line-height:1.6;">Welcome to OFF GRID® Lifestyle. Confirm your email to activate your account and track shop orders, custom requests, and delivery updates.</p>
-      ${params.otp ? `<p style="margin:16px 0;padding:14px 20px;background:#f5f0e6;border-radius:12px;font-family:monospace;font-size:22px;font-weight:800;letter-spacing:0.2em;text-align:center;">${escapeHtml(params.otp)}</p>` : ""}
-      ${cta(params.verifyUrl, "Confirm email")}`;
-    textBody = `Confirm your account: ${params.verifyUrl}${params.otp ? `\n\nOr use code: ${params.otp}` : ""}`;
+    title = "Confirm your email";
+    preheader = "Confirm your email to activate your OFF GRID® account.";
+    body = `<p style="color:${muted};line-height:1.65;margin:0 0 12px;">${greeting}</p>
+      <p style="color:${muted};line-height:1.65;margin:0 0 16px;">Welcome to OFF GRID® Lifestyle. Confirm your email to activate your account and track shop orders, custom requests, and delivery updates.</p>
+      ${params.otp ? `<p style="margin:0 0 20px;padding:16px 20px;background:${EMAIL_BRAND.surface};border-radius:8px;font-family:monospace;font-size:22px;font-weight:800;letter-spacing:0.2em;text-align:center;color:${EMAIL_BRAND.dark};">${escapeHtml(params.otp)}</p>` : ""}
+      ${emailCta(params.verifyUrl, "Confirm email")}`;
+    textBody = `Confirm your account: ${params.verifyUrl}${params.otp ? `\n\nOr use code: ${params.otp}` : ""}${emailTextFooter(siteUrl)}`;
   } else if (params.actionType === "recovery") {
-    body = `<p style="color:${MUTED};line-height:1.6;">${greeting}</p>
-      <p style="color:${MUTED};line-height:1.6;">We received a request to reset your password. If you didn't ask for this, you can ignore this email.</p>
-      ${cta(params.verifyUrl, "Reset password")}`;
-    textBody = `Reset your password: ${params.verifyUrl}`;
+    title = "Reset your password";
+    preheader = "Reset your OFF GRID® account password.";
+    body = `<p style="color:${muted};line-height:1.65;margin:0 0 12px;">${greeting}</p>
+      <p style="color:${muted};line-height:1.65;margin:0 0 16px;">We received a request to reset your password. If you didn&rsquo;t ask for this, you can ignore this email.</p>
+      ${emailCta(params.verifyUrl, "Reset password")}`;
+    textBody = `Reset your password: ${params.verifyUrl}${emailTextFooter(siteUrl)}`;
   } else if (params.actionType === "magiclink") {
-    body = `<p style="color:${MUTED};line-height:1.6;">${greeting}</p>
-      <p style="color:${MUTED};line-height:1.6;">Use the button below to sign in to your account. This link expires soon.</p>
-      ${cta(params.verifyUrl, "Sign in")}`;
-    textBody = `Sign in: ${params.verifyUrl}`;
+    title = "Sign in to your account";
+    preheader = "Your secure sign-in link for OFF GRID® Lifestyle.";
+    body = `<p style="color:${muted};line-height:1.65;margin:0 0 12px;">${greeting}</p>
+      <p style="color:${muted};line-height:1.65;margin:0 0 16px;">Use the button below to sign in to your account. This link expires soon.</p>
+      ${emailCta(params.verifyUrl, "Sign in")}`;
+    textBody = `Sign in: ${params.verifyUrl}${emailTextFooter(siteUrl)}`;
   } else {
-    body = `<p style="color:${MUTED};line-height:1.6;">${greeting}</p>
-      <p style="color:${MUTED};line-height:1.6;">Complete this action using the link below.</p>
-      ${params.otp ? `<p style="margin:16px 0;font-family:monospace;font-size:18px;font-weight:700;">${escapeHtml(params.otp)}</p>` : ""}
-      ${cta(params.verifyUrl, "Continue")}`;
-    textBody = `Continue: ${params.verifyUrl}`;
+    preheader = "Complete your OFF GRID® account action.";
+    body = `<p style="color:${muted};line-height:1.65;margin:0 0 12px;">${greeting}</p>
+      <p style="color:${muted};line-height:1.65;margin:0 0 16px;">Complete this action using the link below.</p>
+      ${params.otp ? `<p style="margin:0 0 20px;font-family:monospace;font-size:18px;font-weight:700;color:${EMAIL_BRAND.dark};">${escapeHtml(params.otp)}</p>` : ""}
+      ${emailCta(params.verifyUrl, "Continue")}`;
+    textBody = `Continue: ${params.verifyUrl}${emailTextFooter(siteUrl)}`;
   }
 
-  const title =
-    params.actionType === "signup"
-      ? "Confirm your email"
-      : params.actionType === "recovery"
-        ? "Reset your password"
-        : "Account action";
-
-  return { subject, html: layout(title, body), text: textBody };
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;");
+  return {
+    subject,
+    html: emailLayout({ title, siteUrl, preheader, bodyHtml: body }),
+    text: textBody,
+  };
 }
 
 export { formatPhp };

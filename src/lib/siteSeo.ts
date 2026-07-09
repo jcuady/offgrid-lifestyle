@@ -4,16 +4,19 @@ export const SITE_URL = "https://www.oglifestyleph.com";
 export const SITE_NAME = "OFF GRID® Lifestyle";
 
 export const SITE_TITLE =
-  "OFF GRID® Lifestyle | Custom Teamwear & Premium Filipino Sportswear";
+  "OFF GRID® | Custom Teamwear & Sportswear Philippines";
 
 export const SITE_DESCRIPTION =
-  "Play Different. Live Off Grid. Premium pickleball, golf, and everyday sportswear — custom team uniforms, OG Signatures, and events for Filipino athletes across the Philippines.";
+  "Custom teamwear, pickleball & golf apparel, and OG Signatures — designed in Manila for Filipino athletes. Shop online or build your team kit nationwide.";
 
 export const SITE_KEYWORDS =
   "OFF GRID Lifestyle, oglifestyleph, Filipino sportswear, custom teamwear, pickleball apparel, golf wear, premium athletic wear, Philippines, OG Signatures, team uniforms, Manila sportswear";
 
 /** Social preview — dark wordmark on light background. */
 export const SITE_OG_IMAGE_PATH = "/OG%20logo/OG%20logo/Complete/Black%20No%20BG.png";
+
+/** Square mark for favicon, PWA, and schema.org logo. */
+export const SITE_LOGO_ICON_PATH = "/favicon_io/android-chrome-192x192.png";
 
 export const absoluteUrl = (path: string) =>
   path.startsWith("http") ? path : `${SITE_URL}${path.startsWith("/") ? path : `/${path}`}`;
@@ -91,7 +94,7 @@ export function organizationJsonLd() {
     "@type": "Organization",
     name: "OFF GRID Lifestyle",
     url: SITE_URL,
-    logo: absoluteUrl(SITE_OG_IMAGE_PATH),
+    logo: absoluteUrl(SITE_LOGO_ICON_PATH),
     description:
       "Premium Filipino sportswear and custom teamwear for pickleball, golf, running, and everyday movement.",
     areaServed: "PH",

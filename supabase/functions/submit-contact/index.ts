@@ -48,9 +48,10 @@ Deno.serve(async (req: Request) => {
 
     const topicLabel = TOPIC_LABELS[topic] ?? "General";
     const inbox = Deno.env.get("CONTACT_INBOX_EMAIL") ?? "offxgrid2024@gmail.com";
+    const siteUrl = (Deno.env.get("SITE_URL") ?? "https://www.oglifestyleph.com").replace(/\/$/, "");
     const replyTo = email;
 
-    const staff = contactStaffEmail({ name, email, topic: topicLabel, message });
+    const staff = contactStaffEmail({ name, email, topic: topicLabel, message, siteUrl });
     await sendViaResend({
       to: inbox,
       subject: staff.subject,
@@ -59,7 +60,7 @@ Deno.serve(async (req: Request) => {
       replyTo,
     });
 
-    const auto = contactAutoReplyEmail({ name, topic: topicLabel });
+    const auto = contactAutoReplyEmail({ name, topic: topicLabel, siteUrl });
     await sendViaResend({
       to: email,
       subject: auto.subject,

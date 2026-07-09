@@ -62,6 +62,7 @@ Deno.serve(async (req: Request) => {
         name,
         verifyUrl,
         otp,
+        siteUrl,
       });
       await sendViaResend({ to, subject: mail.subject, html: mail.html, text: mail.text });
     };

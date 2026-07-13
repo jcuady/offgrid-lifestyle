@@ -3,8 +3,9 @@ import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/src/lib/utils"
 
+/** Brand CTA primitive — 44×44px floor on all sizes (Apple HIG / Material). */
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-full font-sans text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98]",
+  "inline-flex cursor-pointer items-center justify-center whitespace-nowrap rounded-full font-sans text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98]",
   {
     variants: {
       variant: {
@@ -13,12 +14,17 @@ const buttonVariants = cva(
         outline: "border-2 border-offgrid-green text-offgrid-green hover:bg-offgrid-green hover:text-offgrid-cream",
         ghost: "hover:bg-offgrid-green/10 text-offgrid-green",
         link: "text-offgrid-green underline-offset-4 hover:underline",
+        /** Lime fill for dark heroes / primary brand accents */
+        accent: "bg-offgrid-lime text-offgrid-cream hover:bg-white hover:text-offgrid-green",
+        /** Cream outline on dark backgrounds */
+        outlineInverse:
+          "border border-offgrid-cream/35 text-offgrid-cream hover:border-offgrid-cream hover:bg-offgrid-cream/10",
       },
       size: {
-        default: "h-11 px-6 py-2",
-        sm: "h-9 px-4 text-xs",
-        lg: "h-14 px-8 text-base",
-        icon: "h-10 w-10",
+        default: "h-11 min-h-11 px-6 py-2",
+        sm: "h-11 min-h-11 px-4 text-xs",
+        lg: "h-14 min-h-14 px-8 text-base",
+        icon: "h-11 min-h-11 w-11 min-w-11",
       },
     },
     defaultVariants: {

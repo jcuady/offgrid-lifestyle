@@ -11,10 +11,12 @@ import {
 } from "lucide-react";
 import { formatPrice, Product } from "@/src/data/products";
 import { Button } from "@/src/components/ui/Button";
+import { Input } from "@/src/components/ui/input";
 import { ProductCard } from "@/src/components/ProductCard";
 import { ProductQuickViewModal } from "@/src/components/ProductQuickViewModal";
 import { FeaturedSpotlight } from "@/src/components/FeaturedSpotlight";
 import { cn } from "@/src/lib/utils";
+import { marketingPageHero, siteContainer, stickyBelowNav } from "@/src/lib/brandLayout";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { hydrateProductsFromSupabase } from "@/src/services";
 
@@ -189,11 +191,11 @@ export function ShopPage() {
   const priceBucketLabel = priceBuckets.find((b) => b.value === priceBucket)?.label;
 
   return (
-    <div className="min-h-screen bg-offgrid-cream">
+    <div id="main" className="min-h-screen bg-offgrid-cream">
       {/* Shop Header */}
-      <div className="relative overflow-hidden bg-offgrid-green py-9 text-offgrid-cream sm:py-14 md:py-20">
+      <div className={marketingPageHero}>
         <div className="pointer-events-none absolute -right-16 -top-16 h-72 w-72 rounded-full bg-offgrid-lime/10 blur-3xl" />
-        <div className="container relative mx-auto px-6 md:px-12">
+        <div className={cn(siteContainer, "relative")}>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
             <span className="mb-3 inline-block font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-cream/80 sm:mb-4">
               Shop All · {products.length} pieces
@@ -216,39 +218,41 @@ export function ShopPage() {
       <FeaturedSpotlight placement="shop" />
 
       {/* Filters & Controls Bar */}
-      <div className="z-30 border-b border-offgrid-green/10 bg-offgrid-cream/95 py-3 backdrop-blur-md sm:py-4 md:sticky md:top-[72px]">
-        <div className="container mx-auto px-4 sm:px-6 md:px-12">
+      <div className={cn("z-30 border-b border-offgrid-green/10 bg-offgrid-cream/95 py-3 backdrop-blur-md sm:py-4", stickyBelowNav)}>
+        <div className={siteContainer}>
           <div className="flex items-center gap-2 sm:gap-3 md:justify-between md:gap-6">
             {/* Search */}
             <div className="relative min-w-0 flex-1 md:max-w-md">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-offgrid-green/40" />
-              <input
-                type="text"
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-offgrid-green/40" />
+              <Input
+                type="search"
                 placeholder="Search products..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-xl border border-offgrid-green/20 bg-white py-2.5 pl-10 pr-9 text-sm text-offgrid-green outline-none transition-all placeholder:text-offgrid-green/40 focus:border-offgrid-lime focus:ring-2 focus:ring-offgrid-lime/25"
+                className="pl-10 pr-11"
+                aria-label="Search products"
               />
-              {searchQuery && (
+              {searchQuery ? (
                 <button
                   type="button"
                   onClick={() => setSearchQuery("")}
                   aria-label="Clear search"
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full p-1 text-offgrid-green/40 hover:bg-offgrid-green/5 hover:text-offgrid-green"
+                  className="absolute right-1.5 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full text-offgrid-green/40 hover:bg-offgrid-green/5 hover:text-offgrid-green"
                 >
-                  <X className="h-3.5 w-3.5" />
+                  <X className="h-4 w-4" />
                 </button>
-              )}
+              ) : null}
             </div>
 
             {/* Controls */}
             <div className="flex shrink-0 items-center gap-2 sm:gap-3">
               <button
+                type="button"
                 onClick={() => setShowFilters((v) => !v)}
                 aria-expanded={showFilters}
                 aria-label="Filters"
                 className={cn(
-                  "flex items-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-medium transition-colors sm:px-4",
+                  "flex min-h-11 items-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-medium transition-colors sm:px-4",
                   showFilters || advancedFilterCount > 0
                     ? "border-offgrid-green bg-offgrid-green text-offgrid-cream"
                     : "border-offgrid-green/20 text-offgrid-green hover:bg-offgrid-green/5",
@@ -268,7 +272,7 @@ export function ShopPage() {
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as SortOption)}
                   aria-label="Sort products"
-                  className="cursor-pointer appearance-none rounded-xl border border-offgrid-green/20 bg-white py-2.5 pl-3 pr-9 text-sm font-medium text-offgrid-green outline-none transition-colors hover:bg-offgrid-green/5 focus:border-offgrid-lime focus:ring-2 focus:ring-offgrid-lime/25 sm:pl-4 sm:pr-10"
+                  className="min-h-11 cursor-pointer appearance-none rounded-xl border border-offgrid-green/20 bg-white py-2.5 pl-3 pr-9 text-base font-medium text-offgrid-green outline-none transition-colors hover:bg-offgrid-green/5 focus:border-offgrid-lime focus:ring-2 focus:ring-offgrid-lime/25 sm:pl-4 sm:pr-10 sm:text-sm"
                 >
                   {(Object.keys(SORT_LABELS) as SortOption[]).map((value) => (
                     <option key={value} value={value}>
@@ -286,9 +290,10 @@ export function ShopPage() {
             {categories.map((cat) => (
               <button
                 key={cat.value}
+                type="button"
                 onClick={() => setSelectedCategory(cat.value)}
                 className={cn(
-                  "rounded-full px-3.5 py-2 text-xs font-semibold transition-all sm:px-4",
+                  "min-h-11 rounded-full px-3.5 py-2 text-xs font-semibold transition-all sm:px-4",
                   selectedCategory === cat.value
                     ? "bg-offgrid-green text-offgrid-cream"
                     : "border border-offgrid-green/10 bg-white text-offgrid-green/60 hover:bg-offgrid-green/5",
@@ -383,7 +388,7 @@ export function ShopPage() {
       {/* Products Grid */}
       <div
         ref={gridTopRef}
-        className="container mx-auto scroll-mt-40 px-4 py-10 sm:px-6 sm:py-12 md:px-12 md:py-16"
+        className={cn(siteContainer, "scroll-mt-40 py-10 sm:py-12 md:py-16")}
       >
         <div className="mb-6 flex flex-wrap items-baseline justify-between gap-2 sm:mb-8">
           <p className="text-sm text-offgrid-green/60">
@@ -435,7 +440,7 @@ export function ShopPage() {
                   onClick={() => goToPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
                   aria-label="Previous page"
-                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-offgrid-green/20 bg-white text-offgrid-green outline-none transition-all hover:border-offgrid-green/50 hover:bg-offgrid-green/5 focus-visible:ring-2 focus-visible:ring-offgrid-lime focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-offgrid-green/20 disabled:hover:bg-white"
+                  className="flex h-11 w-11 items-center justify-center rounded-xl border border-offgrid-green/20 bg-white text-offgrid-green outline-none transition-all hover:border-offgrid-green/50 hover:bg-offgrid-green/5 focus-visible:ring-2 focus-visible:ring-offgrid-lime focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-offgrid-green/20 disabled:hover:bg-white"
                 >
                   <ChevronLeft className="h-5 w-5" />
                 </button>
@@ -473,7 +478,7 @@ export function ShopPage() {
                   onClick={() => goToPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
                   aria-label="Next page"
-                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-offgrid-green/20 bg-white text-offgrid-green outline-none transition-all hover:border-offgrid-green/50 hover:bg-offgrid-green/5 focus-visible:ring-2 focus-visible:ring-offgrid-lime focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-offgrid-green/20 disabled:hover:bg-white"
+                  className="flex h-11 w-11 items-center justify-center rounded-xl border border-offgrid-green/20 bg-white text-offgrid-green outline-none transition-all hover:border-offgrid-green/50 hover:bg-offgrid-green/5 focus-visible:ring-2 focus-visible:ring-offgrid-lime focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-offgrid-green/20 disabled:hover:bg-white"
                 >
                   <ChevronRight className="h-5 w-5" />
                 </button>
@@ -485,7 +490,7 @@ export function ShopPage() {
 
       {/* CTA Banner */}
       <div className="bg-offgrid-green py-16 text-offgrid-cream md:py-20">
-        <div className="container mx-auto px-6 text-center md:px-12">
+        <div className={cn(siteContainer, "text-center")}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}

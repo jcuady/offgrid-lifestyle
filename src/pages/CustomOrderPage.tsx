@@ -5,7 +5,7 @@ import { Button } from "@/src/components/ui/Button";
 import { CustomOrderWizard } from "@/src/components/custom-order/CustomOrderWizard";
 import { hydrateSiteContentFromSupabase } from "@/src/services";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
-import { siteContainer, sectionEyebrow } from "@/src/lib/brandLayout";
+import { siteContainer, sectionEyebrow, marketingPageHero } from "@/src/lib/brandLayout";
 import { cn } from "@/src/lib/utils";
 
 export function CustomOrderPage() {
@@ -49,7 +49,7 @@ export function CustomOrderPage() {
 
   return (
     <>
-      <section className="relative bg-offgrid-green pt-28 pb-12 sm:pt-32 sm:pb-16 overflow-hidden">
+      <section className={marketingPageHero}>
         <div
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(0,10,255,0.10),transparent_65%)]"
           aria-hidden

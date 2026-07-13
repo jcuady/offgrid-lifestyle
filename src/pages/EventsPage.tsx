@@ -89,7 +89,7 @@ export function EventsPage() {
       {/* Featured Event */}
       {featuredEvent && featuredEvent.status === "upcoming" && (
         <section className="py-16 md:py-20">
-          <div className="container mx-auto px-6 md:px-12">
+          <div className={siteContainer}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -297,7 +297,7 @@ export function EventsPage() {
 
       {/* Past Events */}
       <section className="py-16 md:py-20 bg-offgrid-dark text-offgrid-cream">
-        <div className="container mx-auto px-6 md:px-12">
+        <div className={siteContainer}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}

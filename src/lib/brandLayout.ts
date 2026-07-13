@@ -6,6 +6,17 @@ export const siteContainer = "container mx-auto w-full max-w-7xl px-4 sm:px-6 md
 /** Account / portal customer pages — fluid width, capped readable line length. */
 export const accountContainer = "mx-auto w-full max-w-6xl min-w-0 px-4 sm:px-6 md:px-8 lg:px-10";
 
+/** Inner marketing page heroes (Shop, About, Contact, Custom…) — not the home OffgridHero. */
+export const marketingPageHero =
+  "relative overflow-hidden bg-offgrid-green pb-12 pt-28 text-offgrid-cream sm:pb-16 sm:pt-32 md:pt-36";
+
+export const marketingPageHeroDark =
+  "relative overflow-hidden bg-offgrid-dark pb-12 pt-28 text-offgrid-cream sm:pb-16 sm:pt-32 md:pt-36";
+
+/** Sticky bars below the fixed storefront nav (safe-area aware). */
+export const stickyBelowNav =
+  "md:sticky md:top-[calc(4.5rem+env(safe-area-inset-top,0px))]";
+
 export const sectionEyebrow =
   "mb-3 block font-mono text-xs font-bold uppercase tracking-[0.2em] text-offgrid-green/60";
 

@@ -2,6 +2,7 @@ import { motion, useReducedMotion } from "motion/react";
 import { ArrowRight } from "lucide-react";
 import { LANDING_HERO_VIDEO_DEFAULT } from "@/src/data/landingContent";
 import type { CSSProperties } from "react";
+import { Button } from "@/src/components/ui/Button";
 
 const DEFAULT_HERO_VIDEO = LANDING_HERO_VIDEO_DEFAULT;
 
@@ -128,23 +129,25 @@ export function OffgridHero({
             ) : null}
 
             <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap">
-              <button
+              <Button
                 type="button"
+                variant="accent"
                 onClick={primaryCta.onClick}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-offgrid-lime px-6 py-3.5 text-sm font-bold uppercase tracking-[0.12em] text-offgrid-cream transition-colors hover:bg-white hover:text-offgrid-green focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offgrid-lime focus-visible:ring-offset-2 focus-visible:ring-offset-offgrid-dark sm:w-auto sm:py-3"
+                className="w-full gap-2 text-sm font-bold uppercase tracking-[0.12em] focus-visible:ring-offgrid-lime focus-visible:ring-offset-offgrid-dark sm:w-auto"
               >
                 {primaryCta.label}
                 <ArrowRight className="h-4 w-4" />
-              </button>
+              </Button>
 
               {secondaryCta ? (
-                <button
+                <Button
                   type="button"
+                  variant="outlineInverse"
                   onClick={secondaryCta.onClick}
-                  className="inline-flex w-full items-center justify-center rounded-full border border-offgrid-cream/35 px-6 py-3.5 text-sm font-bold uppercase tracking-[0.1em] text-offgrid-cream transition-colors hover:border-offgrid-cream hover:bg-offgrid-cream/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offgrid-lime focus-visible:ring-offset-2 focus-visible:ring-offset-offgrid-dark sm:w-auto sm:py-3"
+                  className="w-full text-sm font-bold uppercase tracking-[0.1em] focus-visible:ring-offgrid-lime focus-visible:ring-offset-offgrid-dark sm:w-auto"
                 >
                   {secondaryCta.label}
-                </button>
+                </Button>
               ) : null}
             </div>
           </motion.div>

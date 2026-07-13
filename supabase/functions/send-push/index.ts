@@ -23,7 +23,7 @@ function safeNavigationUrl(raw: unknown, fallback = "/"): string {
 
 function corsHeadersFor(req: Request): Record<string, string> {
   const defaults =
-    "https://www.oglifestyleph.com,https://oglifestyleph.com,https://offgrid-lifestyle.vercel.app,https://offgrid-lifestyle-jcuadys-projects.vercel.app,http://localhost:3000,http://127.0.0.1:3000";
+    "https://www.oglifestyleph.com,https://oglifestyleph.com,https://offgrid-lifestyle.vercel.app,https://offgrid-lifestyle-jcuadys-projects.vercel.app,http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000";
   const allowed = (Deno.env.get("ALLOWED_ORIGINS") ?? defaults)
     .split(",")
     .map((s) => s.trim())

@@ -57,7 +57,7 @@ export function CartDrawer() {
               </div>
               <button
                 onClick={handleClose}
-                className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-offgrid-green/5 flex items-center justify-center hover:bg-offgrid-green hover:text-offgrid-cream transition-colors"
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-offgrid-green/5 transition-colors hover:bg-offgrid-green hover:text-offgrid-cream"
               >
                 <X className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
@@ -137,7 +137,7 @@ export function CartDrawer() {
                             <button
                               onClick={() => updateQuantity(item.productId, item.size, item.color, item.quantity - 1)}
                               aria-label="Decrease quantity"
-                              className="flex h-9 w-9 items-center justify-center rounded-full border border-offgrid-green/20 transition-colors hover:bg-offgrid-green/10 active:scale-95"
+                              className="flex h-11 w-11 items-center justify-center rounded-full border border-offgrid-green/20 transition-colors hover:bg-offgrid-green/10 active:scale-95"
                             >
                               <Minus className="h-3.5 w-3.5" />
                             </button>
@@ -147,7 +147,7 @@ export function CartDrawer() {
                             <button
                               onClick={() => updateQuantity(item.productId, item.size, item.color, item.quantity + 1)}
                               aria-label="Increase quantity"
-                              className="flex h-9 w-9 items-center justify-center rounded-full border border-offgrid-green/20 transition-colors hover:bg-offgrid-green/10 active:scale-95"
+                              className="flex h-11 w-11 items-center justify-center rounded-full border border-offgrid-green/20 transition-colors hover:bg-offgrid-green/10 active:scale-95"
                             >
                               <Plus className="h-3.5 w-3.5" />
                             </button>
@@ -160,7 +160,7 @@ export function CartDrawer() {
                             <button
                               onClick={() => removeFromCart(item.productId, item.size, item.color)}
                               aria-label={`Remove ${item.name}`}
-                              className="flex h-9 w-9 items-center justify-center rounded-full text-offgrid-green/40 transition-colors hover:bg-red-500/10 hover:text-red-500 active:scale-95"
+                              className="flex h-11 w-11 items-center justify-center rounded-full text-offgrid-green/40 transition-colors hover:bg-red-500/10 hover:text-red-500 active:scale-95"
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>

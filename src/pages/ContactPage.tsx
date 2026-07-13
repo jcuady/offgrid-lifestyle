@@ -13,7 +13,8 @@ import {
   CornerDownRight,
 } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
-import { siteContainer } from "@/src/lib/brandLayout";
+import { Input } from "@/src/components/ui/input";
+import { siteContainer, marketingPageHero } from "@/src/lib/brandLayout";
 import { isValidEmail } from "@/src/lib/formValidation";
 import { submitContactForm } from "@/src/services/emailService";
 import { cn } from "@/src/lib/utils";
@@ -88,7 +89,7 @@ export function ContactPage() {
   return (
     <div className="min-h-screen bg-offgrid-cream">
       {/* Hero */}
-      <section className="relative overflow-hidden bg-offgrid-green pb-16 pt-28 text-offgrid-cream md:pb-20 md:pt-32">
+      <section className={cn(marketingPageHero, "md:pb-20")}>
         <div className="pointer-events-none absolute -right-16 -top-10 h-72 w-72 rounded-full bg-offgrid-lime/15 blur-3xl" />
         <div className={cn(siteContainer, "relative")}>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
@@ -175,21 +176,23 @@ export function ContactPage() {
               {/* Fields */}
               <div className="mt-6 grid gap-5">
                 <Field label="Your name" error={errors.name}>
-                  <input
+                  <Input
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Juan Dela Cruz"
-                    className={inputClass(!!errors.name)}
+                    aria-invalid={!!errors.name}
+                    className={errors.name ? "border-red-500 focus-visible:ring-red-500/25" : undefined}
                   />
                 </Field>
                 <Field label="Your email" error={errors.email}>
-                  <input
+                  <Input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@email.com"
-                    className={inputClass(!!errors.email)}
+                    aria-invalid={!!errors.email}
+                    className={errors.email ? "border-red-500 focus-visible:ring-red-500/25" : undefined}
                   />
                 </Field>
                 <Field label="Message" error={errors.message}>
@@ -198,7 +201,11 @@ export function ContactPage() {
                     onChange={(e) => setMessage(e.target.value)}
                     rows={5}
                     placeholder="Share details — quantities, dates, links, or questions."
-                    className={cn(inputClass(!!errors.message), "resize-y")}
+                    aria-invalid={!!errors.message}
+                    className={cn(
+                      "flex min-h-[8rem] w-full resize-y rounded-xl border border-offgrid-green/16 bg-white px-3.5 py-2.5 text-base text-offgrid-green transition-colors placeholder:text-offgrid-green/40 focus-visible:border-offgrid-lime focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offgrid-lime/25 sm:text-sm",
+                      errors.message && "border-red-500 focus-visible:ring-red-500/25",
+                    )}
                   />
                 </Field>
               </div>
@@ -326,14 +333,5 @@ function Field({ label, error, children }: { label: string; error?: string; chil
       {children}
       {error && <span className="mt-1.5 block text-xs font-medium text-red-600">{error}</span>}
     </label>
-  );
-}
-
-function inputClass(hasError: boolean) {
-  return cn(
-    "w-full rounded-xl border bg-offgrid-cream/40 px-4 py-3 text-sm text-offgrid-green outline-none transition-all placeholder:text-offgrid-green/40 focus:bg-white focus:ring-2",
-    hasError
-      ? "border-red-400 focus:border-red-500 focus:ring-red-500/20"
-      : "border-offgrid-green/15 focus:border-offgrid-lime focus:ring-offgrid-lime/20",
   );
 }

@@ -4,7 +4,7 @@ import { ArrowLeft, ArrowRight, Download, ImageIcon } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import type { CustomTemplateAsset } from "@/src/store/useSiteContentStore";
-import { siteContainer, sectionEyebrow, sectionEyebrowOnDark } from "@/src/lib/brandLayout";
+import { siteContainer, sectionEyebrow, sectionEyebrowOnDark, marketingPageHero } from "@/src/lib/brandLayout";
 import { resolveCanonicalTemplates } from "@/src/lib/canonicalTemplates";
 import { triggerTemplateDownload } from "@/src/lib/resolveTemplateDownload";
 import { hydrateSiteContentFromSupabase } from "@/src/services";
@@ -55,7 +55,7 @@ export function CustomTemplatesPage() {
 
   return (
     <>
-      <section className="relative overflow-hidden bg-offgrid-green pt-28 pb-12 sm:pt-36 sm:pb-16">
+      <section className={marketingPageHero}>
         <div
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(0,10,255,0.10),transparent_60%)]"
           aria-hidden

@@ -18,7 +18,6 @@ import { usePortalStore, getPortalLandingByRole } from "./store/usePortalStore";
 import { RequirePortalRole } from "./components/portal/RequirePortalRole";
 import { CookieConsentBanner } from "./components/consent/CookieConsentBanner";
 import { PushPermissionPrompt } from "./components/notifications/PushPermissionPrompt";
-import { PwaInstallBanner } from "./components/pwa/PwaInstallBanner";
 import { PwaInstallModal } from "./components/pwa/PwaInstallModal";
 import { PwaUpdateBanner } from "./components/pwa/PwaUpdateBanner";
 import { initAuthListener } from "@/src/services/authService";
@@ -171,6 +170,12 @@ function AppFrame() {
 
   return (
     <div className="min-h-screen bg-offgrid-cream font-sans text-offgrid-green overflow-x-hidden">
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-full focus:bg-offgrid-lime focus:px-4 focus:py-3 focus:text-sm focus:font-bold focus:text-offgrid-cream focus:shadow-lg"
+      >
+        Skip to main content
+      </a>
       <RouteSeo />
       <GoogleAnalytics />
       <ScrollToTop />
@@ -283,7 +288,6 @@ function AppFrame() {
 
       <CartDrawer />
       <CheckoutModal />
-      <PwaInstallBanner />
       <PwaInstallModal />
       <PwaUpdateBanner />
       <CookieConsentBanner />

@@ -46,21 +46,17 @@ export function usePwaInstall() {
     return outcome === "accepted";
   }, []);
 
-  // Dismissing must flip local state so the banner unmounts immediately;
-  // localStorage alone never re-renders React, which left the banner up while
-  // the header slid beneath it.
   const dismiss = useCallback(() => {
     dismissPwaInstallPrompt();
     setDismissed(true);
   }, []);
 
-  // The auto-banner only shows when not installed/dismissed and either a native
-  // prompt is ready (Android/Chrome) or the device is iOS (manual add).
-  const showAutoBanner =
+  // Soft auto-offer only when installable (Chrome) or iOS (manual Add to Home Screen).
+  const shouldAutoPrompt =
     !standalone && !installed && !dismissed && (nativeReady || isIosDevice());
 
   return {
-    showAutoBanner,
+    shouldAutoPrompt,
     canNativeInstall: nativeReady,
     isIos: isIosDevice(),
     standalone,

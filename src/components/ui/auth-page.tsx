@@ -1,6 +1,6 @@
 import type { FormEvent, ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import { AtSignIcon, ChevronLeftIcon, LockKeyhole, Phone, UserRound } from "lucide-react";
 import { Button } from "./Button";
 import { Input } from "./input";
@@ -344,6 +344,7 @@ function Field({
 }
 
 function FloatingPaths({ position }: { position: number }) {
+  const reduceMotion = useReducedMotion();
   const paths = Array.from({ length: 36 }, (_, i) => ({
     id: i,
     d: `M-${380 - i * 5 * position} -${189 + i * 6}C-${380 - i * 5 * position} -${189 + i * 6} -${
@@ -355,7 +356,7 @@ function FloatingPaths({ position }: { position: number }) {
   }));
 
   return (
-    <div className="pointer-events-none absolute inset-0">
+    <div className="pointer-events-none absolute inset-0" aria-hidden>
       <svg className="h-full w-full text-offgrid-lime/70" viewBox="0 0 696 316" fill="none">
         <title>Background paths</title>
         {paths.map((path) => (
@@ -365,17 +366,25 @@ function FloatingPaths({ position }: { position: number }) {
             stroke="currentColor"
             strokeWidth={path.width + 0.4}
             strokeOpacity={0.18 + path.id * 0.025}
-            initial={{ pathLength: 0.3, opacity: 0.6 }}
-            animate={{
-              pathLength: 1,
-              opacity: [0.4, 0.75, 0.4],
-              pathOffset: [0, 1, 0],
-            }}
-            transition={{
-              duration: 20 + (path.id % 10),
-              repeat: Number.POSITIVE_INFINITY,
-              ease: "linear",
-            }}
+            initial={reduceMotion ? false : { pathLength: 0.3, opacity: 0.6 }}
+            animate={
+              reduceMotion
+                ? { pathLength: 1, opacity: 0.45, pathOffset: 0 }
+                : {
+                    pathLength: 1,
+                    opacity: [0.4, 0.75, 0.4],
+                    pathOffset: [0, 1, 0],
+                  }
+            }
+            transition={
+              reduceMotion
+                ? { duration: 0 }
+                : {
+                    duration: 20 + (path.id % 10),
+                    repeat: Number.POSITIVE_INFINITY,
+                    ease: "linear",
+                  }
+            }
           />
         ))}
       </svg>

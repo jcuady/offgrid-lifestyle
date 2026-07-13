@@ -233,7 +233,7 @@ export function Navbar() {
       </AnimatePresence>
       <header
         className={cn(
-          "fixed left-0 right-0 z-50 transition-all duration-300 ease-in-out top-[var(--pwa-install-banner-height,0px)]",
+          "fixed left-0 right-0 top-0 z-50 transition-all duration-300 ease-in-out",
           isStandalone && "pt-[env(safe-area-inset-top)]",
           navSolid ? "bg-offgrid-green/95 backdrop-blur-md py-3 shadow-sm" : "bg-transparent py-5",
         )}

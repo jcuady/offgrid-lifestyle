@@ -58,7 +58,7 @@ export function HomePage() {
         primaryCta={{ label: hero.ctaShopLabel, onClick: () => followCmsCta(navigate, hero.ctaShopHref) }}
         secondaryCta={{ label: hero.ctaExploreLabel, onClick: scrollToCollections }}
       />
-      <main>
+      <main id="main">
         <FeaturedCollections />
         <FeaturedSpotlight placement="home" />
         <BestSellers />

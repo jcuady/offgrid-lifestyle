@@ -127,7 +127,7 @@ export function AccountLayout({
             </nav>
           </aside>
 
-          <main className="min-w-0">
+          <main id="main" className="min-w-0">
             {backTo ? (
               <Link
                 to={backTo.to}

@@ -4,7 +4,7 @@ import { motion, useReducedMotion } from "motion/react";
 import { ArrowLeft, ArrowRight, Star, Quote, BadgeCheck, MapPin, TrendingUp } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { followCmsCta } from "@/src/lib/cmsNavigation";
-import { siteContainer, sectionEyebrow, sectionEyebrowOnDark } from "@/src/lib/brandLayout";
+import { siteContainer, sectionEyebrow, sectionEyebrowOnDark, marketingPageHero } from "@/src/lib/brandLayout";
 import { cn } from "@/src/lib/utils";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { hydrateSiteContentFromSupabase } from "@/src/services";
@@ -87,7 +87,7 @@ export function TestimonialsPage() {
 
   return (
     <>
-      <section className="relative overflow-hidden bg-offgrid-green pt-28 pb-14 sm:pt-36 sm:pb-20">
+      <section className={cn(marketingPageHero, "pb-14 sm:pb-20")}>
         <div
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(0,10,255,0.10),transparent_60%)]"
           aria-hidden

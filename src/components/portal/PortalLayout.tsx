@@ -225,7 +225,7 @@ export function PortalLayout({ role }: PortalLayoutProps) {
               onClick={() => setMobileOpen((v) => !v)}
               aria-label={mobileOpen ? "Close menu" : "Open menu"}
               aria-expanded={mobileOpen}
-              className="grid h-9 w-9 place-items-center rounded-xl border border-offgrid-cream/20 text-offgrid-cream"
+              className="grid h-11 w-11 place-items-center rounded-xl border border-offgrid-cream/20 text-offgrid-cream"
             >
               {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
@@ -234,19 +234,19 @@ export function PortalLayout({ role }: PortalLayoutProps) {
 
         {/* Mobile slide-down drawer */}
         {mobileOpen && (
-          <div className="fixed inset-0 top-[57px] z-40 lg:hidden">
+          <div className="fixed inset-0 top-16 z-40 lg:hidden">
             <button
               aria-label="Close menu"
               onClick={() => setMobileOpen(false)}
               className="absolute inset-0 bg-offgrid-dark/60"
             />
-            <div className="relative flex h-full max-h-[calc(100svh-57px)] w-[84%] max-w-xs flex-col overflow-y-auto border-r border-offgrid-cream/10 bg-offgrid-green px-5 py-6">
+            <div className="relative flex h-full max-h-[calc(100svh-4rem)] w-[84%] max-w-xs flex-col overflow-y-auto border-r border-offgrid-cream/10 bg-offgrid-green px-5 py-6">
               {sidebarBody(() => setMobileOpen(false))}
             </div>
           </div>
         )}
 
-        <main className="portal-surface min-h-screen min-w-0 bg-offgrid-cream">
+        <main id="main" className="portal-surface min-h-screen min-w-0 bg-offgrid-cream">
           <div className="hidden lg:flex sticky top-0 z-30 items-center justify-end border-b border-offgrid-green/10 bg-offgrid-cream/95 px-8 py-3 backdrop-blur-sm">
             <NotificationBell
               className="shrink-0"

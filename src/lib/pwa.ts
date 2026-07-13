@@ -71,7 +71,7 @@ export function shouldOfferPwaInstall(): boolean {
 }
 
 // ---------------------------------------------------------------------------
-// Centralized install-prompt state so the banner, buttons, and modal stay in
+// Centralized install-prompt state so the modal and account-menu CTA stay in
 // sync on a single captured `beforeinstallprompt` event.
 // ---------------------------------------------------------------------------
 

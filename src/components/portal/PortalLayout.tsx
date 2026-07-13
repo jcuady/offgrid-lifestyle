@@ -209,6 +209,7 @@ export function PortalLayout({ role }: PortalLayoutProps) {
           <div className="flex items-center gap-3">
             <NotificationBell
               variant="dark"
+              className="shrink-0"
               settingsHref={
                 role === "admin"
                   ? "/portal/admin/settings"
@@ -248,6 +249,7 @@ export function PortalLayout({ role }: PortalLayoutProps) {
         <main className="portal-surface min-h-screen min-w-0 bg-offgrid-cream">
           <div className="hidden lg:flex sticky top-0 z-30 items-center justify-end border-b border-offgrid-green/10 bg-offgrid-cream/95 px-8 py-3 backdrop-blur-sm">
             <NotificationBell
+              className="shrink-0"
               settingsHref={
                 role === "admin"
                   ? "/portal/admin/settings"

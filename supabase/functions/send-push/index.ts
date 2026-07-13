@@ -23,7 +23,7 @@ function safeNavigationUrl(raw: unknown, fallback = "/"): string {
 
 function corsHeadersFor(req: Request): Record<string, string> {
   const defaults =
-    "https://offgrid-lifestyle.vercel.app,https://offgrid-lifestyle-jcuadys-projects.vercel.app,http://localhost:3000,http://127.0.0.1:3000";
+    "https://www.oglifestyleph.com,https://oglifestyleph.com,https://offgrid-lifestyle.vercel.app,https://offgrid-lifestyle-jcuadys-projects.vercel.app,http://localhost:3000,http://127.0.0.1:3000";
   const allowed = (Deno.env.get("ALLOWED_ORIGINS") ?? defaults)
     .split(",")
     .map((s) => s.trim())
@@ -151,9 +151,11 @@ Deno.serve(async (req: Request) => {
       const orderAgeMs = Date.now() - new Date(order.created_at).getTime();
       const isRecentGuest = !order.customer_id && orderAgeMs >= 0 && orderAgeMs < 10 * 60 * 1000;
       const isOwner = Boolean(order.customer_id && callerPortalId === order.customer_id);
-      const isPaymentProof = alertType === "payment_proof" && isOwner;
+      const isOwnerPaymentProof = isOwner && alertType === "payment_proof";
+      const isGuestCheckoutAlert =
+        isRecentGuest && (alertType === "new_retail_order" || alertType === "new_custom_order");
 
-      if (!isStaffOrAdmin && !isOwner && !isRecentGuest && !isPaymentProof) {
+      if (!isStaffOrAdmin && !isOwnerPaymentProof && !isGuestCheckoutAlert) {
         return new Response(JSON.stringify({ error: "Forbidden" }), {
           status: 403,
           headers: { ...corsHeaders, "Content-Type": "application/json" },

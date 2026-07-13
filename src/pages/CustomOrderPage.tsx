@@ -51,7 +51,7 @@ export function CustomOrderPage() {
     <>
       <section className="relative bg-offgrid-green pt-28 pb-12 sm:pt-32 sm:pb-16 overflow-hidden">
         <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(197,211,48,0.10),transparent_65%)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(0,10,255,0.10),transparent_65%)]"
           aria-hidden
         />
         <div className={cn(siteContainer, "relative z-10")}>

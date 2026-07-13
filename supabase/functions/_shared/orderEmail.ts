@@ -1,6 +1,6 @@
 import { EMAIL_BRAND, escapeHtml } from "./emailBrand.ts";
 
-const { muted: MUTED, accent: ACCENT, dark: DARK, surface: SURFACE } = EMAIL_BRAND;
+const { muted: MUTED, accent: ACCENT, text: TEXT, surface: SURFACE, border: BORDER } = EMAIL_BRAND;
 
 function formatPhp(amountCentavos: number | null | undefined): string {
   if (amountCentavos == null) return "—";
@@ -91,7 +91,7 @@ function formatPaymentMethod(method: string | null | undefined): string {
 }
 
 function metaRow(label: string, value: string): string {
-  return `<tr><td style="padding:5px 0;color:${MUTED};width:120px;vertical-align:top;">${escapeHtml(label)}</td><td style="padding:5px 0;font-weight:600;">${value}</td></tr>`;
+  return `<tr><td style="padding:5px 0;color:${MUTED};width:120px;vertical-align:top;">${escapeHtml(label)}</td><td style="padding:5px 0;font-weight:600;color:${TEXT};">${value}</td></tr>`;
 }
 
 function formatAddress(info: ShippingSnapshot): string {
@@ -107,7 +107,7 @@ function formatAddress(info: ShippingSnapshot): string {
 
 export function buildOrderSummaryHtml(ctx: OrderEmailContext): string {
   const channel = ctx.orderType === "retail" ? "Shop order" : "Custom order";
-  let html = `<div style="margin:16px 0;padding:16px;background:${SURFACE};border-radius:8px;font-size:13px;line-height:1.5;">
+  let html = `<div style="margin:16px 0;padding:16px;background:${SURFACE};border-radius:8px;font-size:13px;line-height:1.5;color:${TEXT};">
     <p style="margin:0 0 10px;font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:${MUTED};">${channel}</p>
     <table role="presentation" width="100%" style="font-size:13px;">`;
 
@@ -121,7 +121,7 @@ export function buildOrderSummaryHtml(ctx: OrderEmailContext): string {
 
   if (ctx.orderType === "retail" && ctx.lineItems?.length) {
     html += `</table><table role="presentation" width="100%" style="margin-top:12px;font-size:13px;border-collapse:collapse;">
-      <tr style="border-bottom:1px solid #e0d8c8;">
+      <tr style="border-bottom:1px solid ${BORDER};">
         <th align="left" style="padding:6px 0;color:${MUTED};font-weight:600;">Item</th>
         <th align="right" style="padding:6px 0;color:${MUTED};font-weight:600;">Qty</th>
         <th align="right" style="padding:6px 0;color:${MUTED};font-weight:600;">Price</th>
@@ -129,10 +129,10 @@ export function buildOrderSummaryHtml(ctx: OrderEmailContext): string {
     for (const line of ctx.lineItems) {
       const label = [line.name, line.size, line.color].filter(Boolean).join(" · ");
       const lineTotal = (line.price ?? 0) * (line.quantity ?? 1);
-      html += `<tr style="border-bottom:1px solid #eee;">
-        <td style="padding:8px 0;">${escapeHtml(label || "Item")}</td>
-        <td align="right" style="padding:8px 0;">×${line.quantity ?? 1}</td>
-        <td align="right" style="padding:8px 0;">${formatPhp(Math.round(lineTotal * 100))}</td>
+      html += `<tr style="border-bottom:1px solid ${BORDER};">
+        <td style="padding:8px 0;color:${TEXT};">${escapeHtml(label || "Item")}</td>
+        <td align="right" style="padding:8px 0;color:${TEXT};">×${line.quantity ?? 1}</td>
+        <td align="right" style="padding:8px 0;color:${TEXT};">${formatPhp(Math.round(lineTotal * 100))}</td>
       </tr>`;
     }
     html += `</table><table role="presentation" width="100%" style="margin-top:8px;font-size:13px;">`;
@@ -158,12 +158,12 @@ export function buildOrderSummaryHtml(ctx: OrderEmailContext): string {
     }
     if (ctx.designNotes?.trim()) {
       html += `</table><p style="margin:10px 0 0;font-size:12px;color:${MUTED};">Design notes</p>
-        <p style="margin:4px 0 0;white-space:pre-wrap;font-size:13px;">${escapeHtml(ctx.designNotes.trim())}</p>
+        <p style="margin:4px 0 0;white-space:pre-wrap;font-size:13px;color:${TEXT};">${escapeHtml(ctx.designNotes.trim())}</p>
         <table role="presentation" width="100%" style="font-size:13px;">`;
     }
     if (ctx.quoteNotes?.trim()) {
       html += `</table><p style="margin:10px 0 0;font-size:12px;color:${MUTED};">Quote notes</p>
-        <p style="margin:4px 0 0;white-space:pre-wrap;font-size:13px;">${escapeHtml(ctx.quoteNotes.trim())}</p>
+        <p style="margin:4px 0 0;white-space:pre-wrap;font-size:13px;color:${TEXT};">${escapeHtml(ctx.quoteNotes.trim())}</p>
         <table role="presentation" width="100%" style="font-size:13px;">`;
     }
   }
@@ -176,7 +176,7 @@ export function buildOrderSummaryHtml(ctx: OrderEmailContext): string {
 
   if (ctx.shippingInfo && (ctx.shippingInfo.address || ctx.shippingInfo.city)) {
     html += `<p style="margin:12px 0 4px;font-size:12px;color:${MUTED};">Ship to</p>
-      <p style="margin:0;font-size:13px;line-height:1.5;">${formatAddress(ctx.shippingInfo)}</p>`;
+      <p style="margin:0;font-size:13px;line-height:1.5;color:${TEXT};">${formatAddress(ctx.shippingInfo)}</p>`;
   }
 
   html += `</div>`;
@@ -310,4 +310,4 @@ export function buildOrderSummaryText(ctx: OrderEmailContext): string {
   return lines.join("\n");
 }
 
-export { escapeHtml, formatPaymentMethod, MUTED, DARK, ACCENT };
+export { escapeHtml, formatPaymentMethod, MUTED, TEXT, ACCENT };

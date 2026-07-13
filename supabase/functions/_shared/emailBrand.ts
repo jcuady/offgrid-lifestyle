@@ -1,17 +1,20 @@
-/** OFF GRID® transactional email branding — aligned with site tokens (Black / White / Electric Blue). */
+/** OFF GRID® transactional email branding — dark theme, black logo on white header band. */
 
 export const EMAIL_BRAND = {
   name: "OFF GRID® Lifestyle",
   tagline: "When comfort meets movement",
   location: "Est. Manila, PH",
   accent: "#000AFF",
-  dark: "#000000",
-  muted: "#6A6A6A",
-  subtle: "#A1A1A1",
-  border: "#E4E4E4",
-  surface: "#F1F1F1",
+  shell: "#000000",
+  card: "#0D0D0D",
+  surface: "#1A1A1A",
+  border: "#2A2A2A",
+  text: "#F5F5F5",
+  muted: "#B0B0B0",
+  subtle: "#808080",
   white: "#FFFFFF",
-  logoWhitePath: "/OG%20logo/OG%20logo/Complete/White%20No%20BG.png",
+  black: "#000000",
+  logoBlackPath: "/OG%20logo/OG%20logo/Complete/Black%20No%20BG.png",
 } as const;
 
 export function resolveSiteUrl(override?: string): string {
@@ -20,7 +23,19 @@ export function resolveSiteUrl(override?: string): string {
 }
 
 export function logoUrl(siteUrl: string): string {
-  return `${siteUrl}${EMAIL_BRAND.logoWhitePath}`;
+  return `${siteUrl}${EMAIL_BRAND.logoBlackPath}`;
+}
+
+export function emailHeader(siteUrl: string): string {
+  const logo = logoUrl(siteUrl);
+  const imgStyle =
+    "display:block;margin:0 auto;border:0;outline:none;max-width:200px;width:100%;height:auto;";
+
+  return `<tr><td bgcolor="${EMAIL_BRAND.white}" style="background:${EMAIL_BRAND.white};padding:22px 28px;text-align:center;">
+    <a href="${siteUrl}" style="text-decoration:none;">
+      <img src="${logo}" alt="${EMAIL_BRAND.name}" width="200" style="${imgStyle}">
+    </a>
+  </td></tr>`;
 }
 
 export function escapeHtml(value: string): string {
@@ -33,8 +48,8 @@ export function escapeHtml(value: string): string {
 
 export function emailCta(href: string, label: string): string {
   return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:28px 0 0;">
-    <tr><td style="border-radius:999px;background:${EMAIL_BRAND.dark};">
-      <a href="${href}" style="display:inline-block;padding:13px 26px;color:${EMAIL_BRAND.white};text-decoration:none;font-weight:700;font-size:14px;letter-spacing:0.02em;">${escapeHtml(label)}</a>
+    <tr><td style="border-radius:999px;background:${EMAIL_BRAND.white};">
+      <a href="${href}" style="display:inline-block;padding:13px 26px;color:${EMAIL_BRAND.black};text-decoration:none;font-weight:700;font-size:14px;letter-spacing:0.02em;">${escapeHtml(label)}</a>
     </td></tr>
   </table>`;
 }
@@ -47,9 +62,9 @@ export function emailFooter(siteUrl: string): string {
   const shop = `${siteUrl}/shop`;
   const custom = `${siteUrl}/custom`;
   const contact = `${siteUrl}/contact`;
-  return `<tr><td style="padding:22px 28px 26px;background:${EMAIL_BRAND.white};border-top:1px solid ${EMAIL_BRAND.border};">
+  return `<tr><td style="padding:22px 28px 26px;background:${EMAIL_BRAND.card};border-top:1px solid ${EMAIL_BRAND.border};">
     <p style="margin:0 0 6px;font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:${EMAIL_BRAND.muted};">${EMAIL_BRAND.tagline}</p>
-    <p style="margin:0 0 12px;font-size:12px;color:${EMAIL_BRAND.muted};">${EMAIL_BRAND.location} · <a href="${siteUrl}" style="color:${EMAIL_BRAND.dark};text-decoration:none;font-weight:600;">oglifestyleph.com</a></p>
+    <p style="margin:0 0 12px;font-size:12px;color:${EMAIL_BRAND.muted};">${EMAIL_BRAND.location} · <a href="${siteUrl}" style="color:${EMAIL_BRAND.text};text-decoration:none;font-weight:600;">oglifestyleph.com</a></p>
     <p style="margin:0;font-size:11px;color:${EMAIL_BRAND.subtle};">
       <a href="${shop}" style="color:${EMAIL_BRAND.muted};text-decoration:none;">Shop</a>
       &nbsp;·&nbsp;
@@ -71,9 +86,8 @@ export function emailLayout(params: {
   preheader?: string;
 }): string {
   const siteUrl = resolveSiteUrl(params.siteUrl);
-  const logo = logoUrl(siteUrl);
   const preheader = params.preheader ?? params.title;
-  const { dark, white, surface, muted } = EMAIL_BRAND;
+  const { shell, card, text } = EMAIL_BRAND;
 
   return `<!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
@@ -81,22 +95,18 @@ export function emailLayout(params: {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="x-apple-disable-message-reformatting">
-  <meta name="color-scheme" content="light">
-  <meta name="supported-color-schemes" content="light">
+  <meta name="color-scheme" content="dark">
+  <meta name="supported-color-schemes" content="dark">
   <title>${escapeHtml(params.title)}</title>
 </head>
-<body style="margin:0;padding:0;background:${surface};font-family:Helvetica,Arial,sans-serif;color:${dark};-webkit-text-size-adjust:100%;">
+<body style="margin:0;padding:0;background:${shell};font-family:Helvetica,Arial,sans-serif;color:${text};-webkit-text-size-adjust:100%;">
   <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">${escapeHtml(preheader)}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div>
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${surface};padding:32px 16px;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${shell};padding:32px 16px;">
     <tr><td align="center">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:${white};border-radius:12px;overflow:hidden;border:1px solid ${EMAIL_BRAND.border};">
-        <tr><td style="background:${dark};padding:22px 28px;text-align:center;">
-          <a href="${siteUrl}" style="text-decoration:none;">
-            <img src="${logo}" alt="${EMAIL_BRAND.name}" width="200" height="auto" style="display:block;margin:0 auto;border:0;outline:none;max-width:200px;height:auto;">
-          </a>
-        </td></tr>
-        <tr><td style="padding:32px 28px 28px;">
-          <h1 style="margin:0 0 16px;font-size:22px;line-height:1.25;font-weight:800;color:${dark};">${escapeHtml(params.title)}</h1>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:${card};border-radius:12px;overflow:hidden;border:1px solid ${EMAIL_BRAND.border};">
+        ${emailHeader(siteUrl)}
+        <tr><td style="padding:32px 28px 28px;background:${card};">
+          <h1 style="margin:0 0 16px;font-size:22px;line-height:1.25;font-weight:800;color:${text};">${escapeHtml(params.title)}</h1>
           ${params.bodyHtml}
         </td></tr>
         ${emailFooter(siteUrl)}

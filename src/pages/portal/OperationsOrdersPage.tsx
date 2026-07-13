@@ -286,7 +286,7 @@ export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
       </section>
 
       <div className="space-y-6 px-6 py-8 sm:px-8 lg:space-y-8 lg:px-10 lg:py-10">
-        <div className="rounded-2xl border border-offgrid-green/[0.09] bg-white p-4 shadow-[0_2px_28px_-8px_rgba(15,47,47,0.08)] ring-1 ring-offgrid-green/[0.05] sm:p-5">
+        <div className="rounded-2xl border border-offgrid-green/[0.09] bg-white p-4 shadow-[0_2px_28px_-8px_rgba(0,0,0,0.08)] ring-1 ring-offgrid-green/[0.05] sm:p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="relative min-w-0 flex-1">
               <Search
@@ -449,7 +449,7 @@ export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
             ) : null}
           </div>
         ) : view === "table" ? (
-          <div className="overflow-hidden rounded-2xl border border-offgrid-green/[0.09] bg-white shadow-[0_2px_28px_-8px_rgba(15,47,47,0.08)] ring-1 ring-offgrid-green/[0.05]">
+          <div className="overflow-hidden rounded-2xl border border-offgrid-green/[0.09] bg-white shadow-[0_2px_28px_-8px_rgba(0,0,0,0.08)] ring-1 ring-offgrid-green/[0.05]">
             <div className="overflow-x-auto">
               <table className="min-w-[880px] w-full text-left">
                 <thead>

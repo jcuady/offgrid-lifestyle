@@ -40,7 +40,7 @@ export const notificationService = {
   async listForCurrentUser(limit = 30): Promise<AppNotification[]> {
     const { data, error } = await supabase
       .from("og_notifications")
-      .select("*")
+      .select("id, user_id, title, body, url, category, read_at, created_at")
       .order("created_at", { ascending: false })
       .limit(limit);
 

@@ -66,6 +66,32 @@ describe("pushAuth", () => {
       ).toBe(true);
     });
 
+    it("denies customers fabricating new-order alerts for their own order", () => {
+      expect(
+        canDispatchOperationalPush({
+          orderCustomerId: "cust-1",
+          orderCreatedAt: RECENT_CREATED,
+          alertType: "new_retail_order",
+          callerPortalId: "cust-1",
+          callerRole: "customer",
+          nowMs: NOW,
+        }),
+      ).toBe(false);
+    });
+
+    it("denies recent guests fabricating payment_proof alerts", () => {
+      expect(
+        canDispatchOperationalPush({
+          orderCustomerId: null,
+          orderCreatedAt: RECENT_CREATED,
+          alertType: "payment_proof",
+          callerPortalId: null,
+          callerRole: null,
+          nowMs: NOW,
+        }),
+      ).toBe(false);
+    });
+
     it("denies unrelated customers", () => {
       expect(
         canDispatchOperationalPush({

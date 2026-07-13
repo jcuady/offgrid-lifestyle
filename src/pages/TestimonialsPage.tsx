@@ -89,7 +89,7 @@ export function TestimonialsPage() {
     <>
       <section className="relative overflow-hidden bg-offgrid-green pt-28 pb-14 sm:pt-36 sm:pb-20">
         <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(197,211,48,0.10),transparent_60%)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(0,10,255,0.10),transparent_60%)]"
           aria-hidden
         />
         <div className={cn(siteContainer, "relative z-10")}>
@@ -302,7 +302,7 @@ export function TestimonialsPage() {
 
       <section className="relative overflow-hidden bg-offgrid-dark py-16 md:py-20">
         <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,rgba(197,211,48,0.10),transparent_60%)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,rgba(0,10,255,0.10),transparent_60%)]"
           aria-hidden
         />
         <div className={cn(siteContainer, "relative z-10 text-center")}>

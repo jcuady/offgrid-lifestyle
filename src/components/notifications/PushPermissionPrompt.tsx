@@ -16,6 +16,13 @@ export function PushPermissionPrompt() {
     if (!user) return;
     if (isPushPromptDismissed()) return;
     if (getCookieConsent() === "essential-only") return;
+
+    // iOS Safari only supports Web Push in a Home Screen PWA — show install CTA, not Enable.
+    if (isIosDevice() && !isStandalonePwa()) {
+      setVisible(true);
+      return;
+    }
+
     if (!canReceiveWebPush()) return;
     if (!("Notification" in window) || Notification.permission === "granted") return;
 

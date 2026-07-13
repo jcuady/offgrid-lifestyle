@@ -337,7 +337,7 @@ export function ProductDetailPage() {
                 <div
                   className={cn(
                     "mt-10 rounded-2xl border border-offgrid-green/30 bg-white",
-                    "p-6 md:p-8 shadow-[0_1px_0_rgba(15,47,47,0.06)]",
+                    "p-6 md:p-8 shadow-[0_1px_0_rgba(0,0,0,0.06)]",
                   )}
                   aria-labelledby="pdp-shipping-heading"
                 >

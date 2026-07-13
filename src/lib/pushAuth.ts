@@ -23,10 +23,14 @@ export function isRecentGuestOrder(customerId: string | null, createdAt: string,
 export function canDispatchOperationalPush(ctx: OperationalPushContext): boolean {
   const isStaffOrAdmin = ctx.callerRole === "admin" || ctx.callerRole === "staff";
   const isOwner = Boolean(ctx.orderCustomerId && ctx.callerPortalId === ctx.orderCustomerId);
-  const isPaymentProof = ctx.alertType === "payment_proof" && isOwner;
-  const isRecentGuest = isRecentGuestOrder(ctx.orderCustomerId, ctx.orderCreatedAt, ctx.nowMs);
+  // Customers may only alert staff when uploading payment proof for their own order.
+  const isOwnerPaymentProof = isOwner && ctx.alertType === "payment_proof";
+  // Guest checkout may alert staff only for new-order events inside the time window.
+  const isGuestCheckoutAlert =
+    isRecentGuestOrder(ctx.orderCustomerId, ctx.orderCreatedAt, ctx.nowMs) &&
+    (ctx.alertType === "new_retail_order" || ctx.alertType === "new_custom_order");
 
-  return isStaffOrAdmin || isOwner || isRecentGuest || isPaymentProof;
+  return isStaffOrAdmin || isOwnerPaymentProof || isGuestCheckoutAlert;
 }
 
 export function portalOrderDetailPath(

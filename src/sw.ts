@@ -5,6 +5,7 @@ import { NavigationRoute, registerRoute } from "workbox-routing";
 import { CacheFirst, NetworkFirst, StaleWhileRevalidate } from "workbox-strategies";
 import { ExpirationPlugin } from "workbox-expiration";
 import { CacheableResponsePlugin } from "workbox-cacheable-response";
+import { absoluteNotificationUrl } from "./lib/pushPayload";
 
 declare const self: ServiceWorkerGlobalScope;
 
@@ -89,12 +90,14 @@ self.addEventListener("push", (event) => {
     };
 
     const title = payload.title ?? "OffGrid Lifestyle";
+    const path = payload.url ?? "/";
     const options: NotificationOptions = {
       body: payload.body ?? "",
       icon: payload.icon ?? "/favicon_io/android-chrome-192x192.png",
       badge: "/favicon_io/favicon-32x32.png",
-      data: { url: payload.url ?? "/" },
-      tag: "offgrid-notification",
+      data: { url: path },
+      // Unique per deep-link so concurrent order alerts do not collapse on Android.
+      tag: path === "/" ? `offgrid-${Date.now()}` : `offgrid:${path}`,
     };
 
     event.waitUntil(self.registration.showNotification(title, options));
@@ -104,6 +107,7 @@ self.addEventListener("push", (event) => {
       self.registration.showNotification("OffGrid Lifestyle", {
         body: text,
         icon: "/favicon_io/android-chrome-192x192.png",
+        tag: `offgrid-${Date.now()}`,
       }),
     );
   }
@@ -113,7 +117,7 @@ self.addEventListener("push", (event) => {
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const rawUrl = (event.notification.data as { url?: string })?.url ?? "/";
-  const targetUrl = new URL(rawUrl, self.location.origin).href;
+  const targetUrl = absoluteNotificationUrl(rawUrl, self.location.origin);
 
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((windowClients) => {

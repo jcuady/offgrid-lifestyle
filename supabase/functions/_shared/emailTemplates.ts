@@ -42,11 +42,11 @@ export function contactStaffEmail(params: {
     preheader: `New ${params.topic} inquiry from ${params.name}`,
     bodyHtml: `<p style="color:${muted};line-height:1.65;margin:0 0 16px;">You received a message from the contact form.</p>
      <table role="presentation" width="100%" style="font-size:14px;line-height:1.65;">
-       <tr><td style="padding:6px 0;color:${muted};width:90px;vertical-align:top;">Name</td><td style="padding:6px 0;"><strong>${escapeHtml(params.name)}</strong></td></tr>
-       <tr><td style="padding:6px 0;color:${muted};vertical-align:top;">Email</td><td style="padding:6px 0;"><a href="mailto:${escapeHtml(params.email)}" style="color:${EMAIL_BRAND.dark};">${escapeHtml(params.email)}</a></td></tr>
-       <tr><td style="padding:6px 0;color:${muted};vertical-align:top;">Topic</td><td style="padding:6px 0;">${escapeHtml(params.topic)}</td></tr>
+       <tr><td style="padding:6px 0;color:${muted};width:90px;vertical-align:top;">Name</td><td style="padding:6px 0;color:${EMAIL_BRAND.text};"><strong>${escapeHtml(params.name)}</strong></td></tr>
+       <tr><td style="padding:6px 0;color:${muted};vertical-align:top;">Email</td><td style="padding:6px 0;"><a href="mailto:${escapeHtml(params.email)}" style="color:${EMAIL_BRAND.text};">${escapeHtml(params.email)}</a></td></tr>
+       <tr><td style="padding:6px 0;color:${muted};vertical-align:top;">Topic</td><td style="padding:6px 0;color:${EMAIL_BRAND.text};">${escapeHtml(params.topic)}</td></tr>
      </table>
-     <div style="margin-top:20px;padding:16px;background:${EMAIL_BRAND.surface};border-radius:8px;white-space:pre-wrap;font-size:14px;line-height:1.65;color:${EMAIL_BRAND.dark};">${escapeHtml(params.message)}</div>`,
+     <div style="margin-top:20px;padding:16px;background:${EMAIL_BRAND.surface};border-radius:8px;white-space:pre-wrap;font-size:14px;line-height:1.65;color:${EMAIL_BRAND.text};">${escapeHtml(params.message)}</div>`,
   });
   return { subject, html, text };
 }
@@ -64,7 +64,7 @@ export function contactAutoReplyEmail(params: {
     siteUrl,
     preheader: `We received your ${params.topic} inquiry and will reply soon.`,
     bodyHtml: `<p style="color:${muted};line-height:1.65;margin:0 0 12px;">Hi ${escapeHtml(params.name)},</p>
-     <p style="color:${muted};line-height:1.65;margin:0;">Thanks for reaching out about <strong style="color:${EMAIL_BRAND.dark};">${escapeHtml(params.topic)}</strong>. We received your message and will get back to you within one business day.</p>
+     <p style="color:${muted};line-height:1.65;margin:0;">Thanks for reaching out about <strong style="color:${EMAIL_BRAND.text};">${escapeHtml(params.topic)}</strong>. We received your message and will get back to you within one business day.</p>
      ${emailCallout("Team kits, wholesale, and custom orders — we&rsquo;re on it.")}`,
   });
   return { subject, html, text };
@@ -155,11 +155,10 @@ export function authActionEmail(params: {
   if (params.actionType === "signup") {
     title = "Confirm your email";
     preheader = "Confirm your email to activate your OFF GRID® account.";
-    body = `<p style="color:${muted};line-height:1.65;margin:0 0 12px;">${greeting}</p>
-      <p style="color:${muted};line-height:1.65;margin:0 0 16px;">Welcome to OFF GRID® Lifestyle. Confirm your email to activate your account and track shop orders, custom requests, and delivery updates.</p>
-      ${params.otp ? `<p style="margin:0 0 20px;padding:16px 20px;background:${EMAIL_BRAND.surface};border-radius:8px;font-family:monospace;font-size:22px;font-weight:800;letter-spacing:0.2em;text-align:center;color:${EMAIL_BRAND.dark};">${escapeHtml(params.otp)}</p>` : ""}
+    body = `<p class="email-text" style="color:${muted};line-height:1.65;margin:0 0 12px;">${greeting}</p>
+      <p class="email-text" style="color:${muted};line-height:1.65;margin:0 0 16px;">Welcome to OFF GRID® Lifestyle. Confirm your email to activate your account and track shop orders, custom requests, and delivery updates.</p>
       ${emailCta(params.verifyUrl, "Confirm email")}`;
-    textBody = `Confirm your account: ${params.verifyUrl}${params.otp ? `\n\nOr use code: ${params.otp}` : ""}${emailTextFooter(siteUrl)}`;
+    textBody = `Confirm your account: ${params.verifyUrl}${emailTextFooter(siteUrl)}`;
   } else if (params.actionType === "recovery") {
     title = "Reset your password";
     preheader = "Reset your OFF GRID® account password.";
@@ -178,7 +177,7 @@ export function authActionEmail(params: {
     preheader = "Complete your OFF GRID® account action.";
     body = `<p style="color:${muted};line-height:1.65;margin:0 0 12px;">${greeting}</p>
       <p style="color:${muted};line-height:1.65;margin:0 0 16px;">Complete this action using the link below.</p>
-      ${params.otp ? `<p style="margin:0 0 20px;font-family:monospace;font-size:18px;font-weight:700;color:${EMAIL_BRAND.dark};">${escapeHtml(params.otp)}</p>` : ""}
+      ${params.otp ? `<p style="margin:0 0 20px;font-family:monospace;font-size:18px;font-weight:700;color:${EMAIL_BRAND.text};">${escapeHtml(params.otp)}</p>` : ""}
       ${emailCta(params.verifyUrl, "Continue")}`;
     textBody = `Continue: ${params.verifyUrl}${emailTextFooter(siteUrl)}`;
   }

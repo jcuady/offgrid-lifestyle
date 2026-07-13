@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test.describe("public shell", () => {
   test("homepage loads with navigation", async ({ page }) => {
     await page.goto("/");
-    await expect(page).toHaveTitle(/OffGrid/i);
+    await expect(page).toHaveTitle(/OFF GRID/i);
     await expect(page.locator("header")).toBeVisible();
   });
 

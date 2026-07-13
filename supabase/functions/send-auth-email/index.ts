@@ -76,7 +76,7 @@ Deno.serve(async (req: Request) => {
         await sendOne(newEmail, action, email_data.token_hash, email_data.token_new);
       }
     } else {
-      await sendOne(user.email, action, email_data.token_hash, email_data.token);
+      await sendOne(user.email, action, email_data.token_hash, action === "signup" ? undefined : email_data.token);
     }
 
     return new Response(JSON.stringify({}), {

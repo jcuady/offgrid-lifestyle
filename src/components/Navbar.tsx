@@ -321,12 +321,13 @@ export function Navbar() {
             {currentUser ? (
               <NotificationBell
                 variant="dark"
+                className="shrink-0"
                 settingsHref={
                   currentUser.role === "customer"
                     ? "/account/profile"
                     : currentUser.role === "admin"
                       ? "/portal/admin/settings"
-                      : undefined
+                      : "/portal/staff"
                 }
               />
             ) : null}

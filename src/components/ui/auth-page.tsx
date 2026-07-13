@@ -161,7 +161,7 @@ export function AuthPage({
             </div>
           ) : null}
 
-          <form className="space-y-4" onSubmit={handleFormSubmit}>
+          <form className="space-y-4" onSubmit={handleFormSubmit} noValidate>
             {mode === "sign-up" && onNameChange ? (
               <Field label="Full name" error={fieldErrors.name}>
                 <div className="relative">
@@ -204,7 +204,8 @@ export function AuthPage({
                 <Input
                   placeholder="your.email@example.com"
                   className="peer ps-9"
-                  type="email"
+                  type="text"
+                  inputMode="email"
                   autoComplete="email"
                   value={email}
                   onChange={(e) => onEmailChange(e.target.value)}
@@ -283,7 +284,7 @@ export function AuthPage({
               </p>
             ) : null}
 
-            <Button type="submit" size="lg" className="w-full">
+            <Button type="submit" size="lg" className="w-full" formNoValidate>
               {submitLabel ?? (mode === "sign-up" ? "Create account" : "Sign in")}
             </Button>
           </form>

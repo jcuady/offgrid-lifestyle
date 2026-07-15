@@ -2,11 +2,11 @@ import { Fragment } from "react";
 import { motion } from "motion/react";
 import { ArrowUpRight, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { formatPrice } from "@/src/data/products";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { resolveFeaturedSpotlightItems, type FeaturedDisplayItem } from "@/src/lib/featuredProducts";
 import { siteContainer } from "@/src/lib/brandLayout";
 import { cn } from "@/src/lib/utils";
+import { ProductPrice } from "@/src/components/ProductPrice";
 
 interface FeaturedSpotlightProps {
   placement: "home" | "shop";
@@ -126,7 +126,7 @@ function FeaturedHeroTile({ item, onClick }: { item: FeaturedDisplayItem; onClic
           alt={item.name}
           loading="lazy"
           decoding="async"
-          className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+          className="absolute inset-0 h-full w-full object-cover object-center"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-offgrid-dark/85 via-offgrid-dark/35 to-transparent" />
 
@@ -144,9 +144,12 @@ function FeaturedHeroTile({ item, onClick }: { item: FeaturedDisplayItem; onClic
               <h3 className="font-display text-3xl font-bold leading-tight text-offgrid-cream sm:text-4xl md:text-5xl">
                 {item.name}
               </h3>
-              <p className="mt-3 inline-block border-l-2 border-offgrid-cream pl-3 font-display text-xl font-black tabular-nums tracking-tight text-offgrid-cream sm:text-2xl">
-                {formatPrice(item.price)}
-              </p>
+              <ProductPrice
+                product={item}
+                className="mt-3 border-l-2 border-offgrid-cream pl-3"
+                priceClassName="text-xl text-offgrid-cream sm:text-2xl"
+                compareClassName="text-sm text-offgrid-cream/65 sm:text-base"
+              />
             </>
           ) : null}
           <span className="mt-5 inline-flex w-fit items-center gap-2 rounded-full border border-offgrid-cream/35 bg-offgrid-cream/10 px-4 py-2 font-mono text-xs font-bold uppercase tracking-[0.14em] text-offgrid-cream backdrop-blur-sm transition-colors group-hover:bg-offgrid-cream group-hover:text-offgrid-lime">
@@ -189,7 +192,7 @@ function FeaturedTile({ item, onClick, index, large = false, className }: Featur
         alt={item.name}
         loading="lazy"
         decoding="async"
-        className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-[1.05]"
+        className="absolute inset-0 h-full w-full object-cover object-center"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-offgrid-dark via-offgrid-dark/30 to-transparent" />
 
@@ -219,14 +222,12 @@ function FeaturedTile({ item, onClick, index, large = false, className }: Featur
           >
             {item.name}
           </h3>
-          <p
-            className={cn(
-              "mt-2 inline-block border-l-2 border-offgrid-cream/60 pl-2 font-display font-black tabular-nums tracking-tight text-offgrid-cream transition-colors group-hover:border-offgrid-cream",
-              large ? "text-xl sm:text-2xl" : "text-base sm:text-lg",
-            )}
-          >
-            {formatPrice(item.price)}
-          </p>
+          <ProductPrice
+            product={item}
+            className="mt-2 border-l-2 border-offgrid-cream/60 pl-2 transition-colors group-hover:border-offgrid-cream"
+            priceClassName={cn("text-offgrid-cream", large ? "text-xl sm:text-2xl" : "text-base sm:text-lg")}
+            compareClassName="text-xs text-offgrid-cream/65"
+          />
         </div>
       ) : null}
     </motion.button>

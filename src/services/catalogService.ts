@@ -1,4 +1,4 @@
-import type { Product } from "@/src/data/products";
+import { getProductSports, getProductTags, type Product } from "@/src/data/products";
 import type { Database } from "@/src/types/database";
 import { logger } from "@/src/lib/logger";
 import { supabase } from "@/src/lib/supabase";
@@ -8,7 +8,7 @@ import { usePortalStore } from "@/src/store/usePortalStore";
 type ProductRow = Database["public"]["Tables"]["og_products"]["Row"];
 
 function rowToProduct(row: ProductRow): Product {
-  return {
+  const legacyProduct: Product = {
     id: row.id as string,
     slug: row.slug as string,
     name: row.name as string,
@@ -31,12 +31,19 @@ function rowToProduct(row: ProductRow): Product {
     sold: row.sold as number,
     stock: (row.stock as number) ?? undefined,
     tag: (row.tag as string) ?? undefined,
+    tags: (row.tags as string[]) ?? [],
+    sports: (row.sports as string[]) ?? [],
     homeBestSellerRank: (row.home_best_seller_rank as number) ?? undefined,
     status: row.status as Product["status"],
     metaTitle: (row.meta_title as string) ?? undefined,
     metaDescription: (row.meta_description as string) ?? undefined,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
+  };
+  return {
+    ...legacyProduct,
+    sports: legacyProduct.sports.length ? legacyProduct.sports : getProductSports(legacyProduct),
+    tags: legacyProduct.tags.length ? legacyProduct.tags : getProductTags(legacyProduct),
   };
 }
 
@@ -69,6 +76,7 @@ function productToRow(p: Product): ProductInsert {
     slug: p.slug,
     name: p.name,
     category: p.category,
+    sports: getProductSports(p),
     collection_ids: p.collectionIds ?? [],
     base_price: p.basePrice,
     price: p.price,
@@ -86,7 +94,8 @@ function productToRow(p: Product): ProductInsert {
     variants: (p.variants ?? []) as unknown as ProductInsert["variants"],
     sold: p.sold,
     stock: p.stock ?? null,
-    tag: p.tag ?? null,
+    tag: getProductTags(p)[0] ?? null,
+    tags: getProductTags(p),
     home_best_seller_rank: p.homeBestSellerRank ?? 0,
     status: p.status,
     meta_title: p.metaTitle ?? null,
@@ -133,6 +142,7 @@ export const supabaseCatalogService: CatalogService = {
     if (patch.name !== undefined) partial.name = patch.name;
     if (patch.slug !== undefined) partial.slug = patch.slug;
     if (patch.category !== undefined) partial.category = patch.category;
+    if (patch.sports !== undefined) partial.sports = patch.sports;
     if (patch.basePrice !== undefined) partial.base_price = patch.basePrice;
     if (patch.price !== undefined) partial.price = patch.price;
     if (patch.image !== undefined) partial.image = patch.image;
@@ -145,6 +155,10 @@ export const supabaseCatalogService: CatalogService = {
     if (patch.sold !== undefined) partial.sold = patch.sold;
     if (patch.stock !== undefined) partial.stock = patch.stock;
     if (patch.tag !== undefined) partial.tag = patch.tag;
+    if (patch.tags !== undefined) {
+      partial.tags = patch.tags;
+      partial.tag = patch.tags[0] ?? null;
+    }
     if (patch.status !== undefined) partial.status = patch.status;
     if (patch.homeBestSellerRank !== undefined) partial.home_best_seller_rank = patch.homeBestSellerRank;
 

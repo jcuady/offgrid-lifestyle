@@ -9,7 +9,7 @@ import {
   ChevronRight,
   X,
 } from "lucide-react";
-import { formatPrice, Product } from "@/src/data/products";
+import { compareSports, formatPrice, getProductSports, getProductTags, Product } from "@/src/data/products";
 import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/input";
 import { ProductCard } from "@/src/components/ProductCard";
@@ -52,9 +52,13 @@ export function ShopPage() {
     void hydrateProductsFromSupabase();
   }, []);
 
-  // Storefront never lists archived items (matches homepage convention).
+  useEffect(() => {
+    setSelectedCategory(searchParams.get("category") ?? "all");
+  }, [searchParams]);
+
+  // Storefront only lists purchasable active items (DB rejects draft/archived at checkout).
   const products = useMemo(
-    () => allProducts.filter((p) => p.status !== "archived"),
+    () => allProducts.filter((p) => p.status === "active"),
     [allProducts],
   );
 
@@ -68,21 +72,19 @@ export function ShopPage() {
   };
 
   const categories = useMemo(() => {
-    const unique = [...new Set(products.map((p) => p.category))].sort((a, b) =>
-      String(a).localeCompare(String(b)),
-    );
+    const unique = [...new Set(products.flatMap(getProductSports))].sort(compareSports);
     return [
       { value: "all", label: "All Products", count: products.length },
       ...unique.map((cat) => ({
         value: cat,
         label: cat,
-        count: products.filter((p) => p.category === cat).length,
+        count: products.filter((p) => getProductSports(p).includes(cat)).length,
       })),
     ];
   }, [products]);
 
   const tags = useMemo(() => {
-    const unique = [...new Set(products.map((p) => p.tag).filter((t): t is string => !!t && t.trim().length > 0))];
+    const unique = [...new Set(products.flatMap(getProductTags))];
     return unique.sort((a, b) => String(a).localeCompare(String(b)));
   }, [products]);
 
@@ -115,11 +117,11 @@ export function ShopPage() {
     let filtered = products;
 
     if (selectedCategory !== "all") {
-      filtered = filtered.filter((p) => p.category === selectedCategory);
+      filtered = filtered.filter((p) => getProductSports(p).includes(selectedCategory));
     }
 
     if (selectedTag !== "all") {
-      filtered = filtered.filter((p) => p.tag === selectedTag);
+      filtered = filtered.filter((p) => getProductTags(p).includes(selectedTag));
     }
 
     if (priceBucket !== "all") {
@@ -133,6 +135,8 @@ export function ShopPage() {
         (p) =>
           p.name.toLowerCase().includes(query) ||
           p.category.toLowerCase().includes(query) ||
+          getProductSports(p).some((sport) => sport.toLowerCase().includes(query)) ||
+          getProductTags(p).some((tag) => tag.toLowerCase().includes(query)) ||
           p.description.toLowerCase().includes(query),
       );
     }
@@ -190,22 +194,37 @@ export function ShopPage() {
 
   const priceBucketLabel = priceBuckets.find((b) => b.value === priceBucket)?.label;
 
+  const isCategoryView = selectedCategory !== "all";
+  const activeCategoryLabel = isCategoryView
+    ? categories.find((c) => c.value === selectedCategory)?.label ?? selectedCategory
+    : "";
+
   return (
     <div id="main" className="min-h-screen bg-offgrid-cream">
-      {/* Shop Header */}
+      {/* Shop Header — category-aware so deep links feel intentional */}
       <div className={marketingPageHero}>
         <div className="pointer-events-none absolute -right-16 -top-16 h-72 w-72 rounded-full bg-offgrid-lime/10 blur-3xl" />
         <div className={cn(siteContainer, "relative")}>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <span className="mb-3 inline-block font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-cream/80 sm:mb-4">
-              Shop All · {products.length} pieces
+            <span className="mb-3 inline-flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-cream/80 sm:mb-4">
+              <span className="h-1.5 w-1.5 rounded-full bg-offgrid-lime" />
+              {isCategoryView ? "Shop By Sport" : "Shop All"} · {filteredAndSortedProducts.length} Pieces
             </span>
-            <h1 className="mb-3 font-display text-3xl font-black leading-[0.9] sm:mb-4 sm:text-4xl md:text-6xl lg:text-7xl">
-              The Full <span className="italic font-normal text-white sm:hidden">Collection</span>
-              <span className="hidden sm:inline">
-                <br />
-                <span className="italic font-normal text-white">Collection</span>
-              </span>
+            <h1 className="mb-3 font-display text-3xl font-black leading-[0.9] sm:mb-4 sm:text-5xl md:text-6xl lg:text-7xl">
+              {isCategoryView ? (
+                <>
+                  {activeCategoryLabel}
+                  <span className="block italic font-normal text-white sm:inline sm:ml-3">Collection</span>
+                </>
+              ) : (
+                <>
+                  The Full <span className="italic font-normal text-white sm:hidden">Collection</span>
+                  <span className="hidden sm:inline">
+                    <br />
+                    <span className="italic font-normal text-white">Collection</span>
+                  </span>
+                </>
+              )}
             </h1>
             <p className="max-w-lg text-sm text-offgrid-cream/70 md:text-base">
               Premium Filipino sportswear for those who play different. Filter by sport, drop, or price — find your fit.
@@ -285,7 +304,7 @@ export function ShopPage() {
             </div>
           </div>
 
-          {/* Category chips — wrap so every category is visible */}
+          {/* Sport chips are derived from live admin product assignments. */}
           <div className="mt-3 flex flex-wrap gap-2 sm:mt-4">
             {categories.map((cat) => (
               <button
@@ -315,7 +334,7 @@ export function ShopPage() {
               {tags.length > 0 && (
                 <div>
                   <p className="mb-2 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-offgrid-green/50">
-                    Collection / Drop
+                    Promos & Tags
                   </p>
                   <div className="flex flex-wrap gap-2">
                     <FilterChip active={selectedTag === "all"} onClick={() => setSelectedTag("all")}>

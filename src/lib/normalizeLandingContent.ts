@@ -1,5 +1,5 @@
 import type { LandingContent } from "@/src/data/landingContent";
-import { initialLandingContent } from "@/src/data/landingContent";
+import { initialLandingContent, LANDING_HERO_VIDEO_DEFAULT } from "@/src/data/landingContent";
 import { isLegacyPlaceholderImage } from "@/src/lib/communityPhotos";
 
 function mergeTypography(
@@ -52,7 +52,17 @@ export function normalizeLandingContent(partial?: Partial<LandingContent> | null
   return {
     ...base,
     ...partial,
-    hero: { ...base.hero, ...partial.hero },
+    hero: {
+      ...base.hero,
+      ...partial.hero,
+      // Prefer sports still; clear legacy default video so the still shows.
+      imageSrc: partial.hero?.imageSrc?.trim() || base.hero.imageSrc,
+      videoSrc: (() => {
+        const next = partial.hero?.videoSrc ?? base.hero.videoSrc;
+        if (!next?.trim() || next === LANDING_HERO_VIDEO_DEFAULT) return "";
+        return next;
+      })(),
+    },
     collectionsHeader: { ...base.collectionsHeader, ...partial.collectionsHeader },
     collections: base.collections.map((card, index) => ({
       ...card,

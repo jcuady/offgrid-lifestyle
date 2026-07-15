@@ -1,6 +1,7 @@
 import { Star, ArrowRight } from "lucide-react";
-import { formatPrice, type Product } from "@/src/data/products";
+import { getProductSports, getProductTags, type Product } from "@/src/data/products";
 import { cn } from "@/src/lib/utils";
+import { ProductPrice } from "@/src/components/ProductPrice";
 
 interface ProductCardProps {
   product: Product;
@@ -11,6 +12,7 @@ interface ProductCardProps {
 /** Storefront product tile — used across the shop grid and featured rails. */
 export function ProductCard({ product, onSelect, className }: ProductCardProps) {
   const extraColors = Math.max(0, product.colors.length - 4);
+  const primaryTag = getProductTags(product)[0];
 
   return (
     <article
@@ -27,9 +29,9 @@ export function ProductCard({ product, onSelect, className }: ProductCardProps) 
       className={cn("group flex w-full cursor-pointer flex-col text-left outline-none", className)}
     >
       <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-offgrid-green/[0.08] transition-all duration-500 group-hover:-translate-y-1 group-hover:shadow-xl group-hover:ring-offgrid-lime/40 group-focus-visible:ring-2 group-focus-visible:ring-offgrid-lime sm:rounded-2xl">
-        {product.tag && (
+        {primaryTag && (
           <span className="absolute left-2.5 top-2.5 z-10 rounded-full bg-offgrid-lime px-2 py-0.5 font-mono text-[8px] font-bold uppercase tracking-[0.15em] text-white shadow-sm sm:left-3 sm:top-3 sm:px-2.5 sm:py-1 sm:text-[9px]">
-            {product.tag}
+            {primaryTag}
           </span>
         )}
 
@@ -52,11 +54,14 @@ export function ProductCard({ product, onSelect, className }: ProductCardProps) 
       <div className="mt-3 px-0.5 sm:mt-4">
         <div className="mb-1 flex items-baseline justify-between gap-2 sm:mb-1.5">
           <p className="min-w-0 truncate font-mono text-[9px] font-semibold uppercase tracking-[0.16em] text-offgrid-green/45 sm:text-[10px] sm:tracking-[0.18em]">
-            {product.category}
+            {getProductSports(product).join(" · ")}
           </p>
-          <p className="shrink-0 font-display text-xs font-black tabular-nums tracking-tight text-offgrid-green sm:text-sm">
-            {formatPrice(product.price)}
-          </p>
+          <ProductPrice
+            product={product}
+            className="shrink-0 justify-end"
+            priceClassName="text-xs sm:text-sm"
+            compareClassName="text-[10px] sm:text-xs"
+          />
         </div>
         <h3 className="mb-2.5 line-clamp-2 font-display text-sm font-bold leading-tight text-offgrid-green transition-colors group-hover:text-offgrid-lime sm:mb-3 sm:text-base">
           {product.name}

@@ -59,6 +59,12 @@ function validatePassword(password: string | undefined): string | null {
   return null;
 }
 
+function validateEmail(email: string | undefined): string | null {
+  if (!email) return null;
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return "Enter a valid email address.";
+  return null;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -181,6 +187,31 @@ Deno.serve(async (req: Request) => {
             status: 400,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
+        }
+      }
+
+      if (action === "update") {
+        const emailErr = validateEmail(email);
+        if (emailErr) {
+          return new Response(JSON.stringify({ error: emailErr }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        if (!password && !email && !name) {
+          return new Response(JSON.stringify({ error: "No changes to save." }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        if (password) {
+          const pwErr = validatePassword(password);
+          if (pwErr) {
+            return new Response(JSON.stringify({ error: pwErr }), {
+              status: 400,
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
         }
       }
 

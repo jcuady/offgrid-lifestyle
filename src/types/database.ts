@@ -454,9 +454,11 @@ export type Database = {
           sizes: string[] | null
           slug: string
           sold: number
+          sports: string[]
           status: string
           stock: number | null
           tag: string | null
+          tags: string[]
           updated_at: string
           variants: Json | null
         }
@@ -484,9 +486,11 @@ export type Database = {
           sizes?: string[] | null
           slug: string
           sold?: number
+          sports?: string[]
           status?: string
           stock?: number | null
           tag?: string | null
+          tags?: string[]
           updated_at?: string
           variants?: Json | null
         }
@@ -514,9 +518,11 @@ export type Database = {
           sizes?: string[] | null
           slug?: string
           sold?: number
+          sports?: string[]
           status?: string
           stock?: number | null
           tag?: string | null
+          tags?: string[]
           updated_at?: string
           variants?: Json | null
         }

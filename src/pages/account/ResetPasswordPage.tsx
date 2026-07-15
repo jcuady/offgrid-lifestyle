@@ -1,12 +1,21 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CUSTOMER_SIGN_IN_PATH } from "@/src/lib/authRoutes";
+import {
+  CUSTOMER_FORGOT_PASSWORD_PATH,
+  CUSTOMER_SIGN_IN_PATH,
+  PORTAL_FORGOT_PASSWORD_PATH,
+  PORTAL_LOGIN_PATH,
+} from "@/src/lib/authRoutes";
+import { hasPasswordRecoveryUrlHint, isPortalPasswordReset } from "@/src/lib/passwordReset";
 import { localAuthService } from "@/src/services";
 import { supabase } from "@/src/lib/supabase";
 import { AuthPage } from "@/src/components/ui/auth-page";
 
+const RECOVERY_TIMEOUT_MS = 8000;
+
 export function ResetPasswordPage() {
   const navigate = useNavigate();
+  const isPortal = isPortalPasswordReset();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -14,26 +23,60 @@ export function ResetPasswordPage() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    const check = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        setReady(true);
-        return;
-      }
+    let cancelled = false;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+    const failExpired = () => {
+      if (cancelled) return;
+      setReady(false);
       setError("Reset link is invalid or expired. Request a new one from the forgot password page.");
     };
-    void check();
 
-    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY") {
-        setReady(true);
-        setError(null);
+    const markReady = () => {
+      if (cancelled) return;
+      if (timeoutId) clearTimeout(timeoutId);
+      setReady(true);
+      setError(null);
+    };
+
+    const verifySession = async () => {
+      if (!hasPasswordRecoveryUrlHint()) {
+        failExpired();
+        return;
+      }
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (cancelled) return;
+      if (session) {
+        markReady();
+        return;
+      }
+
+      timeoutId = setTimeout(() => {
+        if (!cancelled) failExpired();
+      }, RECOVERY_TIMEOUT_MS);
+    };
+
+    void verifySession();
+
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!hasPasswordRecoveryUrlHint() && event !== "PASSWORD_RECOVERY") return;
+      if (event === "PASSWORD_RECOVERY" || (event === "SIGNED_IN" && session)) {
+        markReady();
       }
     });
-    return () => sub.subscription.unsubscribe();
+
+    return () => {
+      cancelled = true;
+      if (timeoutId) clearTimeout(timeoutId);
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
   const handleSubmit = async () => {
+    if (!ready || busy) return;
     setError(null);
     if (password.length < 8) {
       setError("Password must be at least 8 characters.");
@@ -51,17 +94,28 @@ export function ResetPasswordPage() {
         setError(result.message ?? "Could not update password.");
         return;
       }
-      navigate(CUSTOMER_SIGN_IN_PATH, { replace: true });
+      await localAuthService.logout();
+      const loginPath = isPortal ? PORTAL_LOGIN_PATH : CUSTOMER_SIGN_IN_PATH;
+      navigate(`${loginPath}?reset=1`, { replace: true });
     } finally {
       setBusy(false);
     }
   };
 
+  const forgotHref = isPortal ? PORTAL_FORGOT_PASSWORD_PATH : CUSTOMER_FORGOT_PASSWORD_PATH;
+  const statusMessage = ready
+    ? error
+    : error ?? "Verifying your reset link…";
+
   return (
     <AuthPage
       mode="sign-up"
       title="Choose a new password"
-      description="Set a new password for your OffGrid account."
+      description={
+        isPortal
+          ? "Set a new password for your OffGrid portal account."
+          : "Set a new password for your OffGrid account."
+      }
       email=""
       hideEmail
       password={password}
@@ -71,7 +125,13 @@ export function ResetPasswordPage() {
       onConfirmPasswordChange={setConfirmPassword}
       onSubmit={handleSubmit}
       submitLabel={busy ? "Saving…" : "Update password"}
-      error={ready ? error : error ?? "Verifying reset link…"}
+      submitDisabled={!ready || busy}
+      error={statusMessage}
+      alternateLink={{
+        prompt: "Need a new link?",
+        label: "Request reset again",
+        href: forgotHref,
+      }}
     />
   );
 }

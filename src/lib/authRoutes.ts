@@ -5,6 +5,7 @@ export const CUSTOMER_SIGN_IN_PATH = "/account/sign-in";
 export const CUSTOMER_SIGN_UP_PATH = "/account/sign-up";
 export const CUSTOMER_FORGOT_PASSWORD_PATH = "/account/forgot-password";
 export const CUSTOMER_RESET_PASSWORD_PATH = "/account/reset-password";
+export const PORTAL_FORGOT_PASSWORD_PATH = "/portal/forgot-password";
 
 /** Admin / staff operations portal. */
 export const PORTAL_LOGIN_PATH = "/portal/login";
@@ -17,6 +18,7 @@ const AUTH_SCREEN_PREFIXES = [
   CUSTOMER_SIGN_UP_PATH,
   CUSTOMER_FORGOT_PASSWORD_PATH,
   CUSTOMER_RESET_PASSWORD_PATH,
+  PORTAL_FORGOT_PASSWORD_PATH,
   PORTAL_LOGIN_PATH,
   LEGACY_LOGIN_PATH,
 ] as const;

@@ -83,7 +83,10 @@ export function EventsPage() {
         headingStyle={cmsTypographyStyle(eventTypography, "heading")}
         bodyStyle={cmsTypographyStyle(eventTypography, "body")}
         primaryCta={{ label: landingEvent.ctaPrimary, onClick: scrollToUpcoming }}
-        secondaryCta={{ label: landingEvent.ctaSecondary, onClick: () => navigate("/#community") }}
+        secondaryCta={{
+          label: landingEvent.ctaSecondary,
+          onClick: () => navigate("/custom/order"),
+        }}
       />
 
       {/* Featured Event */}

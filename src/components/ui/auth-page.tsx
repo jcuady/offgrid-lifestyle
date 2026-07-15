@@ -43,6 +43,7 @@ export interface AuthPageProps {
   hideEmail?: boolean;
   acceptedTerms?: boolean;
   onAcceptedTermsChange?: (value: boolean) => void;
+  submitDisabled?: boolean;
 }
 
 export function AuthPage({
@@ -73,6 +74,7 @@ export function AuthPage({
   hideEmail = false,
   acceptedTerms = false,
   onAcceptedTermsChange,
+  submitDisabled = false,
 }: AuthPageProps) {
   const handleFormSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -87,7 +89,7 @@ export function AuthPage({
       <div className="relative hidden h-full flex-col border-r border-border bg-offgrid-dark p-10 text-offgrid-cream lg:flex">
         <div className="absolute inset-0 bg-gradient-to-t from-offgrid-dark via-offgrid-dark/80 to-transparent" />
         <div className="relative z-10 flex items-center gap-3">
-          <img src={LOGO_WORDMARK_WHITE} alt="OFF GRID" className="h-8 w-auto" />
+          <img src={LOGO_WORDMARK_WHITE} alt="OFFGRID" className="h-8 w-auto" />
         </div>
         <div className="relative z-10 mt-auto">
           <blockquote className="space-y-3">
@@ -125,7 +127,7 @@ export function AuthPage({
 
         <div className="mx-auto w-full max-w-sm space-y-5 pt-14 sm:pt-0">
           <div className="flex items-center gap-3 lg:hidden">
-            <img src={LOGO_WORDMARK_WHITE} alt="OFF GRID" className="h-7 w-auto invert" />
+            <img src={LOGO_WORDMARK_WHITE} alt="OFFGRID" className="h-7 w-auto invert" />
           </div>
 
           <div className="flex flex-col space-y-2">
@@ -284,7 +286,7 @@ export function AuthPage({
               </p>
             ) : null}
 
-            <Button type="submit" size="lg" className="w-full" formNoValidate>
+            <Button type="submit" size="lg" className="w-full" formNoValidate disabled={submitDisabled}>
               {submitLabel ?? (mode === "sign-up" ? "Create account" : "Sign in")}
             </Button>
           </form>

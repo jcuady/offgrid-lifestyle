@@ -8,7 +8,7 @@ import { cmsTypographyStyle } from "@/src/lib/cmsTypography";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { cn } from "@/src/lib/utils";
 
-const BRAND_STRIPE = "OFF GRID ®";
+const BRAND_STRIPE = "OFFGRID ®";
 
 function BrandStripe() {
   const repeat = Array.from({ length: 12 }, (_, i) => (
@@ -93,7 +93,7 @@ export function TeamCommunity() {
                     href={social.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    aria-label={`OffGrid Lifestyle on ${social.label}`}
+                    aria-label={`OFFGRID Lifestyle on ${social.label}`}
                     className="flex h-9 w-9 items-center justify-center rounded-full border border-offgrid-cream/25 text-offgrid-cream transition-colors hover:border-offgrid-lime hover:bg-offgrid-lime hover:text-offgrid-cream"
                   >
                     {social.icon}

@@ -12,11 +12,11 @@ import { hydrateSiteContentFromSupabase } from "@/src/services";
 import { useDebouncedLandingPersist } from "@/src/hooks/useDebouncedSitePersist";
 
 const COLLECTION_LABELS: Record<(typeof LANDING_COLLECTION_IDS)[number], string> = {
-  pickleball: "Collection 1 — Pickleball (wide)",
-  golf: "Collection 2 — Golf (wide)",
-  "og-pilipinas": "Collection 3 — OG Pilipinas",
-  everyday: "Collection 4 — Everyday Wear (wide)",
-};
+  frisbee: "Sport 1 — Ultimate Frisbee (featured)",
+  pickleball: "Sport 2 — Pickleball",
+  golf: "Sport 3 — Golf",
+  running: "Sport 4 — Running",
+}
 
 export function AdminLandingPage() {
   const [persistReady, setPersistReady] = useState(false);
@@ -119,11 +119,18 @@ export function AdminLandingPage() {
           <CmsField label="Locality line">
             <CmsTextInput value={landing.hero.locality} onChange={(v) => updateHero({ locality: v })} />
           </CmsField>
-          <CmsField label="Background video URL" className="sm:col-span-2">
+          <CmsField label="Hero sports image (preferred)" className="sm:col-span-2">
+            <CmsImageInput
+              value={landing.hero.imageSrc}
+              onChange={(v) => updateHero({ imageSrc: v })}
+              uploadSection="hero-image"
+            />
+          </CmsField>
+          <CmsField label="Background video URL (optional — leave empty for sports still)" className="sm:col-span-2">
             <CmsTextInput
               value={landing.hero.videoSrc}
               onChange={(v) => updateHero({ videoSrc: v })}
-              placeholder="https://… .mp4"
+              placeholder="Leave empty to use sports image"
             />
           </CmsField>
           <CmsField label="Shop CTA label">

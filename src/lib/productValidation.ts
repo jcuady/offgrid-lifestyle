@@ -1,6 +1,6 @@
 import type { Product, SizeCode } from "@/src/data/products";
 
-export const PRODUCT_TAG_PRESETS = ["Best Seller", "New", "Limited Edition"] as const;
+export const PRODUCT_TAG_PRESETS = ["Promo", "Sale", "Best Seller", "New", "Limited Edition"] as const;
 
 export type ProductTagPreset = (typeof PRODUCT_TAG_PRESETS)[number];
 
@@ -8,13 +8,15 @@ export type ProductFieldErrors = Partial<
   Record<
     | "name"
     | "category"
+    | "sports"
     | "slug"
+    | "basePrice"
     | "price"
     | "stock"
     | "sold"
     | "image"
     | "description"
-    | "tag"
+    | "tags"
     | "homeBestSellerRank"
     | "sizes"
     | "form",
@@ -47,6 +49,14 @@ export function formatSizesInput(sizes: SizeCode[]): string {
   return sizes.join(", ");
 }
 
+export function parseLabelsInput(raw: string): string[] {
+  return [...new Set(raw.split(",").map((value) => value.trim()).filter(Boolean))];
+}
+
+export function formatLabelsInput(values?: string[]): string {
+  return values?.join(", ") ?? "";
+}
+
 function isValidImageRef(value: string): boolean {
   const v = value.trim();
   if (!v) return false;
@@ -73,20 +83,24 @@ export function validateProductDraft({
   const errors: ProductFieldErrors = {};
   const name = draft.name.trim();
   const category = draft.category.trim();
+  const sports = draft.sports ?? [];
   const slug = (draft.slug.trim() || slugifyProductName(name, "product")).toLowerCase();
+  const basePrice = Number(draft.basePrice);
   const price = Number(draft.price);
   const stock = Number(draft.stock ?? 0);
   const sold = Number(draft.sold ?? 0);
   const status = draft.status ?? "draft";
   const image = draft.image.trim();
   const description = draft.description.trim();
-  const tag = draft.tag?.trim() ?? "";
+  const tags = draft.tags ?? (draft.tag ? [draft.tag] : []);
   const rank = draft.homeBestSellerRank;
 
   if (!name) errors.name = "Product name is required.";
   else if (name.length < 2) errors.name = "Name must be at least 2 characters.";
 
   if (!category) errors.category = "Category is required.";
+  if (!sports.length) errors.sports = "Assign at least one sport.";
+  else if (sports.some((sport) => sport.length > 40)) errors.sports = "Sport names must be 40 characters or fewer.";
 
   if (!slug) errors.slug = "URL slug is required.";
   else if (!SLUG_RE.test(slug)) errors.slug = "Use lowercase letters, numbers, and hyphens only.";
@@ -94,7 +108,11 @@ export function validateProductDraft({
   const duplicateSlug = products.find((p) => p.slug === slug && p.id !== editingId);
   if (duplicateSlug) errors.slug = `Slug "${slug}" is already used by ${duplicateSlug.name}.`;
 
+  if (!Number.isFinite(basePrice) || basePrice <= 0) errors.basePrice = "Regular price must be greater than zero.";
   if (!Number.isFinite(price) || price <= 0) errors.price = "Price must be greater than zero.";
+  else if (Number.isFinite(basePrice) && price > basePrice) {
+    errors.price = "Discount price cannot exceed the regular price.";
+  }
 
   if (!Number.isFinite(stock) || stock < 0) errors.stock = "Stock cannot be negative.";
   if (!Number.isFinite(sold) || sold < 0) errors.sold = "Sold count cannot be negative.";
@@ -110,7 +128,8 @@ export function validateProductDraft({
     errors.image = "Image must start with / or be a valid http(s) URL.";
   }
 
-  if (tag.length > 40) errors.tag = "Tag must be 40 characters or fewer.";
+  if (tags.length > 8) errors.tags = "Use no more than 8 tags.";
+  else if (tags.some((tag) => tag.length > 40)) errors.tags = "Tags must be 40 characters or fewer.";
 
   if (typeof rank === "number" && rank > 0) {
     if (!Number.isInteger(rank) || rank < 1 || rank > 20) {
@@ -143,7 +162,8 @@ export function normalizeProductDraft(draft: Product, editingId: string | null):
   const slug = (draft.slug.trim() || slugifyProductName(draft.name, newId)).toLowerCase();
   const price = Number(draft.price) || 0;
   const basePrice = Number(draft.basePrice) || price;
-  const tag = draft.tag?.trim();
+  const sports = parseLabelsInput(formatLabelsInput(draft.sports));
+  const tags = parseLabelsInput(formatLabelsInput(draft.tags ?? (draft.tag ? [draft.tag] : [])));
 
   return {
     ...draft,
@@ -151,6 +171,7 @@ export function normalizeProductDraft(draft: Product, editingId: string | null):
     slug,
     name: draft.name.trim(),
     category: draft.category.trim(),
+    sports,
     basePrice,
     price,
     image: draft.image.trim() || "/images/product_polo.png",
@@ -164,7 +185,8 @@ export function normalizeProductDraft(draft: Product, editingId: string | null):
     cut: draft.cut || "short_sleeve",
     fabricType: draft.fabricType || "dri_fit",
     status: draft.status ?? "draft",
-    tag: tag || undefined,
+    tags,
+    tag: tags[0] || undefined,
     sold: Math.max(0, Math.floor(Number(draft.sold) || 0)),
     stock: Math.max(0, Math.floor(Number(draft.stock) || 0)),
     homeBestSellerRank:

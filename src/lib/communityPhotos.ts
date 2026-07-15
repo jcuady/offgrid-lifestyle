@@ -20,7 +20,7 @@ export const COMMUNITY_COLLECTIONS = [
     label: "Discfest 2025",
     tag: "Ultimate",
     image: COMMUNITY_PHOTO_PATHS.ultimateSkyball,
-    alt: "Off Grid community at Discfest 2025",
+    alt: "OFFGRID community at Discfest 2025",
     layout: "feature",
   },
   {
@@ -36,7 +36,7 @@ export const COMMUNITY_COLLECTIONS = [
     label: "The Greatest x OG",
     tag: "Collab",
     image: COMMUNITY_PHOTO_PATHS.ogBackpack,
-    alt: "The Greatest x OFF GRID collaboration",
+    alt: "The Greatest x OFFGRID collaboration",
     layout: "tile",
   },
   {

@@ -3,14 +3,22 @@ import type { CustomSectionSlug } from "@/src/store/useSiteContentStore";
 
 /** Internal routes admins can assign to CMS buttons. */
 export const CMS_ROUTE_OPTIONS: { value: string; label: string; group: string }[] = [
-  { value: "/#collections", label: "Home — OG Signatures (scroll)", group: "Home" },
-  { value: "/shop", label: "Shop", group: "Store" },
-  { value: "/og-signatures", label: "OG Signatures", group: "Store" },
+  { value: "/#collections", label: "Home — Shop by sport (scroll)", group: "Home" },
+  { value: "/#shop-collections", label: "Home — Shop by collection (scroll)", group: "Home" },
+  { value: "/#who-we-are", label: "Home — Who we are (scroll)", group: "Home" },
+  { value: "/shop", label: "Shop all", group: "Store" },
+  { value: "/shop?category=Ultimate Frisbee", label: "Shop — Ultimate Frisbee", group: "Store" },
+  { value: "/shop?category=Pickleball", label: "Shop — Pickleball", group: "Store" },
+  { value: "/shop?category=Golf", label: "Shop — Golf", group: "Store" },
+  { value: "/shop?category=Running", label: "Shop — Running", group: "Store" },
+  { value: "/og-signatures", label: "Shop by sport (page)", group: "Store" },
   { value: "/custom/order", label: "Place custom order", group: "Custom" },
   { value: "/custom/templates", label: "Templates library", group: "Custom" },
   { value: "/custom#ordering-guide", label: "Ordering guide (scroll)", group: "Custom" },
   { value: "/custom", label: "Custom hub (top)", group: "Custom" },
-  { value: "/events", label: "Events", group: "Site" },
+  { value: "/community", label: "Community & events", group: "Site" },
+  { value: "/events", label: "Events (legacy → community)", group: "Site" },
+  { value: "/faq", label: "FAQ", group: "Site" },
   { value: "/testimonials", label: "Testimonials", group: "Site" },
   { value: "/about", label: "About us", group: "Site" },
   { value: "/contact", label: "Contact", group: "Site" },
@@ -32,6 +40,7 @@ const ALLOWED_HREFS = new Set(CMS_ROUTE_OPTIONS.map((o) => o.value));
 const HREF_ALIASES: Record<string, string> = {
   "/custom#order-flow": "/custom/order",
   "/custom#templates": "/custom/templates",
+  "/shop?category=Frisbee": "/shop?category=Ultimate Frisbee",
 };
 
 export function isAllowedCmsHref(href: string): boolean {
@@ -57,11 +66,19 @@ export function cmsHrefForGuideSlug(slug: CustomSectionSlug): string {
 export function followCmsCta(navigate: NavigateFunction, href: string) {
   const target = normalizeCmsHref(href);
 
-  if (target === "/#collections" || target === "#collections") {
-    navigate({ pathname: "/", hash: "collections" });
+  const homeHash = /^\/#([\w-]+)$/.exec(target) || /^#([\w-]+)$/.exec(target);
+  if (homeHash) {
+    const id = homeHash[1];
+    navigate({ pathname: "/", hash: id });
     setTimeout(() => {
-      document.getElementById("collections")?.scrollIntoView({ behavior: "smooth" });
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
     }, 50);
+    return;
+  }
+
+  if (target.startsWith("/shop?")) {
+    const url = new URL(target, window.location.origin);
+    navigate({ pathname: url.pathname, search: url.search });
     return;
   }
 

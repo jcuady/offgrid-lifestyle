@@ -6,7 +6,7 @@ import { isAuthScreen, isCustomerAccountPath, isPortalPath } from "@/src/lib/aut
 import type { PageSeoInput } from "@/src/lib/siteSeo";
 import { SITE_DESCRIPTION, SITE_TITLE } from "@/src/lib/siteSeo";
 
-const BRAND = "OFF GRID® Lifestyle";
+const BRAND = "OFFGRID® Lifestyle";
 
 /** Exact-path SEO entries. */
 const STATIC_ROUTE_SEO: Record<string, PageSeoInput> = {
@@ -24,7 +24,7 @@ const STATIC_ROUTE_SEO: Record<string, PageSeoInput> = {
   "/og-signatures": {
     title: `OG Signatures — Pickleball, Golf & Running Collections | ${BRAND}`,
     description:
-      "Explore OG Signatures: court-ready pickleball, fairway golf, running, and everyday wear designed for Filipino athletes who play different.",
+      "Shop by sport: ultimate frisbee (top seller), pickleball, golf, and running — OFFGRID Filipino sportswear.",
     path: "/og-signatures",
   },
   "/custom": {
@@ -42,41 +42,41 @@ const STATIC_ROUTE_SEO: Record<string, PageSeoInput> = {
   "/custom/templates": {
     title: `Download Jersey & Apparel Templates | ${BRAND}`,
     description:
-      "Free production-ready Illustrator templates for custom tops, polos, and team uniforms. CMYK-ready for Off Grid manufacturing.",
+      "Free production-ready Illustrator templates for custom tops, polos, and team uniforms. CMYK-ready for OFFGRID manufacturing.",
     path: "/custom/templates",
   },
   "/events": {
     title: `Community Events & Sportswear Philippines | ${BRAND}`,
     description:
-      "Discfest, Mixed Masters, Pickle Project, and more — see where OFF GRID Lifestyle shows up in the Filipino sports community.",
+      "Discfest, Mixed Masters, Pickle Project, and more — see where OFFGRID Lifestyle shows up in the Filipino sports community.",
     path: "/events",
   },
   "/testimonials": {
     title: `Customer Reviews & Team Testimonials | ${BRAND}`,
     description:
-      "Real feedback from pickleball teams, golf crews, and lifestyle athletes across the Philippines who wear OFF GRID.",
+      "Real feedback from pickleball teams, golf crews, and lifestyle athletes across the Philippines who wear OFFGRID.",
     path: "/testimonials",
   },
   "/about": {
     title: `About Us — Filipino Sportswear Brand Manila | ${BRAND}`,
     description:
-      "Where comfort meets movement. Learn how OFF GRID Lifestyle builds premium Filipino sportswear for courts, courses, and life off the grid.",
+      "Where comfort meets movement. Learn how OFFGRID Lifestyle builds premium Filipino sportswear for courts, courses, and life off the grid.",
     path: "/about",
   },
   "/contact": {
-    title: `Contact OFF GRID Lifestyle — Manila, Philippines | ${BRAND}`,
+    title: `Contact OFFGRID Lifestyle — Manila, Philippines | ${BRAND}`,
     description:
-      "Reach the OFF GRID team for custom orders, partnerships, and product questions. Based in Manila, PH — ships nationwide.",
+      "Reach the OFFGRID team for custom orders, partnerships, and product questions. Based in Manila, PH — ships nationwide.",
     path: "/contact",
   },
   "/legal/terms": {
     title: `Terms & Conditions | ${BRAND}`,
-    description: "Terms and conditions for shopping and custom orders at OFF GRID Lifestyle Philippines.",
+    description: "Terms and conditions for shopping and custom orders at OFFGRID Lifestyle Philippines.",
     path: "/legal/terms",
   },
   "/legal/privacy": {
     title: `Privacy Policy | ${BRAND}`,
-    description: "How OFF GRID Lifestyle collects, uses, and protects your personal information.",
+    description: "How OFFGRID Lifestyle collects, uses, and protects your personal information.",
     path: "/legal/privacy",
   },
 };
@@ -100,7 +100,7 @@ export function resolveRouteSeo(pathname: string): PageSeoInput | null {
     return {
       title: `Custom Ordering Guide | ${BRAND}`,
       description:
-        "Sizing charts, lead times, team deals, and FAQs for custom OFF GRID teamwear production.",
+        "Sizing charts, lead times, team deals, and FAQs for custom OFFGRID teamwear production.",
       path: pathname,
     };
   }

@@ -6,6 +6,7 @@ export interface FeaturedDisplayItem {
   name: string;
   slug: string;
   category: string;
+  basePrice: number;
   price: number;
   tag?: string;
   image: string;
@@ -18,7 +19,7 @@ export interface FeaturedDisplayItem {
  * Tagged products first (by sold), then top sellers backfill.
  */
 export function selectFeaturedProducts(products: Product[], count = 3): Product[] {
-  const live = products.filter((p) => p.status !== "archived");
+  const live = products.filter((p) => p.status === "active");
 
   const tagged = live
     .filter((p) => typeof p.tag === "string" && p.tag.trim().length > 0)
@@ -36,7 +37,7 @@ export function selectFeaturedProducts(products: Product[], count = 3): Product[
 
 function selectBestSellers(products: Product[], count: number): Product[] {
   const ranked = [...products]
-    .filter((p) => p.status !== "archived")
+    .filter((p) => p.status === "active")
     .filter((p) => typeof p.homeBestSellerRank === "number" && p.homeBestSellerRank > 0)
     .sort((a, b) => (a.homeBestSellerRank ?? 0) - (b.homeBestSellerRank ?? 0));
 
@@ -50,6 +51,7 @@ function toDisplayItem(product: Product, imageOverride = ""): FeaturedDisplayIte
     name: product.name,
     slug: product.slug,
     category: product.category,
+    basePrice: product.basePrice,
     price: product.price,
     tag: product.tag,
     image: imageOverride || product.image,
@@ -76,7 +78,7 @@ export function resolveFeaturedSpotlightItems(
 
       if (!image) continue;
 
-      if (product && product.status !== "archived") {
+      if (product && product.status === "active") {
         items.push(toDisplayItem(product, slot.imageOverride.trim()));
         continue;
       }
@@ -86,6 +88,7 @@ export function resolveFeaturedSpotlightItems(
         name: config.titleLine1,
         slug: "",
         category: config.eyebrow,
+        basePrice: 0,
         price: 0,
         image,
         isProduct: false,

@@ -85,8 +85,8 @@ export function validateRetailCart(cart: RetailCartLineInput[]): string | null {
     if (!item.name?.trim()) return "A cart item is missing a name.";
     if (!item.size?.trim() || !item.color?.trim()) return "Each item needs a size and color.";
     if (!Number.isFinite(item.price) || item.price <= 0) return "A cart item has an invalid price.";
-    if (!Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > 99) {
-      return "Each item quantity must be between 1 and 99.";
+  if (!Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > 10) {
+      return "Each item quantity must be between 1 and 10.";
     }
   }
   return null;

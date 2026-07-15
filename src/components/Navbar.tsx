@@ -1,38 +1,43 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useShallow } from "zustand/react/shallow";
-import { ShoppingBag, Menu, X, UserRound } from "lucide-react";
+import { ShoppingBag, Menu, X, UserRound, Mail } from "lucide-react";
 import { Button } from "./ui/Button";
 import { cn } from "@/src/lib/utils";
 import { LOGO_WORDMARK_WHITE } from "@/src/lib/brandAssets";
 import { motion, AnimatePresence } from "motion/react";
 import { useStore } from "@/src/store/store";
 import { usePortalStore } from "@/src/store/usePortalStore";
+import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { localAuthService } from "@/src/services";
 import { formatPrice } from "@/src/data/products";
-import { siteContainer } from "@/src/lib/brandLayout";
+import { siteContainer, sectionEyebrowOnDark } from "@/src/lib/brandLayout";
 import { CUSTOMER_SIGN_IN_PATH, CUSTOMER_SIGN_UP_PATH, PORTAL_LOGIN_PATH } from "@/src/lib/authRoutes";
 import { NotificationBell } from "@/src/components/notifications/NotificationBell";
 import { usePwaStandalone } from "@/src/hooks/usePwaStandalone";
 import { openInstallGuide } from "@/src/lib/pwa";
+import { SHOP_BY_COLLECTION } from "@/src/lib/shopTaxonomy";
+import { compareSports, getProductSports } from "@/src/data/products";
 
 const ACCOUNT_MENU_ID = "navbar-account-menu";
+const dropdownPanel =
+  "absolute left-0 top-full mt-3 w-72 rounded-2xl border border-offgrid-green/15 bg-offgrid-cream p-3 shadow-2xl";
 
-/** Mirrors DH Ultimate custom-order IA — deep-links into `/custom#:slug` guide panels. */
-const CUSTOM_NAV_LINKS = [
-  { label: "How to order", to: "/custom#how-to-order" },
-  { label: "Product catalog", to: "/shop" },
-  { label: "Team deals", to: "/custom#team-deals" },
-  { label: "Sizing chart", to: "/custom#sizing-chart" },
-  { label: "Free jersey promo", to: "/custom#free-jersey-promo" },
-  { label: "FAQ", to: "/custom#faqs" },
-] as const;
+/** Mobile drawer — two-tier type scale aligned with brandLayout tokens. */
+const mobileNavPrimary =
+  "min-h-11 w-full font-display text-2xl font-bold tracking-tight text-offgrid-cream transition-colors hover:text-white";
+const mobileNavSecondary =
+  "min-h-11 w-full font-sans text-lg font-medium text-offgrid-cream/80 transition-colors hover:text-white";
+const headerIconBtn =
+  "grid h-11 w-11 shrink-0 place-items-center rounded-full text-offgrid-cream transition-colors hover:text-white";
 
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCartDropdownOpen, setIsCartDropdownOpen] = useState(false);
   const [isCustomMenuOpen, setIsCustomMenuOpen] = useState(false);
+  const [isSportMenuOpen, setIsSportMenuOpen] = useState(false);
+  const [isCollectionMenuOpen, setIsCollectionMenuOpen] = useState(false);
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
   const { toggleCart, cart, openCheckout } = useStore(
     useShallow((state) => ({
@@ -42,6 +47,7 @@ export function Navbar() {
     })),
   );
   const currentUser = usePortalStore((state) => state.currentUser);
+  const products = useSiteContentStore((state) => state.products);
   const navigate = useNavigate();
   const location = useLocation();
   const cartDropdownRef = useRef<HTMLDivElement | null>(null);
@@ -50,6 +56,17 @@ export function Navbar() {
 
   const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const cartSubtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const sportLinks = useMemo(
+    () =>
+      [...new Set(products.filter((product) => product.status === "active").flatMap(getProductSports))]
+        .sort(compareSports)
+        .map((sport) => ({
+          label: sport,
+          href: `/shop?category=${encodeURIComponent(sport)}`,
+          description: `Shop OFFGRID ${sport} products.`,
+        })),
+    [products],
+  );
 
   useEffect(() => {
     const handleScroll = () => {
@@ -66,6 +83,8 @@ export function Navbar() {
     isMobileMenuOpen ||
     isCartDropdownOpen ||
     isCustomMenuOpen ||
+    isSportMenuOpen ||
+    isCollectionMenuOpen ||
     isAccountMenuOpen;
   const navSolid = isScrolled || forceSolidOnTop;
 
@@ -73,6 +92,8 @@ export function Navbar() {
     setIsMobileMenuOpen(false);
     setIsCartDropdownOpen(false);
     setIsCustomMenuOpen(false);
+    setIsSportMenuOpen(false);
+    setIsCollectionMenuOpen(false);
     setIsAccountMenuOpen(false);
     setIsScrolled(window.scrollY > 50);
   }, [location]);
@@ -99,9 +120,21 @@ export function Navbar() {
   }, [isAccountMenuOpen]);
 
   const handleNavigate = (path: string) => {
-    navigate(path);
+    if (path.startsWith("/#") || path.startsWith("#")) {
+      const id = path.replace(/^\/?#/, "");
+      navigate({ pathname: "/", hash: id });
+      setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" }), 50);
+    } else if (path.includes("?")) {
+      const url = new URL(path, window.location.origin);
+      navigate({ pathname: url.pathname, search: url.search });
+    } else {
+      navigate(path);
+    }
     setIsAccountMenuOpen(false);
     setIsMobileMenuOpen(false);
+    setIsCustomMenuOpen(false);
+    setIsSportMenuOpen(false);
+    setIsCollectionMenuOpen(false);
   };
 
   const handleSignOut = async () => {
@@ -117,11 +150,8 @@ export function Navbar() {
   };
 
   const navLinks = [
-    { name: "OG Signatures", action: () => handleNavigate("/og-signatures") },
-    { name: "Shop", action: () => handleNavigate("/shop") },
-    { name: "Events", action: () => handleNavigate("/events") },
-    { name: "About", action: () => handleNavigate("/about") },
-    { name: "Testimonials", action: () => handleNavigate("/testimonials") },
+    { name: "Community", action: () => handleNavigate("/community") },
+    { name: "FAQ", action: () => handleNavigate("/faq") },
     { name: "Contact", action: () => handleNavigate("/contact") },
   ];
 
@@ -186,7 +216,7 @@ export function Navbar() {
         role="menuitem"
         onClick={() => item.onSelect()}
         className={cn(
-          "w-full rounded-xl px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-[0.12em] transition-colors",
+          "w-full rounded-xl px-3 py-2.5 text-left text-sm font-semibold transition-colors",
           item.tone === "danger"
             ? "text-red-700 hover:bg-red-50"
             : "text-offgrid-green hover:bg-offgrid-green/5",
@@ -203,7 +233,7 @@ export function Navbar() {
         type="button"
         onClick={() => item.onSelect()}
         className={cn(
-          "w-full rounded-xl border px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] transition-colors",
+          "min-h-11 w-full rounded-xl border px-4 py-3 text-left text-sm font-semibold transition-colors",
           item.tone === "danger"
             ? "border-red-400/35 text-red-200 hover:bg-red-950/35"
             : "border-offgrid-cream/15 bg-offgrid-cream/10 text-offgrid-cream hover:bg-offgrid-cream/20",
@@ -240,17 +270,18 @@ export function Navbar() {
       >
         <div className={cn(siteContainer, "flex min-w-0 items-center justify-between gap-3")}>
           <Link to="/" className="flex shrink-0 items-center z-50">
-            <img src={LOGO_WORDMARK_WHITE} alt="OFF GRID® — OffGrid Lifestyle" className="h-8 w-auto sm:h-10" />
+            <img src={LOGO_WORDMARK_WHITE} alt="OFFGRID® Lifestyle" className="h-8 w-auto sm:h-10" />
           </Link>
 
-          <nav className="hidden md:flex items-center gap-8">
+          <nav className="hidden items-center gap-6 lg:gap-8 md:flex">
             <div
               className="relative"
               onMouseEnter={() => setIsCustomMenuOpen(true)}
               onMouseLeave={() => setIsCustomMenuOpen(false)}
             >
               <button
-                onClick={() => handleNavigate("/custom")}
+                type="button"
+                onClick={() => handleNavigate("/custom/order")}
                 className={cn(
                   "text-sm font-medium transition-colors hover:text-white cursor-pointer",
                   navSolid ? "text-offgrid-cream/80" : "text-offgrid-cream/90",
@@ -259,49 +290,121 @@ export function Navbar() {
                 Custom Order
               </button>
               <AnimatePresence>
-                {isCustomMenuOpen && (
+                {isCustomMenuOpen ? (
                   <motion.div
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 8 }}
-                    className="absolute left-0 top-full mt-3 w-72 rounded-2xl border border-offgrid-green/15 bg-offgrid-cream p-3 shadow-2xl"
+                    className={dropdownPanel}
                   >
                     <button
+                      type="button"
                       onClick={() => handleNavigate("/custom/order")}
-                      className="mb-2 block w-full rounded-xl bg-offgrid-green px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-[0.12em] text-offgrid-cream hover:bg-offgrid-green/90"
+                      className="mb-1 block w-full rounded-xl bg-offgrid-green px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-[0.12em] text-offgrid-cream hover:bg-offgrid-green/90"
                     >
-                      Place custom order
+                      Start a team order
                     </button>
                     <button
+                      type="button"
                       onClick={() => handleNavigate("/custom/templates")}
-                      className="mb-2 block w-full rounded-xl px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.12em] text-offgrid-green hover:bg-offgrid-green/5"
+                      className="block w-full rounded-xl px-3 py-2 text-left text-xs font-medium text-offgrid-green/80 hover:bg-offgrid-green/5"
                     >
                       Templates
                     </button>
-                    <div className="my-2 border-t border-offgrid-green/10" />
-                    {CUSTOM_NAV_LINKS.map((link) => (
-                      <button
-                        key={link.to}
-                        onClick={() => handleNavigate(link.to)}
-                        className="block w-full rounded-xl px-3 py-2 text-left text-xs font-medium text-offgrid-green/80 hover:bg-offgrid-green/5 hover:text-offgrid-green"
-                      >
-                        {link.label}
-                      </button>
-                    ))}
-                    <div className="my-2 border-t border-offgrid-green/10" />
                     <button
+                      type="button"
                       onClick={() => handleNavigate("/custom")}
-                      className="block w-full rounded-xl px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.12em] text-offgrid-green/60 hover:bg-offgrid-green/5"
+                      className="block w-full rounded-xl px-3 py-2 text-left text-xs font-medium text-offgrid-green/80 hover:bg-offgrid-green/5"
                     >
-                      Full ordering guide
+                      Ordering guide
                     </button>
                   </motion.div>
-                )}
+                ) : null}
               </AnimatePresence>
             </div>
+
+            <div
+              className="relative"
+              onMouseEnter={() => setIsSportMenuOpen(true)}
+              onMouseLeave={() => setIsSportMenuOpen(false)}
+            >
+              <button
+                type="button"
+                onClick={() => handleNavigate("/#collections")}
+                className={cn(
+                  "text-sm font-medium transition-colors hover:text-white cursor-pointer",
+                  navSolid ? "text-offgrid-cream/80" : "text-offgrid-cream/90",
+                )}
+              >
+                Shop By Sport
+              </button>
+              <AnimatePresence>
+                {isSportMenuOpen ? (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
+                    className={dropdownPanel}
+                  >
+                    {sportLinks.map((item) => (
+                      <button
+                        key={item.label}
+                        type="button"
+                        onClick={() => handleNavigate(item.href)}
+                        className="block w-full rounded-xl px-3 py-2 text-left text-xs font-medium text-offgrid-green/80 hover:bg-offgrid-green/5 hover:text-offgrid-green"
+                      >
+                        <span className="font-semibold text-offgrid-green">{item.label}</span>
+                        <span className="mt-0.5 block text-[11px] text-offgrid-green/55">{item.description}</span>
+                      </button>
+                    ))}
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
+            </div>
+
+            <div
+              className="relative"
+              onMouseEnter={() => setIsCollectionMenuOpen(true)}
+              onMouseLeave={() => setIsCollectionMenuOpen(false)}
+            >
+              <button
+                type="button"
+                onClick={() => handleNavigate("/#shop-collections")}
+                className={cn(
+                  "text-sm font-medium transition-colors hover:text-white cursor-pointer",
+                  navSolid ? "text-offgrid-cream/80" : "text-offgrid-cream/90",
+                )}
+              >
+                Shop By Collection
+              </button>
+              <AnimatePresence>
+                {isCollectionMenuOpen ? (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
+                    className={dropdownPanel}
+                  >
+                    {SHOP_BY_COLLECTION.map((item) => (
+                      <button
+                        key={item.label}
+                        type="button"
+                        onClick={() => handleNavigate(item.href)}
+                        className="block w-full rounded-xl px-3 py-2 text-left text-xs font-medium text-offgrid-green/80 hover:bg-offgrid-green/5 hover:text-offgrid-green"
+                      >
+                        <span className="font-semibold text-offgrid-green">{item.label}</span>
+                        <span className="mt-0.5 block text-[11px] text-offgrid-green/55">{item.description}</span>
+                      </button>
+                    ))}
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
+            </div>
+
             {navLinks.map((link) => (
               <button
                 key={link.name}
+                type="button"
                 onClick={link.action}
                 className={cn(
                   "text-sm font-medium transition-colors hover:text-white cursor-pointer",
@@ -314,8 +417,13 @@ export function Navbar() {
           </nav>
 
           <div className="flex min-w-0 shrink-0 items-center gap-2 sm:gap-3 md:gap-4 z-50">
-            <Button variant="secondary" size="sm" className="hidden md:inline-flex" onClick={() => handleNavigate("/shop")}>
-              Shop Now
+            <Button
+              variant="secondary"
+              size="sm"
+              className="hidden md:inline-flex"
+              onClick={() => handleNavigate("/shop?category=Ultimate Frisbee")}
+            >
+              Shop Ultimate
             </Button>
 
             {currentUser ? (
@@ -344,7 +452,7 @@ export function Navbar() {
                   setIsAccountMenuOpen((prev) => !prev);
                 }}
                 className={cn(
-                  "inline-flex items-center gap-2 rounded-full border px-2.5 py-2 text-xs font-semibold uppercase tracking-[0.12em] transition-colors sm:px-3 sm:py-1.5",
+                  "inline-flex min-h-11 items-center gap-2 rounded-full border px-2.5 py-2 text-sm font-semibold transition-colors sm:px-3",
                   onAccountRoute
                     ? "border-offgrid-lime bg-offgrid-lime/20 text-white"
                     : "border-offgrid-cream/35 text-offgrid-cream hover:border-white hover:text-white",
@@ -378,6 +486,19 @@ export function Navbar() {
               </AnimatePresence>
             </div>
 
+            <button
+              type="button"
+              onClick={() => handleNavigate("/contact")}
+              aria-label="Contact us"
+              title="Contact us"
+              className={cn(
+                headerIconBtn,
+                location.pathname === "/contact" && "bg-offgrid-cream/10 text-white",
+              )}
+            >
+              <Mail className="w-5 h-5" />
+            </button>
+
             <div className="relative" ref={cartDropdownRef}>
               <button
                 type="button"
@@ -385,7 +506,8 @@ export function Navbar() {
                   setIsAccountMenuOpen(false);
                   setIsCartDropdownOpen((prev) => !prev);
                 }}
-                className={cn("p-2 transition-colors hover:text-white relative", "text-offgrid-cream")}
+                aria-label="Cart"
+                className={cn(headerIconBtn, "relative")}
               >
                 <ShoppingBag className="w-5 h-5" />
                 <AnimatePresence>
@@ -474,7 +596,8 @@ export function Navbar() {
             </div>
             <button
               type="button"
-              className={cn("md:hidden p-2 transition-colors", "text-offgrid-cream")}
+              aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
+              className={cn(headerIconBtn, "md:hidden")}
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -486,60 +609,80 @@ export function Navbar() {
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0, y: -12 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed inset-0 z-40 flex flex-col overflow-y-auto bg-offgrid-green px-4 pb-6 pt-24 sm:px-6"
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-40 flex flex-col bg-offgrid-green px-4 pt-[calc(env(safe-area-inset-top,0px)+5.5rem)] pb-[env(safe-area-inset-bottom,0px)] sm:px-6"
           >
-            <nav className="flex flex-col gap-6 text-center mt-12 overflow-y-auto">
+            <nav className="flex flex-1 flex-col gap-8 overflow-y-auto text-center">
               <button
+                type="button"
                 onClick={() => handleNavigate("/custom/order")}
-                className="text-3xl font-display font-bold text-offgrid-cream hover:text-white transition-colors cursor-pointer"
+                className={mobileNavPrimary}
               >
-                Place custom order
+                Custom Order
               </button>
-              <button
-                onClick={() => handleNavigate("/custom/templates")}
-                className="text-xl font-display font-semibold text-offgrid-cream/80 hover:text-white transition-colors cursor-pointer"
-              >
-                Templates
-              </button>
-              {CUSTOM_NAV_LINKS.map((link) => (
-                <button
-                  key={link.to}
-                  onClick={() => handleNavigate(link.to)}
-                  className="text-lg font-display font-semibold text-offgrid-cream/75 hover:text-white transition-colors cursor-pointer"
-                >
-                  {link.label}
-                </button>
-              ))}
-              <button
-                onClick={() => handleNavigate("/custom")}
-                className="text-lg font-display font-semibold text-offgrid-cream/60 hover:text-white transition-colors cursor-pointer"
-              >
-                Full ordering guide
-              </button>
-              {navLinks.map((link) => (
-                <button
-                  key={link.name}
-                  onClick={() => {
-                    link.action();
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="text-3xl font-display font-bold text-offgrid-cream hover:text-white transition-colors cursor-pointer"
-                >
-                  {link.name}
-                </button>
-              ))}
 
-              <div className="mx-auto mt-4 w-full max-w-xs border-t border-offgrid-cream/15 pt-6">
-                <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-cream/45">Account</p>
+              <div className="flex flex-col gap-3">
+                <p className={cn(sectionEyebrowOnDark, "mb-0 text-center")}>Shop By Sport</p>
+                <div className="flex flex-col gap-1">
+                  {sportLinks.map((item) => (
+                    <button
+                      key={item.label}
+                      type="button"
+                      onClick={() => handleNavigate(item.href)}
+                      className={mobileNavSecondary}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <p className={cn(sectionEyebrowOnDark, "mb-0 text-center")}>Shop By Collection</p>
+                <div className="flex flex-col gap-1">
+                  {SHOP_BY_COLLECTION.map((item) => (
+                    <button
+                      key={item.label}
+                      type="button"
+                      onClick={() => handleNavigate(item.href)}
+                      className={mobileNavSecondary}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-4">
+                {navLinks.map((link) => (
+                  <button
+                    key={link.name}
+                    type="button"
+                    onClick={link.action}
+                    className={mobileNavPrimary}
+                  >
+                    {link.name}
+                  </button>
+                ))}
+              </div>
+
+              <div className="mx-auto w-full max-w-xs border-t border-offgrid-cream/15 pt-6">
+                <p className={cn(sectionEyebrowOnDark, "mb-3 text-center")}>Account</p>
                 <div className="flex flex-col gap-2">{renderMobileAccountItems()}</div>
               </div>
             </nav>
-            <div className="mt-auto pb-8 flex justify-center">
-              <Button variant="secondary" size="lg" className="w-full max-w-xs" onClick={() => handleNavigate("/shop")}>
-                Shop Now
+
+            <div className="shrink-0 border-t border-offgrid-cream/15 px-2 py-5">
+              <Button
+                variant="secondary"
+                size="lg"
+                className="mx-auto w-full max-w-xs"
+                onClick={() => handleNavigate("/shop?category=Ultimate Frisbee")}
+              >
+                Shop Ultimate
               </Button>
             </div>
           </motion.div>

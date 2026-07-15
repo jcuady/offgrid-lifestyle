@@ -58,12 +58,12 @@ export function CollectionsPage() {
             {header.titleLine1} <span className="font-normal italic text-white">{header.titleLine2Italic}</span>
           </h1>
           <p className="mt-5 max-w-2xl text-sm leading-relaxed text-offgrid-cream/70 md:text-base">
-            {header.caption} One lifestyle, built for every court, fairway, run, and rest day.
+            {header.caption}
           </p>
 
           {/* Quick jump — collection names, no numbers */}
           {collections.length > 0 ? (
-            <nav aria-label="Jump to an OG Signature" className="mt-10 flex flex-wrap gap-2.5">
+            <nav aria-label="Jump to a sport" className="mt-10 flex flex-wrap gap-2.5">
               {collections.map((collection) => (
                 <Link
                   key={collection.id}
@@ -91,7 +91,7 @@ export function CollectionsPage() {
               >
                 <Link
                   to={shopHref(collection.shopCategory)}
-                  aria-label={`Shop the ${collection.title} OG Signature`}
+                  aria-label={`Shop ${collection.title}`}
                   className={cn(
                     "group relative block aspect-[4/3] overflow-hidden rounded-3xl ring-1 ring-offgrid-green/10",
                     imageRight && "lg:order-2",
@@ -102,7 +102,7 @@ export function CollectionsPage() {
                     alt={collection.title}
                     loading="lazy"
                     decoding="async"
-                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    className="absolute inset-0 h-full w-full object-cover"
                   />
                   <div
                     className="pointer-events-none absolute inset-0 bg-gradient-to-t from-offgrid-dark/70 via-offgrid-dark/10 to-transparent"
@@ -173,7 +173,7 @@ export function CollectionsPage() {
                       alt={line.category}
                       loading="lazy"
                       decoding="async"
-                      className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      className="absolute inset-0 h-full w-full object-cover"
                     />
                     <div
                       className="pointer-events-none absolute inset-0 bg-gradient-to-t from-offgrid-dark/80 via-offgrid-dark/20 to-transparent"

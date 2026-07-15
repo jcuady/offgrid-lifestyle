@@ -3,7 +3,8 @@ import { supabase } from "@/src/lib/supabase";
 import { logger } from "@/src/lib/logger";
 import { usePortalStore, type PortalUser, type UserRole } from "@/src/store/usePortalStore";
 import { linkPushSubscriptionToUser } from "@/src/lib/pushSubscription";
-import type { RegisterCustomerInput } from "@/src/types/portal";
+import type { PasswordResetAudience } from "@/src/lib/passwordReset";
+import { passwordResetRedirectUrl } from "@/src/lib/passwordReset";
 
 export interface AuthService {
   currentUser: () => PortalUser | null;
@@ -11,7 +12,7 @@ export interface AuthService {
   /** Development-only shortcut used by local demo flows. */
   loginAsRole: (role: UserRole) => void;
   registerCustomer: (input: RegisterCustomerInput) => Promise<{ ok: boolean; message?: string; userId?: string; emailConfirmationRequired?: boolean }>;
-  requestPasswordReset: (email: string) => Promise<{ ok: boolean; message?: string }>;
+  requestPasswordReset: (email: string, audience?: PasswordResetAudience) => Promise<{ ok: boolean; message?: string }>;
   updatePassword: (newPassword: string) => Promise<{ ok: boolean; message?: string }>;
   logout: () => Promise<void>;
 }
@@ -180,18 +181,22 @@ export const supabaseAuthService: AuthService = {
     return { ok: true, userId: portalUser.id, emailConfirmationRequired };
   },
 
-  requestPasswordReset: async (email) => {
+  requestPasswordReset: async (email, audience = "customer") => {
     const normalized = email.trim().toLowerCase();
     if (!normalized) {
       return { ok: false, message: "Enter your email address." };
     }
 
-    const redirectTo = `${window.location.origin}/account/reset-password`;
+    const redirectTo = passwordResetRedirectUrl(window.location.origin, audience);
     const { error } = await supabase.auth.resetPasswordForEmail(normalized, { redirectTo });
     if (error) {
       return { ok: false, message: error.message };
     }
-    return { ok: true, message: "Check your email for a password reset link." };
+    const audienceHint =
+      audience === "portal"
+        ? " If this email is a team portal account, use the new password on the portal sign-in page."
+        : "";
+    return { ok: true, message: `Check your email for a password reset link.${audienceHint}` };
   },
 
   updatePassword: async (newPassword) => {

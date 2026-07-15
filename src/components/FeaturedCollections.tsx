@@ -8,21 +8,18 @@ import { cmsTypographyStyle } from "@/src/lib/cmsTypography";
 import { cn } from "@/src/lib/utils";
 
 /**
- * Editorial bento that fills a clean 4×2 grid:
+ * Shop by sport — frisbee featured (top seller).
  *  ┌───────────┬───────────┐
- *  │           │   golf    │
- *  │ pickleball├─────┬─────┤
- *  │           │ pil │ evd │
+ *  │           │ pickleball│
+ *  │  frisbee  ├─────┬─────┤
+ *  │           │ golf│ run │
  *  └───────────┴─────┴─────┘
  */
-const layoutById: Record<
-  LandingCollectionId,
-  { className: string; index: string }
-> = {
-  pickleball: { className: "md:col-span-2 md:row-span-2", index: "01" },
-  golf: { className: "md:col-span-2 md:row-span-1", index: "02" },
-  "og-pilipinas": { className: "md:col-span-1 md:row-span-1", index: "03" },
-  everyday: { className: "md:col-span-1 md:row-span-1", index: "04" },
+const layoutById: Record<LandingCollectionId, { className: string; index: string }> = {
+  frisbee: { className: "md:col-span-2 md:row-span-2", index: "01" },
+  pickleball: { className: "md:col-span-2 md:row-span-1", index: "02" },
+  golf: { className: "md:col-span-1 md:row-span-1", index: "03" },
+  running: { className: "md:col-span-1 md:row-span-1", index: "04" },
 };
 
 export function FeaturedCollections() {
@@ -53,7 +50,7 @@ export function FeaturedCollections() {
               </p>
             ) : null}
             <Link
-              to="/og-signatures"
+              to="/shop"
               className="group inline-flex items-center gap-1.5 font-mono text-xs font-bold uppercase tracking-[0.14em] text-offgrid-green/70 transition-colors hover:text-offgrid-lime"
             >
               {viewAllLabel}
@@ -64,8 +61,8 @@ export function FeaturedCollections() {
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4 md:auto-rows-[236px] md:gap-5">
           {collections.map((collection, index) => {
-            const layout = layoutById[collection.id];
-            const isFeature = collection.id === "pickleball";
+            const layout = layoutById[collection.id] ?? { className: "", index: String(index + 1).padStart(2, "0") };
+            const isFeature = collection.id === "frisbee";
             return (
               <motion.div
                 key={collection.id}
@@ -74,25 +71,25 @@ export function FeaturedCollections() {
                 viewport={{ once: true, margin: "-80px" }}
                 transition={{ duration: 0.55, delay: index * 0.08 }}
                 className={cn(
-                  "group relative overflow-hidden rounded-2xl ring-1 ring-offgrid-green/10 transition-all duration-300 hover:-translate-y-0.5 hover:ring-offgrid-lime/40 hover:shadow-xl",
+                  "group relative overflow-hidden rounded-2xl ring-1 ring-offgrid-green/10 transition-shadow duration-300 hover:ring-offgrid-lime/40 hover:shadow-xl",
                   layout.className,
                   "aspect-[4/3] md:aspect-auto",
                 )}
               >
                 <img
                   src={collection.image}
-                  alt={collection.title}
-                  className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
+                  alt={`${collection.title} — OFFGRID`}
+                  className="absolute inset-0 h-full w-full object-cover object-center"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-offgrid-dark/90 via-offgrid-dark/30 to-offgrid-dark/5" />
 
                 <Link
                   to={`/shop?category=${encodeURIComponent(collection.shopCategory)}`}
                   className="absolute inset-0 z-10 flex flex-col justify-between p-5 md:p-6"
-                  aria-label={`Shop ${collection.title} OG Signature`}
+                  aria-label={`Shop ${collection.title}`}
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <span className="font-mono text-3xl font-black tabular-nums leading-none text-offgrid-cream/25 transition-colors group-hover:text-offgrid-lime/50 md:text-4xl">
+                    <span className="font-mono text-3xl font-black tabular-nums leading-none text-offgrid-cream/25 md:text-4xl">
                       {layout.index}
                     </span>
                     <span className="shrink-0 rounded-full bg-offgrid-cream/90 px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-[0.15em] text-offgrid-green backdrop-blur-sm">
@@ -107,13 +104,13 @@ export function FeaturedCollections() {
                     <h3
                       className={cn(
                         "font-display font-black leading-none text-offgrid-cream",
-                        isFeature ? "text-3xl md:text-4xl" : "text-2xl md:text-2xl",
+                        isFeature ? "text-3xl md:text-4xl" : "text-2xl",
                       )}
                     >
                       {collection.title}
                     </h3>
-                    <span className="mt-3 inline-flex items-center gap-1.5 font-mono text-xs font-bold uppercase tracking-[0.14em] text-offgrid-lime opacity-0 transition-opacity group-hover:opacity-100">
-                      Shop now
+                    <span className="mt-3 inline-flex items-center gap-1.5 font-mono text-xs font-bold uppercase tracking-[0.14em] text-offgrid-lime">
+                      {isFeature ? "Shop the drop" : "Shop sport"}
                       <ArrowRight className="h-3 w-3" />
                     </span>
                   </div>

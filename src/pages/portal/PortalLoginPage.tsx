@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { cn } from "@/src/lib/utils";
-import { CUSTOMER_SIGN_IN_PATH } from "@/src/lib/authRoutes";
+import { CUSTOMER_SIGN_IN_PATH, PORTAL_FORGOT_PASSWORD_PATH } from "@/src/lib/authRoutes";
 import {
   getPortalLandingByRole,
   resolvePostLoginPath,
@@ -21,8 +21,11 @@ const showDemoShortcuts = import.meta.env.DEV;
 export function PortalLoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const currentUser = usePortalStore((state) => state.currentUser);
   const logout = usePortalStore((state) => state.logout);
+
+  const passwordReset = searchParams.get("reset") === "1";
 
   const [email, setEmail] = useState(showDemoShortcuts ? "admin@offgrid.test" : "");
   const [password, setPassword] = useState("");
@@ -66,7 +69,7 @@ export function PortalLoginPage() {
   return (
     <AuthPage
       mode="sign-in"
-      badge="Team portal · Admin & staff"
+      badge={passwordReset ? "Password updated — sign in with your new password" : "Team portal · Admin & staff"}
       title="Team sign in"
       description="Admin and staff only — manage orders, production, and storefront content."
       submitLabel="Sign in to portal"
@@ -80,6 +83,11 @@ export function PortalLoginPage() {
       onPasswordChange={setPassword}
       onSubmit={handleSubmit}
       error={error}
+      alternateLink={{
+        prompt: "Forgot password?",
+        label: "Reset portal password",
+        href: PORTAL_FORGOT_PASSWORD_PATH,
+      }}
       demoAccounts={
         showDemoShortcuts
           ? PORTAL_DEMOS.map((demo) => ({

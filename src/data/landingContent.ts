@@ -28,7 +28,8 @@ export type LandingTypographySectionKey =
 
 export type LandingTypography = Record<LandingTypographySectionKey, CmsSectionTypography>;
 
-export type LandingCollectionId = "pickleball" | "golf" | "og-pilipinas" | "everyday";
+/** Shop-by-sport tiles on the homepage (frisbee is featured). */
+export type LandingCollectionId = "frisbee" | "pickleball" | "golf" | "running";
 
 export interface LandingHeroContent {
   badge: string;
@@ -38,7 +39,10 @@ export interface LandingHeroContent {
   /** Supporting paragraph below the hero title. */
   description: string;
   locality: string;
+  /** Optional loop video; when empty, `imageSrc` is used. */
   videoSrc: string;
+  /** Sports still — preferred hero media when video is empty or fails. */
+  imageSrc: string;
   ctaShopLabel: string;
   ctaShopHref: string;
   ctaExploreLabel: string;
@@ -270,12 +274,12 @@ export const FEATURED_SPOTLIGHT_SLOT_COUNT = 3;
 const emptyFeaturedSlot = (): FeaturedSpotlightSlot => ({ productId: "", imageOverride: "" });
 
 export const initialFeaturedSpotlightContent: LandingFeaturedSpotlightContent = {
-  eyebrow: "Featured",
-  titleLine1: "Crowd",
-  titleLine2Italic: "favorites.",
-  subtitle: "Hand-picked drops the community keeps coming back to. Shop the pieces defining the season.",
-  ctaLabel: "Shop all featured",
-  ctaHref: "/shop",
+  eyebrow: "Promo of the month",
+  titleLine1: "Ultimate",
+  titleLine2Italic: "frisbee.",
+  subtitle: "Our top-selling retail — Discfest-proven kits. Shop the drop teams keep reordering.",
+  ctaLabel: "Shop the ultimate line",
+  ctaHref: "/shop?category=Ultimate Frisbee",
   layout: "bento",
   source: "best_sellers",
   slots: [emptyFeaturedSlot(), emptyFeaturedSlot(), emptyFeaturedSlot()],
@@ -296,104 +300,101 @@ const initialGalleryTiles = (): LandingGalleryTile[] =>
   }));
 
 export const LANDING_COLLECTION_IDS: LandingCollectionId[] = [
+  "frisbee",
   "pickleball",
   "golf",
-  "og-pilipinas",
-  "everyday",
+  "running",
 ];
 
 export const initialLandingContent: LandingContent = {
   hero: {
-    badge: "When Comfort Meets Movement",
-    titleLine1: "OFF GRID®",
+    badge: "Filipino sportswear · Built for play",
+    titleLine1: "OFFGRID®",
     titleLine2: "LIFESTYLE",
-    tagline: "Play Different. Live Off Grid.",
-    description:
-      "Premium Filipino sportswear engineered for movement — on the court, on the course, and everywhere off the grid.",
+    tagline: "Play different. Live OFFGRID.",
+    description: "Sportswear for ultimate frisbee, pickleball, golf, and running — plus custom team kits.",
     locality: "EST. MANILA, PH",
-    videoSrc: LANDING_HERO_VIDEO_DEFAULT,
-    ctaShopLabel: "Shop Collection",
-    ctaShopHref: "/shop",
-    ctaExploreLabel: "Explore Sports",
+    videoSrc: "",
+    imageSrc: COMMUNITY_PHOTO_PATHS.ultimateCatch,
+    ctaShopLabel: "Shop Ultimate Line",
+    ctaShopHref: "/shop?category=Ultimate Frisbee",
+    ctaExploreLabel: "Shop By Sport",
     ctaExploreHref: "/#collections",
     statItemsSoldLabel: "Items Sold",
-    statCollectionsLabel: "OG Signatures",
+    statCollectionsLabel: "Sports",
     statLocalityLine: "EST. MANILA, PH",
     statLocalitySub: "Proudly Pinoy",
   },
   collectionsHeader: {
-    eyebrow: "OG Signatures",
-    titleLine1: "Find Your",
-    titleLine2Italic: "Movement.",
-    caption: "One lifestyle. Thoughtfully designed for every way you move.",
+    eyebrow: "Shop By Sport",
+    titleLine1: "Pick your",
+    titleLine2Italic: "game.",
+    caption: "Fewer lines. Clearer focus. Ultimate frisbee first — our top-selling retail.",
   },
   collections: [
     {
+      id: "frisbee",
+      title: "Ultimate Frisbee",
+      subtitle: "Top seller · Discfest ready",
+      image: COMMUNITY_PHOTO_PATHS.ultimateSkyball,
+      tag: "Featured",
+      shopCategory: "Ultimate Frisbee",
+    },
+    {
       id: "pickleball",
       title: "Pickleball",
-      subtitle: "Dink. Rally. Repeat.",
+      subtitle: "One line. Court + lifestyle.",
       image: "/images/collection-pickleball.png",
-      tag: "Court Ready",
+      tag: "Merged line",
       shopCategory: "Pickleball",
     },
     {
       id: "golf",
       title: "Golf",
-      subtitle: "Fairways & Fresh Fits.",
+      subtitle: "Fairway fits.",
       image: "/images/collection-golf.png",
-      tag: "Course Classics",
+      tag: "Course",
       shopCategory: "Golf",
     },
     {
-      id: "og-pilipinas",
+      id: "running",
       title: "Running",
-      subtitle: "Stride With Purpose.",
+      subtitle: "Stride ready.",
       image: "/images/collection-pilipinas.png",
-      tag: "In Motion",
+      tag: "In motion",
       shopCategory: "Running",
     },
-    {
-      id: "everyday",
-      title: "Everyday Wear",
-      subtitle: "Move. Rest. Repeat.",
-      image: "/images/collection-everyday.jpg",
-      tag: "OG Vibe",
-      shopCategory: "Lifestyle / OG Vibe",
-    },
   ],
-  collectionsViewAllLabel: "View all OG Signatures",
+  collectionsViewAllLabel: "View all sports",
   bestSellersHeader: {
-    eyebrow: "The Full Collection",
-    titleLine1: "A complete expression of",
-    titleLine2Italic: "Off Grid Lifestyle.",
-    caption:
-      "Thoughtfully designed pieces inspired by sport, shaped by culture, and made for everyday movement.",
+    eyebrow: "Retail",
+    titleLine1: "Shop what",
+    titleLine2Italic: "moves.",
+    caption: "Ultimate frisbee, pickleball, golf, and running — ready to ship.",
   },
-  bestSellersShopLink: "Shop full catalog",
+  bestSellersShopLink: "Open the shop",
   gallery: {
-    eyebrow: "OG in the wild",
-    titleLine1: "Real moments.",
-    titleLine2Italic: "Real community.",
-    caption:
-      "From Discfest to Pickle Project — Filipino sportswear tested on court, course, and everywhere off the grid.",
-    footnote: "Discfest · Mixed Masters · Towels · Pickle · The Greatest x OG",
-    ctaLabel: "Explore events",
-    ctaHref: "/events",
+    eyebrow: "Community",
+    titleLine1: "On the field.",
+    titleLine2Italic: "In the kit.",
+    caption: "Discfest, pickle, and race days — sportswear tested where it matters.",
+    footnote: "Discfest · Pickle · Running · Golf",
+    ctaLabel: "See community & events",
+    ctaHref: "/community",
     tiles: initialGalleryTiles(),
   },
   brandStory: {
-    eyebrow: "Our Story",
-    titleLine1: "Where Comfort",
-    titleLine2Italic: "Meets Movement.",
+    eyebrow: "Who we are",
+    titleLine1: "Sportswear for",
+    titleLine2Italic: "how you play.",
     titleLine3: "",
     paragraph1:
-      "Off Grid Lifestyle was founded on the belief that the things we wear should move with us. Through everyday routines, quiet moments, and everything in between.",
-    paragraph2:
-      "From thoughtfully curated collections to pieces made uniquely yours, we create apparel designed with comfort, versatility, and craftsmanship at its core.",
-    paragraph3Prefix: "Because style isn't reserved for special occasions.",
-    paragraph3Highlight: "It's found in the way we live, move, and make things our own.",
+      "OFFGRID makes Filipino sportswear for athletes and teams — ultimate frisbee first, then pickleball, golf, and running.",
+    paragraph2: "Retail drops for everyday play. Custom kits when your squad needs a full run.",
+    paragraph3Prefix: "",
+    paragraph3Highlight: "",
     closingQuote: "",
-    image: COMMUNITY_PHOTO_PATHS.ogBackpack,
+    image: COMMUNITY_PHOTO_PATHS.ultimateField,
     badgeEst: "EST.",
     badgeLocality: "MANILA, PH",
     badgeGritty: "Gritty",
@@ -401,26 +402,25 @@ export const initialLandingContent: LandingContent = {
     badgeProudlyPinoy: "Proudly Pinoy",
   },
   event: {
-    badge: "Community & Events",
-    titleLine1: "More Than a Brand.",
-    titleLine2Italic: "A shared space for connection.",
+    badge: "Community",
+    titleLine1: "Play together.",
+    titleLine2Italic: "Show up in kit.",
     description:
-      "Off Grid Lifestyle exists beyond clothing. Through gatherings and shared experiences, we create space for people to connect, move, and belong.",
+      "Events, gatherings, and team days — where OFFGRID meets the community. Browse upcoming and past sessions below.",
     backgroundImage: COMMUNITY_PHOTO_PATHS.ultimateSkyball,
-    imageCaption: "Gritty · In motion · Product-focused",
+    imageCaption: "Discfest · Courts · Courses · Runs",
     date: "",
     countdownTime: "",
     location: "",
     category: "",
-    ctaPrimary: "Explore Events",
-    ctaSecondary: "View Community",
+    ctaPrimary: "See upcoming events",
+    ctaSecondary: "Start a team order",
   },
   socialHeader: {
     eyebrow: "Testimonials",
-    titleLine1: "Crafted with",
-    titleLine2Italic: "Intention.",
-    caption:
-      "Off Grid Lifestyle is built on consistency and care. From custom pieces to everyday essentials, each experience reflects quality, clarity, and craftsmanship.",
+    titleLine1: "From the",
+    titleLine2Italic: "field.",
+    caption: "Teams and athletes on fit, finish, and game-day wear.",
   },
   ugcTiles: [
     { image: COMMUNITY_PHOTO_PATHS.ultimateCatch, label: "Community Play" },
@@ -457,30 +457,30 @@ export const initialLandingContent: LandingContent = {
   ],
   testimonialsViewAll: "View all testimonials",
   teamCommunity: {
-    badge: "Our Community",
-    headlineLine1: "Built for teams.",
-    headlineLine2Italic: "Powered by connection.",
-    metaLine: "EST. MANILA, PH — GRITTY · IN MOTION · PRODUCT-FOCUSED",
+    badge: "Community",
+    headlineLine1: "Teams. Events.",
+    headlineLine2Italic: "Same kit energy.",
+    metaLine: "EST. MANILA, PH · ULTIMATE FRISBEE · PICKLEBALL · GOLF · RUNNING",
     teams: [
+      { name: "Discfest squads", sport: "Ultimate Frisbee" },
       { name: "Manila Smash", sport: "Pickleball" },
       { name: "Fairway Co.", sport: "Golf" },
       { name: "Takbo MNL", sport: "Running" },
-      { name: "Barangay Ball", sport: "Basketball" },
     ],
-    primaryCtaLabel: "View events",
-    primaryCtaHref: "/events",
-    secondaryCtaLabel: "Start a team order",
-    secondaryCtaHref: "/custom",
-    socialHeading: "Follow the movement",
+    primaryCtaLabel: "Community & events",
+    primaryCtaHref: "/community",
+    secondaryCtaLabel: "Kit my team",
+    secondaryCtaHref: "/custom/order",
+    socialHeading: "Follow OFFGRID",
     instagramUrl: "https://www.instagram.com/offgridlifestyle.ph/",
     facebookUrl: "https://www.facebook.com/offgridlifestyleph/",
   },
   faq: {
     eyebrow: "FAQ",
-    titleLine1: "Questions",
-    titleLine2Italic: "answered.",
-    caption: "Quick answers on orders, artwork, and custom design support.",
-    ctaLabel: "View full ordering guide",
+    titleLine1: "Quick",
+    titleLine2Italic: "answers.",
+    caption: "Orders, artwork, and custom team kits.",
+    ctaLabel: "Full ordering guide",
     ctaHref: "/custom#faqs",
     items: [
       {
@@ -491,47 +491,47 @@ export const initialLandingContent: LandingContent = {
       {
         question: "What file format should I submit?",
         answer:
-          "Place your design in OffGrid templates, then send the final file as Adobe Illustrator (.AI) in CMYK color mode for clean production output.",
+          "Place your design in OFFGRID templates, then send the final file as Adobe Illustrator (.AI) in CMYK for production.",
       },
       {
         question: "What if I don't use Illustrator?",
         answer:
-          "You can still send any file format and an OffGrid rep will guide you through preparation so your artwork is production-ready.",
+          "Send any file format and an OFFGRID rep will help get it production-ready.",
       },
       {
-        question: "Can OffGrid help with design?",
+        question: "Can OFFGRID help with design?",
         answer:
-          "Design assistance is free. Share your concept, colors, logos, references, and team style so we can build a production-ready layout faster.",
+          "Yes — design help is free. Share concept, colors, logos, and references.",
       },
       {
         question: "How do I give design direction?",
         answer:
-          "Review sample team looks from our channels and include pegs in your brief. The more context you share, the faster we match your direction.",
+          "Send pegs and sample looks. More context = faster match to your direction.",
       },
     ],
   },
   cta: {
-    eyebrow: "Stay connected",
-    titleLine1: "READY TO GO",
-    titleLine2: "OFF GRID?",
-    priceFallback: "Premium pieces for athletes who play different.",
+    eyebrow: "Next step",
+    titleLine1: "READY TO",
+    titleLine2: "PLAY?",
+    priceFallback: "Shop retail or kit your team.",
     contactEmail: "hello@offgridlifestyle.ph",
     contactLinkLabel: "Send a message",
     contactHref: "/contact",
     localityLine: "Est. Manila, PH · 14.5995° N, 120.9842° E",
-    ctaShop: "Shop Now",
-    ctaShopHref: "/shop",
-    ctaStory: "Our Story",
-    ctaStoryHref: "/about",
+    ctaShop: "Grab the ultimate drop",
+    ctaShopHref: "/shop?category=Ultimate Frisbee",
+    ctaStory: "Kit my team",
+    ctaStoryHref: "/custom/order",
     trustShipping: "Free shipping ₱2,000+",
     trustReturns: "14-day returns",
     trustShips: "Ships nationwide",
     trustCheckout: "Secure checkout",
   },
   footer: {
-    taglineLine1: "Play Different. Live Off Grid.",
-    taglineLine2: "Proudly made for Filipino athletes.",
-    copyright: "© 2026 OffGrid Lifestyle. All rights reserved.",
+    taglineLine1: "Play different. Live OFFGRID.",
+    taglineLine2: "Made for Filipino athletes and teams.",
+    copyright: "© 2026 OFFGRID Lifestyle. All rights reserved.",
   },
   featuredSpotlight: initialFeaturedSpotlightContent,
   testimonialsPage: initialTestimonialsPageContent,

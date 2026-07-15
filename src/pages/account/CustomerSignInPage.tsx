@@ -22,6 +22,7 @@ export function CustomerSignInPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const emailConfirmed = searchParams.get("confirmed") === "1";
+  const passwordReset = searchParams.get("reset") === "1";
 
   const redirectedFrom = (location.state as { from?: string } | null)?.from;
 
@@ -70,7 +71,13 @@ export function CustomerSignInPage() {
       onPasswordChange={setPassword}
       onSubmit={handleSubmit}
       error={error}
-      badge={emailConfirmed ? "Email confirmed — sign in below" : undefined}
+      badge={
+        emailConfirmed
+          ? "Email confirmed — sign in below"
+          : passwordReset
+            ? "Password updated — sign in with your new password"
+            : undefined
+      }
       demoAccounts={
         showDemoShortcuts
           ? [

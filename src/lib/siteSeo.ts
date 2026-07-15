@@ -1,16 +1,16 @@
 /** Canonical production URL (www is primary on Vercel). */
 export const SITE_URL = "https://www.oglifestyleph.com";
 
-export const SITE_NAME = "OFF GRID® Lifestyle";
+export const SITE_NAME = "OFFGRID® Lifestyle";
 
 export const SITE_TITLE =
-  "OFF GRID® | Custom Teamwear & Sportswear Philippines";
+  "OFFGRID® | Ultimate Frisbee, Pickleball & Custom Teamwear Philippines";
 
 export const SITE_DESCRIPTION =
-  "Custom teamwear, pickleball & golf apparel, and OG Signatures — designed in Manila for Filipino athletes. Shop online or build your team kit nationwide.";
+  "OFFGRID Filipino sportswear — ultimate frisbee retail, pickleball, golf, running, and custom team kits. Designed in Manila.";
 
 export const SITE_KEYWORDS =
-  "OFF GRID Lifestyle, oglifestyleph, Filipino sportswear, custom teamwear, pickleball apparel, golf wear, premium athletic wear, Philippines, OG Signatures, team uniforms, Manila sportswear";
+  "OFFGRID Lifestyle, oglifestyleph, Filipino sportswear, ultimate frisbee apparel, custom teamwear, pickleball apparel, golf wear, Philippines, team uniforms, Manila sportswear";
 
 /** Social preview — dark wordmark on light background. */
 export const SITE_OG_IMAGE_PATH = "/OG%20logo/OG%20logo/Complete/Black%20No%20BG.png";
@@ -92,11 +92,11 @@ export function organizationJsonLd() {
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "OFF GRID Lifestyle",
+    name: "OFFGRID Lifestyle",
     url: SITE_URL,
     logo: absoluteUrl(SITE_LOGO_ICON_PATH),
     description:
-      "Premium Filipino sportswear and custom teamwear for pickleball, golf, running, and everyday movement.",
+      "OFFGRID Filipino sportswear — ultimate frisbee retail, pickleball, golf, running, and custom team kits.",
     areaServed: "PH",
     sameAs: [
       "https://www.instagram.com/offgridlifestyle.ph/",
@@ -147,7 +147,7 @@ export function productJsonLd(product: {
     description: product.description,
     image: product.image ? absoluteUrl(product.image) : absoluteUrl(SITE_OG_IMAGE_PATH),
     url: absoluteUrl(`/shop/${product.slug}`),
-    brand: { "@type": "Brand", name: "OFF GRID Lifestyle" },
+    brand: { "@type": "Brand", name: "OFFGRID Lifestyle" },
     offers: {
       "@type": "Offer",
       priceCurrency: product.currency ?? "PHP",

@@ -3,10 +3,11 @@ import { motion, AnimatePresence } from "motion/react";
 import { X, Minus, Plus, Star, ArrowRight, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useShallow } from "zustand/react/shallow";
-import { formatPrice, type Product } from "@/src/data/products";
+import { formatPrice, getProductSports, getProductTags, type Product } from "@/src/data/products";
 import { useStore } from "@/src/store/store";
 import { Button } from "@/src/components/ui/Button";
 import { cn } from "@/src/lib/utils";
+import { ProductPrice } from "@/src/components/ProductPrice";
 
 interface ProductQuickViewModalProps {
   product: Product | null;
@@ -53,6 +54,7 @@ export function ProductQuickViewModal({ product, onClose }: ProductQuickViewModa
 
   const activeColor = product?.colors.find((c) => c.value === selectedColor) ?? product?.colors[0];
   const lineTotal = (product?.price ?? 0) * quantity;
+  const primaryTag = product ? getProductTags(product)[0] : undefined;
 
   const buildCartItem = () => {
     if (!product) return null;
@@ -131,9 +133,9 @@ export function ProductQuickViewModal({ product, onClose }: ProductQuickViewModa
               <div className="grid gap-5 p-4 sm:grid-cols-2 sm:gap-8 sm:p-6">
                 {/* Large image — desktop */}
                 <div className="relative hidden aspect-[4/5] overflow-hidden rounded-2xl bg-white ring-1 ring-offgrid-green/10 sm:block">
-                  {product.tag ? (
+                  {primaryTag ? (
                     <span className="absolute left-3 top-3 z-10 rounded-full bg-offgrid-lime px-2.5 py-1 font-mono text-[9px] font-bold uppercase tracking-[0.15em] text-white shadow-sm">
-                      {product.tag}
+                      {primaryTag}
                     </span>
                   ) : null}
                   <img
@@ -148,16 +150,16 @@ export function ProductQuickViewModal({ product, onClose }: ProductQuickViewModa
                   {/* Compact header with thumbnail — mobile */}
                   <div className="flex gap-3.5 sm:hidden">
                     <div className="relative h-28 w-24 shrink-0 overflow-hidden rounded-xl bg-white ring-1 ring-offgrid-green/10">
-                      {product.tag ? (
+                      {primaryTag ? (
                         <span className="absolute left-1.5 top-1.5 z-10 rounded-full bg-offgrid-lime px-1.5 py-0.5 font-mono text-[7px] font-bold uppercase tracking-[0.12em] text-white shadow-sm">
-                          {product.tag}
+                          {primaryTag}
                         </span>
                       ) : null}
                       <img src={product.image} alt={product.name} className="h-full w-full object-cover object-center" />
                     </div>
                     <div className="flex min-w-0 flex-1 flex-col">
                       <span className="font-mono text-[9px] font-semibold uppercase tracking-[0.16em] text-offgrid-green/50">
-                        {product.category}
+                        {getProductSports(product).join(" · ")}
                       </span>
                       <h2
                         id="quick-view-title"
@@ -165,9 +167,12 @@ export function ProductQuickViewModal({ product, onClose }: ProductQuickViewModa
                       >
                         {product.name}
                       </h2>
-                      <p className="mt-auto font-display text-lg font-bold text-offgrid-lime">
-                        {formatPrice(product.price)}
-                      </p>
+                      <ProductPrice
+                        product={product}
+                        className="mt-auto"
+                        priceClassName="text-lg text-offgrid-lime"
+                        compareClassName="text-sm"
+                      />
                       <div className="mt-1 flex items-center gap-1.5 font-mono text-[10px] text-offgrid-green/60">
                         <Star className="h-3 w-3 fill-offgrid-green text-offgrid-green" />
                         <span className="font-bold text-offgrid-green">{product.sold}</span> sold
@@ -179,7 +184,7 @@ export function ProductQuickViewModal({ product, onClose }: ProductQuickViewModa
                   <div className="hidden sm:block">
                     <div className="mb-1 flex flex-wrap items-center gap-2">
                       <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-offgrid-green/50">
-                        {product.category}
+                        {getProductSports(product).join(" · ")}
                       </span>
                       <span className="h-1 w-1 rounded-full bg-offgrid-green/20" aria-hidden />
                       <span className="rounded-full border border-offgrid-green/10 px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/50">
@@ -192,7 +197,12 @@ export function ProductQuickViewModal({ product, onClose }: ProductQuickViewModa
                     </h2>
 
                     <div className="mt-3 flex items-end justify-between border-b border-offgrid-green/10 pb-4">
-                      <p className="font-display text-2xl font-bold text-offgrid-lime">{formatPrice(product.price)}</p>
+                      <ProductPrice
+                        product={product}
+                        priceClassName="text-2xl text-offgrid-lime"
+                        compareClassName="text-base"
+                        showSavings
+                      />
                       <div className="flex items-center gap-1.5 font-mono text-[11px] text-offgrid-green/60">
                         <Star className="h-3.5 w-3.5 fill-offgrid-green text-offgrid-green" />
                         <span className="font-bold text-offgrid-green">{product.sold}</span> sold

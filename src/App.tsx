@@ -20,6 +20,7 @@ import { CookieConsentBanner } from "./components/consent/CookieConsentBanner";
 import { PushPermissionPrompt } from "./components/notifications/PushPermissionPrompt";
 import { PwaInstallModal } from "./components/pwa/PwaInstallModal";
 import { PwaUpdateBanner } from "./components/pwa/PwaUpdateBanner";
+import { CustomTeamOrderModal } from "./components/CustomTeamOrderModal";
 import { initAuthListener } from "@/src/services/authService";
 
 const HomePage = lazy(() => import("./pages/HomePage").then((m) => ({ default: m.HomePage })));
@@ -31,6 +32,7 @@ const CollectionsPage = lazy(() =>
   import("./pages/CollectionsPage").then((m) => ({ default: m.CollectionsPage })),
 );
 const EventsPage = lazy(() => import("./pages/EventsPage").then((m) => ({ default: m.EventsPage })));
+const FaqPage = lazy(() => import("./pages/FaqPage").then((m) => ({ default: m.FaqPage })));
 const TestimonialsPage = lazy(() =>
   import("./pages/TestimonialsPage").then((m) => ({ default: m.TestimonialsPage })),
 );
@@ -193,7 +195,9 @@ function AppFrame() {
         <Route path="/og-signatures" element={<CollectionsPage />} />
         <Route path="/shop" element={<ShopPage />} />
         <Route path="/shop/:slug" element={<ProductDetailPage />} />
-        <Route path="/events" element={<EventsPage />} />
+        <Route path="/community" element={<EventsPage />} />
+        <Route path="/events" element={<Navigate to="/community" replace />} />
+        <Route path="/faq" element={<FaqPage />} />
         <Route path="/testimonials" element={<TestimonialsPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/about" element={<AboutPage />} />
@@ -209,6 +213,7 @@ function AppFrame() {
         <Route path="/account/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/account/reset-password" element={<ResetPasswordPage />} />
         <Route path="/portal/login" element={<PortalLoginPage />} />
+        <Route path="/portal/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/portal/orders/:orderId" element={<PortalOrderRedirect />} />
         <Route path="/portal" element={<PortalIndexRedirect />} />
         <Route
@@ -288,6 +293,7 @@ function AppFrame() {
 
       <CartDrawer />
       <CheckoutModal />
+      <CustomTeamOrderModal />
       <PwaInstallModal />
       <PwaUpdateBanner />
       <CookieConsentBanner />

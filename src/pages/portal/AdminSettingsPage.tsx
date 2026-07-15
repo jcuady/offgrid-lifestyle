@@ -129,7 +129,8 @@ export function AdminSettingsPage() {
           </span>
         </div>
         <p className="mt-4 text-xs text-offgrid-green/55">
-          Manage staff credentials in the Staff area. Self-service password changes arrive with production auth.
+          Manage staff and customer credentials in the Staff area. Use forgot password on the storefront or portal sign-in
+          pages for self-service resets.
         </p>
       </section>
 

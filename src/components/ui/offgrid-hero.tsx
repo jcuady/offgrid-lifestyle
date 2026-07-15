@@ -1,10 +1,10 @@
 import { motion, useReducedMotion } from "motion/react";
 import { ArrowRight } from "lucide-react";
-import { LANDING_HERO_VIDEO_DEFAULT } from "@/src/data/landingContent";
+import { COMMUNITY_PHOTO_PATHS } from "@/src/lib/communityPhotos";
 import type { CSSProperties } from "react";
 import { Button } from "@/src/components/ui/Button";
 
-const DEFAULT_HERO_VIDEO = LANDING_HERO_VIDEO_DEFAULT;
+const DEFAULT_HERO_IMAGE = COMMUNITY_PHOTO_PATHS.ultimateCatch;
 
 export interface OffgridHeroCta {
   label: string;
@@ -21,7 +21,9 @@ export interface OffgridHeroProps {
   description: string;
   primaryCta: OffgridHeroCta;
   secondaryCta?: OffgridHeroCta;
+  /** When set, plays as full-bleed background. Prefer sports still via imageSrc. */
   videoSrc?: string;
+  imageSrc?: string;
   titleStyle?: CSSProperties;
   descriptionStyle?: CSSProperties;
 }
@@ -36,29 +38,40 @@ export function OffgridHero({
   description,
   primaryCta,
   secondaryCta,
-  videoSrc = DEFAULT_HERO_VIDEO,
+  videoSrc = "",
+  imageSrc = DEFAULT_HERO_IMAGE,
   titleStyle,
   descriptionStyle,
 }: OffgridHeroProps) {
   const reduceMotion = useReducedMotion();
+  const useVideo = Boolean(videoSrc?.trim());
 
   return (
     <section
       className="relative flex min-h-[max(100svh,32rem)] w-full flex-col overflow-hidden bg-offgrid-dark"
-      aria-label="OFF GRID hero"
+      aria-label="OFFGRID hero"
     >
-      <video
-        autoPlay
-        loop
-        muted
-        playsInline
-        preload="auto"
-        aria-hidden
-        className="absolute inset-0 h-full w-full object-cover"
-        src={videoSrc}
-      />
+      {useVideo ? (
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="auto"
+          aria-hidden
+          className="absolute inset-0 h-full w-full object-cover"
+          src={videoSrc}
+          poster={imageSrc}
+        />
+      ) : (
+        <img
+          src={imageSrc}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+      )}
 
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/50 via-black/20 to-black/75" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/50 via-black/25 to-black/80" />
 
       <div className="relative z-10 flex min-h-[max(100svh,32rem)] flex-1 flex-col px-5 pb-[max(1.75rem,env(safe-area-inset-bottom))] pt-[max(5rem,calc(env(safe-area-inset-top)+3.5rem))] sm:px-6 sm:pb-10 md:px-10">
         <div className="flex items-start justify-between gap-3">
@@ -133,10 +146,10 @@ export function OffgridHero({
                 type="button"
                 variant="accent"
                 onClick={primaryCta.onClick}
-                className="w-full gap-2 text-sm font-bold uppercase tracking-[0.12em] focus-visible:ring-offgrid-lime focus-visible:ring-offset-offgrid-dark sm:w-auto"
+                className="group w-full gap-2 text-sm font-bold uppercase tracking-[0.12em] focus-visible:ring-offgrid-lime focus-visible:ring-offset-offgrid-dark sm:w-auto"
               >
                 {primaryCta.label}
-                <ArrowRight className="h-4 w-4" />
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Button>
 
               {secondaryCta ? (

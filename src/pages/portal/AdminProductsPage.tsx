@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Package, Plus, Pencil, Trash2, Search, Star } from "lucide-react";
-import type { FabricType, GarmentCut, Product, SizeCode } from "@/src/data/products";
+import { compareSports, type FabricType, type GarmentCut, type Product } from "@/src/data/products";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { formatPrice } from "@/src/data/products";
 import { localCatalogService } from "@/src/services";
 import {
+  formatLabelsInput,
   formatSizesInput,
   normalizeProductDraft,
+  parseLabelsInput,
   parseSizesInput,
   PRODUCT_TAG_PRESETS,
   slugifyProductName,
@@ -35,6 +37,7 @@ function defaultDraft(): Product {
     slug: "",
     name: "",
     category: "Pickleball",
+    sports: ["Pickleball"],
     basePrice: 1100,
     price: 1100,
     image: "",
@@ -51,6 +54,7 @@ function defaultDraft(): Product {
     fit: "",
     sold: 0,
     stock: 0,
+    tags: [],
     status: "draft",
     createdAt: now,
     updatedAt: now,
@@ -86,7 +90,8 @@ export function AdminProductsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<Product>(() => defaultDraft());
   const [sizesInput, setSizesInput] = useState(() => formatSizesInput(defaultDraft().sizes));
-  const [customTagMode, setCustomTagMode] = useState(false);
+  const [sportsInput, setSportsInput] = useState(() => formatLabelsInput(defaultDraft().sports));
+  const [customTagsInput, setCustomTagsInput] = useState("");
   const [query, setQuery] = useState("");
   const [fieldErrors, setFieldErrors] = useState<ProductFieldErrors>({});
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -101,8 +106,16 @@ export function AdminProductsPage() {
 
   const categoryOptions = useMemo(() => {
     const fromCatalog = products.map((p) => p.category.trim()).filter(Boolean);
-    return [...new Set([...fromCatalog, "Pickleball", "Golf", "Running", "Lifestyle / OG Vibe"])].sort();
+    return [
+      ...new Set([...fromCatalog, "Ultimate Frisbee", "Pickleball", "Golf", "Running", "Lifestyle / OG Vibe", "Solar Collection", "Primal Collection"]),
+    ].sort();
   }, [products]);
+
+  const sportOptions = useMemo(
+    () =>
+      [...new Set(products.flatMap((product) => product.sports ?? []).filter(Boolean))].sort(compareSports),
+    [products],
+  );
 
   const sorted = useMemo(() => [...products].sort((a, b) => a.name.localeCompare(b.name)), [products]);
   const filtered = sorted.filter((product) =>
@@ -113,7 +126,8 @@ export function AdminProductsPage() {
     const next = defaultDraft();
     setDraft(next);
     setSizesInput(formatSizesInput(next.sizes));
-    setCustomTagMode(false);
+    setSportsInput(formatLabelsInput(next.sports));
+    setCustomTagsInput("");
     setFieldErrors({});
     slugTouched.current = false;
   };
@@ -134,8 +148,11 @@ export function AdminProductsPage() {
     setEditingId(product.id);
     setDraft(product);
     setSizesInput(formatSizesInput(product.sizes));
-    setCustomTagMode(
-      Boolean(product.tag && !PRODUCT_TAG_PRESETS.includes(product.tag as (typeof PRODUCT_TAG_PRESETS)[number])),
+    setSportsInput(formatLabelsInput(product.sports));
+    setCustomTagsInput(
+      (product.tags ?? (product.tag ? [product.tag] : []))
+        .filter((tag) => !PRODUCT_TAG_PRESETS.includes(tag as (typeof PRODUCT_TAG_PRESETS)[number]))
+        .join(", "),
     );
     setFieldErrors({});
     slugTouched.current = true;
@@ -153,25 +170,41 @@ export function AdminProductsPage() {
   };
 
   const applyTagPreset = (tag: string) => {
-    setCustomTagMode(false);
     setDraft((prev) => {
-      const next: Product = { ...prev, tag };
-      if (tag === "Best Seller" && !prev.homeBestSellerRank) {
-        next.homeBestSellerRank = 1;
-      }
-      return next;
+      const current = prev.tags ?? (prev.tag ? [prev.tag] : []);
+      const tags = current.includes(tag) ? current.filter((value) => value !== tag) : [...current, tag];
+      return {
+        ...prev,
+        tags,
+        tag: tags[0],
+        homeBestSellerRank:
+          tag === "Best Seller" && !current.includes(tag) && !prev.homeBestSellerRank
+            ? 1
+            : prev.homeBestSellerRank,
+      };
     });
-    setFieldErrors((prev) => ({ ...prev, tag: undefined, homeBestSellerRank: undefined }));
+    setFieldErrors((prev) => ({ ...prev, tags: undefined, homeBestSellerRank: undefined }));
   };
 
-  const clearTag = () => {
-    setCustomTagMode(false);
-    setDraft((prev) => ({ ...prev, tag: undefined }));
+  const clearTags = () => {
+    setCustomTagsInput("");
+    setDraft((prev) => ({ ...prev, tag: undefined, tags: [] }));
   };
 
   const submit = async () => {
     const sizes = parseSizesInput(sizesInput);
-    const withSizes = { ...draft, sizes };
+    const customTags = parseLabelsInput(customTagsInput);
+    const presetTags = (draft.tags ?? []).filter((tag) =>
+      PRODUCT_TAG_PRESETS.includes(tag as (typeof PRODUCT_TAG_PRESETS)[number]),
+    );
+    const tags = [...new Set([...presetTags, ...customTags])];
+    const withSizes = {
+      ...draft,
+      sizes,
+      sports: parseLabelsInput(sportsInput),
+      tags,
+      tag: tags[0],
+    };
     const errors = validateProductDraft({ draft: withSizes, products, editingId });
     setFieldErrors(errors);
     if (Object.keys(errors).length > 0) return;
@@ -200,8 +233,7 @@ export function AdminProductsPage() {
     }
   };
 
-  const activeTag = draft.tag?.trim() ?? "";
-  const tagIsPreset = PRODUCT_TAG_PRESETS.includes(activeTag as (typeof PRODUCT_TAG_PRESETS)[number]);
+  const activeTags = draft.tags ?? (draft.tag ? [draft.tag] : []);
 
   return (
     <div className="p-6 sm:p-8 lg:p-10">
@@ -284,11 +316,15 @@ export function AdminProductsPage() {
               </div>
               <div className="flex flex-1 flex-col p-4">
                 <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-offgrid-green/45">
-                  {product.category}
+                  {(product.sports?.length ? product.sports : [product.category]).join(" · ")}
                 </p>
                 <h3 className="mt-1 line-clamp-1 font-display text-base font-bold text-offgrid-green">{product.name}</h3>
                 <p className="mt-1 text-sm text-offgrid-green/65">
-                  {formatPrice(product.price)} <span className="text-offgrid-green/35">·</span> Stock {product.stock ?? 0}
+                  <span className="font-semibold text-offgrid-green">{formatPrice(product.price)}</span>
+                  {product.basePrice > product.price ? (
+                    <span className="ml-2 text-offgrid-green/40 line-through">{formatPrice(product.basePrice)}</span>
+                  ) : null}{" "}
+                  <span className="text-offgrid-green/35">·</span> Stock {product.stock ?? 0}
                 </p>
                 <div className="mt-4 flex gap-2 border-t border-offgrid-green/10 pt-3">
                   <button
@@ -371,6 +407,25 @@ export function AdminProductsPage() {
           </Field>
 
           <Field
+            label="Sports"
+            hint="Comma-separated. Enter a new name to create a new storefront sport automatically."
+            error={fieldErrors.sports}
+          >
+            <input
+              list="product-sports"
+              value={sportsInput}
+              onChange={(e) => setSportsInput(e.target.value)}
+              placeholder="Ultimate Frisbee, Running"
+              className={cn(inputClass, fieldErrors.sports && inputErrorClass)}
+            />
+            <datalist id="product-sports">
+              {sportOptions.map((sport) => (
+                <option key={sport} value={sport} />
+              ))}
+            </datalist>
+          </Field>
+
+          <Field
             label="URL slug"
             hint="Used in /shop/product/your-slug. Auto-generated from name until you edit it."
             error={fieldErrors.slug}
@@ -434,11 +489,7 @@ export function AdminProductsPage() {
             </select>
           </Field>
 
-          <Field
-            label="Storefront tag"
-            hint="Shows on product cards and powers shop tag filters."
-            error={fieldErrors.tag}
-          >
+          <Field label="Storefront tags" hint="Choose promo badges and add custom comma-separated tags." error={fieldErrors.tags}>
             <div className="flex flex-wrap gap-2">
               {PRODUCT_TAG_PRESETS.map((preset) => (
                 <button
@@ -447,7 +498,7 @@ export function AdminProductsPage() {
                   onClick={() => applyTagPreset(preset)}
                   className={cn(
                     "rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors",
-                    activeTag === preset && !customTagMode
+                    activeTags.includes(preset)
                       ? "border-offgrid-lime bg-offgrid-lime text-white"
                       : "border-offgrid-green/20 bg-white text-offgrid-green hover:border-offgrid-lime/40",
                   )}
@@ -455,41 +506,22 @@ export function AdminProductsPage() {
                   {preset}
                 </button>
               ))}
-              <button
-                type="button"
-                onClick={() => {
-                  setCustomTagMode(true);
-                  if (tagIsPreset) setDraft((prev) => ({ ...prev, tag: "" }));
-                }}
-                className={cn(
-                  "rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors",
-                  customTagMode
-                    ? "border-offgrid-lime bg-offgrid-lime text-white"
-                    : "border-offgrid-green/20 bg-white text-offgrid-green hover:border-offgrid-lime/40",
-                )}
-              >
-                Custom
-              </button>
-              {activeTag ? (
+              {activeTags.length || customTagsInput ? (
                 <button
                   type="button"
-                  onClick={clearTag}
+                  onClick={clearTags}
                   className="rounded-full border border-offgrid-green/15 px-3 py-1.5 text-xs text-offgrid-green/55 hover:text-offgrid-green"
                 >
                   Clear
                 </button>
               ) : null}
             </div>
-            {customTagMode ? (
-              <input
-                value={draft.tag ?? ""}
-                onChange={(e) => setDraft((prev) => ({ ...prev, tag: e.target.value }))}
-                placeholder="e.g. Team Bundle, Pre-order"
-                className={cn("mt-2", inputClass, fieldErrors.tag && inputErrorClass)}
-              />
-            ) : activeTag && !tagIsPreset ? (
-              <p className="mt-2 text-xs text-offgrid-green/60">Current: {activeTag}</p>
-            ) : null}
+            <input
+              value={customTagsInput}
+              onChange={(e) => setCustomTagsInput(e.target.value)}
+              placeholder="Custom tags: Team Bundle, Pre-order"
+              className={cn("mt-2", inputClass, fieldErrors.tags && inputErrorClass)}
+            />
           </Field>
 
           <Field
@@ -524,16 +556,36 @@ export function AdminProductsPage() {
             />
           </Field>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <Field label="Price (PHP)" error={fieldErrors.price}>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <Field label="Regular price (PHP)" error={fieldErrors.basePrice}>
               <input
                 type="number"
                 min={1}
-                value={draft.price}
+                value={draft.basePrice}
                 onChange={(e) => {
                   const n = Number(e.target.value);
-                  setDraft((prev) => ({ ...prev, price: n, basePrice: n }));
+                  setDraft((prev) => ({
+                    ...prev,
+                    basePrice: n,
+                    price: prev.price >= prev.basePrice ? n : Math.min(prev.price, n),
+                  }));
                 }}
+                className={cn(inputClass, fieldErrors.basePrice && inputErrorClass)}
+              />
+            </Field>
+            <Field label="Discount price (PHP)" hint="Optional. Leave blank for no discount." error={fieldErrors.price}>
+              <input
+                type="number"
+                min={1}
+                max={draft.basePrice || undefined}
+                value={draft.price < draft.basePrice ? draft.price : ""}
+                onChange={(e) =>
+                  setDraft((prev) => ({
+                    ...prev,
+                    price: e.target.value === "" ? prev.basePrice : Number(e.target.value),
+                  }))
+                }
+                placeholder="No discount"
                 className={cn(inputClass, fieldErrors.price && inputErrorClass)}
               />
             </Field>

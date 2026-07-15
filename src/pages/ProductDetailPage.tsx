@@ -5,8 +5,9 @@ import { motion } from "motion/react";
 import { ArrowLeft, Star, Minus, Plus, Check } from "lucide-react";
 import { useStore } from "@/src/store/store";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
-import { formatPrice } from "@/src/data/products";
+import { formatPrice, getProductSports, getProductTags } from "@/src/data/products";
 import { Button } from "@/src/components/ui/Button";
+import { ProductPrice } from "@/src/components/ProductPrice";
 import { cn } from "@/src/lib/utils";
 import { reviewService, type ProductReview } from "@/src/services/reviewService";
 import { usePageSeo } from "@/src/hooks/usePageSeo";
@@ -30,8 +31,8 @@ export function ProductDetailPage() {
     if (!product) {
       if (!catalogReady) return null;
       return {
-        title: "Product Not Found | OFF GRID® Lifestyle",
-        description: "This product is unavailable. Browse the OFF GRID Lifestyle shop for sportswear and teamwear.",
+        title: "Product Not Found | OFFGRID® Lifestyle",
+        description: "This product is unavailable. Browse the OFFGRID Lifestyle shop for sportswear and teamwear.",
         path: slug ? `/shop/${slug}` : "/shop",
         noindex: true,
       };
@@ -39,9 +40,9 @@ export function ProductDetailPage() {
     const description =
       product.metaDescription?.trim() ||
       product.description.slice(0, 155).trim() ||
-      `Shop ${product.name} from OFF GRID Lifestyle — premium Filipino sportswear.`;
+      `Shop ${product.name} from OFFGRID Lifestyle — premium Filipino sportswear.`;
     return {
-      title: product.metaTitle?.trim() || `${product.name} | OFF GRID® Lifestyle`,
+      title: product.metaTitle?.trim() || `${product.name} | OFFGRID® Lifestyle`,
       description,
       path: `/shop/${product.slug}`,
       imagePath: product.image,
@@ -82,6 +83,8 @@ export function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1);
   const [reviews, setReviews] = useState<ProductReview[]>([]);
   const [justAdded, setJustAdded] = useState(false);
+  const isPurchasable =
+    product?.status === "active" && (product.stock === undefined || product.stock > 0);
 
   useEffect(() => {
     if (product) {
@@ -117,6 +120,7 @@ export function ProductDetailPage() {
   }
 
   const activeColor = product.colors.find((c) => c.value === selectedColor) || product.colors[0];
+  const primaryTag = getProductTags(product)[0];
   const averageRating = reviews.length > 0 ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : 0;
 
   const handleAddToCart = () => {
@@ -155,9 +159,9 @@ export function ProductDetailPage() {
                 transition={{ duration: 0.5 }}
                 className="aspect-[4/5] bg-white rounded-2xl overflow-hidden shadow-sm"
               >
-                {product.tag && (
+                {primaryTag && (
                   <span className="absolute top-4 left-4 z-10 px-3 py-1.5 bg-offgrid-dark/90 backdrop-blur-sm text-offgrid-cream text-[10px] font-bold tracking-[0.15em] uppercase rounded-full">
-                    {product.tag}
+                    {primaryTag}
                   </span>
                 )}
                 <img
@@ -177,7 +181,7 @@ export function ProductDetailPage() {
               >
                 <div className="flex items-center gap-3 mb-2">
                   <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-offgrid-green/50">
-                    {product.category}
+                    {getProductSports(product).join(" · ")}
                   </span>
                   <div className="w-1 h-1 rounded-full bg-offgrid-green/20" />
                   <span className="text-[10px] font-semibold tracking-[0.15em] uppercase text-offgrid-green/50 px-2 py-0.5 rounded-full border border-offgrid-green/10">
@@ -190,9 +194,12 @@ export function ProductDetailPage() {
                 </h1>
                 
                 <div className="flex items-end justify-between mb-6 pb-6 border-b border-offgrid-green/10">
-                  <p className="text-2xl font-display font-bold text-offgrid-lime">
-                    {formatPrice(product.price)}
-                  </p>
+                  <ProductPrice
+                    product={product}
+                    priceClassName="text-2xl text-offgrid-lime"
+                    compareClassName="text-base"
+                    showSavings
+                  />
                   <div className="flex items-center gap-1.5 text-xs text-offgrid-green/60 font-medium">
                     <Star className="w-3.5 h-3.5 fill-offgrid-green text-offgrid-green" />
                     <span className="font-bold text-offgrid-green">{product.sold.toLocaleString()}</span> sold
@@ -313,10 +320,12 @@ export function ProductDetailPage() {
                     variant="default"
                     size="lg"
                     onClick={handleAddToCart}
-                    disabled={!selectedSize}
+                    disabled={!selectedSize || !isPurchasable}
                     className="flex-1 h-[52px] text-sm font-semibold tracking-wide"
                   >
-                    Add to Cart — {formatPrice(product.price * quantity)}
+                    {isPurchasable
+                      ? `Add to Cart — ${formatPrice(product.price * quantity)}`
+                      : "Currently unavailable"}
                   </Button>
                 </div>
 

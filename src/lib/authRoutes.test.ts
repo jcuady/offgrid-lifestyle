@@ -3,6 +3,7 @@ import {
   CUSTOMER_FORGOT_PASSWORD_PATH,
   CUSTOMER_RESET_PASSWORD_PATH,
   CUSTOMER_SIGN_IN_PATH,
+  PORTAL_FORGOT_PASSWORD_PATH,
   getLoginPathForRole,
   isAuthScreen,
 } from "./authRoutes";
@@ -12,6 +13,7 @@ describe("authRoutes", () => {
     expect(isAuthScreen(CUSTOMER_SIGN_IN_PATH)).toBe(true);
     expect(isAuthScreen(CUSTOMER_FORGOT_PASSWORD_PATH)).toBe(true);
     expect(isAuthScreen(CUSTOMER_RESET_PASSWORD_PATH)).toBe(true);
+    expect(isAuthScreen(PORTAL_FORGOT_PASSWORD_PATH)).toBe(true);
     expect(isAuthScreen("/shop")).toBe(false);
   });
 

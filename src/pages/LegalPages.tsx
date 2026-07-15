@@ -48,7 +48,7 @@ export function TermsPage() {
     <LegalPageLayout title="Terms & Conditions" updated="July 9, 2026">
       <Section title="1. Introduction">
         <p>
-          These Terms &amp; Conditions (&ldquo;Terms&rdquo;) govern your use of the OFF GRID® Lifestyle website at{" "}
+          These Terms &amp; Conditions (&ldquo;Terms&rdquo;) govern your use of the OFFGRID® Lifestyle website at{" "}
           <a href="https://www.oglifestyleph.com" className="font-semibold underline underline-offset-4">
             oglifestyleph.com
           </a>

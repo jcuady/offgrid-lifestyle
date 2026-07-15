@@ -148,6 +148,11 @@ export function AdminStaffPage() {
   const submitEdit = async () => {
     if (!editTarget) return;
     setFormError(null);
+    const trimmedEmail = email.trim().toLowerCase();
+    if (!trimmedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      setFormError("Enter a valid email address.");
+      return;
+    }
     if (password && password !== confirmPassword) {
       setFormError("Passwords do not match.");
       return;
@@ -160,7 +165,7 @@ export function AdminStaffPage() {
     const result = await userService.updateUser({
       portalUserId: editTarget.id,
       name: name.trim() !== editTarget.name ? name.trim() : undefined,
-      email: email.trim().toLowerCase() !== editTarget.email ? email.trim().toLowerCase() : undefined,
+      email: trimmedEmail !== editTarget.email ? trimmedEmail : undefined,
       password: password || undefined,
     });
 
@@ -171,15 +176,18 @@ export function AdminStaffPage() {
 
     const actor = usePortalStore.getState().currentUser;
     if (actor) {
+      const emailChanged = trimmedEmail !== editTarget.email;
       usePortalStore.getState().recordAudit({
-        action: "staff.updated",
+        action: emailChanged ? "staff.email_changed" : "staff.updated",
         actorId: actor.id,
         actorEmail: actor.email,
         actorRole: actor.role,
         targetType: "user",
         targetId: editTarget.id,
-        summary: `Updated user ${editTarget.email}`,
-        metadata: { userId: editTarget.id },
+        summary: emailChanged
+          ? `Changed email for ${editTarget.email} → ${trimmedEmail}`
+          : `Updated user ${editTarget.email}`,
+        metadata: { userId: editTarget.id, from: editTarget.email, to: trimmedEmail },
       });
     }
 

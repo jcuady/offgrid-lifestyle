@@ -10,27 +10,27 @@ const FOOTER_COLUMNS: { heading: string; links: FooterLink[] }[] = [
   {
     heading: "Shop",
     links: [
+      { label: "Ultimate Frisbee Line", to: "/shop?category=Ultimate Frisbee" },
+      { label: "Shop By Sport", to: "/#collections" },
+      { label: "Shop By Collection", to: "/#shop-collections" },
       { label: "All Products", to: "/shop" },
-      { label: "OG Signatures", to: "/og-signatures" },
-      { label: "Events", to: "/events" },
-      { label: "Testimonials", to: "/testimonials" },
     ],
   },
   {
     heading: "Custom",
     links: [
-      { label: "Custom Hub", to: "/custom" },
-      { label: "Start an Order", to: "/custom/order" },
+      { label: "Start a team order", to: "/custom/order" },
       { label: "Templates", to: "/custom/templates" },
+      { label: "Ordering guide", to: "/custom" },
     ],
   },
   {
     heading: "Company",
     links: [
-      { label: "About Us", to: "/about" },
-      { label: "My Account", to: "/account/orders" },
+      { label: "Who we are", to: "/about" },
+      { label: "Community", to: "/community" },
+      { label: "FAQ", to: "/faq" },
       { label: "Contact", to: "/contact" },
-      { label: "Sizing Guide", to: "/custom#sizing" },
     ],
   },
 ];
@@ -48,7 +48,7 @@ export function Footer() {
           {/* Brand */}
           <div className="md:col-span-4">
             <Link to="/" className="inline-flex items-center">
-              <img src={LOGO_WORDMARK_WHITE} alt="OFF GRID® — OffGrid Lifestyle" className="h-9 w-auto" />
+              <img src={LOGO_WORDMARK_WHITE} alt="OFFGRID® Lifestyle" className="h-9 w-auto" />
             </Link>
             <p className="mt-5 max-w-xs text-sm leading-relaxed text-offgrid-cream/80">
               {footer.taglineLine1}

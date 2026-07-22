@@ -16,6 +16,7 @@ import {
   type PaymentKind,
 } from "../_shared/orderPayment.ts";
 import { dispatchPaymentReceiptEmail } from "../_shared/dispatchPaymentReceipt.ts";
+import { dispatchPaymentConfirmedPush } from "../_shared/dispatchPaymentPush.ts";
 
 type CheckoutSessionData = {
   id?: string;
@@ -102,6 +103,7 @@ async function notifyPaymentConfirmed(
     }).then(({ error }) => {
       if (error) console.error("og_notifications insert", error);
     });
+    void dispatchPaymentConfirmedPush(orderId, customerId);
   }
 
   await dispatchPaymentReceiptEmail(orderId);

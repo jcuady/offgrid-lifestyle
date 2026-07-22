@@ -106,11 +106,13 @@ Deno.serve(async (req: Request) => {
       auth: { autoRefreshToken: false, persistSession: false },
     });
     const token = authHeader.replace("Bearer ", "");
+    // Service-role callers (webhooks) may target specific users; never broadcast anonymously.
+    const isServiceRole = token === serviceRoleKey;
     const { data: authData } = await userClient.auth.getUser(token);
     const authUser = authData.user ?? null;
 
     const role = authUser?.app_metadata?.portal_role as string | undefined;
-    const isStaffOrAdmin = role === "admin" || role === "staff";
+    const isStaffOrAdmin = isServiceRole || role === "admin" || role === "staff";
 
     let callerPortalId: string | null = null;
     if (authUser) {
@@ -151,11 +153,16 @@ Deno.serve(async (req: Request) => {
       const orderAgeMs = Date.now() - new Date(order.created_at).getTime();
       const isRecentGuest = !order.customer_id && orderAgeMs >= 0 && orderAgeMs < 10 * 60 * 1000;
       const isOwner = Boolean(order.customer_id && callerPortalId === order.customer_id);
-      const isOwnerPaymentProof = isOwner && alertType === "payment_proof";
+      // Mirror src/lib/pushAuth.ts canDispatchOperationalPush — owner may alert for new orders + proof.
+      const isOwnerOperationalAlert =
+        isOwner &&
+        (alertType === "payment_proof" ||
+          alertType === "new_retail_order" ||
+          alertType === "new_custom_order");
       const isGuestCheckoutAlert =
         isRecentGuest && (alertType === "new_retail_order" || alertType === "new_custom_order");
 
-      if (!isStaffOrAdmin && !isOwnerPaymentProof && !isGuestCheckoutAlert) {
+      if (!isStaffOrAdmin && !isOwnerOperationalAlert && !isGuestCheckoutAlert) {
         return new Response(JSON.stringify({ error: "Forbidden" }), {
           status: 403,
           headers: { ...corsHeaders, "Content-Type": "application/json" },

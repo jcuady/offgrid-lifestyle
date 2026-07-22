@@ -143,15 +143,14 @@ export const useStore = create<StoreState>()(
       paymentMethod: state.paymentMethod,
     });
 
-    // PayMongo QR Ph: leave cart cleared locally then redirect to hosted checkout.
+    // PayMongo QR Ph: keep cart until redirect so checkout UI never flashes "empty".
     if (state.paymentMethod === "paymongo") {
       const { createPayMongoCheckoutSession, redirectToPayMongoCheckout } = await import(
         "@/src/lib/paymongo"
       );
       set({
         orderId,
-        cart: [],
-        checkoutStep: 2,
+        checkoutStep: 3,
       });
       try {
         const session = await createPayMongoCheckoutSession({
@@ -168,11 +167,12 @@ export const useStore = create<StoreState>()(
         if (!session.checkoutUrl) {
           throw new Error("PayMongo did not return a checkout URL.");
         }
+        set({ cart: [] });
         redirectToPayMongoCheckout(session.checkoutUrl);
         return orderId;
       } catch (err) {
-        // Keep order id so customer can retry from the retry page / account.
-        set({ orderId, checkoutStep: 3 });
+        // Order exists in DB — clear cart; keep order id for retry.
+        set({ orderId, cart: [], checkoutStep: 3 });
         throw err instanceof Error
           ? err
           : new Error("Order saved, but PayMongo checkout could not start. Use Retry payment.");

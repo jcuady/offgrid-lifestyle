@@ -3,7 +3,6 @@ import { EMPTY_SHIPPING_INFO } from "@/src/types/commerce";
 import { ensureNcrShippingFields, isNcrRegion } from "@/src/lib/philippinesAddress";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PHONE_RE = /^\+?[\d\s().-]{7,20}$/;
 
 export function isValidEmail(email: string): boolean {
   return EMAIL_RE.test(email.trim());
@@ -20,8 +19,16 @@ export function validateTermsAccepted(accepted: boolean): string | null {
 }
 
 export function isValidPhone(phone: string): boolean {
+  return isValidPhilippineMobile(phone);
+}
+
+/** PH mobile: exactly 10 local digits starting with 9 (after stripping 0 / 63). */
+export function isValidPhilippineMobile(phone: string): boolean {
   const digits = phone.replace(/\D/g, "");
-  return digits.length >= 10 && PHONE_RE.test(phone.trim());
+  let local = digits;
+  if (local.startsWith("63")) local = local.slice(2);
+  if (local.startsWith("0")) local = local.slice(1);
+  return local.length === 10 && local.startsWith("9");
 }
 
 /** Format Philippine mobile numbers as +63 9XX XXX XXXX while typing. */
@@ -55,7 +62,7 @@ export function sanitizeShippingInfo(info: ShippingInfo): ShippingInfo {
     ...info,
     fullName: info.fullName.trim(),
     email: info.email.trim().toLowerCase(),
-    phone: info.phone.trim(),
+    phone: normalizePhilippinePhone(info.phone),
     address: info.address.trim(),
     barangay: info.barangay.trim(),
     city: info.city.trim(),
@@ -103,7 +110,9 @@ export function validateShippingInfoFields(info: ShippingInfo): ShippingFieldErr
   const errors: ShippingFieldErrors = {};
   if (!data.fullName) errors.fullName = "Full name is required.";
   if (!isValidEmail(data.email)) errors.email = "Enter a valid email address.";
-  if (!isValidPhone(data.phone)) errors.phone = "Enter a valid Philippine phone number (at least 10 digits).";
+  if (!isValidPhone(data.phone)) {
+    errors.phone = "Enter a valid PH mobile (e.g. +63 917 123 4567).";
+  }
   if (!data.region || !data.regionCode) errors.region = "Select your region.";
   if (!isNcrRegion(data.regionCode) && (!data.province || !data.provinceCode)) {
     errors.province = "Select your province.";

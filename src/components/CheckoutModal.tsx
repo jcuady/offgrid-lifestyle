@@ -7,7 +7,8 @@ import { useStore } from "@/src/store/store";
 import { usePortalStore } from "@/src/store/usePortalStore";
 import { Button } from "./ui/Button";
 import { formatPrice } from "@/src/data/products";
-import { validateShippingInfoFields, validateRetailCart, normalizeShippingInfo, sanitizeShippingInfo, type ShippingFieldErrors } from "@/src/lib/formValidation";
+import { validateShippingInfoFields, validateRetailCart, normalizeShippingInfo, sanitizeShippingInfo, formatPhilippinePhoneInput, type ShippingFieldErrors } from "@/src/lib/formValidation";
+import { shouldShowEmptyCartGate } from "@/src/lib/checkoutUi";
 import { EMPTY_SHIPPING_INFO, type ShippingInfo } from "@/src/types/commerce";
 import {
   checkoutPaymentConfigFromSettings,
@@ -219,7 +220,15 @@ export function CheckoutModal() {
 
   if (!isCheckoutOpen) return null;
 
-  if (!cart.length && checkoutStep < 3) {
+  // Only block when truly empty and no in-flight / placed order (PayMongo race).
+  if (
+    shouldShowEmptyCartGate({
+      cartLength: cart.length,
+      checkoutStep,
+      orderId,
+      placingOrder,
+    })
+  ) {
     return (
       <AnimatePresence>
         <motion.div
@@ -246,31 +255,31 @@ export function CheckoutModal() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 bg-offgrid-dark/80 backdrop-blur-sm overflow-y-auto"
+        className="fixed inset-0 z-50 flex items-stretch justify-center bg-offgrid-dark/80 p-0 backdrop-blur-sm sm:items-center sm:p-4"
       >
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
-          className="min-h-[100dvh] px-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(1.5rem,env(safe-area-inset-top))] sm:px-4 sm:py-8 md:py-12"
+          exit={{ opacity: 0, y: 16 }}
+          className="flex h-[100dvh] w-full max-w-6xl flex-col overflow-hidden bg-transparent sm:h-auto sm:max-h-[min(92dvh,880px)]"
         >
-          <div className="max-w-6xl mx-auto">
+          <div className="flex min-h-0 flex-1 flex-col px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-0 sm:py-0">
             {/* Header */}
-            <div className="flex items-center justify-between mb-6 sm:mb-8">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-black text-offgrid-cream">
+            <div className="mb-3 flex shrink-0 items-center justify-between sm:mb-4">
+              <h1 className="text-2xl font-display font-black text-offgrid-cream sm:text-3xl md:text-4xl">
                 {checkoutStep === 3 ? "Order Confirmed" : "Checkout"}
               </h1>
               <button
                 onClick={handleClose}
-                className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-offgrid-cream/10 flex items-center justify-center hover:bg-offgrid-cream/20 transition-colors text-offgrid-cream"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-offgrid-cream/10 text-offgrid-cream transition-colors hover:bg-offgrid-cream/20 sm:h-10 sm:w-10"
               >
-                <X className="w-4 h-4 sm:w-5 sm:h-5" />
+                <X className="h-4 w-4 sm:h-5 sm:w-5" />
               </button>
             </div>
 
             {/* Step Indicator */}
             {checkoutStep < 3 && (
-              <div className="mb-6 sm:mb-10">
+              <div className="mb-3 shrink-0 sm:mb-4">
                 <div className="flex items-center justify-center gap-2 sm:gap-4">
                   {[
                     { step: 1, label: "Shipping", icon: MapPin },
@@ -279,17 +288,17 @@ export function CheckoutModal() {
                     <div key={item.step} className="flex items-center gap-2 sm:gap-4">
                       <div
                         className={cn(
-                          "flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold transition-all",
+                          "flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold transition-all sm:px-4 sm:py-2 sm:text-sm",
                           checkoutStep >= item.step
                             ? "bg-offgrid-lime text-white"
                             : "bg-offgrid-cream/10 text-offgrid-cream/40"
                         )}
                       >
-                        <item.icon className="w-3 h-3 sm:w-4 sm:h-4" />
+                        <item.icon className="h-3 w-3 sm:h-4 sm:w-4" />
                         <span className="hidden sm:inline">{item.label}</span>
                       </div>
                       {index < 1 && (
-                        <ChevronRight className="w-5 h-5 text-offgrid-cream/30" />
+                        <ChevronRight className="h-5 w-5 text-offgrid-cream/30" />
                       )}
                     </div>
                   ))}
@@ -297,27 +306,33 @@ export function CheckoutModal() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-              {/* Main Content */}
-              <div className="lg:col-span-2">
+            <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-hidden lg:grid-cols-3 lg:gap-6">
+              {/* Main Content — scrolls inside the card, not the page */}
+              <div className="flex min-h-0 flex-col overflow-hidden lg:col-span-2">
                 <AnimatePresence mode="wait">
                   {/* Step 1: Shipping */}
                   {checkoutStep === 1 && (
                     <motion.div
                       key="step1"
-                      initial={{ opacity: 0, x: -20 }}
+                      initial={{ opacity: 0, x: -12 }}
                       animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 20 }}
-                      className="bg-offgrid-cream rounded-2xl p-5 sm:p-8"
+                      exit={{ opacity: 0, x: 12 }}
+                      className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-offgrid-cream"
                     >
-                      <h2 className="text-xl sm:text-2xl font-display font-bold text-offgrid-green mb-5 sm:mb-6">
-                        Shipping Information
-                      </h2>
-                      <form ref={shippingFormRef} onSubmit={handleShippingSubmit} className="flex min-h-0 flex-col">
-                        <div className="space-y-4 sm:space-y-5">
-                          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 sm:gap-5">
+                      <div className="shrink-0 border-b border-offgrid-green/10 px-4 py-3 sm:px-6 sm:py-4">
+                        <h2 className="text-lg font-display font-bold text-offgrid-green sm:text-xl">
+                          Shipping Information
+                        </h2>
+                      </div>
+                      <form
+                        ref={shippingFormRef}
+                        onSubmit={handleShippingSubmit}
+                        className="flex min-h-0 flex-1 flex-col"
+                      >
+                        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-3 sm:space-y-4 sm:px-6 sm:py-4">
+                          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 sm:gap-4">
                             <div className="md:col-span-2">
-                              <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.15em] text-offgrid-green">
+                              <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.15em] text-offgrid-green sm:mb-2 sm:text-xs">
                                 Full Name *
                               </label>
                               <input
@@ -341,7 +356,7 @@ export function CheckoutModal() {
                             </div>
 
                             <div>
-                              <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.15em] text-offgrid-green">
+                              <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.15em] text-offgrid-green sm:mb-2 sm:text-xs">
                                 Email *
                               </label>
                               <input
@@ -365,7 +380,7 @@ export function CheckoutModal() {
                             </div>
 
                             <div>
-                              <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.15em] text-offgrid-green">
+                              <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.15em] text-offgrid-green sm:mb-2 sm:text-xs">
                                 Phone *
                               </label>
                               <input
@@ -374,7 +389,10 @@ export function CheckoutModal() {
                                 inputMode="tel"
                                 value={formData.phone}
                                 onChange={(e) => {
-                                  setFormData({ ...formData, phone: e.target.value });
+                                  setFormData({
+                                    ...formData,
+                                    phone: formatPhilippinePhoneInput(e.target.value),
+                                  });
                                   clearFieldError("phone");
                                 }}
                                 className={contactInputClass(Boolean(fieldErrors.phone))}
@@ -404,28 +422,28 @@ export function CheckoutModal() {
                               onClearError={clearFieldError}
                             />
                           </Suspense>
+
+                          {shippingError ? (
+                            <p className="text-sm font-medium text-red-600" role="alert">
+                              {shippingError}
+                            </p>
+                          ) : null}
                         </div>
 
-                        {shippingError ? (
-                          <p className="mt-4 text-sm font-medium text-red-600" role="alert">
-                            {shippingError}
-                          </p>
-                        ) : null}
-
-                        <div className="sticky bottom-0 z-10 -mx-5 mt-6 flex flex-col-reverse gap-3 border-t border-offgrid-green/10 bg-offgrid-cream/95 px-5 py-4 backdrop-blur-sm sm:static sm:mx-0 sm:mt-8 sm:flex-row sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
+                        <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-offgrid-green/10 bg-offgrid-cream px-4 py-3 sm:flex-row sm:gap-3 sm:px-6 sm:py-4">
                           <Button
                             type="button"
                             variant="outline"
                             size="lg"
                             onClick={handleBackFromShipping}
-                            className="h-12 w-full border-offgrid-green text-offgrid-green sm:h-14 sm:flex-1"
+                            className="h-11 w-full border-offgrid-green text-offgrid-green sm:h-12 sm:flex-1"
                           >
                             Back to cart
                           </Button>
                           <Button
                             type="submit"
                             size="lg"
-                            className="h-12 w-full bg-offgrid-lime font-bold text-white hover:bg-offgrid-lime/90 sm:h-14 sm:flex-[1.2]"
+                            className="h-11 w-full bg-offgrid-lime font-bold text-white hover:bg-offgrid-lime/90 sm:h-12 sm:flex-[1.2]"
                           >
                             Continue to Payment
                           </Button>
@@ -438,16 +456,17 @@ export function CheckoutModal() {
                   {checkoutStep === 2 && (
                     <motion.div
                       key="step2"
-                      initial={{ opacity: 0, x: -20 }}
+                      initial={{ opacity: 0, x: -12 }}
                       animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 20 }}
-                      className="bg-offgrid-cream rounded-2xl p-5 sm:p-8"
+                      exit={{ opacity: 0, x: 12 }}
+                      className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-offgrid-cream"
                     >
-                      <h2 className="text-xl sm:text-2xl font-display font-bold text-offgrid-green mb-5 sm:mb-6">
-                        Payment Method
-                      </h2>
-
-                      <div className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
+                      <div className="shrink-0 border-b border-offgrid-green/10 px-4 py-3 sm:px-6 sm:py-4">
+                        <h2 className="text-lg font-display font-bold text-offgrid-green sm:text-xl">
+                          Payment Method
+                        </h2>
+                      </div>
+                      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-3 sm:space-y-4 sm:px-6 sm:py-4">
                         {RETAIL_PAYMENT_METHODS.map((method) => {
                           const Icon = PAYMENT_ICONS[method.id];
                           const selectable = isRetailPaymentMethodSelectable(method.id, checkoutPaymentConfig);
@@ -492,7 +511,6 @@ export function CheckoutModal() {
                             </button>
                           );
                         })}
-                      </div>
 
                       {paymentMethod === "paymongo" && isRetailPaymentMethodSelectable("paymongo", checkoutPaymentConfig) ? (
                         <motion.div
@@ -542,17 +560,18 @@ export function CheckoutModal() {
                       ) : null}
 
                       {checkoutError ? (
-                        <p className="mb-4 text-sm font-medium text-red-600" role="alert">
+                        <p className="mb-2 text-sm font-medium text-red-600" role="alert">
                           {checkoutError}
                         </p>
                       ) : null}
+                      </div>
 
-                      <div className="sticky bottom-0 z-10 -mx-5 mt-6 flex flex-col-reverse gap-3 border-t border-offgrid-green/10 bg-offgrid-cream/95 px-5 py-4 backdrop-blur-sm sm:static sm:mx-0 sm:mt-8 sm:flex-row sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
+                      <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-offgrid-green/10 bg-offgrid-cream px-4 py-3 sm:flex-row sm:gap-3 sm:px-6 sm:py-4">
                         <Button
                           variant="outline"
                           size="lg"
                           onClick={() => setCheckoutStep(1)}
-                          className="h-12 w-full border-offgrid-green text-offgrid-green sm:h-14 sm:flex-1"
+                          className="h-11 w-full border-offgrid-green text-offgrid-green sm:h-12 sm:flex-1"
                         >
                           Back
                         </Button>
@@ -560,7 +579,7 @@ export function CheckoutModal() {
                           size="lg"
                           disabled={placingOrder}
                           onClick={() => void handlePlaceOrder()}
-                          className="h-12 w-full bg-offgrid-lime font-bold text-white hover:bg-offgrid-lime/90 disabled:opacity-70 sm:h-14 sm:flex-[1.2]"
+                          className="h-11 w-full bg-offgrid-lime font-bold text-white hover:bg-offgrid-lime/90 disabled:opacity-70 sm:h-12 sm:flex-[1.2]"
                         >
                           {placingOrder ? (
                             <>
@@ -579,9 +598,9 @@ export function CheckoutModal() {
                   {checkoutStep === 3 && (
                     <motion.div
                       key="step3"
-                      initial={{ opacity: 0, scale: 0.9 }}
+                      initial={{ opacity: 0, scale: 0.96 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="bg-offgrid-cream rounded-2xl p-6 sm:p-10 text-center"
+                      className="min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-2xl bg-offgrid-cream p-5 text-center sm:p-8"
                     >
                       <motion.div
                         initial={{ scale: 0 }}
@@ -737,21 +756,21 @@ export function CheckoutModal() {
 
               {/* Order Summary Sidebar */}
               {checkoutStep < 3 && (
-                <div className="lg:col-span-1 order-first lg:order-last -mt-2 lg:mt-0">
-                  <div className="bg-offgrid-cream rounded-2xl p-5 sm:p-6 lg:sticky lg:top-8">
-                    <h3 className="text-base sm:text-lg font-display font-bold text-offgrid-green mb-4 sm:mb-6">
+                <div className="order-first flex max-h-[32vh] min-h-0 flex-col overflow-hidden lg:order-last lg:col-span-1 lg:max-h-none">
+                  <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-offgrid-cream">
+                    <h3 className="shrink-0 border-b border-offgrid-green/10 px-4 py-3 text-base font-display font-bold text-offgrid-green sm:px-5 sm:text-lg">
                       Order Summary
                     </h3>
 
-                    <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
+                    <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-3 sm:px-5">
                       {cart.map((item) => (
                         <div key={`${item.productId}-${item.size}-${item.color}`} className="flex gap-3">
-                          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden flex-shrink-0 bg-white">
-                            <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                          <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-white sm:h-16 sm:w-16">
+                            <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-bold text-offgrid-green text-xs sm:text-sm truncate">{item.name}</p>
-                            <p className="text-[10px] sm:text-xs text-offgrid-green/50 truncate">
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-xs font-bold text-offgrid-green sm:text-sm">{item.name}</p>
+                            <p className="truncate text-[10px] text-offgrid-green/50 sm:text-xs">
                               {item.size} · {item.color} · Qty: {item.quantity}
                             </p>
                           </div>
@@ -759,16 +778,16 @@ export function CheckoutModal() {
                       ))}
                     </div>
 
-                    <div className="space-y-2 pt-3 sm:pt-4 border-t border-offgrid-green/10">
-                      <div className="flex justify-between text-xs sm:text-sm text-offgrid-green/60">
+                    <div className="shrink-0 space-y-2 border-t border-offgrid-green/10 px-4 py-3 sm:px-5 sm:py-4">
+                      <div className="flex justify-between text-xs text-offgrid-green/60 sm:text-sm">
                         <span>Subtotal</span>
                         <span>{formatPrice(subtotal)}</span>
                       </div>
-                      <div className="flex justify-between text-xs sm:text-sm text-offgrid-green/60">
+                      <div className="flex justify-between text-xs text-offgrid-green/60 sm:text-sm">
                         <span>Shipping</span>
                         <span>{shipping === 0 ? "FREE" : formatPrice(shipping)}</span>
                       </div>
-                      <div className="flex justify-between text-base sm:text-lg font-display font-bold text-offgrid-green pt-2 sm:pt-3 border-t border-offgrid-green/10">
+                      <div className="flex justify-between border-t border-offgrid-green/10 pt-2 text-base font-display font-bold text-offgrid-green sm:pt-3 sm:text-lg">
                         <span>Total</span>
                         <span>{formatPrice(total)}</span>
                       </div>

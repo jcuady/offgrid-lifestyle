@@ -66,7 +66,7 @@ describe("pushAuth", () => {
       ).toBe(true);
     });
 
-    it("denies customers fabricating new-order alerts for their own order", () => {
+    it("allows order owners to alert staff on their new retail/custom order", () => {
       expect(
         canDispatchOperationalPush({
           orderCustomerId: "cust-1",
@@ -76,7 +76,17 @@ describe("pushAuth", () => {
           callerRole: "customer",
           nowMs: NOW,
         }),
-      ).toBe(false);
+      ).toBe(true);
+      expect(
+        canDispatchOperationalPush({
+          orderCustomerId: "cust-1",
+          orderCreatedAt: STALE_CREATED,
+          alertType: "new_custom_order",
+          callerPortalId: "cust-1",
+          callerRole: "customer",
+          nowMs: NOW,
+        }),
+      ).toBe(true);
     });
 
     it("denies recent guests fabricating payment_proof alerts", () => {

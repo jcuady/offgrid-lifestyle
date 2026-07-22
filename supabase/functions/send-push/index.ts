@@ -73,7 +73,7 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const { title, body, url: clickUrl, user_ids, operational_alert } = await req.json();
+    const { title, body, url: clickUrl, user_ids, operational_alert, tag } = await req.json();
     if (!title || !body) {
       return new Response(JSON.stringify({ error: "title and body are required" }), {
         status: 400,
@@ -84,6 +84,10 @@ Deno.serve(async (req: Request) => {
     const safeTitle = String(title).trim().slice(0, 120);
     const safeBody = String(body).trim().slice(0, 500);
     const safeUrl = safeNavigationUrl(clickUrl);
+    const safeTag =
+      typeof tag === "string" && tag.trim()
+        ? tag.trim().slice(0, 120)
+        : `offgrid:${safeUrl}:${Date.now()}`;
 
     const hasTargetedUsers = user_ids && Array.isArray(user_ids) && user_ids.length > 0;
     const hasOperationalAlert =
@@ -113,16 +117,21 @@ Deno.serve(async (req: Request) => {
     const authUser = authData.user ?? null;
 
     const role = authUser?.app_metadata?.portal_role as string | undefined;
-    const isStaffOrAdmin = isServiceRole || role === "admin" || role === "staff";
+    let isStaffOrAdmin = isServiceRole || role === "admin" || role === "staff";
 
     let callerPortalId: string | null = null;
+    let callerPortalRole: string | null = null;
     if (authUser) {
       const { data: portalRow } = await adminClient
         .from("og_portal_users")
-        .select("id")
+        .select("id, role")
         .eq("auth_user_id", authUser.id)
         .maybeSingle();
       callerPortalId = portalRow?.id ?? null;
+      callerPortalRole = portalRow?.role ?? null;
+      if (!isStaffOrAdmin && (callerPortalRole === "admin" || callerPortalRole === "staff")) {
+        isStaffOrAdmin = true;
+      }
     }
 
     let targetUserIds: string[] | null = null;
@@ -225,7 +234,12 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const payloadStr = JSON.stringify({ title: safeTitle, body: safeBody, url: safeUrl });
+    const payloadStr = JSON.stringify({
+      title: safeTitle,
+      body: safeBody,
+      url: safeUrl,
+      tag: safeTag,
+    });
 
     let sent = 0;
     let failed = 0;

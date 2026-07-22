@@ -1,6 +1,7 @@
 import { notificationService } from "@/src/services/notificationService";
 import { sendPushNotification, type OperationalAlertType } from "@/src/lib/pushSubscription";
 import { operationalPushUrl } from "@/src/lib/pushAuth";
+import { buildWebPushTag } from "@/src/lib/pushPayload";
 import { logger } from "@/src/lib/logger";
 
 export interface NotifyPayload {
@@ -8,6 +9,8 @@ export interface NotifyPayload {
   body: string;
   url?: string;
   category?: string;
+  /** Optional dedupe key so rapid same-order pushes do not collapse in the OS tray. */
+  tagKey?: string;
 }
 
 /** Persist in-app notification and send Web Push when subscribed. */
@@ -25,6 +28,7 @@ export async function notifyUser(userId: string, payload: NotifyPayload): Promis
       title: payload.title,
       body: payload.body,
       url: payload.url,
+      tag: buildWebPushTag(payload.url ?? "/", payload.tagKey),
       userIds: [userId],
     });
   } catch (err) {
@@ -72,6 +76,7 @@ export async function notifyStaffOrderEvent(orderId: string, event: StaffOrderEv
       title: payload.title,
       body: payload.body,
       url: payload.url,
+      tag: buildWebPushTag(payload.url ?? "/", `${event}-${orderId}`),
       operationalAlert: { orderId, alertType: event as OperationalAlertType },
     });
   } catch (err) {

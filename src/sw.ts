@@ -87,20 +87,35 @@ self.addEventListener("push", (event) => {
       body?: string;
       url?: string;
       icon?: string;
+      tag?: string;
     };
 
     const title = payload.title ?? "OffGrid Lifestyle";
     const path = payload.url ?? "/";
-    const options: NotificationOptions = {
+    const tag =
+      typeof payload.tag === "string" && payload.tag.trim()
+        ? payload.tag.trim().slice(0, 120)
+        : `offgrid:${path}:${Date.now()}`;
+    const options: NotificationOptions & { renotify?: boolean } = {
       body: payload.body ?? "",
       icon: payload.icon ?? "/favicon_io/android-chrome-192x192.png",
       badge: "/favicon_io/favicon-32x32.png",
       data: { url: path },
-      // Unique per deep-link so concurrent order alerts do not collapse on Android.
-      tag: path === "/" ? `offgrid-${Date.now()}` : `offgrid:${path}`,
+      tag,
+      // Ensure rapid same-order updates still surface in the OS tray.
+      renotify: true,
     };
 
-    event.waitUntil(self.registration.showNotification(title, options));
+    event.waitUntil(
+      Promise.all([
+        self.registration.showNotification(title, options),
+        self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+          for (const client of clients) {
+            client.postMessage({ type: "OG_PUSH_RECEIVED", url: path, title, body: options.body });
+          }
+        }),
+      ]),
+    );
   } catch {
     const text = event.data.text();
     event.waitUntil(
@@ -108,29 +123,37 @@ self.addEventListener("push", (event) => {
         body: text,
         icon: "/favicon_io/android-chrome-192x192.png",
         tag: `offgrid-${Date.now()}`,
-      }),
+        renotify: true,
+      } as NotificationOptions),
     );
   }
 });
 
-// Notification click — open the target URL (absolute URL required for Safari)
+// Notification click — focus an open tab and navigate to the deep link.
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const rawUrl = (event.notification.data as { url?: string })?.url ?? "/";
   const targetUrl = absoluteNotificationUrl(rawUrl, self.location.origin);
 
   event.waitUntil(
-    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((windowClients) => {
+    (async () => {
+      const windowClients = await self.clients.matchAll({
+        type: "window",
+        includeUncontrolled: true,
+      });
       for (const client of windowClients) {
-        const clientPath = new URL(client.url).pathname;
-        const targetPath = new URL(targetUrl).pathname;
-        if (clientPath === targetPath && "focus" in client) {
-          return client.focus();
+        if (!("focus" in client)) continue;
+        await client.focus();
+        const navClient = client as WindowClient & { navigate?: (url: string) => Promise<WindowClient | null> };
+        if (typeof navClient.navigate === "function") {
+          return navClient.navigate(targetUrl);
         }
+        client.postMessage({ type: "OG_NAVIGATE", url: rawUrl });
+        return client;
       }
       if (self.clients.openWindow) {
         return self.clients.openWindow(targetUrl);
       }
-    }),
+    })(),
   );
 });

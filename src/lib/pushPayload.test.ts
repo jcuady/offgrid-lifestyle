@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { absoluteNotificationUrl } from "./pushPayload";
+import { absoluteNotificationUrl, buildWebPushTag } from "./pushPayload";
 import { safeNavigationUrl } from "./safeUrl";
 
 describe("pushPayload", () => {
@@ -14,5 +14,13 @@ describe("pushPayload", () => {
       "https://offgrid-lifestyle.vercel.app/",
     );
     expect(safeNavigationUrl("//evil.com/phish")).toBe("/");
+  });
+
+  it("builds unique tags so same-order events do not collapse", () => {
+    const a = buildWebPushTag("/account/orders/OG-1", "order_confirmed");
+    const b = buildWebPushTag("/account/orders/OG-1", "shipped");
+    expect(a).not.toBe(b);
+    expect(a).toContain("/account/orders/OG-1");
+    expect(a).toContain("order_confirmed");
   });
 });

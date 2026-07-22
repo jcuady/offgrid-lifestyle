@@ -199,6 +199,7 @@ export async function sendPushNotification(params: {
   title: string;
   body: string;
   url?: string;
+  tag?: string;
   userIds?: string[];
   operationalAlert?: { orderId: string; alertType: OperationalAlertType };
 }): Promise<{ sent: number; failed: number }> {
@@ -217,6 +218,7 @@ export async function sendPushNotification(params: {
       title: params.title,
       body: params.body,
       url: params.url,
+      tag: params.tag,
       user_ids: params.userIds,
       operational_alert: params.operationalAlert
         ? {

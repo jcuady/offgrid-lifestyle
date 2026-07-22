@@ -18,6 +18,7 @@ import { usePortalStore, getPortalLandingByRole } from "./store/usePortalStore";
 import { RequirePortalRole } from "./components/portal/RequirePortalRole";
 import { CookieConsentBanner } from "./components/consent/CookieConsentBanner";
 import { PushPermissionPrompt } from "./components/notifications/PushPermissionPrompt";
+import { PushNavigateListener } from "./components/notifications/PushNavigateListener";
 import { PwaInstallModal } from "./components/pwa/PwaInstallModal";
 import { PwaUpdateBanner } from "./components/pwa/PwaUpdateBanner";
 import { CustomTeamOrderModal } from "./components/CustomTeamOrderModal";
@@ -187,6 +188,7 @@ function AppFrame() {
       <RouteSeo />
       <GoogleAnalytics />
       <ScrollToTop />
+      <PushNavigateListener />
       {!hideStorefrontChrome && <Navbar />}
       <Suspense
         fallback={

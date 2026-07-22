@@ -52,6 +52,7 @@ export async function notifyCustomerOrderEvent(
         body,
         url: `/account/orders/${orderId}`,
         category: "order",
+        tagKey: `${event}-${Date.now()}`,
       });
       logger.info("Customer notification sent", {
         operation: "notifyCustomerOrderEvent",

@@ -7,6 +7,8 @@ import { useStore } from "@/src/store/store";
 import { PortalPageHeader } from "@/src/components/portal/PortalPageHeader";
 import { useEnsureOrdersLoaded } from "@/src/hooks/useEnsureOrdersLoaded";
 import { NotificationSettings } from "@/src/components/settings/NotificationSettings";
+import { ChangePasswordForm } from "@/src/components/account/ChangePasswordForm";
+import { ChangeEmailForm } from "@/src/components/account/ChangeEmailForm";
 
 interface OperationsDashboardPageProps {
   role: UserRole;
@@ -106,8 +108,12 @@ export function OperationsDashboardPage({ role }: OperationsDashboardPageProps) 
       </div>
 
       {role === "staff" ? (
-        <div className="mt-6">
-          <NotificationSettings />
+        <div className="mt-6 grid gap-5 lg:grid-cols-2">
+          <ChangeEmailForm />
+          <ChangePasswordForm />
+          <div className="lg:col-span-2">
+            <NotificationSettings />
+          </div>
         </div>
       ) : null}
     </div>

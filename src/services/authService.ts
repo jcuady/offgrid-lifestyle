@@ -31,7 +31,10 @@ export interface AuthService {
     code?: "email_exists";
   }>;
   requestPasswordReset: (email: string, audience?: PasswordResetAudience) => Promise<{ ok: boolean; message?: string }>;
+  /** Re-authenticate with the current account password (no audit side effects). */
+  verifyPassword: (password: string) => Promise<{ ok: boolean; message?: string }>;
   updatePassword: (newPassword: string) => Promise<{ ok: boolean; message?: string }>;
+  updateEmail: (newEmail: string) => Promise<{ ok: boolean; message?: string }>;
   logout: () => Promise<void>;
 }
 
@@ -46,10 +49,18 @@ async function ensurePortalUserRow(user: User): Promise<PortalUser | null> {
     .maybeSingle();
 
   if (existing) {
+    const authEmail = (user.email ?? existing.email).trim().toLowerCase();
+    if (authEmail && authEmail !== existing.email.toLowerCase()) {
+      // Keep portal directory in sync after confirmed email changes.
+      await supabase
+        .from("og_portal_users")
+        .update({ email: authEmail })
+        .eq("id", existing.id);
+    }
     return {
       id: existing.id,
       name: existing.name,
-      email: existing.email,
+      email: authEmail || existing.email,
       role: existing.role as UserRole,
     };
   }
@@ -262,6 +273,60 @@ export const supabaseAuthService: AuthService = {
     return { ok: true };
   },
 
+  verifyPassword: async (password) => {
+    const email = usePortalStore.getState().currentUser?.email;
+    if (!email) {
+      return { ok: false, message: "You must be signed in." };
+    }
+    if (!password) {
+      return { ok: false, message: "Enter your current password." };
+    }
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (error) {
+      return { ok: false, message: "Current password is incorrect." };
+    }
+    return { ok: true };
+  },
+
+  updateEmail: async (newEmail) => {
+    const normalized = newEmail.trim().toLowerCase();
+    if (!isValidEmail(normalized)) {
+      return { ok: false, message: "Enter a valid email address." };
+    }
+    const current = usePortalStore.getState().currentUser?.email?.trim().toLowerCase();
+    if (current && normalized === current) {
+      return { ok: false, message: "New email must be different from your current email." };
+    }
+
+    const { data, error } = await supabase.auth.updateUser({ email: normalized });
+    if (error) {
+      return { ok: false, message: error.message.trim() || "Unable to update email. Please try again." };
+    }
+
+    // Immediate email change (no confirm) — sync portal row now.
+    // Confirm-required flows keep the old email until the user clicks the link.
+    const confirmedEmail = data.user?.email?.trim().toLowerCase();
+    if (confirmedEmail === normalized) {
+      const portalId = usePortalStore.getState().currentUser?.id;
+      if (portalId) {
+        await supabase.from("og_portal_users").update({ email: normalized }).eq("id", portalId);
+        const user = usePortalStore.getState().currentUser;
+        if (user) {
+          usePortalStore.getState().setCurrentUser({ ...user, email: normalized });
+        }
+      }
+      return { ok: true, message: "Email updated." };
+    }
+
+    return {
+      ok: true,
+      message: "Check your new inbox to confirm the email change, then sign in with the new address.",
+    };
+  },
+
   logout: async () => {
     const user = usePortalStore.getState().currentUser;
     if (user) {
@@ -298,7 +363,7 @@ export async function initAuthListener() {
   supabase.auth.onAuthStateChange(async (event) => {
     if (event === "SIGNED_OUT") {
       usePortalStore.getState().setCurrentUser(null);
-    } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+    } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
       const user = await resolvePortalUser();
       usePortalStore.getState().setCurrentUser(user);
       if (event === "SIGNED_IN" && user) {

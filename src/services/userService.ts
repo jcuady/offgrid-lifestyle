@@ -23,6 +23,7 @@ export interface UpdateUserInput {
 
 async function callManageUser(body: Record<string, unknown>): Promise<{ ok: boolean; message?: string; id?: string }> {
   const projectUrl = import.meta.env.VITE_SUPABASE_URL;
+  const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
   const session = (await supabase.auth.getSession()).data.session;
   if (!session) {
     return { ok: false, message: "You must be signed in as admin." };
@@ -34,6 +35,7 @@ async function callManageUser(body: Record<string, unknown>): Promise<{ ok: bool
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${session.access_token}`,
+        ...(anonKey ? { apikey: anonKey } : {}),
       },
       body: JSON.stringify(body),
     });

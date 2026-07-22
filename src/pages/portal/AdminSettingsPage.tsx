@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import { PortalPageHeader } from "@/src/components/portal/PortalPageHeader";
 import { NotificationSettings } from "@/src/components/settings/NotificationSettings";
+import { ChangePasswordForm } from "@/src/components/account/ChangePasswordForm";
+import { ChangeEmailForm } from "@/src/components/account/ChangeEmailForm";
 import { usePortalStore } from "@/src/store/usePortalStore";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { cn } from "@/src/lib/utils";
@@ -129,9 +131,13 @@ export function AdminSettingsPage() {
           </span>
         </div>
         <p className="mt-4 text-xs text-offgrid-green/55">
-          Manage staff and customer credentials in the Staff area. Use forgot password on the storefront or portal sign-in
-          pages for self-service resets.
+          Change your own email or password below. Manage other staff and customer credentials in Staff.
         </p>
+      </section>
+
+      <section className="mb-8 grid gap-5 lg:grid-cols-2">
+        <ChangeEmailForm />
+        <ChangePasswordForm />
       </section>
 
       <section className="mb-8">

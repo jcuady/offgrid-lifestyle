@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/src/components/ui/Button";
 import { PasswordField } from "@/src/components/ui/PasswordField";
+import { validateChangePasswordInput } from "@/src/lib/accountCredentials";
 import { localAuthService } from "@/src/services";
 
 export function ChangePasswordForm() {
@@ -15,26 +16,21 @@ export function ChangePasswordForm() {
     setError(null);
     setMessage(null);
 
-    if (newPassword.length < 8) {
-      setError("New password must be at least 8 characters.");
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      setError("Passwords do not match.");
+    const validationError = validateChangePasswordInput({
+      currentPassword,
+      newPassword,
+      confirmPassword,
+    });
+    if (validationError) {
+      setError(validationError);
       return;
     }
 
     setBusy(true);
     try {
-      const email = localAuthService.currentUser()?.email;
-      if (!email) {
-        setError("You must be signed in.");
-        return;
-      }
-
-      const loginCheck = await localAuthService.login(email, currentPassword);
+      const loginCheck = await localAuthService.verifyPassword(currentPassword);
       if (!loginCheck.ok) {
-        setError("Current password is incorrect.");
+        setError(loginCheck.message ?? "Current password is incorrect.");
         return;
       }
 

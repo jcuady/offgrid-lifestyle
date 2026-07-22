@@ -5,6 +5,7 @@ import { Button } from "@/src/components/ui/Button";
 import { AccountLayout } from "@/src/components/account/AccountLayout";
 import { NotificationSettings } from "@/src/components/settings/NotificationSettings";
 import { ChangePasswordForm } from "@/src/components/account/ChangePasswordForm";
+import { ChangeEmailForm } from "@/src/components/account/ChangeEmailForm";
 
 const fieldLabel = "text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/45";
 
@@ -59,6 +60,7 @@ export function CustomerProfilePage() {
         </section>
 
         <NotificationSettings />
+        <ChangeEmailForm />
         <ChangePasswordForm />
       </div>
     </AccountLayout>

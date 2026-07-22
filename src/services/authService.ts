@@ -13,6 +13,8 @@ import { usePortalStore, type PortalUser, type UserRole } from "@/src/store/useP
 import { linkPushSubscriptionToUser } from "@/src/lib/pushSubscription";
 import type { PasswordResetAudience } from "@/src/lib/passwordReset";
 import { passwordResetRedirectUrl } from "@/src/lib/passwordReset";
+import { authCallbackRedirectPath, classifyAuthCallback } from "@/src/lib/authCallbackRouting";
+import { markEmailConfirmHandoffTab } from "@/src/lib/authTabSync";
 import type { RegisterCustomerInput } from "@/src/types/portal";
 
 export interface AuthService {
@@ -161,7 +163,8 @@ export const supabaseAuthService: AuthService = {
     if (!isValidEmail(email)) return { ok: false, message: "Enter a valid email address." };
     if (passwordError) return { ok: false, message: passwordError };
 
-    const redirectTo = `${window.location.origin}/account/sign-in?confirmed=1`;
+    // After confirm, land on orders (session established from the email link).
+    const redirectTo = `${window.location.origin}/account/orders`;
     const { data, error } = await supabase.auth.signUp({
       email,
       password: input.password,
@@ -279,13 +282,18 @@ export const supabaseAuthService: AuthService = {
 
 /** Initialize auth state from existing session on app load. */
 export async function initAuthListener() {
-  // ponytail: Supabase recovery links may land on `/` (site URL fallback) instead of
-  // `/account/reset-password` when the redirect_to isn't allowlisted. Route any recovery
-  // hash to the dedicated reset page so the user picks a new password — never auto-signs in.
-  redirectIfRecoveryHash();
+  // Route signup confirm → /account/orders and recovery → /account/reset-password.
+  // Never treat signup tokens as password recovery.
+  redirectAuthCallback();
 
-  const portalUser = await resolvePortalUser();
-  usePortalStore.getState().setCurrentUser(portalUser);
+  try {
+    // Ensures PKCE/hash from the confirm-email link is exchanged before route guards run.
+    await supabase.auth.getSession();
+    const portalUser = await resolvePortalUser();
+    usePortalStore.getState().setCurrentUser(portalUser);
+  } finally {
+    usePortalStore.getState().setAuthHydrated(true);
+  }
 
   supabase.auth.onAuthStateChange(async (event) => {
     if (event === "SIGNED_OUT") {
@@ -300,19 +308,14 @@ export async function initAuthListener() {
   });
 }
 
-function redirectIfRecoveryHash(): void {
+function redirectAuthCallback(): void {
   if (typeof window === "undefined") return;
   const { pathname, hash, search } = window.location;
-  if (pathname === "/account/reset-password") return;
-
-  const isRecovery =
-    hash.includes("type=recovery") ||
-    hash.includes("access_token=") ||
-    new URLSearchParams(search).has("code");
-
-  if (!isRecovery) return;
-
-  // Preserve the full hash so ResetPasswordPage can verify the session.
-  const target = `/account/reset-password${hash || ""}`;
+  const kind = classifyAuthCallback({ pathname, hash, search });
+  if (kind === "signup_confirm") {
+    markEmailConfirmHandoffTab();
+  }
+  const target = authCallbackRedirectPath({ pathname, hash, search });
+  if (!target) return;
   window.location.replace(target);
 }

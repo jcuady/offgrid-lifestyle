@@ -142,6 +142,8 @@ function migrateManagedCustomOrderRecord(raw: unknown): ManagedCustomOrder {
 interface PortalState {
   demoAccounts: DemoAccount[];
   currentUser: PortalUser | null;
+  /** False until initAuthListener finishes (prevents auth-callback bounce to login). */
+  authHydrated: boolean;
   retailOrders: ManagedRetailOrder[];
   customOrders: ManagedCustomOrder[];
   paymentSettings: PaymentSettings;
@@ -149,6 +151,7 @@ interface PortalState {
   registeredCustomers: RegisteredCustomer[];
   auditLogs: AuditLogEntry[];
   setCurrentUser: (user: PortalUser | null) => void;
+  setAuthHydrated: (ready: boolean) => void;
   login: (email: string, password: string) => { ok: boolean; message?: string };
   loginAsRole: (role: UserRole) => void;
   registerCustomer: (input: RegisterCustomerInput) => { ok: boolean; message?: string; userId?: string };
@@ -231,6 +234,7 @@ export const usePortalStore = create<PortalState>()(
     (set, get) => ({
       demoAccounts: import.meta.env.DEV ? DEMO_ACCOUNTS : [],
       currentUser: null,
+      authHydrated: false,
       retailOrders: [],
       customOrders: [],
       paymentSettings: { ...DEFAULT_PAYMENT_SETTINGS },
@@ -239,6 +243,7 @@ export const usePortalStore = create<PortalState>()(
       auditLogs: [],
 
       setCurrentUser: (user) => set({ currentUser: user }),
+      setAuthHydrated: (ready) => set({ authHydrated: ready }),
 
       login: (email, password) => {
         const normalizedEmail = email.trim().toLowerCase();

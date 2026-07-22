@@ -11,7 +11,17 @@ interface RequirePortalRoleProps {
 /** Standard route guard — redirects unauthenticated users to the correct sign-in screen. */
 export function RequirePortalRole({ roles, children }: RequirePortalRoleProps) {
   const currentUser = usePortalStore((state) => state.currentUser);
+  const authHydrated = usePortalStore((state) => state.authHydrated);
   const location = useLocation();
+
+  // Wait for email-link session exchange before bouncing to login.
+  if (!authHydrated) {
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center bg-offgrid-cream px-6 text-sm text-offgrid-green/60">
+        Signing you in…
+      </div>
+    );
+  }
 
   if (!currentUser) {
     return (

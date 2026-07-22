@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Package2, ArrowRight, ShoppingBag, Sparkles, Truck, CheckCircle2 } from "lucide-react";
 import { formatMoney } from "@/src/types/commerce";
@@ -13,6 +13,11 @@ import {
   orderStatusClassCustomer,
   paymentStatusClassCustomer,
 } from "@/src/lib/portal";
+import {
+  announceEmailConfirmed,
+  consumeEmailConfirmHandoffTab,
+  hasPendingSignupPeer,
+} from "@/src/lib/authTabSync";
 import { usePortalStore } from "@/src/store/usePortalStore";
 import type { ManagedCustomOrder, ManagedRetailOrder } from "@/src/store/usePortalStore";
 import { Button } from "@/src/components/ui/Button";
@@ -35,9 +40,34 @@ const cardClass =
 export function CustomerOrdersPage() {
   useEnsureOrdersLoaded();
   const [filter, setFilter] = useState<OrderFilter>("all");
+  const [deferToOtherTab, setDeferToOtherTab] = useState(false);
   const user = usePortalStore((state) => state.currentUser);
   const retailOrders = usePortalStore((state) => state.retailOrders);
   const customOrders = usePortalStore((state) => state.customOrders);
+
+  useEffect(() => {
+    if (!consumeEmailConfirmHandoffTab()) return;
+    let cancelled = false;
+    void (async () => {
+      const peer = await hasPendingSignupPeer();
+      if (cancelled) return;
+      announceEmailConfirmed();
+      if (peer) {
+        setDeferToOtherTab(true);
+        // Email clients open a new tab — we cannot focus the signup tab, but we can ask this one to close.
+        window.setTimeout(() => {
+          try {
+            window.close();
+          } catch {
+            /* browsers block close unless script-opened */
+          }
+        }, 400);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const ownsOrder = (order: { customerId: string | null; customerEmail: string }) =>
     !!user &&
@@ -73,6 +103,21 @@ export function CustomerOrdersPage() {
   }, [filter, scopedRetail, scopedCustom]);
 
   const firstName = user?.name?.trim().split(/\s+/)[0];
+
+  if (deferToOtherTab) {
+    return (
+      <main className="flex min-h-[70vh] flex-col items-center justify-center bg-offgrid-cream px-6 text-center">
+        <CheckCircle2 className="mb-4 h-10 w-10 text-offgrid-lime" aria-hidden />
+        <h1 className="font-heading text-2xl font-black text-offgrid-green">Email confirmed</h1>
+        <p className="mt-2 max-w-md text-sm text-offgrid-green/65">
+          You&apos;re signed in on your other OffGrid tab. You can close this window.
+        </p>
+        <Button className="mt-6" onClick={() => setDeferToOtherTab(false)}>
+          Stay on this tab
+        </Button>
+      </main>
+    );
+  }
 
   return (
     <AccountLayout

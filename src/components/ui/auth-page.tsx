@@ -1,9 +1,10 @@
 import type { FormEvent, ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "motion/react";
-import { AtSignIcon, ChevronLeftIcon, LockKeyhole, Phone, UserRound } from "lucide-react";
+import { AtSignIcon, ChevronLeftIcon, Phone, UserRound } from "lucide-react";
 import { Button } from "./Button";
 import { Input } from "./input";
+import { PasswordField } from "./PasswordField";
 import { cn } from "@/src/lib/utils";
 import { LOGO_WORDMARK_WHITE } from "@/src/lib/brandAssets";
 
@@ -221,37 +222,24 @@ export function AuthPage({
 
             {!hidePassword ? (
             <Field label="Password" error={fieldErrors.password}>
-              <div className="relative">
-                <Input
-                  placeholder={mode === "sign-up" ? "At least 8 characters" : "Your password"}
-                  className="peer ps-9"
-                  type="password"
-                  autoComplete={mode === "sign-up" ? "new-password" : "current-password"}
-                  value={password}
-                  onChange={(e) => onPasswordChange(e.target.value)}
-                />
-                <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3 text-muted-foreground">
-                  <LockKeyhole className="size-4" aria-hidden />
-                </div>
-              </div>
+              <PasswordField
+                value={password}
+                onChange={onPasswordChange}
+                placeholder={mode === "sign-up" ? "At least 8 characters" : "Your password"}
+                autoComplete={mode === "sign-up" ? "new-password" : "current-password"}
+                showStrengthGuide={mode === "sign-up"}
+              />
             </Field>
             ) : null}
 
             {mode === "sign-up" && onConfirmPasswordChange ? (
               <Field label="Confirm password" error={fieldErrors.confirmPassword}>
-                <div className="relative">
-                  <Input
-                    placeholder="Re-enter password"
-                    className="peer ps-9"
-                    type="password"
-                    autoComplete="new-password"
-                    value={confirmPassword}
-                    onChange={(e) => onConfirmPasswordChange(e.target.value)}
-                  />
-                  <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3 text-muted-foreground">
-                    <LockKeyhole className="size-4" aria-hidden />
-                  </div>
-                </div>
+                <PasswordField
+                  value={confirmPassword}
+                  onChange={onConfirmPasswordChange}
+                  placeholder="Re-enter password"
+                  autoComplete="new-password"
+                />
               </Field>
             ) : null}
 

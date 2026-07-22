@@ -10,6 +10,7 @@ import {
 } from "@/src/lib/formValidation";
 import { AUTH_ACCOUNT_EXISTS } from "@/src/lib/authErrors";
 import { CUSTOMER_SIGN_IN_PATH } from "@/src/lib/authRoutes";
+import { subscribePendingSignupTab } from "@/src/lib/authTabSync";
 import { usePortalStore } from "@/src/store/usePortalStore";
 import { localAuthService } from "@/src/services";
 import { AuthPage } from "@/src/components/ui/auth-page";
@@ -40,6 +41,13 @@ export function CustomerSignUpPage() {
       navigate("/account/orders", { replace: true });
     }
   }, [currentUser, navigate]);
+
+  useEffect(() => {
+    if (!pendingEmail) return;
+    return subscribePendingSignupTab(() => {
+      navigate("/account/orders", { replace: true });
+    });
+  }, [pendingEmail, navigate]);
 
   const validate = (): boolean => {
     const next: typeof errors = {};
@@ -87,9 +95,11 @@ export function CustomerSignUpPage() {
       <AuthPage
         mode="sign-in"
         title="Check your email"
-        description={`We sent a confirmation link to ${pendingEmail}. Open it to activate your account, then sign in.`}
-        email={pendingEmail}
+        description={`We sent a confirmation link to ${pendingEmail}. Open it to activate your account — you'll land on your orders automatically.`}
+        email=""
         password=""
+        hideEmail
+        hidePassword
         onEmailChange={() => {}}
         onPasswordChange={() => {}}
         onSubmit={() => navigate(`${CUSTOMER_SIGN_IN_PATH}?email=${encodeURIComponent(pendingEmail)}`)}

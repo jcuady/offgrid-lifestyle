@@ -1,9 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/src/components/ui/Button";
+import { PasswordField } from "@/src/components/ui/PasswordField";
 import { localAuthService } from "@/src/services";
-
-const inputCls =
-  "w-full rounded-xl border border-offgrid-green/20 bg-white px-3.5 py-2.5 text-sm text-offgrid-green outline-none transition-colors focus:border-offgrid-lime/60 focus:ring-2 focus:ring-offgrid-lime/20";
 
 export function ChangePasswordForm() {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -67,11 +65,9 @@ export function ChangePasswordForm() {
           <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/50">
             Current password
           </label>
-          <input
-            type="password"
-            className={inputCls}
+          <PasswordField
             value={currentPassword}
-            onChange={(e) => setCurrentPassword(e.target.value)}
+            onChange={setCurrentPassword}
             autoComplete="current-password"
           />
         </div>
@@ -79,24 +75,23 @@ export function ChangePasswordForm() {
           <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/50">
             New password
           </label>
-          <input
-            type="password"
-            className={inputCls}
+          <PasswordField
             value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
+            onChange={setNewPassword}
             autoComplete="new-password"
+            placeholder="At least 8 characters"
+            showStrengthGuide
           />
         </div>
         <div>
           <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/50">
             Confirm new password
           </label>
-          <input
-            type="password"
-            className={inputCls}
+          <PasswordField
             value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
+            onChange={setConfirmPassword}
             autoComplete="new-password"
+            placeholder="Re-enter password"
           />
         </div>
       </div>

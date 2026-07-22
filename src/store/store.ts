@@ -143,6 +143,42 @@ export const useStore = create<StoreState>()(
       paymentMethod: state.paymentMethod,
     });
 
+    // PayMongo QR Ph: leave cart cleared locally then redirect to hosted checkout.
+    if (state.paymentMethod === "paymongo") {
+      const { createPayMongoCheckoutSession, redirectToPayMongoCheckout } = await import(
+        "@/src/lib/paymongo"
+      );
+      set({
+        orderId,
+        cart: [],
+        checkoutStep: 2,
+      });
+      try {
+        const session = await createPayMongoCheckoutSession({
+          orderId,
+          paymentKind: "full",
+          email: state.shippingInfo.email,
+        });
+        if (session.alreadyPaid) {
+          // ponytail: don't trust alreadyPaid for a freshly-placed order — throw a soft
+          // error so step 3 shows the retry UI. Edge Function may return alreadyPaid on
+          // a reused session; the retry page will reconcile the real payment status.
+          throw new Error("This order may already be paid. Tap Retry QR Ph payment to confirm.");
+        }
+        if (!session.checkoutUrl) {
+          throw new Error("PayMongo did not return a checkout URL.");
+        }
+        redirectToPayMongoCheckout(session.checkoutUrl);
+        return orderId;
+      } catch (err) {
+        // Keep order id so customer can retry from the retry page / account.
+        set({ orderId, checkoutStep: 3 });
+        throw err instanceof Error
+          ? err
+          : new Error("Order saved, but PayMongo checkout could not start. Use Retry payment.");
+      }
+    }
+
     set({
       orderId,
       checkoutStep: 3,

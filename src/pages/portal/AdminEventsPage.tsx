@@ -122,7 +122,7 @@ export function AdminEventsPage() {
     <div className="p-6 sm:p-8 lg:p-10">
       <PortalPageHeader
         eyebrow="Admin Events Control"
-        title="Events"
+        title="Events and Sports"
         description="Create and manage community events shown on the storefront."
         actions={
           <button

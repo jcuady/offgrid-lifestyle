@@ -16,4 +16,13 @@ describe("shopTaxonomy", () => {
     const discfest = SHOP_BY_COLLECTION.find((c) => c.label === "Discfest");
     expect(discfest?.category).toBe("Ultimate Frisbee");
   });
+
+  it("exposes four sport-led named drop entry points", () => {
+    expect(SHOP_BY_SPORT.map((s) => s.label)).toEqual([
+      "Ultimate Frisbee",
+      "Pickleball",
+      "Golf",
+      "Running",
+    ]);
+  });
 });

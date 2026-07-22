@@ -1,7 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { corsHeadersFor } from "../_shared/cors.ts";
-import { orderReceiptEmail, orderUpdateEmail } from "../_shared/emailTemplates.ts";
+import { orderReceiptEmail, orderUpdateEmail, paymentReceiptEmail } from "../_shared/emailTemplates.ts";
 import { buildOrderEmailContextFromRow, escapeHtml } from "../_shared/orderEmail.ts";
 import { sendViaResend } from "../_shared/resend.ts";
 
@@ -188,11 +188,36 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    if (!orderEmail) {
+    if (!orderEmail || orderEmail.endsWith("@offgrid.local")) {
       return new Response(JSON.stringify({ error: "Order has no customer email" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Dedup: one email per (order, event, payment_status) — webhook + sync + staff all share this.
+    const dedupePaymentStatus =
+      event === "payment_confirmed"
+        ? row.payment_status || ""
+        : RECEIPT_EVENTS.has(event)
+          ? "placed"
+          : "";
+    const shouldDedupe = event === "payment_confirmed" || RECEIPT_EVENTS.has(event);
+    if (shouldDedupe) {
+      const { error: claimErr } = await adminClient.from("og_order_email_log").insert({
+        order_id: orderId,
+        event,
+        payment_status: dedupePaymentStatus,
+      });
+
+      if (claimErr?.code === "23505") {
+        return new Response(JSON.stringify({ ok: true, duplicate: true }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (claimErr) {
+        console.error("og_order_email_log claim", claimErr);
+      }
     }
 
     const ctx = buildOrderEmailContextFromRow(row);
@@ -200,6 +225,8 @@ Deno.serve(async (req: Request) => {
 
     if (event === "order_receipt_retail" || event === "order_receipt_custom") {
       mail = orderReceiptEmail({ ...ctx, siteUrl });
+    } else if (event === "payment_confirmed") {
+      mail = paymentReceiptEmail({ ...ctx, siteUrl });
     } else {
       const copy = UPDATE_COPY[event as keyof typeof UPDATE_COPY];
       let extraHtml = "";
@@ -215,16 +242,28 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const result = await sendViaResend({
-      to: orderEmail,
-      subject: mail.subject,
-      html: mail.html,
-      text: mail.text,
-    });
+    try {
+      const result = await sendViaResend({
+        to: orderEmail,
+        subject: mail.subject,
+        html: mail.html,
+        text: mail.text,
+      });
 
-    return new Response(JSON.stringify({ ok: true, id: result.id }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+      return new Response(JSON.stringify({ ok: true, id: result.id }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    } catch (sendErr) {
+      if (shouldDedupe) {
+        await adminClient
+          .from("og_order_email_log")
+          .delete()
+          .eq("order_id", orderId)
+          .eq("event", event)
+          .eq("payment_status", dedupePaymentStatus);
+      }
+      throw sendErr;
+    }
   } catch (err) {
     const message = err instanceof Error ? err.message : "Internal server error";
     return new Response(JSON.stringify({ error: message }), {

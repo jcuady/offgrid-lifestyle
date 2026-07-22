@@ -41,7 +41,7 @@ export const DEFAULT_PAYMONGO_SETTINGS: PayMongoSettings = {
   mode: "test",
   publicKey: "",
   checkoutDescription:
-    "Pay securely with GCash, Maya, GrabPay, or card via PayMongo. You will be redirected to complete payment.",
+    "Pay with QR Ph via PayMongo. OFFGRID absorbs the processing fee — you pay the order total only.",
 };
 
 /** Checkout-time config passed to payment validators (maps to `og_payment_settings`). */
@@ -68,8 +68,8 @@ export const RETAIL_PAYMENT_METHODS: RetailPaymentMethodMeta[] = [
   },
   {
     id: "paymongo",
-    label: "PayMongo",
-    description: "GCash, Maya, GrabPay & cards — instant online checkout",
+    label: "PayMongo QR Ph",
+    description: "Scan QR Ph to pay — fee absorbed by OFFGRID",
     comingSoon: true,
     provider: "paymongo",
   },
@@ -122,7 +122,7 @@ export function validateRetailPaymentMethod(method: string, config: CheckoutPaym
     return "Cash on delivery is coming soon. Pay via GCash or PayMongo.";
   }
   if (method === "paymongo") {
-    return "PayMongo checkout is coming soon. Pay via GCash for now.";
+    return "PayMongo QR Ph is not available yet. Pay via GCash for now.";
   }
   return "This payment method is not available.";
 }

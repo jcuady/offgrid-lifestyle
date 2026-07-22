@@ -8,6 +8,7 @@ import {
   validatePassword,
   validateTermsAccepted,
 } from "@/src/lib/formValidation";
+import { AUTH_ACCOUNT_EXISTS } from "@/src/lib/authErrors";
 import { CUSTOMER_SIGN_IN_PATH } from "@/src/lib/authRoutes";
 import { usePortalStore } from "@/src/store/usePortalStore";
 import { localAuthService } from "@/src/services";
@@ -57,19 +58,24 @@ export function CustomerSignUpPage() {
   const handleSubmit = async () => {
     if (!validate()) return;
 
+    const normalizedEmail = email.trim().toLowerCase();
     const result = await localAuthService.registerCustomer({
       name: name.trim(),
       phone: normalizePhilippinePhone(phone),
-      email: email.trim().toLowerCase(),
+      email: normalizedEmail,
       password,
     });
     if (!result.ok) {
-      setErrors({ form: result.message ?? "Unable to create account." });
+      const exists = result.code === "email_exists" || result.message === AUTH_ACCOUNT_EXISTS;
+      setErrors({
+        email: exists ? AUTH_ACCOUNT_EXISTS : undefined,
+        form: result.message ?? "Unable to create account.",
+      });
       return;
     }
 
     if (result.emailConfirmationRequired) {
-      setPendingEmail(email);
+      setPendingEmail(normalizedEmail);
       return;
     }
 
@@ -86,7 +92,7 @@ export function CustomerSignUpPage() {
         password=""
         onEmailChange={() => {}}
         onPasswordChange={() => {}}
-        onSubmit={() => navigate(CUSTOMER_SIGN_IN_PATH)}
+        onSubmit={() => navigate(`${CUSTOMER_SIGN_IN_PATH}?email=${encodeURIComponent(pendingEmail)}`)}
         submitLabel="Go to sign in"
         alternateLink={{
           prompt: "Didn't receive the email?",
@@ -96,6 +102,10 @@ export function CustomerSignUpPage() {
       />
     );
   }
+
+  const signInHref = email.trim()
+    ? `${CUSTOMER_SIGN_IN_PATH}?email=${encodeURIComponent(email.trim().toLowerCase())}`
+    : CUSTOMER_SIGN_IN_PATH;
 
   return (
     <AuthPage
@@ -109,7 +119,10 @@ export function CustomerSignUpPage() {
       confirmPassword={confirmPassword}
       onNameChange={setName}
       onPhoneChange={(value) => setPhone(formatPhilippinePhoneInput(value))}
-      onEmailChange={setEmail}
+      onEmailChange={(value) => {
+        setEmail(value);
+        if (errors.email || errors.form) setErrors((prev) => ({ ...prev, email: undefined, form: undefined }));
+      }}
       onPasswordChange={setPassword}
       onConfirmPasswordChange={setConfirmPassword}
       acceptedTerms={acceptedTerms}
@@ -119,7 +132,7 @@ export function CustomerSignUpPage() {
       alternateLink={{
         prompt: "Already have an account?",
         label: "Sign in",
-        href: CUSTOMER_SIGN_IN_PATH,
+        href: signInHref,
       }}
     />
   );

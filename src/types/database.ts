@@ -399,6 +399,7 @@ export type Database = {
           id: string
           last_login_at: string | null
           name: string
+          phone: string | null
           role: string
           status: string
           updated_at: string
@@ -411,6 +412,7 @@ export type Database = {
           id?: string
           last_login_at?: string | null
           name: string
+          phone?: string | null
           role: string
           status?: string
           updated_at?: string
@@ -423,6 +425,7 @@ export type Database = {
           id?: string
           last_login_at?: string | null
           name?: string
+          phone?: string | null
           role?: string
           status?: string
           updated_at?: string
@@ -696,6 +699,57 @@ export type Database = {
           id?: string
           updated_at?: string
           updated_by?: string | null
+        }
+        Relationships: []
+      }
+      og_testimonials: {
+        Row: {
+          author: string
+          created_at: string
+          featured: boolean
+          handle: string
+          id: string
+          image: string
+          location: string
+          outcome: string
+          published: boolean
+          quote: string
+          rating: number
+          sort_order: number
+          tag: string
+          updated_at: string
+        }
+        Insert: {
+          author?: string
+          created_at?: string
+          featured?: boolean
+          handle?: string
+          id: string
+          image?: string
+          location?: string
+          outcome?: string
+          published?: boolean
+          quote?: string
+          rating?: number
+          sort_order?: number
+          tag?: string
+          updated_at?: string
+        }
+        Update: {
+          author?: string
+          created_at?: string
+          featured?: boolean
+          handle?: string
+          id?: string
+          image?: string
+          location?: string
+          outcome?: string
+          published?: boolean
+          quote?: string
+          rating?: number
+          sort_order?: number
+          tag?: string
+          updated_at?: string
         }
         Relationships: []
       }

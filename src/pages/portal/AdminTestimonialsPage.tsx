@@ -170,19 +170,21 @@ export function AdminTestimonialsPage() {
         </CmsSectionPanel>
 
         {page.showcase.tiles.map((tile, index) => (
-          <CmsSectionPanel key={index} title={`Showcase tile ${index + 1}`}>
-            <CmsField label="Image" className="sm:col-span-2">
-              <CmsImageInput
-                value={tile.image}
-                onChange={(v) => updateShowcaseTile(index, { image: v })}
-                alt={`Showcase tile ${index + 1}`}
-                uploadSection="testimonials-showcase"
-              />
-            </CmsField>
-            <CmsField label="Label">
-              <CmsTextInput value={tile.label} onChange={(v) => updateShowcaseTile(index, { label: v })} />
-            </CmsField>
-          </CmsSectionPanel>
+          <div key={index}>
+            <CmsSectionPanel title={`Showcase tile ${index + 1}`}>
+              <CmsField label="Image" className="sm:col-span-2">
+                <CmsImageInput
+                  value={tile.image}
+                  onChange={(v) => updateShowcaseTile(index, { image: v })}
+                  alt={`Showcase tile ${index + 1}`}
+                  uploadSection="testimonials-showcase"
+                />
+              </CmsField>
+              <CmsField label="Label">
+                <CmsTextInput value={tile.label} onChange={(v) => updateShowcaseTile(index, { label: v })} />
+              </CmsField>
+            </CmsSectionPanel>
+          </div>
         ))}
 
         <CmsSectionPanel title="Wall section copy">

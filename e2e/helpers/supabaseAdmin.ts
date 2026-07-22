@@ -1,5 +1,5 @@
 import { config } from "dotenv";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type User } from "@supabase/supabase-js";
 
 config();
 
@@ -25,7 +25,7 @@ async function setCustomerEmailConfirmed(email: string, confirmed: boolean): Pro
   const { data, error } = await admin.auth.admin.listUsers({ perPage: 200 });
   if (error) throw error;
 
-  const user = data.users.find((u) => u.email?.toLowerCase() === email.toLowerCase());
+  const user = (data.users as User[]).find((u) => u.email?.toLowerCase() === email.toLowerCase());
   if (!user) throw new Error(`Test user not found: ${email}`);
 
   const { error: updateError } = await admin.auth.admin.updateUserById(user.id, {
@@ -47,7 +47,7 @@ export async function deleteCustomerByEmail(email: string): Promise<void> {
   const { data, error } = await admin.auth.admin.listUsers({ perPage: 200 });
   if (error) throw error;
 
-  const user = data.users.find((u) => u.email?.toLowerCase() === email.toLowerCase());
+  const user = (data.users as User[]).find((u) => u.email?.toLowerCase() === email.toLowerCase());
   if (!user) return;
 
   const { error: deleteError } = await admin.auth.admin.deleteUser(user.id);

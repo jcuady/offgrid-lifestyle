@@ -6,10 +6,10 @@ describe("resolveRouteSeo", () => {
     const paths = [
       "/",
       "/shop",
-      "/og-signatures",
+      "/collections",
       "/custom",
       "/custom/order",
-      "/events",
+      "/community",
       "/testimonials",
       "/about",
       "/contact",

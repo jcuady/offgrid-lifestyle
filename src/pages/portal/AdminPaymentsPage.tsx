@@ -75,7 +75,7 @@ export function AdminPaymentsPage() {
       <PortalPageHeader
         eyebrow="Payments"
         title="Checkout payments"
-        description="GCash is live at checkout. PayMongo and COD are prepared — enable each in admin when ready."
+        description="GCash and PayMongo QR Ph are available at checkout when enabled. COD stays optional."
         actions={
           <Button variant="outline" size="sm" className="gap-2" asChild>
             <Link to="/shop" target="_blank" rel="noreferrer">
@@ -171,12 +171,12 @@ export function AdminPaymentsPage() {
 
       <div className="mt-10">
       <CmsSectionPanel
-        title="PayMongo (coming soon)"
-        description="Prepared for hosted checkout — GCash, Maya, GrabPay, and cards. Maps to og_payment_settings in Supabase."
+        title="PayMongo QR Ph"
+        description="Hosted Checkout with QR Ph only. OFFGRID sets pass_on_fees=false so customers pay the order total; we absorb the fee."
       >
         <CmsField
           label="Enable PayMongo at checkout"
-          hint="Leave off until your server creates PayMongo Checkout Sessions. Customers see PayMongo as “Coming soon” while disabled."
+          hint="Requires Edge Function create-paymongo-checkout + webhook. Public key must be set (pk_test_* / pk_live_*)."
         >
           <label className="mt-2 flex cursor-pointer items-center gap-2 text-sm text-offgrid-green">
             <input
@@ -217,26 +217,28 @@ export function AdminPaymentsPage() {
           />
         </CmsField>
 
-        <CmsField label="Webhook endpoint (production)" className="sm:col-span-2">
-          <p className="mt-2 rounded-xl border border-offgrid-green/10 bg-offgrid-cream/50 px-4 py-3 font-mono text-xs text-offgrid-green/80">
-            {typeof window !== "undefined" ? `${window.location.origin}${paymongoWebhookPath()}` : paymongoWebhookPath()}
+        <CmsField label="Webhook endpoint (Supabase Edge)" className="sm:col-span-2">
+          <p className="mt-2 break-all rounded-xl border border-offgrid-green/10 bg-offgrid-cream/50 px-4 py-3 font-mono text-xs text-offgrid-green/80">
+            {paymongoWebhookPath()}
           </p>
           <p className="mt-2 text-[10px] text-offgrid-green/50">
-            Register this URL in PayMongo Dashboard. Verify with PAYMONGO_WEBHOOK_SECRET server env. Events update{" "}
-            <code className="text-offgrid-green/70">og_payment_transactions</code>.
+            Register this URL in PayMongo Dashboard (checkout_session.payment.paid, payment.paid, payment.failed).
+            Store the signing secret as Edge secret <code className="text-offgrid-green/70">PAYMONGO_WEBHOOK_SECRET</code>{" "}
+            or Vault <code className="text-offgrid-green/70">paymongo_webhook_secret</code>.
           </p>
         </CmsField>
       </CmsSectionPanel>
       </div>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2">
-        <div className="rounded-2xl border border-offgrid-gold/25 bg-offgrid-gold/[0.06] p-5 sm:p-6">
+        <div className="rounded-2xl border border-offgrid-lime/25 bg-offgrid-lime/[0.06] p-5 sm:p-6">
           <div className="flex items-start gap-3">
-            <Zap className="mt-0.5 h-5 w-5 shrink-0 text-offgrid-gold" />
+            <Zap className="mt-0.5 h-5 w-5 shrink-0 text-offgrid-lime" />
             <div className="space-y-2 text-sm text-offgrid-green/80">
-              <p className="font-semibold text-offgrid-green">PayMongo — coming soon</p>
+              <p className="font-semibold text-offgrid-green">PayMongo QR Ph</p>
               <p className="text-xs">
-                Enable after server checkout + webhook. Supports GCash, Maya, GrabPay, and cards online.
+                Retail checkout redirects to hosted QR Ph. Custom deposits and balances pay from My orders. Processing
+                fees are absorbed by OFFGRID.
               </p>
             </div>
           </div>
@@ -245,7 +247,7 @@ export function AdminPaymentsPage() {
           <div className="flex items-start gap-3">
             <Banknote className="mt-0.5 h-5 w-5 shrink-0 text-offgrid-gold" />
             <div className="space-y-2 text-sm text-offgrid-green/80">
-              <p className="font-semibold text-offgrid-green">COD — coming soon</p>
+              <p className="font-semibold text-offgrid-green">COD — optional</p>
               <p className="text-xs">
                 Enable when courier cash-on-delivery is ready. Orders use <code className="text-[10px]">payment_method = cod</code>.
               </p>

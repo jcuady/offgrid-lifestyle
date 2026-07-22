@@ -35,6 +35,40 @@ describe("normalizeLandingContent", () => {
     expect(merged.faq.items).toHaveLength(initialLandingContent.faq.items.length);
     expect(merged.typography.hero).toEqual({});
   });
+
+  it("preserves an arbitrary team roster and assigns stable fallback ids", () => {
+    const teams = Array.from({ length: 7 }, (_, index) => ({
+      name: `Team ${index + 1}`,
+      sport: index % 2 ? "Pickleball" : "Ultimate Frisbee",
+    }));
+    const partial = {
+      teamCommunity: {
+        ...initialLandingContent.teamCommunity,
+        teams,
+      },
+    } as unknown as Partial<LandingContent>;
+
+    const merged = normalizeLandingContent(partial);
+
+    expect(merged.teamCommunity.teams).toHaveLength(7);
+    expect(merged.teamCommunity.teams[0]).toEqual({
+      id: "team-1",
+      name: "Team 1",
+      sport: "Ultimate Frisbee",
+    });
+    expect(merged.teamCommunity.teams[6].name).toBe("Team 7");
+  });
+
+  it("preserves an intentionally empty team roster", () => {
+    const merged = normalizeLandingContent({
+      teamCommunity: {
+        ...initialLandingContent.teamCommunity,
+        teams: [],
+      },
+    });
+
+    expect(merged.teamCommunity.teams).toEqual([]);
+  });
 });
 
 describe("cmsImageUpload", () => {

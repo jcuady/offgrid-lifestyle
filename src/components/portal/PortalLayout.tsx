@@ -62,7 +62,7 @@ const navByRole: Record<Exclude<UserRole, "customer">, NavSection[]> = {
         { name: "Products", to: "/portal/admin/products", icon: Package },
         { name: "Reviews", to: "/portal/admin/reviews", icon: MessageSquare },
         { name: "Payments", to: "/portal/admin/payments", icon: QrCode },
-        { name: "Events", to: "/portal/admin/events", icon: CalendarDays },
+        { name: "Events and Sports", to: "/portal/admin/events", icon: CalendarDays },
       ],
     },
     {

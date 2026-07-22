@@ -10,6 +10,7 @@ export type AuditAction =
   | "staff.deactivated"
   | "staff.reactivated"
   | "staff.password_reset"
+  | "staff.email_changed"
   | "staff.updated"
   | "order.retail_status_changed"
   | "order.retail_payment_changed"

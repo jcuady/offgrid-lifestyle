@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { cn } from "@/src/lib/utils";
 import { CUSTOMER_SIGN_IN_PATH, PORTAL_FORGOT_PASSWORD_PATH } from "@/src/lib/authRoutes";
+import { isValidEmail } from "@/src/lib/formValidation";
 import {
   getPortalLandingByRole,
   resolvePostLoginPath,
@@ -44,7 +45,16 @@ export function PortalLoginPage() {
 
   const handleSubmit = async () => {
     setError(null);
-    const result = await localAuthService.login(email, password);
+    if (!isValidEmail(email)) {
+      setError("Enter a valid email address.");
+      return;
+    }
+    if (!password) {
+      setError("Enter your password.");
+      return;
+    }
+
+    const result = await localAuthService.login(email.trim().toLowerCase(), password);
     if (!result.ok) {
       setError(result.message ?? "Unable to sign in.");
       return;

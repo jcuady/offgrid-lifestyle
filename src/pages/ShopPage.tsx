@@ -72,7 +72,7 @@ export function ShopPage() {
   };
 
   const categories = useMemo(() => {
-    const unique = [...new Set(products.flatMap(getProductSports))].sort(compareSports);
+    const unique = Array.from(new Set<string>(products.flatMap(getProductSports))).sort(compareSports);
     return [
       { value: "all", label: "All Products", count: products.length },
       ...unique.map((cat) => ({

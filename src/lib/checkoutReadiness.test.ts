@@ -131,7 +131,7 @@ describe("payment gateway readiness — payment methods", () => {
 
   it("blocks COD and PayMongo until admin enables them", () => {
     expect(validateRetailPaymentMethod("cod", disabledConfig)).toMatch(/coming soon/i);
-    expect(validateRetailPaymentMethod("paymongo", disabledConfig)).toMatch(/coming soon/i);
+    expect(validateRetailPaymentMethod("paymongo", disabledConfig)).toMatch(/not available|GCash/i);
   });
 
   it("allows PayMongo when enabled with public key", () => {

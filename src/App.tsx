@@ -110,6 +110,12 @@ const AdminEventsPage = lazy(() =>
 const AdminPaymentsPage = lazy(() =>
   import("./pages/portal/AdminPaymentsPage").then((m) => ({ default: m.AdminPaymentsPage })),
 );
+const PayMongoCompletePage = lazy(() =>
+  import("./pages/PayMongoReturnPage").then((m) => ({ default: m.PayMongoCompletePage })),
+);
+const PayMongoRetryPage = lazy(() =>
+  import("./pages/PayMongoReturnPage").then((m) => ({ default: m.PayMongoRetryPage })),
+);
 const AdminCustomContentPage = lazy(() =>
   import("./pages/portal/AdminCustomContentPage").then((m) => ({
     default: m.AdminCustomContentPage,
@@ -191,8 +197,8 @@ function AppFrame() {
       >
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/collections" element={<Navigate to="/og-signatures" replace />} />
-        <Route path="/og-signatures" element={<CollectionsPage />} />
+        <Route path="/collections" element={<CollectionsPage />} />
+        <Route path="/og-signatures" element={<Navigate to="/collections" replace />} />
         <Route path="/shop" element={<ShopPage />} />
         <Route path="/shop/:slug" element={<ProductDetailPage />} />
         <Route path="/community" element={<EventsPage />} />
@@ -203,6 +209,8 @@ function AppFrame() {
         <Route path="/about" element={<AboutPage />} />
         <Route path="/legal/terms" element={<TermsPage />} />
         <Route path="/legal/privacy" element={<PrivacyPage />} />
+        <Route path="/checkout/paymongo/complete" element={<PayMongoCompletePage />} />
+        <Route path="/checkout/paymongo/retry" element={<PayMongoRetryPage />} />
         <Route path="/custom/order" element={<CustomOrderPage />} />
         <Route path="/custom/templates" element={<CustomTemplatesPage />} />
         <Route path="/custom" element={<CustomHubPage />} />

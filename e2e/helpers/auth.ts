@@ -99,7 +99,8 @@ export async function fillSignUpForm(
 export async function submitSignUpForm(page: Page): Promise<void> {
   await dismissCookieBanner(page);
   await page.locator("form").evaluate((form) => {
-    form.noValidate = true;
-    form.requestSubmit();
+    const htmlForm = form as HTMLFormElement;
+    htmlForm.noValidate = true;
+    htmlForm.requestSubmit();
   });
 }

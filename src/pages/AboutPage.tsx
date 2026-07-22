@@ -39,7 +39,7 @@ const PILLARS: {
   },
   {
     icon: Users,
-    title: "Community & Events",
+    title: "Events and Sports",
     description: "More than a brand — gatherings and experiences that bring the movement together.",
     to: "/events",
     cta: "See what's on",
@@ -47,7 +47,7 @@ const PILLARS: {
 ];
 
 const STATS: { value: string; label: string }[] = [
-  { value: "EST. 2024", label: "Manila, PH" },
+  { value: "EST. 2024", label: "Marikina, Metro Manila" },
   { value: "Nationwide", label: "Shipping + tracking" },
   { value: "8–15 days", label: "Custom production" },
   { value: "Free", label: "Design support" },

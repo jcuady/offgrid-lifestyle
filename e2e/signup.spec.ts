@@ -152,8 +152,9 @@ test.describe("customer sign-in after registration", () => {
     await page.getByPlaceholder("your.email@example.com").fill(TEST_EMAIL);
     await page.getByPlaceholder("Your password").fill(TEST_PASSWORD);
     await page.locator("form").evaluate((form) => {
-      form.noValidate = true;
-      form.requestSubmit();
+      const htmlForm = form as HTMLFormElement;
+      htmlForm.noValidate = true;
+      htmlForm.requestSubmit();
     });
 
     const confirmAlert = page.getByRole("alert");
@@ -179,8 +180,9 @@ test.describe("customer sign-in after registration", () => {
     await page.getByPlaceholder("your.email@example.com").fill(TEST_EMAIL);
     await page.getByPlaceholder("Your password").fill(TEST_PASSWORD);
     await page.locator("form").evaluate((form) => {
-      form.noValidate = true;
-      form.requestSubmit();
+      const htmlForm = form as HTMLFormElement;
+      htmlForm.noValidate = true;
+      htmlForm.requestSubmit();
     });
 
     await expect(page).toHaveURL(/\/account\/orders/, { timeout: 20_000 });

@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useShallow } from "zustand/react/shallow";
-import { ShoppingBag, Menu, X, UserRound, Mail } from "lucide-react";
+import { ShoppingBag, Menu, X, UserRound } from "lucide-react";
 import { Button } from "./ui/Button";
 import { cn } from "@/src/lib/utils";
 import { LOGO_WORDMARK_WHITE } from "@/src/lib/brandAssets";
@@ -11,7 +11,12 @@ import { usePortalStore } from "@/src/store/usePortalStore";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { localAuthService } from "@/src/services";
 import { formatPrice } from "@/src/data/products";
-import { siteContainer, sectionEyebrowOnDark } from "@/src/lib/brandLayout";
+import {
+  headerContainer,
+  headerLogoClass,
+  headerNavLinkClass,
+  sectionEyebrowOnDark,
+} from "@/src/lib/brandLayout";
 import { CUSTOMER_SIGN_IN_PATH, CUSTOMER_SIGN_UP_PATH, PORTAL_LOGIN_PATH } from "@/src/lib/authRoutes";
 import { NotificationBell } from "@/src/components/notifications/NotificationBell";
 import { usePwaStandalone } from "@/src/hooks/usePwaStandalone";
@@ -29,7 +34,12 @@ const mobileNavPrimary =
 const mobileNavSecondary =
   "min-h-11 w-full font-sans text-lg font-medium text-offgrid-cream/80 transition-colors hover:text-white";
 const headerIconBtn =
-  "grid h-11 w-11 shrink-0 place-items-center rounded-full text-offgrid-cream transition-colors hover:text-white";
+  "grid h-11 w-11 shrink-0 place-items-center rounded-full text-offgrid-cream transition-colors hover:bg-offgrid-cream/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offgrid-cream/50";
+
+function publishHeaderHeight(el: HTMLElement | null) {
+  if (!el || typeof document === "undefined") return;
+  document.documentElement.style.setProperty("--og-header-height", `${el.offsetHeight}px`);
+}
 
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -52,6 +62,7 @@ export function Navbar() {
   const location = useLocation();
   const cartDropdownRef = useRef<HTMLDivElement | null>(null);
   const accountDropdownRef = useRef<HTMLDivElement | null>(null);
+  const headerRef = useRef<HTMLElement | null>(null);
   const isStandalone = usePwaStandalone();
 
   const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -73,7 +84,7 @@ export function Navbar() {
       setIsScrolled(window.scrollY > 50);
     };
     handleScroll();
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -87,6 +98,20 @@ export function Navbar() {
     isCollectionMenuOpen ||
     isAccountMenuOpen;
   const navSolid = isScrolled || forceSolidOnTop;
+
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const sync = () => publishHeaderHeight(el);
+    sync();
+    const ro = new ResizeObserver(sync);
+    ro.observe(el);
+    window.addEventListener("orientationchange", sync);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("orientationchange", sync);
+    };
+  }, [navSolid, isStandalone, isMobileMenuOpen]);
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
@@ -119,6 +144,15 @@ export function Navbar() {
     return () => window.removeEventListener("keydown", onKey);
   }, [isAccountMenuOpen]);
 
+  useEffect(() => {
+    if (!isMobileMenuOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [isMobileMenuOpen]);
+
   const handleNavigate = (path: string) => {
     if (path.startsWith("/#") || path.startsWith("#")) {
       const id = path.replace(/^\/?#/, "");
@@ -150,9 +184,9 @@ export function Navbar() {
   };
 
   const navLinks = [
-    { name: "Community", action: () => handleNavigate("/community") },
-    { name: "FAQ", action: () => handleNavigate("/faq") },
-    { name: "Contact", action: () => handleNavigate("/contact") },
+    { name: "Events", fullName: "Events and Sports", action: () => handleNavigate("/community") },
+    { name: "FAQ", fullName: "FAQ", action: () => handleNavigate("/faq") },
+    { name: "Contact", fullName: "Contact", action: () => handleNavigate("/contact") },
   ];
 
   type AccountMenuItem = { label: string; onSelect: () => void; tone?: "danger" };
@@ -204,7 +238,7 @@ export function Navbar() {
 
   const accountPanelClass = cn(
     "rounded-2xl border border-offgrid-green/15 bg-offgrid-cream p-2 shadow-2xl text-left z-[60]",
-    "fixed inset-x-3 top-[calc(env(safe-area-inset-top,0px)+4.25rem)] w-auto",
+    "fixed inset-x-3 top-[calc(var(--og-header-height,4.5rem)+0.5rem)] w-auto",
     "sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 sm:w-64",
   );
 
@@ -262,18 +296,25 @@ export function Navbar() {
         ) : null}
       </AnimatePresence>
       <header
+        ref={headerRef}
         className={cn(
-          "fixed left-0 right-0 top-0 z-50 transition-all duration-300 ease-in-out",
+          "fixed left-0 right-0 top-0 z-50 transition-[background-color,box-shadow,padding,backdrop-filter] duration-300 ease-out",
           isStandalone && "pt-[env(safe-area-inset-top)]",
-          navSolid ? "bg-offgrid-green/95 backdrop-blur-md py-3 shadow-sm" : "bg-transparent py-5",
+          navSolid
+            ? "border-b border-white/10 bg-offgrid-green/95 py-[clamp(0.55rem,1.2vw,0.85rem)] shadow-sm backdrop-blur-md supports-[backdrop-filter]:bg-offgrid-green/88"
+            : "bg-transparent py-[clamp(0.85rem,2.2vw,1.35rem)] [@media(orientation:landscape)_and_(max-height:700px)]:py-2",
         )}
       >
-        <div className={cn(siteContainer, "flex min-w-0 items-center justify-between gap-3")}>
-          <Link to="/" className="flex shrink-0 items-center z-50">
-            <img src={LOGO_WORDMARK_WHITE} alt="OFFGRID® Lifestyle" className="h-8 w-auto sm:h-10" />
+        <div className={headerContainer}>
+          <Link to="/" className="z-50 flex min-w-0 shrink-0 items-center">
+            <img src={LOGO_WORDMARK_WHITE} alt="OFFGRID® Lifestyle" className={headerLogoClass} />
           </Link>
 
-          <nav className="hidden items-center gap-6 lg:gap-8 md:flex">
+          {/* Desktop links only from xl — md/lg stay in the drawer to avoid overflow. */}
+          <nav
+            className="hidden min-w-0 items-center justify-center gap-[clamp(0.35rem,1.1vw,1.35rem)] xl:flex"
+            aria-label="Primary"
+          >
             <div
               className="relative"
               onMouseEnter={() => setIsCustomMenuOpen(true)}
@@ -283,11 +324,12 @@ export function Navbar() {
                 type="button"
                 onClick={() => handleNavigate("/custom/order")}
                 className={cn(
-                  "text-sm font-medium transition-colors hover:text-white cursor-pointer",
+                  headerNavLinkClass,
+                  "cursor-pointer",
                   navSolid ? "text-offgrid-cream/80" : "text-offgrid-cream/90",
                 )}
               >
-                Custom Order
+                Custom
               </button>
               <AnimatePresence>
                 {isCustomMenuOpen ? (
@@ -332,11 +374,12 @@ export function Navbar() {
                 type="button"
                 onClick={() => handleNavigate("/#collections")}
                 className={cn(
-                  "text-sm font-medium transition-colors hover:text-white cursor-pointer",
+                  headerNavLinkClass,
+                  "cursor-pointer",
                   navSolid ? "text-offgrid-cream/80" : "text-offgrid-cream/90",
                 )}
               >
-                Shop By Sport
+                By Sport
               </button>
               <AnimatePresence>
                 {isSportMenuOpen ? (
@@ -369,13 +412,14 @@ export function Navbar() {
             >
               <button
                 type="button"
-                onClick={() => handleNavigate("/#shop-collections")}
+                onClick={() => handleNavigate("/collections")}
                 className={cn(
-                  "text-sm font-medium transition-colors hover:text-white cursor-pointer",
+                  headerNavLinkClass,
+                  "cursor-pointer",
                   navSolid ? "text-offgrid-cream/80" : "text-offgrid-cream/90",
                 )}
               >
-                Shop By Collection
+                Collections
               </button>
               <AnimatePresence>
                 {isCollectionMenuOpen ? (
@@ -403,11 +447,12 @@ export function Navbar() {
 
             {navLinks.map((link) => (
               <button
-                key={link.name}
+                key={link.fullName}
                 type="button"
                 onClick={link.action}
                 className={cn(
-                  "text-sm font-medium transition-colors hover:text-white cursor-pointer",
+                  headerNavLinkClass,
+                  "cursor-pointer",
                   navSolid ? "text-offgrid-cream/80" : "text-offgrid-cream/90",
                 )}
               >
@@ -416,11 +461,11 @@ export function Navbar() {
             ))}
           </nav>
 
-          <div className="flex min-w-0 shrink-0 items-center gap-2 sm:gap-3 md:gap-4 z-50">
+          <div className="z-50 flex min-w-0 shrink-0 items-center gap-[clamp(0.25rem,1vw,0.75rem)] justify-self-end">
             <Button
               variant="secondary"
               size="sm"
-              className="hidden md:inline-flex"
+              className="hidden min-h-11 px-[clamp(0.85rem,1.5vw,1.25rem)] text-[clamp(0.65rem,0.55rem+0.25vw,0.75rem)] xl:inline-flex"
               onClick={() => handleNavigate("/shop?category=Ultimate Frisbee")}
             >
               Shop Ultimate
@@ -459,8 +504,8 @@ export function Navbar() {
                 )}
                 title={currentUser ? "Account menu" : "Sign in"}
               >
-                <UserRound className="w-4 h-4 shrink-0" />
-                <span className="hidden max-w-[7rem] truncate sm:inline">{accountLabel}</span>
+                <UserRound className="h-4 w-4 shrink-0" />
+                <span className="hidden max-w-[7rem] truncate 2xl:inline">{accountLabel}</span>
               </button>
               <AnimatePresence>
                 {isAccountMenuOpen && (
@@ -486,19 +531,6 @@ export function Navbar() {
               </AnimatePresence>
             </div>
 
-            <button
-              type="button"
-              onClick={() => handleNavigate("/contact")}
-              aria-label="Contact us"
-              title="Contact us"
-              className={cn(
-                headerIconBtn,
-                location.pathname === "/contact" && "bg-offgrid-cream/10 text-white",
-              )}
-            >
-              <Mail className="w-5 h-5" />
-            </button>
-
             <div className="relative" ref={cartDropdownRef}>
               <button
                 type="button"
@@ -509,14 +541,14 @@ export function Navbar() {
                 aria-label="Cart"
                 className={cn(headerIconBtn, "relative")}
               >
-                <ShoppingBag className="w-5 h-5" />
+                <ShoppingBag className="h-5 w-5" />
                 <AnimatePresence>
                   {itemCount > 0 && (
                     <motion.div
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       exit={{ scale: 0 }}
-                      className="absolute -top-1 -right-1 w-5 h-5 bg-offgrid-lime text-white rounded-full text-[10px] font-bold flex items-center justify-center shadow-md"
+                      className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-offgrid-lime text-[10px] font-bold text-white shadow-md"
                     >
                       {itemCount}
                     </motion.div>
@@ -531,13 +563,13 @@ export function Navbar() {
                     exit={{ opacity: 0, y: 8, scale: 0.98 }}
                     transition={{ duration: 0.16 }}
                     className={cn(
-                      "rounded-2xl border border-offgrid-green/10 bg-offgrid-cream p-4 text-offgrid-green shadow-2xl z-[60]",
-                      "fixed inset-x-3 top-[calc(env(safe-area-inset-top,0px)+4.25rem)] w-auto",
+                      "z-[60] rounded-2xl border border-offgrid-green/10 bg-offgrid-cream p-4 text-offgrid-green shadow-2xl",
+                      "fixed inset-x-3 top-[calc(var(--og-header-height,4.5rem)+0.5rem)] w-auto",
                       "sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 sm:w-80",
                     )}
                   >
                     <div className="mb-3 flex items-center justify-between">
-                      <p className="text-sm font-display font-bold">Cart Preview</p>
+                      <p className="font-display text-sm font-bold">Cart Preview</p>
                       <p className="text-xs text-offgrid-green/50">{itemCount} item(s)</p>
                     </div>
                     {cart.length === 0 ? (
@@ -558,7 +590,7 @@ export function Navbar() {
                         {cart.length > 3 && (
                           <p className="text-[11px] text-offgrid-green/50">+{cart.length - 3} more item(s)</p>
                         )}
-                        <div className="mt-2 border-t border-offgrid-green/10 pt-2 flex items-center justify-between">
+                        <div className="mt-2 flex items-center justify-between border-t border-offgrid-green/10 pt-2">
                           <p className="text-xs text-offgrid-green/50">Subtotal</p>
                           <p className="font-semibold">{formatPrice(cartSubtotal)}</p>
                         </div>
@@ -571,7 +603,7 @@ export function Navbar() {
                           setIsCartDropdownOpen(false);
                           toggleCart(true);
                         }}
-                        className="rounded-xl border border-offgrid-green/20 px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] hover:bg-offgrid-green/5 transition-colors"
+                        className="rounded-xl border border-offgrid-green/20 px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] transition-colors hover:bg-offgrid-green/5"
                       >
                         View Cart
                       </button>
@@ -585,7 +617,7 @@ export function Navbar() {
                             toggleCart(true);
                           }
                         }}
-                        className="rounded-xl bg-offgrid-green px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-offgrid-cream hover:bg-offgrid-dark transition-colors"
+                        className="rounded-xl bg-offgrid-green px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-offgrid-cream transition-colors hover:bg-offgrid-dark"
                       >
                         Checkout
                       </button>
@@ -597,10 +629,11 @@ export function Navbar() {
             <button
               type="button"
               aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
-              className={cn(headerIconBtn, "md:hidden")}
+              aria-expanded={isMobileMenuOpen}
+              className={cn(headerIconBtn, "xl:hidden")}
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
-              {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
           </div>
         </div>
@@ -613,7 +646,7 @@ export function Navbar() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-40 flex flex-col bg-offgrid-green px-4 pt-[calc(env(safe-area-inset-top,0px)+5.5rem)] pb-[env(safe-area-inset-bottom,0px)] sm:px-6"
+            className="fixed inset-0 z-40 flex flex-col bg-offgrid-green px-4 pt-[calc(var(--og-header-height,4.5rem)+0.75rem)] pb-[env(safe-area-inset-bottom,0px)] sm:px-6"
           >
             <nav className="flex flex-1 flex-col gap-8 overflow-y-auto text-center">
               <button
@@ -641,7 +674,13 @@ export function Navbar() {
               </div>
 
               <div className="flex flex-col gap-3">
-                <p className={cn(sectionEyebrowOnDark, "mb-0 text-center")}>Shop By Collection</p>
+                <button
+                  type="button"
+                  onClick={() => handleNavigate("/collections")}
+                  className={cn(sectionEyebrowOnDark, "mb-0 text-center transition-colors hover:text-white")}
+                >
+                  Shop By Collection
+                </button>
                 <div className="flex flex-col gap-1">
                   {SHOP_BY_COLLECTION.map((item) => (
                     <button
@@ -659,12 +698,12 @@ export function Navbar() {
               <div className="flex flex-col gap-4">
                 {navLinks.map((link) => (
                   <button
-                    key={link.name}
+                    key={link.fullName}
                     type="button"
                     onClick={link.action}
                     className={mobileNavPrimary}
                   >
-                    {link.name}
+                    {link.fullName}
                   </button>
                 ))}
               </div>

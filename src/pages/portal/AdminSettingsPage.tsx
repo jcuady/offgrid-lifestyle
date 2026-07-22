@@ -23,7 +23,7 @@ const SHORTCUTS: { name: string; description: string; to: string; icon: typeof H
   { name: "Payments", description: "GCash QR, PayMongo (coming soon)", to: "/portal/admin/payments", icon: QrCode },
   { name: "Homepage", description: "Hero, OG Signatures, and landing copy", to: "/portal/admin/homepage", icon: Home },
   { name: "Custom pages", description: "Ordering guide sections and templates", to: "/portal/admin/custom-pages", icon: Palette },
-  { name: "Events", description: "Community events and spotlights", to: "/portal/admin/events", icon: CalendarDays },
+  { name: "Events and Sports", description: "Community events and sports spotlights", to: "/portal/admin/events", icon: CalendarDays },
   { name: "Staff", description: "Provision and manage staff logins", to: "/portal/admin/staff", icon: Users },
   { name: "Audit log", description: "Review portal activity history", to: "/portal/admin/audit-logs", icon: ScrollText },
 ];

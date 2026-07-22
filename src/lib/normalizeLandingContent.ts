@@ -31,6 +31,7 @@ export function normalizeLandingContent(partial?: Partial<LandingContent> | null
         headlinePart3?: string;
       })
     | undefined;
+  const sourceTeams = partial.teamCommunity?.teams ?? base.teamCommunity.teams;
   const teamCommunity = {
     ...base.teamCommunity,
     ...partial.teamCommunity,
@@ -43,10 +44,11 @@ export function normalizeLandingContent(partial?: Partial<LandingContent> | null
       partial.teamCommunity?.headlineLine2Italic ??
       legacyTeam?.headlinePart3 ??
       base.teamCommunity.headlineLine2Italic,
-    teams: base.teamCommunity.teams.map((team, index) => ({
-      ...team,
-      ...(partial.teamCommunity?.teams?.[index] ?? {}),
-    })) as LandingContent["teamCommunity"]["teams"],
+    teams: sourceTeams.map((team, index) => ({
+      id: team.id?.trim() || `team-${index + 1}`,
+      name: team.name ?? "",
+      sport: team.sport ?? "",
+    })),
   };
 
   return {
@@ -73,7 +75,9 @@ export function normalizeLandingContent(partial?: Partial<LandingContent> | null
     bestSellersHeader: { ...base.bestSellersHeader, ...partial.bestSellersHeader },
     bestSellersShopLink: partial.bestSellersShopLink ?? base.bestSellersShopLink,
     gallery: (() => {
-      const legacyBenefits = partial.benefits as
+      const legacyBenefits = (partial as Partial<LandingContent> & {
+        benefits?: { eyebrow?: string; titleLine1?: string; titleLine2Italic?: string };
+      }).benefits as
         | { eyebrow?: string; titleLine1?: string; titleLine2Italic?: string }
         | undefined;
       const gallery = partial.gallery;

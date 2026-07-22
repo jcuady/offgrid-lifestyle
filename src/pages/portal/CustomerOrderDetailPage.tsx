@@ -1,6 +1,6 @@
 import { type Attributes, type ChangeEvent, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { Star, Upload } from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
+import { QrCode, Star, Upload } from "lucide-react";
 import { usePortalStore, type PortalUser } from "@/src/store/usePortalStore";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { reviewService } from "@/src/services/reviewService";
@@ -18,6 +18,11 @@ import { cn } from "@/src/lib/utils";
 import { notifyStaffOrderEvent } from "@/src/lib/notifications";
 import { fileAcceptAttribute, validateUploadedFile } from "@/src/lib/fileValidation";
 import { resolveStorageReference, toStorageReference } from "@/src/lib/storageAccess";
+import {
+  createPayMongoCheckoutSession,
+  redirectToPayMongoCheckout,
+} from "@/src/lib/paymongo";
+import { isPayMongoCheckoutAvailable } from "@/src/types/payments";
 import { AccountLayout } from "@/src/components/account/AccountLayout";
 import { OrderTracker } from "@/src/components/account/OrderTracker";
 import { CustomOrderFileButton } from "@/src/components/custom-order/CustomOrderFileButton";
@@ -37,6 +42,67 @@ import {
 
 const inputCls =
   "w-full rounded-xl border border-offgrid-green/20 bg-white px-3.5 py-2.5 text-sm text-offgrid-green outline-none transition-colors focus:border-offgrid-lime/60 focus:ring-2 focus:ring-offgrid-lime/20";
+
+function PayMongoPayButton({
+  orderId,
+  paymentKind,
+  label,
+  email,
+}: {
+  orderId: string;
+  paymentKind: "full" | "deposit" | "balance";
+  label: string;
+  email?: string | null;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+
+  const onPay = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const session = await createPayMongoCheckoutSession({
+        orderId,
+        paymentKind,
+        email: email ?? undefined,
+      });
+      if (session.alreadyPaid) {
+        navigate(`/checkout/paymongo/complete?order_id=${encodeURIComponent(orderId)}`);
+        return;
+      }
+      if (!session.checkoutUrl) {
+        throw new Error("PayMongo did not return a checkout URL.");
+      }
+      redirectToPayMongoCheckout(session.checkoutUrl);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not start PayMongo checkout.");
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="mt-4 space-y-2">
+      <button
+        type="button"
+        disabled={busy}
+        onClick={() => void onPay()}
+        className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-offgrid-lime px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-white transition-colors hover:bg-offgrid-gold disabled:opacity-60 sm:w-auto"
+      >
+        <QrCode className="h-3.5 w-3.5" />
+        {busy ? "Starting QR Ph…" : label}
+      </button>
+      <p className="text-[11px] text-offgrid-green/55">
+        PayMongo QR Ph — OFFGRID absorbs the processing fee.
+      </p>
+      {error ? (
+        <p className="text-xs font-medium text-red-600" role="alert">
+          {error}
+        </p>
+      ) : null}
+    </div>
+  );
+}
 
 function StarPicker({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   const [hovered, setHovered] = useState(0);
@@ -463,6 +529,16 @@ export function CustomerOrderDetailPage() {
                     />
                   </div>
                 ) : null}
+                {retail.paymentMethod === "paymongo" &&
+                retail.paymentStatus === "unpaid" &&
+                isPayMongoCheckoutAvailable("paymongo", paymentSettings.paymongo) ? (
+                  <PayMongoPayButton
+                    orderId={retail.id}
+                    paymentKind="full"
+                    label="Pay with QR Ph"
+                    email={retail.customerEmail}
+                  />
+                ) : null}
                 {retail.paymentProviderRef ? (
                   <div>
                     <dt className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/45">
@@ -658,25 +734,46 @@ export function CustomerOrderDetailPage() {
                 ) : null}
               </dl>
               {custom.paymentStatus !== "fully_paid" ? (
-                <div className="mt-4 rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/45">
-                    Pay deposit via GCash
-                  </p>
-                  <p className="mt-1 text-xs text-offgrid-green/60">{paymentSettings.gcashInstructions}</p>
-                  <img
-                    src={paymentSettings.gcashQrImageUrl}
-                    alt="GCash QR"
-                    className="mt-2 h-28 w-28 rounded-lg border border-offgrid-green/10 bg-white object-contain"
-                  />
-                  {hasOfficialCustomQuote(custom.officialTotal) && custom.officialDeposit ? (
-                    <p className="mt-2 text-sm font-semibold text-offgrid-green">
-                      Amount due now: {formatMoney(custom.officialDeposit)}
-                    </p>
-                  ) : custom.depositRequired ? (
-                    <p className="mt-2 text-sm font-semibold text-offgrid-green">
-                      Estimated deposit: {formatMoney(custom.depositRequired)}
-                    </p>
+                <div className="mt-4 space-y-3">
+                  {isPayMongoCheckoutAvailable("paymongo", paymentSettings.paymongo) &&
+                  hasOfficialCustomQuote(custom.officialTotal) &&
+                  (custom.paymentStatus === "unpaid" || custom.paymentStatus === "deposit_paid") ? (
+                    <div className="rounded-xl border border-offgrid-lime/25 bg-offgrid-lime/[0.06] p-3">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/45">
+                        PayMongo QR Ph
+                      </p>
+                      <PayMongoPayButton
+                        orderId={custom.id}
+                        paymentKind={custom.paymentStatus === "deposit_paid" ? "balance" : "deposit"}
+                        label={
+                          custom.paymentStatus === "deposit_paid"
+                            ? "Pay remaining balance via QR Ph"
+                            : "Pay deposit via QR Ph"
+                        }
+                        email={custom.customerEmail}
+                      />
+                    </div>
                   ) : null}
+                  <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/45">
+                      Or pay deposit via GCash
+                    </p>
+                    <p className="mt-1 text-xs text-offgrid-green/60">{paymentSettings.gcashInstructions}</p>
+                    <img
+                      src={paymentSettings.gcashQrImageUrl}
+                      alt="GCash QR"
+                      className="mt-2 h-28 w-28 rounded-lg border border-offgrid-green/10 bg-white object-contain"
+                    />
+                    {hasOfficialCustomQuote(custom.officialTotal) && custom.officialDeposit ? (
+                      <p className="mt-2 text-sm font-semibold text-offgrid-green">
+                        Amount due now: {formatMoney(custom.officialDeposit)}
+                      </p>
+                    ) : custom.depositRequired ? (
+                      <p className="mt-2 text-sm font-semibold text-offgrid-green">
+                        Estimated deposit: {formatMoney(custom.depositRequired)}
+                      </p>
+                    ) : null}
+                  </div>
                 </div>
               ) : null}
             </div>

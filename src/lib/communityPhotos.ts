@@ -13,6 +13,50 @@ export const COMMUNITY_PHOTO_PATHS = {
   towelBench: "/images/community/product-towel-bench.jpg",
 } as const;
 
+/** Focus-rail stories for the homepage community section — real Materials shoot photos. */
+export const COMMUNITY_FOCUS_RAIL = [
+  {
+    id: "discfest",
+    title: "Discfest 2025",
+    description: "Ultimate frisbee event energy — skyballs, squads, and OFFGRID kit on the field.",
+    meta: "Event · Ultimate",
+    imageSrc: COMMUNITY_PHOTO_PATHS.ultimateSkyball,
+    href: "/community",
+  },
+  {
+    id: "ultimate-catch",
+    title: "Catch & cut",
+    description: "Game-day sports moments from OFFGRID teams that show up ready.",
+    meta: "Sport · Ultimate",
+    imageSrc: COMMUNITY_PHOTO_PATHS.ultimateCatch,
+    href: "/community",
+  },
+  {
+    id: "mixed-masters",
+    title: "Mixed Masters",
+    description: "Fundraiser weekends and Pilipinas pride — events that build the roster.",
+    meta: "Event · Community",
+    imageSrc: COMMUNITY_PHOTO_PATHS.pilipinasPortrait,
+    href: "/community",
+  },
+  {
+    id: "pickle-project",
+    title: "Court sessions",
+    description: "Pickleball and multi-sport days — where kits meet real play.",
+    meta: "Sport · Pickleball",
+    imageSrc: COMMUNITY_PHOTO_PATHS.pilipinasCap,
+    href: "/community",
+  },
+  {
+    id: "field-walk",
+    title: "Sideline kit",
+    description: "Towels, packs, and gear that travel from event to everyday.",
+    meta: "Events · Gear",
+    imageSrc: COMMUNITY_PHOTO_PATHS.towelsWalk,
+    href: "/community",
+  },
+] as const;
+
 /** Materials folders highlighted in the community & events band. */
 export const COMMUNITY_COLLECTIONS = [
   {

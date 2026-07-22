@@ -1,7 +1,7 @@
 import React, { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
-import { X, Check, Wallet, Banknote, Package, ChevronRight, ChevronLeft, MapPin, Truck, Zap, Upload, Loader2 } from "lucide-react";
+import { X, Check, Wallet, Banknote, Package, ChevronRight, MapPin, Truck, Zap, Loader2 } from "lucide-react";
 import { useShallow } from "zustand/react/shallow";
 import { useStore } from "@/src/store/store";
 import { usePortalStore } from "@/src/store/usePortalStore";
@@ -16,6 +16,7 @@ import {
   validateRetailPaymentMethod,
 } from "@/src/types/payments";
 import { cn } from "@/src/lib/utils";
+import { electricBluePill } from "@/src/lib/brandLayout";
 
 const PhilippinesAddressFields = lazy(() =>
   import("@/src/components/checkout/PhilippinesAddressFields").then((m) => ({
@@ -419,16 +420,14 @@ export function CheckoutModal() {
                             onClick={handleBackFromShipping}
                             className="h-12 w-full border-offgrid-green text-offgrid-green sm:h-14 sm:flex-1"
                           >
-                            <ChevronLeft className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                             Back to cart
                           </Button>
                           <Button
                             type="submit"
                             size="lg"
-                            className="h-12 w-full bg-offgrid-lime font-bold text-offgrid-green hover:bg-offgrid-lime/90 sm:h-14 sm:flex-[1.2]"
+                            className="h-12 w-full bg-offgrid-lime font-bold text-white hover:bg-offgrid-lime/90 sm:h-14 sm:flex-[1.2]"
                           >
                             Continue to Payment
-                            <ChevronRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
                           </Button>
                         </div>
                       </form>
@@ -503,7 +502,8 @@ export function CheckoutModal() {
                         >
                           <p className="text-sm text-offgrid-green/70">{paymentSettings.paymongo.checkoutDescription}</p>
                           <p className="mt-2 text-xs text-offgrid-green/50">
-                            You will be redirected to PayMongo to complete payment after placing your order.
+                            After you place the order you will be redirected to PayMongo to scan a QR Ph code.
+                            OFFGRID covers the processing fee.
                           </p>
                         </motion.div>
                       ) : null}
@@ -554,14 +554,13 @@ export function CheckoutModal() {
                           onClick={() => setCheckoutStep(1)}
                           className="h-12 w-full border-offgrid-green text-offgrid-green sm:h-14 sm:flex-1"
                         >
-                          <ChevronLeft className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                           Back
                         </Button>
                         <Button
                           size="lg"
                           disabled={placingOrder}
                           onClick={() => void handlePlaceOrder()}
-                          className="h-12 w-full bg-offgrid-lime font-bold text-offgrid-green hover:bg-offgrid-lime/90 disabled:opacity-70 sm:h-14 sm:flex-[1.2]"
+                          className="h-12 w-full bg-offgrid-lime font-bold text-white hover:bg-offgrid-lime/90 disabled:opacity-70 sm:h-14 sm:flex-[1.2]"
                         >
                           {placingOrder ? (
                             <>
@@ -569,10 +568,7 @@ export function CheckoutModal() {
                               Placing order…
                             </>
                           ) : (
-                            <>
-                              Place Order — {formatPrice(total)}
-                              <Check className="ml-2 h-4 w-4 transition-transform group-hover:scale-110 sm:h-5 sm:w-5" />
-                            </>
+                            <>Place Order — {formatPrice(total)}</>
                           )}
                         </Button>
                       </div>
@@ -591,17 +587,39 @@ export function CheckoutModal() {
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
                         transition={{ type: "spring", delay: 0.2, stiffness: 200 }}
-                        className="w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-4 sm:mb-6 rounded-full bg-offgrid-lime flex items-center justify-center"
+                        className={cn(
+                          "w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-4 sm:mb-6 rounded-full flex items-center justify-center",
+                          paymentMethod === "paymongo" && checkoutError
+                            ? "bg-amber-500"
+                            : "bg-offgrid-lime",
+                        )}
                       >
                         <Check className="w-10 h-10 sm:w-12 sm:h-12 text-white" strokeWidth={3} />
                       </motion.div>
 
                       <h2 className="text-2xl sm:text-3xl font-display font-black text-offgrid-green mb-2 sm:mb-3">
-                        Order Confirmed!
+                        {paymentMethod === "paymongo" && checkoutError
+                          ? "Order saved — payment needed"
+                          : "Order Confirmed!"}
                       </h2>
                       <p className="text-sm sm:text-base text-offgrid-green/60 mb-6 sm:mb-8">
-                        Thank you for your purchase. Your order has been placed successfully.
+                        {paymentMethod === "gcash"
+                          ? "Your order is placed. Pay via GCash QR, then upload your screenshot so we can confirm payment."
+                          : paymentMethod === "paymongo" && checkoutError
+                            ? "Your order was saved, but PayMongo checkout did not start. Retry QR Ph payment below."
+                            : paymentMethod === "paymongo"
+                              ? "Your order is saved. Complete QR Ph payment to confirm — status updates automatically."
+                              : "Thank you for your purchase. Your order has been placed successfully."}
                       </p>
+
+                      {paymentMethod === "paymongo" && checkoutError ? (
+                        <p
+                          className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-left text-sm text-amber-900"
+                          role="alert"
+                        >
+                          {checkoutError}
+                        </p>
+                      ) : null}
 
                       {orderId && (
                         <div className="bg-white rounded-xl p-4 sm:p-6 mb-6 sm:mb-8 inline-block">
@@ -638,6 +656,25 @@ export function CheckoutModal() {
                         </div>
                       )}
 
+                      {paymentMethod === "paymongo" && orderId ? (
+                        <div className="mb-6 sm:mb-8 rounded-xl border border-offgrid-lime/30 bg-offgrid-lime/8 p-4 sm:p-6 text-left">
+                          <p className="text-xs font-bold uppercase tracking-[0.16em] text-offgrid-green/60 mb-2">
+                            PayMongo QR Ph
+                          </p>
+                          <p className="text-sm text-offgrid-green/75">
+                            {checkoutError
+                              ? "Continue to secure QR Ph payment — OFFGRID absorbs the fee."
+                              : "Your order was saved. If checkout did not open automatically, continue to secure QR Ph payment — OFFGRID absorbs the fee."}
+                          </p>
+                          <a
+                            href={`/checkout/paymongo/retry?order_id=${encodeURIComponent(orderId)}`}
+                            className={cn(electricBluePill, "mt-4 inline-flex")}
+                          >
+                            {checkoutError ? "Retry QR Ph payment" : "Continue to PayMongo"}
+                          </a>
+                        </div>
+                      ) : null}
+
                       <div className="bg-offgrid-green/5 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8 text-left">
                         <div className="flex items-start gap-3 mb-4">
                           <Truck className="w-4 h-4 sm:w-5 sm:h-5 text-offgrid-lime flex-shrink-0 mt-0.5" />
@@ -673,9 +710,8 @@ export function CheckoutModal() {
                                 navigate("/account/sign-in", { state: { from: proofPath } });
                               }
                             }}
-                            className="h-12 sm:h-14 gap-2"
+                            className="h-12 sm:h-14"
                           >
-                            <Upload className="w-4 h-4" />
                             Upload Payment Proof
                           </Button>
                         ) : null}

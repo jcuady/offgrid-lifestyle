@@ -39,7 +39,7 @@ export const SHOP_BY_SPORT: ShopTaxonomyLink[] = [
   },
 ];
 
-/** Shop by collection — named drops (not separate sport silos). */
+/** Named OFFGRID collections used by the homepage, navigation, and `/collections` hub. */
 export const SHOP_BY_COLLECTION: ShopTaxonomyLink[] = [
   {
     label: "Discfest",

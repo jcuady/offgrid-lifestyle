@@ -1,5 +1,4 @@
 import { motion, useReducedMotion } from "motion/react";
-import { ArrowRight } from "lucide-react";
 import { COMMUNITY_PHOTO_PATHS } from "@/src/lib/communityPhotos";
 import type { CSSProperties } from "react";
 import { Button } from "@/src/components/ui/Button";
@@ -73,14 +72,14 @@ export function OffgridHero({
 
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/50 via-black/25 to-black/80" />
 
-      <div className="relative z-10 flex min-h-[max(100svh,32rem)] flex-1 flex-col px-5 pb-[max(1.75rem,env(safe-area-inset-bottom))] pt-[max(5rem,calc(env(safe-area-inset-top)+3.5rem))] sm:px-6 sm:pb-10 md:px-10">
+      <div className="relative z-10 flex min-h-[max(100svh,32rem)] flex-1 flex-col px-[clamp(1rem,4vw,2.5rem)] pb-[max(1.75rem,env(safe-area-inset-bottom))] pt-[max(5.5rem,calc(var(--og-header-height,4.5rem)+0.85rem))] sm:pb-10">
         <div className="flex items-start justify-between gap-3">
           {badge ? (
             <motion.p
               initial={{ opacity: reduceMotion ? 1 : 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.45 }}
-              className="inline-flex max-w-[70%] items-center gap-2 font-mono text-[11px] font-bold uppercase leading-snug tracking-[0.2em] text-offgrid-cream/90 sm:max-w-none sm:text-xs sm:tracking-[0.24em]"
+              className="inline-flex max-w-[min(72%,28rem)] items-center gap-2 font-mono text-[clamp(0.625rem,0.55rem+0.3vw,0.75rem)] font-bold uppercase leading-snug tracking-[0.18em] text-offgrid-cream/90 sm:tracking-[0.24em]"
             >
               <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-offgrid-lime" />
               {badge}
@@ -93,7 +92,7 @@ export function OffgridHero({
               initial={{ opacity: reduceMotion ? 1 : 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.45, delay: 0.05 }}
-              className="shrink-0 font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-offgrid-cream/70 sm:text-xs sm:tracking-[0.22em]"
+              className="shrink-0 font-mono text-[clamp(0.625rem,0.55rem+0.3vw,0.75rem)] font-bold uppercase tracking-[0.16em] text-offgrid-cream/70 sm:tracking-[0.22em]"
             >
               {locality}
             </motion.p>
@@ -146,10 +145,9 @@ export function OffgridHero({
                 type="button"
                 variant="accent"
                 onClick={primaryCta.onClick}
-                className="group w-full gap-2 text-sm font-bold uppercase tracking-[0.12em] focus-visible:ring-offgrid-lime focus-visible:ring-offset-offgrid-dark sm:w-auto"
+                className="w-full text-sm font-bold uppercase tracking-[0.12em] focus-visible:ring-offgrid-lime focus-visible:ring-offset-offgrid-dark sm:w-auto"
               >
                 {primaryCta.label}
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Button>
 
               {secondaryCta ? (

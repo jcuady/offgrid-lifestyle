@@ -13,6 +13,26 @@ export function loadPhilippinesLocations(): Promise<PhModule> {
 
 type CityRow = { code: string; name: string; provinceCode: string; zipCode?: string };
 
+/**
+ * ponytail: ph-addresses-locations ships double-encoded UTF-8 (e.g. "Las PiÃ±as"
+ * instead of "Las Piñas"). The bytes C3 83 C2 B1 are UTF-8 of "Ã±" (Latin-1 of ñ's
+ * UTF-8 bytes). To fix: take the JS string, encode each char as a Latin-1 byte
+ * (charCodeAt → byte), then decode those bytes as UTF-8.
+ * Ceiling: only fixes U+0080–U+00FF mojibake (the package's failure mode); higher
+ * codepoints would need a fuller normalizer. Upgrade path: replace the package or
+ * pre-process the JSON at build time.
+ */
+function fixMojibakeName(name: string): string {
+  if (!name || (name.indexOf("Ã") === -1 && name.indexOf("Â") === -1)) return name;
+  const bytes = new Uint8Array(name.length);
+  for (let i = 0; i < name.length; i++) {
+    const code = name.charCodeAt(i);
+    if (code > 0xff) return name; // not mojibake — leave alone
+    bytes[i] = code;
+  }
+  return new TextDecoder("utf-8", { fatal: false }).decode(bytes);
+}
+
 export async function getCityZipCode(cityCode: string): Promise<string | null> {
   const cities = (await import("ph-addresses-locations/data/cities.json")).default as CityRow[];
   const row = cities.find((city) => city.code === cityCode);
@@ -50,7 +70,18 @@ export async function getProvincesForRegion(regionCode: string): Promise<PhLocat
     return [{ code: NCR_PROVINCE_CODE, name: NCR_PROVINCE_NAME }];
   }
   const mod = await loadPhilippinesLocations();
-  return mod.getProvinces(regionCode);
+  return mod.getProvinces(regionCode).map((p) => ({ code: p.code, name: fixMojibakeName(p.name) }));
+}
+
+export async function getRegionsList(): Promise<PhLocation[]> {
+  const mod = await loadPhilippinesLocations();
+  return mod.getRegions().map((r) => ({ code: r.code, name: fixMojibakeName(r.name) }));
+}
+
+export async function getBarangaysForCity(cityCode: string): Promise<PhLocation[]> {
+  if (!cityCode) return [];
+  const mod = await loadPhilippinesLocations();
+  return mod.getBarangays(cityCode).map((b) => ({ code: b.code, name: fixMojibakeName(b.name.trim()) }));
 }
 
 export async function getCitiesForProvince(provinceCode: string, regionCode: string): Promise<PhLocation[]> {
@@ -60,11 +91,11 @@ export async function getCitiesForProvince(provinceCode: string, regionCode: str
     const cities = (await import("ph-addresses-locations/data/cities.json")).default as CityRow[];
     return cities
       .filter((city) => city.code.startsWith("138"))
-      .map((city) => ({ code: city.code, name: city.name.trim() }))
+      .map((city) => ({ code: city.code, name: fixMojibakeName(city.name.trim()) }))
       .sort((a, b) => a.name.localeCompare(b.name));
   }
   if (!provinceCode) return [];
-  return mod.getCities(provinceCode).map((city) => ({ code: city.code, name: city.name.trim() }));
+  return mod.getCities(provinceCode).map((city) => ({ code: city.code, name: fixMojibakeName(city.name.trim()) }));
 }
 
 /** Fill virtual NCR province when region is Metro Manila. */

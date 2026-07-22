@@ -146,6 +146,7 @@ export interface LandingFooterContent {
 }
 
 export interface LandingTeamChipContent {
+  id: string;
   name: string;
   sport: string;
 }
@@ -155,7 +156,7 @@ export interface LandingTeamCommunityContent {
   headlineLine1: string;
   headlineLine2Italic: string;
   metaLine: string;
-  teams: [LandingTeamChipContent, LandingTeamChipContent, LandingTeamChipContent, LandingTeamChipContent];
+  teams: LandingTeamChipContent[];
   primaryCtaLabel: string;
   primaryCtaHref: string;
   secondaryCtaLabel: string;
@@ -230,7 +231,6 @@ export interface LandingFeaturedSpotlightContent {
 export const LANDING_COLLECTION_COUNT = 4;
 export const LANDING_UGC_COUNT = 5;
 export const LANDING_TESTIMONIAL_COUNT = 3;
-export const LANDING_TEAM_CHIP_COUNT = 4;
 export const LANDING_GALLERY_TILE_COUNT = 5;
 export const LANDING_FAQ_COUNT = 5;
 
@@ -384,19 +384,20 @@ export const initialLandingContent: LandingContent = {
     tiles: initialGalleryTiles(),
   },
   brandStory: {
-    eyebrow: "Who we are",
-    titleLine1: "Sportswear for",
-    titleLine2Italic: "how you play.",
+    eyebrow: "Our story",
+    titleLine1: "Filipino sportswear",
+    titleLine2Italic: "with a point of view.",
     titleLine3: "",
     paragraph1:
-      "OFFGRID makes Filipino sportswear for athletes and teams — ultimate frisbee first, then pickleball, golf, and running.",
-    paragraph2: "Retail drops for everyday play. Custom kits when your squad needs a full run.",
+      "OFFGRID is built for athletes who play different — ultimate frisbee first, then pickleball, golf, and running. Designed in Marikina for courts, courses, and life off the grid.",
+    paragraph2:
+      "Shop By Collection keeps each retail identity clear. Custom team kits give squads one identity from artwork to delivery.",
     paragraph3Prefix: "",
     paragraph3Highlight: "",
     closingQuote: "",
     image: COMMUNITY_PHOTO_PATHS.ultimateField,
     badgeEst: "EST.",
-    badgeLocality: "MANILA, PH",
+    badgeLocality: "MARIKINA, PH",
     badgeGritty: "Gritty",
     badgeInMotion: "In Motion",
     badgeProudlyPinoy: "Proudly Pinoy",
@@ -457,21 +458,21 @@ export const initialLandingContent: LandingContent = {
   ],
   testimonialsViewAll: "View all testimonials",
   teamCommunity: {
-    badge: "Community",
-    headlineLine1: "Teams. Events.",
-    headlineLine2Italic: "Same kit energy.",
-    metaLine: "EST. MANILA, PH · ULTIMATE FRISBEE · PICKLEBALL · GOLF · RUNNING",
+    badge: "Events and Sports",
+    headlineLine1: "Built for teams.",
+    headlineLine2Italic: "Powered by play.",
+    metaLine: "EVENTS · ULTIMATE FRISBEE · PICKLEBALL · GOLF · RUNNING · MARIKINA",
     teams: [
-      { name: "Discfest squads", sport: "Ultimate Frisbee" },
-      { name: "Manila Smash", sport: "Pickleball" },
-      { name: "Fairway Co.", sport: "Golf" },
-      { name: "Takbo MNL", sport: "Running" },
+      { id: "discfest-squads", name: "Discfest squads", sport: "Ultimate Frisbee" },
+      { id: "manila-smash", name: "Manila Smash", sport: "Pickleball" },
+      { id: "fairway-co", name: "Fairway Co.", sport: "Golf" },
+      { id: "takbo-mnl", name: "Takbo MNL", sport: "Running" },
     ],
-    primaryCtaLabel: "Community & events",
+    primaryCtaLabel: "View events",
     primaryCtaHref: "/community",
-    secondaryCtaLabel: "Kit my team",
+    secondaryCtaLabel: "Start a team order",
     secondaryCtaHref: "/custom/order",
-    socialHeading: "Follow OFFGRID",
+    socialHeading: "Follow the movement",
     instagramUrl: "https://www.instagram.com/offgridlifestyle.ph/",
     facebookUrl: "https://www.facebook.com/offgridlifestyleph/",
   },

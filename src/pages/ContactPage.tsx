@@ -5,7 +5,6 @@ import {
   Phone,
   Clock,
   MapPin,
-  ArrowUpRight,
   Instagram,
   Facebook,
   Send,
@@ -14,14 +13,15 @@ import {
 } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/input";
+import { BrandLocationMap } from "@/src/components/BrandLocationMap";
 import { siteContainer, marketingPageHero } from "@/src/lib/brandLayout";
+import { BRAND_LOCATION } from "@/src/lib/brandLocation";
 import { isValidEmail } from "@/src/lib/formValidation";
 import { submitContactForm } from "@/src/services/emailService";
 import { cn } from "@/src/lib/utils";
 
 const CONTACT_EMAIL = "hello@offgridlifestyle.ph";
 const CONTACT_PHONE = "+63 917 000 0000";
-const MAPS_QUERY = "14.5995,120.9842";
 
 const PURPOSES = [
   { id: "general", label: "General", desc: "Questions, feedback, or anything else." },
@@ -36,7 +36,7 @@ const INFO_CARDS = [
   { icon: Mail, label: "Email", value: CONTACT_EMAIL, href: `mailto:${CONTACT_EMAIL}` },
   { icon: Phone, label: "Phone", value: CONTACT_PHONE, href: `tel:${CONTACT_PHONE.replace(/\s/g, "")}` },
   { icon: Clock, label: "Hours", value: "Mon – Sat · 9:00 AM – 6:00 PM" },
-  { icon: MapPin, label: "Based in", value: "Metro Manila, Philippines" },
+  { icon: MapPin, label: "Location", value: BRAND_LOCATION.line },
 ];
 
 export function ContactPage() {
@@ -232,34 +232,7 @@ export function ContactPage() {
           transition={{ duration: 0.5, delay: 0.1 }}
           className="flex flex-col gap-4"
         >
-          {/* Branded coordinates / location panel */}
-          <div className="relative overflow-hidden rounded-3xl bg-offgrid-dark p-7 text-offgrid-cream">
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-0 opacity-[0.18]"
-              style={{
-                backgroundImage:
-                  "linear-gradient(var(--color-offgrid-lime) 1px, transparent 1px), linear-gradient(90deg, var(--color-offgrid-lime) 1px, transparent 1px)",
-                backgroundSize: "28px 28px",
-              }}
-            />
-            <div className="relative">
-              <span className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-offgrid-cream/80">
-                Off the grid, on the map
-              </span>
-              <p className="mt-3 font-display text-3xl font-black tracking-tight">Manila, PH</p>
-              <p className="mt-1 font-mono text-sm text-offgrid-cream/65">14.5995° N, 120.9842° E</p>
-              <a
-                href={`https://www.google.com/maps/search/?api=1&query=${MAPS_QUERY}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group mt-5 inline-flex items-center gap-2 rounded-full border border-offgrid-cream/30 px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-[0.14em] transition-colors hover:border-offgrid-lime hover:bg-offgrid-lime hover:text-offgrid-cream"
-              >
-                Open in Maps
-                <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-              </a>
-            </div>
-          </div>
+          <BrandLocationMap />
 
           {/* Info cards */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

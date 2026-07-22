@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ExternalLink, RotateCcw } from "lucide-react";
+import { ChevronDown, ChevronUp, ExternalLink, Plus, RotateCcw, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { CmsField, CmsImageInput, CmsSectionPanel, CmsTextInput, CmsTypographyControls } from "@/src/components/admin/landing/CmsField";
 import { CmsRouteSelect } from "@/src/components/admin/CmsRouteSelect";
@@ -60,6 +60,31 @@ export function AdminLandingPage() {
     if (window.confirm("Reset all homepage text and images to defaults? This cannot be undone.")) {
       resetLandingContent();
     }
+  };
+
+  const addTeam = () => {
+    updateTeamCommunity({
+      teams: [
+        ...landing.teamCommunity.teams,
+        { id: crypto.randomUUID(), name: "New team", sport: "Sport" },
+      ],
+    });
+  };
+
+  const removeTeam = (index: number) => {
+    const team = landing.teamCommunity.teams[index];
+    if (!team || !window.confirm(`Remove ${team.name || "this team"} from the homepage?`)) return;
+    updateTeamCommunity({
+      teams: landing.teamCommunity.teams.filter((_, teamIndex) => teamIndex !== index),
+    });
+  };
+
+  const moveTeam = (index: number, direction: -1 | 1) => {
+    const target = index + direction;
+    if (target < 0 || target >= landing.teamCommunity.teams.length) return;
+    const teams = [...landing.teamCommunity.teams];
+    [teams[index], teams[target]] = [teams[target], teams[index]];
+    updateTeamCommunity({ teams });
   };
 
   return (
@@ -567,7 +592,7 @@ export function AdminLandingPage() {
           </CmsField>
         </CmsSectionPanel>
 
-        <CmsSectionPanel title="Community & Events" description="General homepage band (#events) and /events page intro — not tied to a single event.">
+        <CmsSectionPanel title="Events and Sports" description="General homepage band (#events) and /community page intro — not tied to a single event.">
           <CmsField label="Image" className="sm:col-span-2">
             <CmsImageInput
               value={landing.event.backgroundImage}
@@ -719,22 +744,74 @@ export function AdminLandingPage() {
               onChange={(v) => updateTeamCommunity({ metaLine: v })}
             />
           </CmsField>
-          {landing.teamCommunity.teams.map((team, index) => (
-            <div key={index} className="contents">
-              <CmsField label={`Team ${index + 1} — name`}>
-                <CmsTextInput
-                  value={team.name}
-                  onChange={(v) => updateTeamChip(index as 0 | 1 | 2 | 3, { name: v })}
-                />
-              </CmsField>
-              <CmsField label={`Team ${index + 1} — sport`}>
-                <CmsTextInput
-                  value={team.sport}
-                  onChange={(v) => updateTeamChip(index as 0 | 1 | 2 | 3, { sport: v })}
-                />
-              </CmsField>
+          <div className="space-y-3 sm:col-span-2">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h3 className="text-sm font-semibold text-offgrid-green">Team carousel</h3>
+                <p className="mt-0.5 text-xs text-offgrid-green/50">
+                  Add, edit, delete, or reorder homepage team cards.
+                </p>
+              </div>
+              <Button type="button" variant="outline" size="sm" className="shrink-0 gap-1.5" onClick={addTeam}>
+                <Plus className="h-3.5 w-3.5" />
+                Add team
+              </Button>
             </div>
-          ))}
+
+            {landing.teamCommunity.teams.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-offgrid-green/20 px-4 py-8 text-center text-sm text-offgrid-green/55">
+                No teams yet. Add one to populate the homepage carousel.
+              </div>
+            ) : null}
+
+            {landing.teamCommunity.teams.map((team, index) => (
+              <div
+                key={team.id}
+                className="grid gap-3 rounded-xl border border-offgrid-green/10 bg-offgrid-cream/35 p-4 sm:grid-cols-[1fr_1fr_auto]"
+              >
+                <CmsField label={`Team ${index + 1} — name`}>
+                  <CmsTextInput value={team.name} onChange={(v) => updateTeamChip(index, { name: v })} />
+                </CmsField>
+                <CmsField label="Sport">
+                  <CmsTextInput value={team.sport} onChange={(v) => updateTeamChip(index, { sport: v })} />
+                </CmsField>
+                <div className="flex items-end gap-1 sm:pb-0.5">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-9 w-9 p-0"
+                    onClick={() => moveTeam(index, -1)}
+                    disabled={index === 0}
+                    aria-label={`Move ${team.name} earlier`}
+                  >
+                    <ChevronUp className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-9 w-9 p-0"
+                    onClick={() => moveTeam(index, 1)}
+                    disabled={index === landing.teamCommunity.teams.length - 1}
+                    aria-label={`Move ${team.name} later`}
+                  >
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-9 w-9 p-0 text-red-600 hover:border-red-200 hover:bg-red-50 hover:text-red-700"
+                    onClick={() => removeTeam(index)}
+                    aria-label={`Delete ${team.name}`}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
           <CmsField label="Primary CTA label">
             <CmsTextInput
               value={landing.teamCommunity.primaryCtaLabel}

@@ -74,14 +74,19 @@ export function orderReceiptEmail(
   ctx: OrderEmailContext & { siteUrl: string },
 ): { subject: string; html: string; text: string } {
   const isRetail = ctx.orderType === "retail";
+  const unpaid = ctx.paymentStatus === "unpaid";
   const subject = isRetail
-    ? `Order confirmed — ${ctx.orderId}`
+    ? unpaid
+      ? `Order received — ${ctx.orderId}`
+      : `Order receipt — ${ctx.orderId}`
     : `Custom order received — ${ctx.orderId}`;
   const ordersUrl = `${ctx.siteUrl}/account/orders/${ctx.orderId}`;
   const intro = isRetail
-    ? "Thanks for your shop order. Here is your receipt."
+    ? unpaid
+      ? "Thanks for your shop order. Here is your order summary — complete payment to confirm."
+      : "Thanks for your shop order. Here is your receipt."
     : "We received your custom order request. Our team will review your files and send an official quote.";
-  const title = isRetail ? "Order confirmed" : "Custom order received";
+  const title = isRetail ? (unpaid ? "Order received" : "Order receipt") : "Custom order received";
 
   const text = `Hi ${ctx.customerName},\n\n${intro}\n\n${buildOrderSummaryText(ctx)}\n\nView: ${ordersUrl}${emailTextFooter(ctx.siteUrl)}`;
 
@@ -89,11 +94,44 @@ export function orderReceiptEmail(
     title,
     siteUrl: ctx.siteUrl,
     preheader: isRetail
-      ? `Your shop order ${ctx.orderId} is confirmed.`
+      ? `Your shop order ${ctx.orderId} was received.`
       : `We received your custom order ${ctx.orderId}.`,
     bodyHtml: `<p style="color:${muted};line-height:1.65;margin:0 0 12px;">Hi ${escapeHtml(ctx.customerName)},</p>
      <p style="color:${muted};line-height:1.65;margin:0 0 8px;">${intro}</p>
      ${statusBadgeHtml(ctx.status)}
+     ${buildOrderSummaryHtml(ctx)}
+     ${emailCta(ordersUrl, "View order")}`,
+  });
+
+  return { subject, html, text };
+}
+
+/** Payment receipt sent when deposit/full payment settles (PayMongo, GCash, or staff). */
+export function paymentReceiptEmail(
+  ctx: OrderEmailContext & { siteUrl: string },
+): { subject: string; html: string; text: string } {
+  const isDeposit = ctx.paymentStatus === "deposit_paid";
+  const title = isDeposit ? "Deposit receipt" : "Payment receipt";
+  const subject = `${title} — ${ctx.orderId}`;
+  const ordersUrl = `${ctx.siteUrl}/account/orders/${ctx.orderId}`;
+  const message = isDeposit
+    ? "We received your deposit. Here is your payment receipt — production can proceed once your order is confirmed."
+    : "We received your payment. Here is your receipt.";
+
+  const text = `Hi ${ctx.customerName},\n\n${message}\n\n${buildOrderSummaryText(ctx)}\n\nView: ${ordersUrl}${emailTextFooter(ctx.siteUrl)}`;
+
+  const html = emailLayout({
+    title,
+    siteUrl: ctx.siteUrl,
+    preheader: `${message} Order ${ctx.orderId}.`,
+    bodyHtml: `<p style="color:${muted};line-height:1.65;margin:0 0 12px;">Hi ${escapeHtml(ctx.customerName)},</p>
+     <p style="color:${muted};line-height:1.65;margin:0 0 8px;">${escapeHtml(message)}</p>
+     ${statusBadgeHtml(ctx.status)}
+     ${emailCallout(
+       isDeposit
+         ? "Deposit confirmed. Thank you for trusting OFF GRID®."
+         : "Payment confirmed. Thank you for shopping with OFF GRID®.",
+     )}
      ${buildOrderSummaryHtml(ctx)}
      ${emailCta(ordersUrl, "View order")}`,
   });

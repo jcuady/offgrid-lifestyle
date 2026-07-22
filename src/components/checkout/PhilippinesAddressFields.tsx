@@ -6,6 +6,8 @@ import {
   getCityZipCode,
   getProvincesForRegion,
   getCitiesForProvince,
+  getRegionsList,
+  getBarangaysForCity,
   matchPlaceToPsgc,
   reverseGeocodePhilippines,
   searchPhilippinesPlaces,
@@ -101,10 +103,13 @@ export function PhilippinesAddressFields({
 
   useEffect(() => {
     let cancelled = false;
-    void loadPhilippinesLocations().then((mod) => {
+    void loadPhilippinesLocations().then(() => {
       if (cancelled) return;
-      setRegions(mod.getRegions());
-      setReady(true);
+      void getRegionsList().then((regions) => {
+        if (cancelled) return;
+        setRegions(regions);
+        setReady(true);
+      });
     });
     return () => {
       cancelled = true;
@@ -115,12 +120,11 @@ export function PhilippinesAddressFields({
     if (!ready) return;
     let cancelled = false;
     void (async () => {
-      const mod = await loadPhilippinesLocations();
       const nextProvinces = value.regionCode ? await getProvincesForRegion(value.regionCode) : [];
       const provinceCode = isNcrRegion(value.regionCode) ? NCR_PROVINCE_CODE : value.provinceCode;
       const nextCities =
         value.regionCode && provinceCode ? await getCitiesForProvince(provinceCode, value.regionCode) : [];
-      const nextBarangays = value.cityCode ? mod.getBarangays(value.cityCode) : [];
+      const nextBarangays = value.cityCode ? await getBarangaysForCity(value.cityCode) : [];
       if (cancelled) return;
       setProvinces(nextProvinces);
       setCities(nextCities);

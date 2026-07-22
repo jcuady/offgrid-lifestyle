@@ -520,6 +520,9 @@ export function OperationsOrderDetailPage() {
             isAdmin={isAdmin}
             onConfirm={() => {
               updateRetailPaymentStatus(retail.id, "fully_paid");
+              if (retail.status === "pending_deposit" || retail.status === "draft") {
+                updateRetailOrderStatus(retail.id, "confirmed");
+              }
               setFeedback(`Payment confirmed for order ${retail.id}.`);
             }}
           />
@@ -726,6 +729,12 @@ export function OperationsOrderDetailPage() {
             onConfirm={() => {
               const next = custom.paymentStatus === "unpaid" ? ("deposit_paid" as const) : ("fully_paid" as const);
               updateCustomPaymentStatus(custom.id, next);
+              if (
+                (next === "deposit_paid" || next === "fully_paid") &&
+                (custom.status === "pending_deposit" || custom.status === "draft")
+              ) {
+                updateCustomOrderStatus(custom.id, "confirmed");
+              }
               setFeedback(`Payment → ${formatPaymentStatus(next)}.`);
             }}
           />

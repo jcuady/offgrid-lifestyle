@@ -1,17 +1,33 @@
 import type { User } from "@supabase/supabase-js";
+import {
+  AUTH_ACCOUNT_EXISTS,
+  isDuplicateSignUpUser,
+  isEmailConfirmationPending,
+  mapSignInErrorMessage,
+  mapSignUpErrorMessage,
+} from "@/src/lib/authErrors";
+import { isValidEmail, validatePassword } from "@/src/lib/formValidation";
 import { supabase } from "@/src/lib/supabase";
 import { logger } from "@/src/lib/logger";
 import { usePortalStore, type PortalUser, type UserRole } from "@/src/store/usePortalStore";
 import { linkPushSubscriptionToUser } from "@/src/lib/pushSubscription";
 import type { PasswordResetAudience } from "@/src/lib/passwordReset";
 import { passwordResetRedirectUrl } from "@/src/lib/passwordReset";
+import type { RegisterCustomerInput } from "@/src/types/portal";
 
 export interface AuthService {
   currentUser: () => PortalUser | null;
   login: (email: string, password: string) => Promise<{ ok: boolean; message?: string }>;
   /** Development-only shortcut used by local demo flows. */
   loginAsRole: (role: UserRole) => void;
-  registerCustomer: (input: RegisterCustomerInput) => Promise<{ ok: boolean; message?: string; userId?: string; emailConfirmationRequired?: boolean }>;
+  registerCustomer: (input: RegisterCustomerInput) => Promise<{
+    ok: boolean;
+    message?: string;
+    userId?: string;
+    emailConfirmationRequired?: boolean;
+    /** Present when sign-up failed because the email is already registered. */
+    code?: "email_exists";
+  }>;
   requestPasswordReset: (email: string, audience?: PasswordResetAudience) => Promise<{ ok: boolean; message?: string }>;
   updatePassword: (newPassword: string) => Promise<{ ok: boolean; message?: string }>;
   logout: () => Promise<void>;
@@ -91,12 +107,24 @@ export const supabaseAuthService: AuthService = {
   currentUser: () => usePortalStore.getState().currentUser,
 
   login: async (email, password) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!isValidEmail(normalizedEmail)) {
+      return { ok: false, message: "Enter a valid email address." };
+    }
+    if (!password) {
+      return { ok: false, message: "Enter your password." };
+    }
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email: normalizedEmail,
+      password,
+    });
     if (error) {
-      return { ok: false, message: error.message };
+      return { ok: false, message: mapSignInErrorMessage(error.message) };
     }
     const portalUser = await resolvePortalUser();
     if (!portalUser) {
+      await supabase.auth.signOut();
       return { ok: false, message: "Could not load your account profile. Please try again." };
     }
     usePortalStore.getState().setCurrentUser(portalUser);
@@ -125,21 +153,36 @@ export const supabaseAuthService: AuthService = {
   },
 
   registerCustomer: async (input) => {
+    const name = input.name.trim();
+    const email = input.email.trim().toLowerCase();
+    const phone = input.phone.trim();
+    const passwordError = validatePassword(input.password);
+    if (!name) return { ok: false, message: "Full name is required." };
+    if (!isValidEmail(email)) return { ok: false, message: "Enter a valid email address." };
+    if (passwordError) return { ok: false, message: passwordError };
+
     const redirectTo = `${window.location.origin}/account/sign-in?confirmed=1`;
     const { data, error } = await supabase.auth.signUp({
-      email: input.email,
+      email,
       password: input.password,
       options: {
-        data: { name: input.name, phone: input.phone },
+        data: { name, phone },
         emailRedirectTo: redirectTo,
       },
     });
 
     if (error) {
-      if (error.message.toLowerCase().includes("already registered") || error.message.toLowerCase().includes("already exists")) {
-        return { ok: false, message: "An account with this email already exists. Please sign in instead." };
-      }
-      return { ok: false, message: error.message };
+      const message = mapSignUpErrorMessage(error.message);
+      return {
+        ok: false,
+        message,
+        ...(message === AUTH_ACCOUNT_EXISTS ? { code: "email_exists" as const } : {}),
+      };
+    }
+
+    // Existing account: Supabase returns 200 + empty identities (do not show "check your email").
+    if (isDuplicateSignUpUser(data.user)) {
+      return { ok: false, message: AUTH_ACCOUNT_EXISTS, code: "email_exists" };
     }
 
     const authUserId = data.user?.id;
@@ -147,7 +190,10 @@ export const supabaseAuthService: AuthService = {
       return { ok: false, message: "Sign-up succeeded but no user ID returned." };
     }
 
-    const emailConfirmationRequired = data.user?.identities !== undefined && data.user.identities.length === 0;
+    const emailConfirmationRequired = isEmailConfirmationPending({
+      user: data.user,
+      session: data.session,
+    });
 
     let portalUser: PortalUser | null = null;
     if (data.session && data.user) {
@@ -157,13 +203,13 @@ export const supabaseAuthService: AuthService = {
     if (!portalUser) {
       portalUser = {
         id: authUserId,
-        name: input.name,
-        email: input.email,
+        name,
+        email,
         role: "customer",
       };
     }
 
-    if (!emailConfirmationRequired && portalUser) {
+    if (!emailConfirmationRequired && data.session && portalUser) {
       usePortalStore.getState().setCurrentUser(portalUser);
       usePortalStore.getState().recordAudit({
         action: "auth.register",
@@ -190,24 +236,25 @@ export const supabaseAuthService: AuthService = {
     const redirectTo = passwordResetRedirectUrl(window.location.origin, audience);
     const { error } = await supabase.auth.resetPasswordForEmail(normalized, { redirectTo });
     if (error) {
-      return { ok: false, message: error.message };
+      return { ok: false, message: mapSignUpErrorMessage(error.message) };
     }
     const audienceHint =
       audience === "portal"
         ? " If this email is a team portal account, use the new password on the portal sign-in page."
         : "";
+    // Always success-shaped: do not reveal whether the email exists.
     return { ok: true, message: `Check your email for a password reset link.${audienceHint}` };
   },
 
   updatePassword: async (newPassword) => {
-    const password = newPassword.trim();
-    if (password.length < 8) {
-      return { ok: false, message: "Password must be at least 8 characters." };
+    const passwordError = validatePassword(newPassword);
+    if (passwordError) {
+      return { ok: false, message: passwordError };
     }
 
-    const { error } = await supabase.auth.updateUser({ password });
+    const { error } = await supabase.auth.updateUser({ password: newPassword.trim() });
     if (error) {
-      return { ok: false, message: error.message };
+      return { ok: false, message: error.message.trim() || "Unable to update password. Please try again." };
     }
     return { ok: true };
   },
@@ -232,6 +279,11 @@ export const supabaseAuthService: AuthService = {
 
 /** Initialize auth state from existing session on app load. */
 export async function initAuthListener() {
+  // ponytail: Supabase recovery links may land on `/` (site URL fallback) instead of
+  // `/account/reset-password` when the redirect_to isn't allowlisted. Route any recovery
+  // hash to the dedicated reset page so the user picks a new password — never auto-signs in.
+  redirectIfRecoveryHash();
+
   const portalUser = await resolvePortalUser();
   usePortalStore.getState().setCurrentUser(portalUser);
 
@@ -246,4 +298,21 @@ export async function initAuthListener() {
       }
     }
   });
+}
+
+function redirectIfRecoveryHash(): void {
+  if (typeof window === "undefined") return;
+  const { pathname, hash, search } = window.location;
+  if (pathname === "/account/reset-password") return;
+
+  const isRecovery =
+    hash.includes("type=recovery") ||
+    hash.includes("access_token=") ||
+    new URLSearchParams(search).has("code");
+
+  if (!isRecovery) return;
+
+  // Preserve the full hash so ResetPasswordPage can verify the session.
+  const target = `/account/reset-password${hash || ""}`;
+  window.location.replace(target);
 }

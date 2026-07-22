@@ -21,11 +21,11 @@ const STATIC_ROUTE_SEO: Record<string, PageSeoInput> = {
       "Browse premium pickleball, golf, running, and lifestyle apparel. Crowd favorites, new drops, and OG Signatures — ships nationwide in the Philippines.",
     path: "/shop",
   },
-  "/og-signatures": {
-    title: `OG Signatures — Pickleball, Golf & Running Collections | ${BRAND}`,
+  "/collections": {
+    title: `Shop By Collection — Discfest, Solar, Primal & OG Vibe | ${BRAND}`,
     description:
-      "Shop by sport: ultimate frisbee (top seller), pickleball, golf, and running — OFFGRID Filipino sportswear.",
-    path: "/og-signatures",
+      "Explore OFFGRID collections: Discfest, Solar, Primal, and OG Vibe. Filipino sportswear with a distinct point of view for play and everyday movement.",
+    path: "/collections",
   },
   "/custom": {
     title: `Custom Teamwear & Uniform Orders Philippines | ${BRAND}`,
@@ -45,11 +45,11 @@ const STATIC_ROUTE_SEO: Record<string, PageSeoInput> = {
       "Free production-ready Illustrator templates for custom tops, polos, and team uniforms. CMYK-ready for OFFGRID manufacturing.",
     path: "/custom/templates",
   },
-  "/events": {
-    title: `Community Events & Sportswear Philippines | ${BRAND}`,
+  "/community": {
+    title: `Events and Sports Community Philippines | ${BRAND}`,
     description:
-      "Discfest, Mixed Masters, Pickle Project, and more — see where OFFGRID Lifestyle shows up in the Filipino sports community.",
-    path: "/events",
+      "Discfest, Mixed Masters, Pickle Project, and more — discover OFFGRID events and sports across the Filipino athletic community.",
+    path: "/community",
   },
   "/testimonials": {
     title: `Customer Reviews & Team Testimonials | ${BRAND}`,
@@ -58,15 +58,15 @@ const STATIC_ROUTE_SEO: Record<string, PageSeoInput> = {
     path: "/testimonials",
   },
   "/about": {
-    title: `About Us — Filipino Sportswear Brand Manila | ${BRAND}`,
+    title: `About Us — Filipino Sportswear Brand Marikina | ${BRAND}`,
     description:
       "Where comfort meets movement. Learn how OFFGRID Lifestyle builds premium Filipino sportswear for courts, courses, and life off the grid.",
     path: "/about",
   },
   "/contact": {
-    title: `Contact OFFGRID Lifestyle — Manila, Philippines | ${BRAND}`,
+    title: `Contact OFFGRID Lifestyle — Marikina, Metro Manila | ${BRAND}`,
     description:
-      "Reach the OFFGRID team for custom orders, partnerships, and product questions. Based in Manila, PH — ships nationwide.",
+      "Reach the OFFGRID team for custom orders, partnerships, and product questions. Visit us at 5 Mt Everest, Marikina, 1800 Metro Manila — ships nationwide.",
     path: "/contact",
   },
   "/legal/terms": {
@@ -78,6 +78,18 @@ const STATIC_ROUTE_SEO: Record<string, PageSeoInput> = {
     title: `Privacy Policy | ${BRAND}`,
     description: "How OFFGRID Lifestyle collects, uses, and protects your personal information.",
     path: "/legal/privacy",
+  },
+  "/checkout/paymongo/complete": {
+    title: `Payment confirmation | ${BRAND}`,
+    description: "Confirm your PayMongo QR Ph payment for OFFGRID Lifestyle orders.",
+    path: "/checkout/paymongo/complete",
+    noindex: true,
+  },
+  "/checkout/paymongo/retry": {
+    title: `Retry payment | ${BRAND}`,
+    description: "Retry PayMongo QR Ph checkout for your OFFGRID Lifestyle order.",
+    path: "/checkout/paymongo/retry",
+    noindex: true,
   },
 };
 

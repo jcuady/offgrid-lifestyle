@@ -29,6 +29,8 @@ mcp-invoke-*.json
 deploy-result-*.json
 deploy-out-*.json
 deploy-submit.json
+tmp-deploy-*.json
+tmp-mcp/
 .hook-secret.tmp
 
 # Supabase CLI temp

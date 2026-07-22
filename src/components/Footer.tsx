@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { ArrowUpRight, ArrowUp } from "lucide-react";
 import { siteContainer } from "@/src/lib/brandLayout";
 import { LOGO_WORDMARK_WHITE } from "@/src/lib/brandAssets";
+import { BRAND_LOCATION, brandMapsUrl } from "@/src/lib/brandLocation";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 
 type FooterLink = { label: string; to: string; external?: boolean };
@@ -12,7 +13,7 @@ const FOOTER_COLUMNS: { heading: string; links: FooterLink[] }[] = [
     links: [
       { label: "Ultimate Frisbee Line", to: "/shop?category=Ultimate Frisbee" },
       { label: "Shop By Sport", to: "/#collections" },
-      { label: "Shop By Collection", to: "/#shop-collections" },
+      { label: "Shop By Collection", to: "/collections" },
       { label: "All Products", to: "/shop" },
     ],
   },
@@ -20,6 +21,7 @@ const FOOTER_COLUMNS: { heading: string; links: FooterLink[] }[] = [
     heading: "Custom",
     links: [
       { label: "Start a team order", to: "/custom/order" },
+      { label: "Custom orders", to: "/#custom-orders" },
       { label: "Templates", to: "/custom/templates" },
       { label: "Ordering guide", to: "/custom" },
     ],
@@ -27,8 +29,8 @@ const FOOTER_COLUMNS: { heading: string; links: FooterLink[] }[] = [
   {
     heading: "Company",
     links: [
-      { label: "Who we are", to: "/about" },
-      { label: "Community", to: "/community" },
+      { label: "Our story", to: "/#who-we-are" },
+      { label: "Events and Sports", to: "/community" },
       { label: "FAQ", to: "/faq" },
       { label: "Contact", to: "/contact" },
     ],
@@ -55,6 +57,17 @@ export function Footer() {
               <br />
               {footer.taglineLine2}
             </p>
+            <a
+              href={brandMapsUrl()}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-5 block max-w-xs text-sm leading-relaxed text-offgrid-cream/75 transition-colors hover:text-white"
+            >
+              <span className="mb-1 block font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-offgrid-cream/55">
+                Location
+              </span>
+              {BRAND_LOCATION.line}
+            </a>
           </div>
 
           {/* Nav columns */}
@@ -96,8 +109,8 @@ export function Footer() {
           <div className="flex flex-col gap-2 text-xs text-offgrid-cream/65 sm:flex-row sm:items-center sm:gap-5">
             <p>{footer.copyright}</p>
             <span aria-hidden className="hidden h-3 w-px bg-offgrid-cream/25 sm:block" />
-            <span className="font-mono uppercase tracking-[0.16em] text-offgrid-cream/55">
-              14.5995° N, 120.9842° E · Manila, PH
+            <span className="font-mono uppercase tracking-[0.12em] text-offgrid-cream/55">
+              {BRAND_LOCATION.street} · {BRAND_LOCATION.city}, {BRAND_LOCATION.postalCode}
             </span>
           </div>
 

@@ -9,7 +9,8 @@
  *       never blue body text on black (fails contrast).
  */
 
-/* Licensed brand fonts — drop woff2 files into public/fonts/ to activate */
+/* Licensed brand fonts — drop woff2 files into public/fonts/ to activate url() sources.
+ * Until files exist, only local() is used so Vite does not fetch 404 HTML as a font (OTS errors). */
 @font-face {
   font-family: "Swiss 721";
   font-style: normal;
@@ -17,8 +18,7 @@
   font-display: swap;
   src:
     local("Swiss 721"),
-    local("Swiss721 BT"),
-    url("/fonts/Swiss721-Roman.woff2") format("woff2");
+    local("Swiss721 BT");
 }
 
 @font-face {
@@ -28,8 +28,7 @@
   font-display: swap;
   src:
     local("Swiss 721 Bold"),
-    local("Swiss721 BT Bold"),
-    url("/fonts/Swiss721-Bold.woff2") format("woff2");
+    local("Swiss721 BT Bold");
 }
 
 @font-face {
@@ -39,8 +38,7 @@
   font-display: swap;
   src:
     local("TG Frekuent Mono"),
-    local("TG Frekuent Mono Regular"),
-    url("/fonts/TGFrekuentMono-Regular.woff2") format("woff2");
+    local("TG Frekuent Mono Regular");
 }
 
 @font-face {
@@ -48,9 +46,7 @@
   font-style: normal;
   font-weight: 600;
   font-display: swap;
-  src:
-    local("TG Frekuent Mono Medium"),
-    url("/fonts/TGFrekuentMono-Medium.woff2") format("woff2");
+  src: local("TG Frekuent Mono Medium");
 }
 
 @font-face {
@@ -58,9 +54,7 @@
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src:
-    local("TG Frekuent Mono Bold"),
-    url("/fonts/TGFrekuentMono-Bold.woff2") format("woff2");
+  src: local("TG Frekuent Mono Bold");
 }
 
 @theme {

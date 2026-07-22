@@ -86,6 +86,8 @@ function formatPaymentMethod(method: string | null | undefined): string {
     bank_transfer: "Bank transfer",
     cod: "Cash on delivery",
     card: "Card",
+    paymongo: "PayMongo QR Ph",
+    qrph: "PayMongo QR Ph",
   };
   return labels[method] ?? method.replaceAll("_", " ");
 }
@@ -115,7 +117,7 @@ export function buildOrderSummaryHtml(ctx: OrderEmailContext): string {
   html += metaRow("Status", escapeHtml(formatStatusLabel(ctx.status)));
   html += metaRow("Payment", escapeHtml(formatPaymentLabel(ctx.paymentStatus)));
 
-  if (ctx.orderType === "retail" && ctx.paymentMethod) {
+  if (ctx.paymentMethod) {
     html += metaRow("Pay via", escapeHtml(formatPaymentMethod(ctx.paymentMethod)));
   }
 
@@ -246,7 +248,7 @@ export function buildOrderSummaryText(ctx: OrderEmailContext): string {
   lines.push(`Status: ${formatStatusLabel(ctx.status)}`);
   lines.push(`Payment: ${formatPaymentLabel(ctx.paymentStatus)}`);
 
-  if (ctx.orderType === "retail" && ctx.paymentMethod) {
+  if (ctx.paymentMethod) {
     lines.push(`Pay via: ${formatPaymentMethod(ctx.paymentMethod)}`);
   }
 

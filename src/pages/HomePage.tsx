@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { WhoWeAre } from "@/src/components/WhoWeAre";
+import { CustomOrdersBand } from "@/src/components/CustomOrdersBand";
 import { FeaturedCollections } from "@/src/components/FeaturedCollections";
 import { FeaturedSpotlight } from "@/src/components/FeaturedSpotlight";
 import { ShopByCollection } from "@/src/components/ShopByCollection";
@@ -15,8 +16,8 @@ import { faqPageJsonLd, upsertJsonLd, websiteJsonLd } from "@/src/lib/siteSeo";
 import { hydrateProductsFromSupabase, hydrateSiteContentFromSupabase } from "@/src/services";
 
 /**
- * Owner IA: who we are + promo · shop by sport · shop by collection · community · FAQ.
- * Less fluff — no gallery / social-proof / best-seller essay strips.
+ * Owner IA: our story · custom orders · promo · shop by sport · shop by collection ·
+ * events & sports community · FAQ.
  */
 export function HomePage() {
   const navigate = useNavigate();
@@ -63,6 +64,7 @@ export function HomePage() {
       />
       <main id="main">
         <WhoWeAre />
+        <CustomOrdersBand />
         <FeaturedSpotlight placement="home" />
         <FeaturedCollections />
         <ShopByCollection />

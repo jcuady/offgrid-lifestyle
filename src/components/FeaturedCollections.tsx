@@ -2,7 +2,13 @@ import { motion } from "motion/react";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { LandingCollectionId } from "@/src/data/landingContent";
-import { sectionEyebrow, sectionPaddingCream, sectionTitle, siteContainer } from "@/src/lib/brandLayout";
+import {
+  electricBluePill,
+  sectionEyebrow,
+  sectionPaddingCream,
+  sectionTitle,
+  siteContainer,
+} from "@/src/lib/brandLayout";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { cmsTypographyStyle } from "@/src/lib/cmsTypography";
 import { cn } from "@/src/lib/utils";
@@ -51,7 +57,7 @@ export function FeaturedCollections() {
             ) : null}
             <Link
               to="/shop"
-              className="group inline-flex items-center gap-1.5 font-mono text-xs font-bold uppercase tracking-[0.14em] text-offgrid-green/70 transition-colors hover:text-offgrid-lime"
+              className={cn(electricBluePill, "group self-start md:self-auto")}
             >
               {viewAllLabel}
               <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
@@ -89,7 +95,7 @@ export function FeaturedCollections() {
                   aria-label={`Shop ${collection.title}`}
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <span className="font-mono text-3xl font-black tabular-nums leading-none text-offgrid-cream/25 md:text-4xl">
+                    <span className="font-mono text-3xl font-black tabular-nums leading-none text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.65)] md:text-4xl">
                       {layout.index}
                     </span>
                     <span className="shrink-0 rounded-full bg-offgrid-cream/90 px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-[0.15em] text-offgrid-green backdrop-blur-sm">
@@ -109,9 +115,9 @@ export function FeaturedCollections() {
                     >
                       {collection.title}
                     </h3>
-                    <span className="mt-3 inline-flex items-center gap-1.5 font-mono text-xs font-bold uppercase tracking-[0.14em] text-offgrid-lime">
+                    <span className={cn(electricBluePill, "mt-3 group-hover:bg-offgrid-gold")}>
                       {isFeature ? "Shop the drop" : "Shop sport"}
-                      <ArrowRight className="h-3 w-3" />
+                      <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
                     </span>
                   </div>
                 </Link>

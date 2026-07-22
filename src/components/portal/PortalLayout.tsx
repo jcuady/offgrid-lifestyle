@@ -69,6 +69,7 @@ const navByRole: Record<Exclude<UserRole, "customer">, NavSection[]> = {
         { name: "Homepage", to: "/portal/admin/homepage", icon: Home },
         { name: "Testimonials", to: "/portal/admin/testimonials", icon: Quote },
         { name: "Custom pages", to: "/portal/admin/custom-pages", icon: Palette },
+        { name: "Templates", to: "/portal/admin/templates", icon: Package },
       ],
     },
     {

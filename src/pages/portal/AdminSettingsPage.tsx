@@ -8,6 +8,7 @@ import {
   Database,
   ExternalLink,
   Home,
+  Package,
   Palette,
   QrCode,
   ScrollText,
@@ -24,7 +25,8 @@ import { cn } from "@/src/lib/utils";
 const SHORTCUTS: { name: string; description: string; to: string; icon: typeof Home }[] = [
   { name: "Payments", description: "GCash QR, PayMongo (coming soon)", to: "/portal/admin/payments", icon: QrCode },
   { name: "Homepage", description: "Hero, OG Signatures, and landing copy", to: "/portal/admin/homepage", icon: Home },
-  { name: "Custom pages", description: "Ordering guide sections and templates", to: "/portal/admin/custom-pages", icon: Palette },
+  { name: "Custom pages", description: "Ordering guide and custom-order copy", to: "/portal/admin/custom-pages", icon: Palette },
+  { name: "Templates", description: "OG client template library CRUD", to: "/portal/admin/templates", icon: Package },
   { name: "Events and Sports", description: "Community events and sports spotlights", to: "/portal/admin/events", icon: CalendarDays },
   { name: "Staff", description: "Provision and manage staff logins", to: "/portal/admin/staff", icon: Users },
   { name: "Audit log", description: "Review portal activity history", to: "/portal/admin/audit-logs", icon: ScrollText },

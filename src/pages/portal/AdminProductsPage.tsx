@@ -15,9 +15,13 @@ import {
   validateProductDraft,
   type ProductFieldErrors,
 } from "@/src/lib/productValidation";
+import { clampPage } from "@/src/lib/portalPagination";
 import { cn } from "@/src/lib/utils";
 import { PortalPageHeader } from "@/src/components/portal/PortalPageHeader";
 import { PortalDrawer } from "@/src/components/portal/PortalDrawer";
+import { PortalPagination } from "@/src/components/portal/PortalPagination";
+
+const PAGE_SIZE = 24;
 
 const STATUS_BADGE: Record<NonNullable<Product["status"]>, string> = {
   active: "bg-offgrid-lime/20 text-offgrid-green",
@@ -93,6 +97,7 @@ export function AdminProductsPage() {
   const [sportsInput, setSportsInput] = useState(() => formatLabelsInput(defaultDraft().sports));
   const [customTagsInput, setCustomTagsInput] = useState("");
   const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
   const [fieldErrors, setFieldErrors] = useState<ProductFieldErrors>({});
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -117,10 +122,31 @@ export function AdminProductsPage() {
     [products],
   );
 
-  const sorted = useMemo(() => [...products].sort((a, b) => a.name.localeCompare(b.name)), [products]);
-  const filtered = sorted.filter((product) =>
-    `${product.name} ${product.category} ${product.tag ?? ""}`.toLowerCase().includes(query.toLowerCase().trim()),
-  );
+  const filtered = useMemo(() => {
+    const q = query.toLowerCase().trim();
+    const sorted = [...products].sort((a, b) => a.name.localeCompare(b.name));
+    if (!q) return sorted;
+    return sorted.filter((product) =>
+      `${product.name} ${product.category} ${(product.sports ?? []).join(" ")} ${product.tag ?? ""} ${(product.tags ?? []).join(" ")}`
+        .toLowerCase()
+        .includes(q),
+    );
+  }, [products, query]);
+
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = clampPage(page, pageCount);
+  const pageItems = useMemo(() => {
+    const start = (safePage - 1) * PAGE_SIZE;
+    return filtered.slice(start, start + PAGE_SIZE);
+  }, [filtered, safePage]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [query]);
+
+  useEffect(() => {
+    if (page !== safePage) setPage(safePage);
+  }, [page, safePage]);
 
   const resetForm = () => {
     const next = defaultDraft();
@@ -253,8 +279,8 @@ export function AdminProductsPage() {
         }
       />
 
-      <div className="mb-6 flex items-center justify-between gap-3">
-        <div className="relative w-full max-w-sm">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative w-full min-w-0 max-w-sm">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-offgrid-green/40" />
           <input
             value={query}
@@ -263,8 +289,9 @@ export function AdminProductsPage() {
             className={cn(inputClass, "!pl-9")}
           />
         </div>
-        <p className="hidden shrink-0 font-mono text-xs uppercase tracking-[0.12em] text-offgrid-green/45 sm:block">
+        <p className="shrink-0 font-mono text-xs uppercase tracking-[0.12em] text-offgrid-green/45">
           {filtered.length} {filtered.length === 1 ? "item" : "items"}
+          {filtered.length > PAGE_SIZE ? ` · page ${safePage}/${pageCount}` : null}
         </p>
       </div>
 
@@ -276,8 +303,9 @@ export function AdminProductsPage() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-          {filtered.map((product) => (
+        <section className="overflow-hidden rounded-2xl bg-white/40 shadow-sm ring-1 ring-offgrid-green/10">
+          <div className="grid grid-cols-1 gap-4 p-3 sm:grid-cols-2 sm:gap-5 sm:p-4 xl:grid-cols-3 2xl:grid-cols-4">
+            {pageItems.map((product) => (
             <article
               key={product.id}
               className="group flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-offgrid-green/10 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md hover:ring-offgrid-lime/40"
@@ -346,8 +374,16 @@ export function AdminProductsPage() {
                 </div>
               </div>
             </article>
-          ))}
-        </div>
+            ))}
+          </div>
+          <PortalPagination
+            page={safePage}
+            pageSize={PAGE_SIZE}
+            total={filtered.length}
+            onPageChange={setPage}
+            className="bg-white"
+          />
+        </section>
       )}
 
       <PortalDrawer

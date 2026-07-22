@@ -123,6 +123,9 @@ const AdminLandingPage = lazy(() =>
 const AdminCustomPagesPage = lazy(() =>
   import("./pages/portal/AdminCustomPagesPage").then((m) => ({ default: m.AdminCustomPagesPage })),
 );
+const AdminTemplatesPage = lazy(() =>
+  import("./pages/portal/AdminTemplatesPage").then((m) => ({ default: m.AdminTemplatesPage })),
+);
 const AdminStaffPage = lazy(() =>
   import("./pages/portal/AdminStaffPage").then((m) => ({ default: m.AdminStaffPage })),
 );
@@ -261,6 +264,7 @@ function AppFrame() {
           <Route index element={<OperationsDashboardPage role="admin" />} />
           <Route path="homepage" element={<AdminLandingPage />} />
           <Route path="custom-pages" element={<AdminCustomPagesPage />} />
+          <Route path="templates" element={<AdminTemplatesPage />} />
           <Route path="orders" element={<OperationsOrdersPage role="admin" />} />
           <Route path="orders/:orderId" element={<OperationsOrderDetailPage />} />
           <Route path="analytics" element={<Navigate to="/portal/admin" replace />} />

@@ -11,6 +11,7 @@ import {
 import { Button } from "@/src/components/ui/Button";
 import { PortalDrawer } from "@/src/components/portal/PortalDrawer";
 import { PortalPageHeader } from "@/src/components/portal/PortalPageHeader";
+import { PortalPagination } from "@/src/components/portal/PortalPagination";
 import { localStaffService } from "@/src/services";
 import { userService, type PortalUserRow } from "@/src/services/userService";
 import { usePortalStore } from "@/src/store/usePortalStore";
@@ -224,6 +225,12 @@ export function AdminStaffPage() {
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const rangeStart = total === 0 ? 0 : page * PAGE_SIZE + 1;
   const rangeEnd = Math.min(total, (page + 1) * PAGE_SIZE);
+  const currentPage = page + 1;
+
+  // Keep page in range when filters shrink the result set.
+  useEffect(() => {
+    if (page > 0 && page >= pageCount) setPage(Math.max(0, pageCount - 1));
+  }, [page, pageCount]);
 
   const switchTab = (next: UserTab) => {
     startTransition(() => {
@@ -792,32 +799,14 @@ export function AdminStaffPage() {
           </>
         )}
 
-        {total > PAGE_SIZE ? (
-          <div className="flex flex-col gap-3 border-t border-offgrid-green/10 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
-            <p className="font-mono text-[11px] text-offgrid-green/55">
-              Page {page + 1} of {pageCount}
-            </p>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="cursor-pointer"
-                disabled={page === 0 || busy}
-                onClick={() => setPage((p) => Math.max(0, p - 1))}
-              >
-                Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="cursor-pointer"
-                disabled={page + 1 >= pageCount || busy}
-                onClick={() => setPage((p) => p + 1)}
-              >
-                Next
-              </Button>
-            </div>
-          </div>
+        {total > 0 ? (
+          <PortalPagination
+            page={currentPage}
+            pageSize={PAGE_SIZE}
+            total={total}
+            disabled={busy}
+            onPageChange={(next) => setPage(Math.max(0, next - 1))}
+          />
         ) : null}
       </section>
 

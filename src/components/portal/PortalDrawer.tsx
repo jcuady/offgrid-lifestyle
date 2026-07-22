@@ -44,7 +44,8 @@ export function PortalDrawer({ open, onClose, title, description, children, foot
         aria-modal="true"
         aria-label={title}
         className={cn(
-          "absolute inset-y-0 right-0 flex w-full max-w-md flex-col bg-offgrid-cream shadow-2xl transition-transform duration-300 ease-out",
+          "absolute inset-y-0 right-0 flex w-full max-w-full flex-col bg-offgrid-cream shadow-2xl transition-transform duration-300 ease-out sm:max-w-md lg:max-w-lg",
+          "pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)]",
           open ? "translate-x-0" : "translate-x-full",
         )}
       >

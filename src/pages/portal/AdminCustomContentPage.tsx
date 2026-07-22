@@ -1,6 +1,6 @@
 import { Navigate } from "react-router-dom";
 
-/** Legacy route — templates CMS is on Custom pages (#templates-cms). */
+/** Legacy route — template CRUD lives at /portal/admin/templates. */
 export function AdminCustomContentPage() {
-  return <Navigate to="/portal/admin/custom-pages#templates-cms" replace />;
+  return <Navigate to="/portal/admin/templates" replace />;
 }

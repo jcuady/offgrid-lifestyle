@@ -14,7 +14,6 @@ import type { CustomSectionSlug } from "@/src/store/useSiteContentStore";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { hydrateSiteContentFromSupabase, localContentService } from "@/src/services";
 import { useDebouncedCustomPagesPersist } from "@/src/hooks/useDebouncedSitePersist";
-import { TemplateSlotsEditor } from "@/src/components/admin/custom/TemplateSlotsEditor";
 import { HeadwearOptionsEditor } from "@/src/components/admin/custom/HeadwearOptionsEditor";
 import { Button } from "@/src/components/ui/Button";
 import { PortalPageHeader } from "@/src/components/portal/PortalPageHeader";
@@ -69,7 +68,7 @@ export function AdminCustomPagesPage() {
   const confirmResetAll = () => {
     if (
       window.confirm(
-        "Reset all custom page copy, guide panels, headwear/towel types, and template slots to defaults?",
+        "Reset all custom page copy, guide panels, and headwear/towel types to defaults? Template slots are managed on Templates.",
       )
     ) {
       resetCustomPageContent();
@@ -85,11 +84,14 @@ export function AdminCustomPagesPage() {
         title="Custom pages"
         description={
           <>
-            Ordering guide (<code className="text-xs">/custom</code>), templates (
+            Ordering guide (<code className="text-xs">/custom</code>), templates page copy (
             <code className="text-xs">/custom/templates</code>), place order (
             <code className="text-xs">/custom/order</code>), and wizard copy. Layout is fixed — edit text, images,
-            button labels, and where each button links. Template downloads use bundled files unless you upload a per-slot
-            override (browser-local until Supabase sync is wired).
+            button labels, and where each button links. Downloadable OG template files are managed on{" "}
+            <Link to="/portal/admin/templates" className="font-semibold text-offgrid-green underline-offset-2 hover:underline">
+              Templates
+            </Link>
+            .
           </>
         }
         actions={
@@ -624,7 +626,10 @@ export function AdminCustomPagesPage() {
         <div id="templates-cms">
           <HeadwearOptionsEditor />
 
-          <CmsSectionPanel title="Templates page — hero" description="/custom/templates header">
+          <CmsSectionPanel
+            title="Templates page — hero"
+            description="/custom/templates header copy. Downloadable OG files are managed on Templates."
+          >
             <CmsField label="Back link">
               <CmsTextInput value={templatesPage.backLink} onChange={(v) => updateTemplatesPage({ backLink: v })} />
             </CmsField>
@@ -672,8 +677,6 @@ export function AdminCustomPagesPage() {
               <CmsTextInput value={templatesPage.emptyCta} onChange={(v) => updateTemplatesPage({ emptyCta: v })} />
             </CmsField>
           </CmsSectionPanel>
-
-          <TemplateSlotsEditor />
         </div>
       </div>
     </div>

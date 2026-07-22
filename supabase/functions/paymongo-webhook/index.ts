@@ -17,6 +17,7 @@ import {
 } from "../_shared/orderPayment.ts";
 import { dispatchPaymentReceiptEmail } from "../_shared/dispatchPaymentReceipt.ts";
 import { dispatchPaymentConfirmedPush } from "../_shared/dispatchPaymentPush.ts";
+import { resolvePaymentPushUserIds } from "../_shared/paymentPushRecipients.ts";
 
 type CheckoutSessionData = {
   id?: string;
@@ -92,10 +93,30 @@ async function notifyPaymentConfirmed(
   admin: ReturnType<typeof createServiceClient>,
   orderId: string,
   customerId: string | null,
+  customerEmail: string | null,
 ): Promise<void> {
-  if (customerId) {
+  const emailMatchedUserIds: string[] = [];
+  const email = customerEmail?.trim();
+  if (email) {
+    const { data } = await admin
+      .from("og_portal_users")
+      .select("id")
+      .eq("role", "customer")
+      .eq("status", "active")
+      .ilike("email", email);
+    for (const row of data ?? []) {
+      if (row.id) emailMatchedUserIds.push(row.id);
+    }
+  }
+
+  const recipientIds = resolvePaymentPushUserIds({
+    customerId,
+    emailMatchedUserIds,
+  });
+
+  for (const userId of recipientIds) {
     await admin.from("og_notifications").insert({
-      user_id: customerId,
+      user_id: userId,
       title: "Payment confirmed",
       body: `We received your payment for order ${orderId}. A receipt is on the way to your email.`,
       url: `/account/orders/${orderId}`,
@@ -103,9 +124,9 @@ async function notifyPaymentConfirmed(
     }).then(({ error }) => {
       if (error) console.error("og_notifications insert", error);
     });
-    void dispatchPaymentConfirmedPush(orderId, customerId);
   }
 
+  void dispatchPaymentConfirmedPush(orderId, recipientIds);
   await dispatchPaymentReceiptEmail(orderId);
 }
 
@@ -117,7 +138,7 @@ async function markOrderPaid(
 ): Promise<"settled" | "skipped" | "failed"> {
   const { data: order } = await admin
     .from("og_orders")
-    .select("id, order_type, payment_status, status, customer_id")
+    .select("id, order_type, payment_status, status, customer_id, customer_email")
     .eq("id", orderId)
     .maybeSingle();
 
@@ -221,7 +242,12 @@ async function markOrderPaid(
     return "failed";
   }
 
-  await notifyPaymentConfirmed(admin, orderId, order.customer_id ?? null);
+  await notifyPaymentConfirmed(
+    admin,
+    orderId,
+    order.customer_id ?? null,
+    (order as { customer_email?: string | null }).customer_email ?? null,
+  );
   return "settled";
 }
 

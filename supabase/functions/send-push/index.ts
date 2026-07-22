@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import webpush from "npm:web-push@3.6.7";
+import { isServiceRoleBearer } from "../_shared/serviceRoleAuth.ts";
 
 const ORDER_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 const UUID_RE =
@@ -107,7 +108,7 @@ Deno.serve(async (req: Request) => {
     });
     const token = authHeader.replace("Bearer ", "");
     // Service-role callers (webhooks) may target specific users; never broadcast anonymously.
-    const isServiceRole = token === serviceRoleKey;
+    const isServiceRole = isServiceRoleBearer(token, serviceRoleKey);
     const { data: authData } = await userClient.auth.getUser(token);
     const authUser = authData.user ?? null;
 

@@ -3,6 +3,7 @@ import { Bell, BellOff } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import {
   isPushSubscribed,
+  sendPushNotification,
   subscribeToPushDetailed,
   unsubscribeFromPush,
 } from "@/src/lib/pushSubscription";
@@ -15,6 +16,7 @@ export function NotificationSettings() {
   const [subscribed, setSubscribed] = useState(false);
   const [permission, setPermission] = useState<NotificationPermission | "unsupported">("default");
   const [busy, setBusy] = useState(false);
+  const [testBusy, setTestBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
   const pushSupported = canReceiveWebPush();
@@ -65,6 +67,38 @@ export function NotificationSettings() {
       }
     } finally {
       setBusy(false);
+    }
+  };
+
+  const sendTest = async () => {
+    setMessage(null);
+    if (!currentUser) {
+      setMessage("Sign in to send a test notification.");
+      return;
+    }
+    if (!subscribed) {
+      setMessage("Enable push on this device first.");
+      return;
+    }
+    setTestBusy(true);
+    try {
+      const result = await sendPushNotification({
+        title: "OffGrid test notification",
+        body: "Push is working on this device. You can dismiss this.",
+        url: currentUser.role === "customer" ? "/account/orders" : "/portal",
+        userIds: [currentUser.id],
+      });
+      if (result.sent > 0) {
+        setMessage("Test push sent — check your device notifications.");
+      } else {
+        setMessage(
+          "No push delivered (0 sent). Re-enable notifications on this device, or install the PWA on mobile.",
+        );
+      }
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : "Test push failed.");
+    } finally {
+      setTestBusy(false);
     }
   };
 
@@ -145,10 +179,23 @@ export function NotificationSettings() {
             >
               {busy ? "Saving…" : subscribed ? "Turn off notifications" : "Enable notifications"}
             </Button>
+            {subscribed ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full sm:w-auto"
+                disabled={testBusy || !currentUser}
+                onClick={() => void sendTest()}
+              >
+                {testBusy ? "Sending…" : "Send test push"}
+              </Button>
+            ) : null}
           </div>
 
           <p className="mt-3 text-[11px] leading-relaxed text-offgrid-green/40">
-            Works on Chrome, Firefox, Edge, and Safari (macOS and installed iOS app). Uses encrypted Web Push with VAPID.
+            Works on Chrome, Firefox, Edge, and installed PWAs (Android + iOS 16.4+ Home Screen). Uses encrypted Web
+            Push with VAPID. Safari tabs on iPhone cannot receive push — install to Home Screen first.
           </p>
         </div>
       </div>

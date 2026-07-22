@@ -52,12 +52,14 @@ export function PushPermissionPrompt() {
       }
 
       if (!canReceiveWebPush()) return;
-      if (!("Notification" in window) || Notification.permission === "granted") return;
+      if (!("Notification" in window)) return;
 
       const subscribed = await isPushSubscribed();
-      if (!cancelled && !subscribed && Notification.permission === "default") {
-        setVisible(true);
-      }
+      if (cancelled || subscribed) return;
+
+      // Permission may already be granted while the PushSubscription / DB row is missing.
+      if (Notification.permission === "denied") return;
+      setVisible(true);
     };
 
     const schedule = () => {

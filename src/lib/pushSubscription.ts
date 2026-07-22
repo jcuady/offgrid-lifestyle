@@ -50,27 +50,33 @@ export async function subscribeToPushDetailed(): Promise<PushSubscribeResult> {
       return { ok: false, reason: "Could not activate the app service worker. Refresh and try again." };
     }
 
-    const existing = await registration.pushManager.getSubscription();
-    if (existing) {
-      await saveSubscription(existing);
-      return { ok: true };
-    }
-
-    const permission = await Notification.requestPermission();
-    if (permission !== "granted") {
+    if (Notification.permission === "denied") {
       return {
         ok: false,
-        reason:
-          permission === "denied"
-            ? "Notifications are blocked. Allow them in your browser or device settings."
-            : "Notification permission was not granted.",
+        reason: "Notifications are blocked. Allow them in your browser or device settings.",
       };
     }
 
-    const subscription = await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(vapidPublicKey) as BufferSource,
-    });
+    if (Notification.permission !== "granted") {
+      const permission = await Notification.requestPermission();
+      if (permission !== "granted") {
+        return {
+          ok: false,
+          reason:
+            permission === "denied"
+              ? "Notifications are blocked. Allow them in your browser or device settings."
+              : "Notification permission was not granted.",
+        };
+      }
+    }
+
+    let subscription = await registration.pushManager.getSubscription();
+    if (!subscription) {
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey) as BufferSource,
+      });
+    }
 
     await saveSubscription(subscription);
     return { ok: true };

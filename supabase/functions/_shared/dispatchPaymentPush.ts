@@ -4,9 +4,9 @@
  */
 export async function dispatchPaymentConfirmedPush(
   orderId: string,
-  customerId: string | null,
+  userIds: string[],
 ): Promise<void> {
-  if (!customerId || !orderId) return;
+  if (!orderId || !userIds.length) return;
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -24,7 +24,7 @@ export async function dispatchPaymentConfirmedPush(
         title: "Payment confirmed",
         body: `We received your payment for order ${orderId}.`,
         url: `/account/orders/${orderId}`,
-        user_ids: [customerId],
+        user_ids: userIds.slice(0, 50),
       }),
     });
     if (!res.ok) {

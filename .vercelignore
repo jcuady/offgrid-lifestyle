@@ -11,6 +11,8 @@ coverage/
 .env.*
 !.env.example
 *credentials*
+!src/lib/accountCredentials.ts
+!src/lib/accountCredentials.test.ts
 *service-role*
 *service_role*
 *vapid-private*

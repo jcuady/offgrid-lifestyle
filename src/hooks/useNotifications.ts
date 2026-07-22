@@ -29,8 +29,11 @@ export function useNotifications() {
     void refresh();
     if (!currentUser) return;
 
+    // Unique name per mount: PortalLayout renders two NotificationBells (mobile+desktop),
+    // and Strict Mode remounts — reusing `og-notifications:${userId}` returns an already
+    // subscribed channel and .on() throws.
     const channel = supabase
-      .channel(`og-notifications:${currentUser.id}`)
+      .channel(`og-notifications:${currentUser.id}:${crypto.randomUUID()}`)
       .on(
         "postgres_changes",
         {

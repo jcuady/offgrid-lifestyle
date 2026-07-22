@@ -46,7 +46,7 @@ function PaymentProofAdminSection({
   paymentMethod: string | null | undefined;
   paymentStatus: string;
   isAdmin: boolean;
-  onConfirm: () => void;
+  onConfirm: (nextStatus: "deposit_paid" | "fully_paid") => Promise<void> | void;
   forceShow?: boolean;
   confirmAsDeposit?: boolean;
 }) {
@@ -70,9 +70,11 @@ function PaymentProofAdminSection({
     setConfirming(true);
     const nextStatus =
       confirmAsDeposit && paymentStatus === "unpaid" ? "deposit_paid" : "fully_paid";
-    await localOrderService.updateOrderField(orderId, { payment_status: nextStatus });
-    onConfirm();
-    setConfirming(false);
+    try {
+      await onConfirm(nextStatus);
+    } finally {
+      setConfirming(false);
+    }
   };
 
   const showConfirm = isAdmin && !isSettled && proofUrl;
@@ -271,12 +273,13 @@ function AdminQuoteEditor({
 }
 
 export function OperationsOrderDetailPage() {
-  const { orderId } = useParams<{ orderId: string }>();
+  const { orderId: rawOrderId } = useParams<{ orderId: string }>();
   const location = useLocation();
   const isAdmin = location.pathname.startsWith("/portal/admin");
   const basePath = isAdmin ? "/portal/admin" : "/portal/staff";
+  const transitionOpts = isAdmin ? { unrestricted: true } : undefined;
 
-  const { retail, custom, loading, found } = useOrderDetail(orderId);
+  const { retail, custom, loading, found, orderId } = useOrderDetail(rawOrderId);
 
   const updateRetailOrderStatus = usePortalStore((s) => s.updateRetailOrderStatus);
   const updateRetailPaymentStatus = usePortalStore((s) => s.updateRetailPaymentStatus);
@@ -322,10 +325,10 @@ export function OperationsOrderDetailPage() {
   }
 
   return (
-    <div className="p-6 sm:p-8 lg:p-10">
+    <div className="min-w-0 overflow-x-hidden p-4 sm:p-6 lg:p-10">
       <Link
         to={`${basePath}/orders`}
-        className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-offgrid-green/60 hover:text-offgrid-green"
+        className="inline-flex min-h-11 items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-offgrid-green/60 hover:text-offgrid-green"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
         Back to orders
@@ -341,7 +344,7 @@ export function OperationsOrderDetailPage() {
         <div className="mt-6 space-y-8">
           <div>
             <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-green/45">Retail order</p>
-            <h1 className="mt-2 text-4xl font-display font-black text-offgrid-green">{retail.id}</h1>
+            <h1 className="mt-2 break-all font-display text-3xl font-black text-offgrid-green sm:text-4xl">{retail.id}</h1>
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <span className={cn("inline-flex rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em]", orderStatusClass(retail.status))}>
                 Fulfillment: {formatOrderStatus(retail.status)}
@@ -356,15 +359,15 @@ export function OperationsOrderDetailPage() {
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-3">
-            <div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:flex lg:flex-wrap">
+            <div className="min-w-0">
               <label className="text-[10px] font-semibold uppercase tracking-[0.18em] text-offgrid-green/45">Fulfillment status</label>
               <select
                 value={retail.status}
                 onChange={(e) => {
                   void (async () => {
                     const next = e.target.value as (typeof retail)["status"];
-                    if (!canTransitionStatus(retail.status, next)) {
+                    if (!canTransitionStatus(retail.status, next, transitionOpts)) {
                       setFeedback(`Invalid transition: ${formatOrderStatus(retail.status)} → ${formatOrderStatus(next)}.`);
                       return;
                     }
@@ -375,13 +378,13 @@ export function OperationsOrderDetailPage() {
                         next,
                         applyStore: (value) => updateRetailOrderStatus(retail.id, value),
                       });
-                      setFeedback(`Order ${retail.id} → ${formatOrderStatus(next)}.`);
+                      setFeedback(`Order ${retail.id} → ${formatOrderStatus(next)}. Customer notified when applicable.`);
                     } catch (err) {
                       setFeedback(err instanceof Error ? err.message : "Could not update order status.");
                     }
                   })();
                 }}
-                className="mt-1 block rounded-xl border border-offgrid-green/20 px-3 py-2 text-sm"
+                className="mt-1 block min-h-11 w-full min-w-0 rounded-xl border border-offgrid-green/20 px-3 py-2 text-sm sm:w-auto"
               >
                 {ORDER_TRANSITIONS.map((s) => (
                   <option key={s} value={s}>
@@ -391,7 +394,7 @@ export function OperationsOrderDetailPage() {
               </select>
             </div>
             {isAdmin ? (
-              <div>
+              <div className="min-w-0">
                 <label className="text-[10px] font-semibold uppercase tracking-[0.18em] text-offgrid-green/45">Payment status</label>
                 <select
                   value={retail.paymentStatus}
@@ -411,7 +414,7 @@ export function OperationsOrderDetailPage() {
                       }
                     })();
                   }}
-                  className="mt-1 block rounded-xl border border-offgrid-green/20 px-3 py-2 text-sm"
+                  className="mt-1 block min-h-11 w-full min-w-0 rounded-xl border border-offgrid-green/20 px-3 py-2 text-sm sm:w-auto"
                 >
                   {PAYMENT_TRANSITIONS.map((s) => (
                     <option key={s} value={s}>
@@ -425,7 +428,9 @@ export function OperationsOrderDetailPage() {
             )}
           </div>
           <p className="text-xs text-offgrid-green/55">
-            Fulfillment status and payment status are tracked separately.
+            {isAdmin
+              ? "Admin can set any fulfillment or payment status. Customers get push + inbox when status moves to confirmed, production, shipped, delivered, or paid."
+              : "Fulfillment follows the ops pipeline. Payment updates: admin only."}
           </p>
 
           <div className="grid gap-6 lg:grid-cols-2">
@@ -518,10 +523,23 @@ export function OperationsOrderDetailPage() {
             paymentMethod={retail.paymentMethod}
             paymentStatus={retail.paymentStatus}
             isAdmin={isAdmin}
-            onConfirm={() => {
-              updateRetailPaymentStatus(retail.id, "fully_paid");
-              if (retail.status === "pending_deposit" || retail.status === "draft") {
-                updateRetailOrderStatus(retail.id, "confirmed");
+            onConfirm={async (nextStatus) => {
+              await persistOrderPaymentUpdate({
+                orderId: retail.id,
+                previousStatus: retail.paymentStatus,
+                next: nextStatus,
+                applyStore: (value) => updateRetailPaymentStatus(retail.id, value),
+              });
+              if (
+                (nextStatus === "deposit_paid" || nextStatus === "fully_paid") &&
+                (retail.status === "pending_deposit" || retail.status === "draft")
+              ) {
+                await persistOrderStatusUpdate({
+                  orderId: retail.id,
+                  previousStatus: retail.status,
+                  next: "confirmed",
+                  applyStore: (value) => updateRetailOrderStatus(retail.id, value),
+                });
               }
               setFeedback(`Payment confirmed for order ${retail.id}.`);
             }}
@@ -606,7 +624,7 @@ export function OperationsOrderDetailPage() {
                 onChange={(e) => {
                   void (async () => {
                     const next = e.target.value as (typeof custom)["status"];
-                    if (!canTransitionStatus(custom.status, next)) {
+                    if (!canTransitionStatus(custom.status, next, transitionOpts)) {
                       setFeedback(`Invalid transition: ${formatOrderStatus(custom.status)} → ${formatOrderStatus(next)}.`);
                       return;
                     }
@@ -617,7 +635,7 @@ export function OperationsOrderDetailPage() {
                         next,
                         applyStore: (value) => updateCustomOrderStatus(custom.id, value),
                       });
-                      setFeedback(`Order ${custom.id} → ${formatOrderStatus(next)}.`);
+                      setFeedback(`Order ${custom.id} → ${formatOrderStatus(next)}. Customer notified when applicable.`);
                     } catch (err) {
                       setFeedback(err instanceof Error ? err.message : "Could not update order status.");
                     }
@@ -726,16 +744,25 @@ export function OperationsOrderDetailPage() {
             isAdmin={isAdmin}
             forceShow
             confirmAsDeposit
-            onConfirm={() => {
-              const next = custom.paymentStatus === "unpaid" ? ("deposit_paid" as const) : ("fully_paid" as const);
-              updateCustomPaymentStatus(custom.id, next);
+            onConfirm={async (nextStatus) => {
+              await persistOrderPaymentUpdate({
+                orderId: custom.id,
+                previousStatus: custom.paymentStatus,
+                next: nextStatus,
+                applyStore: (value) => updateCustomPaymentStatus(custom.id, value),
+              });
               if (
-                (next === "deposit_paid" || next === "fully_paid") &&
+                (nextStatus === "deposit_paid" || nextStatus === "fully_paid") &&
                 (custom.status === "pending_deposit" || custom.status === "draft")
               ) {
-                updateCustomOrderStatus(custom.id, "confirmed");
+                await persistOrderStatusUpdate({
+                  orderId: custom.id,
+                  previousStatus: custom.status,
+                  next: "confirmed",
+                  applyStore: (value) => updateCustomOrderStatus(custom.id, value),
+                });
               }
-              setFeedback(`Payment → ${formatPaymentStatus(next)}.`);
+              setFeedback(`Payment → ${formatPaymentStatus(nextStatus)}.`);
             }}
           />
 

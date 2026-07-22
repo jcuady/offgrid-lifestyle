@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import type { OrderStatus, PaymentStatus } from "@/src/types/commerce";
 import {
@@ -84,7 +84,19 @@ export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
   const [statusFilter, setStatusFilter] = useState<OrderStatus | "all">("all");
   const [paymentFilter, setPaymentFilter] = useState<PaymentStatus | "all">("all");
   const [quoteFilter, setQuoteFilter] = useState<QuoteFilter>("all");
-  const [view, setView] = useState<"table" | "cards">("table");
+  const [view, setView] = useState<"table" | "cards">(() =>
+    typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches ? "cards" : "table",
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const sync = () => {
+      if (mq.matches) setView("cards");
+    };
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
 
   const allRows = useMemo(() => {
     const list: Row[] = [
@@ -149,7 +161,7 @@ export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
           onChange={(event) => {
             void (async () => {
               const next = event.target.value as OrderStatus;
-              if (!canTransitionStatus(status, next)) {
+              if (!canTransitionStatus(status, next, isAdmin ? { unrestricted: true } : undefined)) {
                 setFeedback(`Invalid transition: ${formatOrderStatus(status)} → ${formatOrderStatus(next)}.`);
                 return;
               }
@@ -271,8 +283,8 @@ export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
   );
 
   return (
-    <div className="min-h-full">
-      <section className="border-b border-offgrid-green/10 bg-offgrid-green/[0.06] px-6 py-10 sm:px-8 lg:px-10">
+    <div className="min-h-full min-w-0 overflow-x-hidden">
+      <section className="border-b border-offgrid-green/10 bg-offgrid-green/[0.06] px-4 py-8 sm:px-8 sm:py-10 lg:px-10">
         <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-offgrid-green/45">
           {isAdmin ? "Admin · Order management" : "Staff · Operations"}
         </p>
@@ -285,7 +297,7 @@ export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
         </p>
       </section>
 
-      <div className="space-y-6 px-6 py-8 sm:px-8 lg:space-y-8 lg:px-10 lg:py-10">
+      <div className="space-y-6 px-4 py-6 sm:px-8 sm:py-8 lg:space-y-8 lg:px-10 lg:py-10">
         <div className="rounded-2xl border border-offgrid-green/[0.09] bg-white p-4 shadow-[0_2px_28px_-8px_rgba(0,0,0,0.08)] ring-1 ring-offgrid-green/[0.05] sm:p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="relative min-w-0 flex-1">
@@ -527,43 +539,41 @@ export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
               const id = row.entry.id;
               const href = detailHref(id);
               return (
-                <Link
+                <div
                   key={`${row.kind}-${id}`}
-                  to={href}
-                  className="group flex flex-col rounded-2xl border border-offgrid-green/[0.09] bg-white p-5 shadow-sm ring-1 ring-offgrid-green/[0.04] transition-all hover:-translate-y-0.5 hover:border-offgrid-lime/40 hover:shadow-md"
+                  className="flex flex-col rounded-2xl border border-offgrid-green/[0.09] bg-white p-5 shadow-sm ring-1 ring-offgrid-green/[0.04]"
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="font-mono text-sm font-bold text-offgrid-green group-hover:text-offgrid-green">{id}</p>
-                      <p className="mt-2 text-sm font-semibold text-offgrid-green">{row.entry.customerName}</p>
-                      <p className="mt-0.5 truncate text-xs text-offgrid-green/55">{row.entry.customerEmail}</p>
+                  <Link to={href} className="group min-w-0">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="break-all font-mono text-sm font-bold text-offgrid-green">{id}</p>
+                        <p className="mt-2 text-sm font-semibold text-offgrid-green">{row.entry.customerName}</p>
+                        <p className="mt-0.5 truncate text-xs text-offgrid-green/55">{row.entry.customerEmail}</p>
+                      </div>
+                      {typeBadge(row.kind)}
                     </div>
-                    {typeBadge(row.kind)}
-                  </div>
-                  <div className="mt-4 space-y-2">
-                    <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/45">Fulfillment</p>
+                    <div className="mt-4 flex flex-wrap gap-2">
                       {fulfillmentBadge(row)}
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/45">Payment</p>
                       {paymentBadge(row)}
                     </div>
-                    {row.kind === "retail" ? (
-                      <p className="text-xs text-offgrid-green/60">{formatPaymentMethodLabel(row.entry.paymentMethod)}</p>
-                    ) : null}
-                  </div>
-                  <div className="mt-3 flex items-center justify-between gap-2 border-t border-offgrid-green/[0.07] pt-4">
-                    <div>{quoteBadge(row)}</div>
-                    <span className="text-[10px] font-medium uppercase tracking-[0.12em] text-offgrid-green/45">
-                      {formatOrderTimestamp(row.entry.createdAt)}
-                    </span>
-                  </div>
-                  <span className="mt-4 inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.12em] text-offgrid-lime">
+                    <div className="mt-3 flex items-center justify-between gap-2 border-t border-offgrid-green/[0.07] pt-3">
+                      <div>{quoteBadge(row)}</div>
+                      <span className="text-[10px] font-medium uppercase tracking-[0.12em] text-offgrid-green/45">
+                        {formatOrderTimestamp(row.entry.createdAt)}
+                      </span>
+                    </div>
+                  </Link>
+                  {canUpdateStatus ? (
+                    <div className="mt-4 border-t border-offgrid-green/[0.07] pt-4">{renderRowActions(row)}</div>
+                  ) : null}
+                  <Link
+                    to={href}
+                    className="mt-3 inline-flex min-h-11 items-center gap-1 text-xs font-semibold uppercase tracking-[0.12em] text-offgrid-lime"
+                  >
                     View order
-                    <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-                  </span>
-                </Link>
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
               );
             })}
           </div>

@@ -22,6 +22,7 @@ import { checkoutPaymentConfigFromSettings, validateRetailPaymentMethod } from "
 import { notifyStaffOrderEvent } from "@/src/lib/notifications";
 import { resolveStorageReference } from "@/src/lib/storageAccess";
 import { sendOrderReceiptEmail } from "@/src/services/emailService";
+import { normalizeOrderId } from "@/src/lib/orderId";
 
 export interface RetailCartLineInput {
   productId: string;
@@ -346,7 +347,9 @@ export const supabaseOrderService: OrderService = {
   },
 
   fetchOrderById: async (orderId) => {
-    const { data, error } = await supabase.from("og_orders").select("*").eq("id", orderId).maybeSingle();
+    const id = normalizeOrderId(orderId);
+    if (!id) return null;
+    const { data, error } = await supabase.from("og_orders").select("*").eq("id", id).maybeSingle();
     if (error || !data) return null;
 
     const row = data as OrderRow;
@@ -364,25 +367,29 @@ export const supabaseOrderService: OrderService = {
   },
 
   updateOrderField: async (id, patch) => {
+    const orderId = normalizeOrderId(id);
+    if (!orderId) throw new Error("Missing order id");
     if (patch.payment_proof_url !== undefined) {
       const { error } = await supabase.rpc("og_submit_payment_proof", {
-        p_order_id: id,
+        p_order_id: orderId,
         p_proof_url: patch.payment_proof_url,
       });
       if (error) throw new Error(error.message);
       return;
     }
 
-    const { error } = await supabase.from("og_orders").update(patch).eq("id", id);
+    const { error } = await supabase.from("og_orders").update(patch).eq("id", orderId);
     if (error) throw new Error(error.message);
   },
 
   fetchOrderProofUrl: async (orderId: string): Promise<string | null> => {
+    const id = normalizeOrderId(orderId);
+    if (!id) return null;
     const { data } = await supabase
       .from("og_orders")
       .select("payment_proof_url")
-      .eq("id", orderId)
-      .single();
+      .eq("id", id)
+      .maybeSingle();
     const reference = data?.payment_proof_url ?? null;
     return resolveStorageReference(reference);
   },

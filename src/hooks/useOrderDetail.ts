@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { localOrderService } from "@/src/services";
 import { usePortalStore } from "@/src/store/usePortalStore";
 import { useEnsureOrdersLoaded } from "@/src/hooks/useEnsureOrdersLoaded";
+import { normalizeOrderId } from "@/src/lib/orderId";
 
 /** Resolve an order by ID, fetching from Supabase when the store is empty (deep links). */
-export function useOrderDetail(orderId: string | undefined) {
+export function useOrderDetail(rawOrderId: string | undefined) {
   useEnsureOrdersLoaded();
+  const orderId = normalizeOrderId(rawOrderId) || undefined;
 
   const retail = usePortalStore((s) => s.retailOrders.find((o) => o.id === orderId));
   const custom = usePortalStore((s) => s.customOrders.find((o) => o.id === orderId));
@@ -44,5 +46,6 @@ export function useOrderDetail(orderId: string | undefined) {
     custom,
     loading,
     found: Boolean(retail || custom),
+    orderId,
   };
 }

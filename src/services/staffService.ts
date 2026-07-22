@@ -17,7 +17,7 @@ export interface StaffService {
 
 export const supabaseStaffService: StaffService = {
   list: async () => {
-    const rows = await userService.list("staff");
+    const { rows } = await userService.list({ role: "staff", limit: 100 });
     return rows.map((row) => ({
       id: row.id,
       name: row.name,

@@ -1,5 +1,6 @@
 import type { CreateStaffInput } from "@/src/types/portal";
 import { logger } from "@/src/lib/logger";
+import { sanitizePortalUserSearch } from "@/src/lib/sanitizePortalUserSearch";
 import { supabase } from "@/src/lib/supabase";
 import { usePortalStore } from "@/src/store/usePortalStore";
 
@@ -14,11 +15,48 @@ export interface PortalUserRow {
   lastLoginAt: string | null;
 }
 
+export interface ListUsersOptions {
+  /** Exact role, or `team` for staff + admin. */
+  role?: PortalUserRow["role"] | "team";
+  status?: PortalUserRow["status"] | "all";
+  /** Matches name or email (ilike). */
+  query?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface ListUsersResult {
+  rows: PortalUserRow[];
+  total: number;
+}
+
 export interface UpdateUserInput {
   portalUserId: string;
   name?: string;
   email?: string;
   password?: string;
+}
+
+function mapRow(row: {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  last_login_at: string | null;
+}): PortalUserRow {
+  return {
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    role: row.role as PortalUserRow["role"],
+    status: row.status as PortalUserRow["status"],
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    lastLoginAt: row.last_login_at,
+  };
 }
 
 async function callManageUser(body: Record<string, unknown>): Promise<{ ok: boolean; message?: string; id?: string }> {
@@ -56,36 +94,46 @@ async function callManageUser(body: Record<string, unknown>): Promise<{ ok: bool
 }
 
 export const userService = {
-  async list(role?: PortalUserRow["role"]): Promise<PortalUserRow[]> {
+  async list(options: ListUsersOptions = {}): Promise<ListUsersResult> {
+    const limit = Math.min(Math.max(options.limit ?? 25, 1), 100);
+    const offset = Math.max(options.offset ?? 0, 0);
+
     let query = supabase
       .from("og_portal_users")
-      .select("id, name, email, role, status, created_at, updated_at, last_login_at")
+      .select("id, name, email, role, status, created_at, updated_at, last_login_at", { count: "exact" })
       .order("created_at", { ascending: false });
 
-    if (role) {
-      query = query.eq("role", role);
+    if (options.role === "team") {
+      query = query.in("role", ["staff", "admin"]);
+    } else if (options.role) {
+      query = query.eq("role", options.role);
     }
 
-    const { data, error } = await query;
+    if (options.status && options.status !== "all") {
+      query = query.eq("status", options.status);
+    }
+
+    const q = options.query ? sanitizePortalUserSearch(options.query) : "";
+    if (q) {
+      query = query.or(`name.ilike.%${q}%,email.ilike.%${q}%`);
+    }
+
+    query = query.range(offset, offset + limit - 1);
+
+    const { data, error, count } = await query;
     if (error || !data) {
       logger.warn("Failed to list portal users", {
         service: "userService",
         operation: "list",
         error: error?.message,
       });
-      return [];
+      return { rows: [], total: 0 };
     }
 
-    return data.map((row) => ({
-      id: row.id,
-      name: row.name,
-      email: row.email,
-      role: row.role as PortalUserRow["role"],
-      status: row.status as PortalUserRow["status"],
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
-      lastLoginAt: row.last_login_at,
-    }));
+    return {
+      rows: data.map(mapRow),
+      total: count ?? data.length,
+    };
   },
 
   createStaff(input: CreateStaffInput) {

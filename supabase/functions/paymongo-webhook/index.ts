@@ -10,6 +10,7 @@ import {
 } from "../_shared/paymongo.ts";
 import {
   amountsMatchCentavos,
+  PAYMONGO_PASS_ON_FEES,
   resolvePaidOrderUpdate,
   resolvePaymentKindFromSession,
   type PaymentKind,
@@ -196,7 +197,7 @@ async function markOrderPaid(
           last_event: eventType,
           fee_centavos: payment?.attributes?.fee ?? null,
           net_amount_centavos: payment?.attributes?.net_amount ?? null,
-          pass_on_fees: false,
+          pass_on_fees: PAYMONGO_PASS_ON_FEES,
         },
       })
       .eq("provider_checkout_session_id", sessionId);

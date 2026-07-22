@@ -45,3 +45,14 @@ export function amountsMatchCentavos(
   if (expected == null || paid == null) return true; // ponytail: skip when PayMongo omits amount
   return Math.abs(expected - paid) <= 1;
 }
+
+/**
+ * Retail PayMongo charge = og_orders.total_centavos (catalog selling prices + shipping).
+ * DB trigger og_apply_live_retail_prices uses og_products.price, never base_price.
+ */
+export function retailPayMongoChargeCentavos(totalCentavos: number | null | undefined): number {
+  return totalCentavos ?? 0;
+}
+
+/** Keep false — OFFGRID absorbs QR Ph fees (mirrors src/lib/paymongo.ts PAYMONGO_PASS_ON_FEES). */
+export const PAYMONGO_PASS_ON_FEES = false as const;

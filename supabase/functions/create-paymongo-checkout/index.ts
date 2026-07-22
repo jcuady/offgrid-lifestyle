@@ -2,8 +2,10 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { corsHeadersFor } from "../_shared/cors.ts";
 import { assertOrderPaymentAccess } from "../_shared/orderAccess.ts";
 import {
+  PAYMONGO_PASS_ON_FEES,
   resolvePaidOrderUpdate,
   resolvePaymentKindFromSession,
+  retailPayMongoChargeCentavos,
   type PaymentKind,
 } from "../_shared/orderPayment.ts";
 import {
@@ -52,7 +54,7 @@ function resolveCharge(
   requestedKind?: PaymentKind,
 ): { kind: PaymentKind; amountCentavos: number; lineName: string } {
   if (order.order_type === "retail") {
-    const amount = order.total_centavos ?? 0;
+    const amount = retailPayMongoChargeCentavos(order.total_centavos);
     if (amount < 100) throw new Error("Order total is too small to charge via PayMongo.");
     return { kind: "full", amountCentavos: amount, lineName: `OFFGRID order ${order.id}` };
   }
@@ -128,7 +130,7 @@ async function settleFromPaidSession(
       metadata: {
         payment_kind: kind,
         last_event: "create_checkout_sync",
-        pass_on_fees: false,
+        pass_on_fees: PAYMONGO_PASS_ON_FEES,
       },
     })
     .eq("provider_checkout_session_id", sessionId);
@@ -335,7 +337,7 @@ Deno.serve(async (req: Request) => {
             },
           ],
           payment_method_types: ["qrph"],
-          pass_on_fees: false,
+          pass_on_fees: PAYMONGO_PASS_ON_FEES,
           success_url: successUrl,
           cancel_url: cancelUrl,
           reference_number: `${orderId}:${charge.kind}`,
@@ -386,7 +388,7 @@ Deno.serve(async (req: Request) => {
       payment_method: "qrph",
       metadata: {
         payment_kind: charge.kind,
-        pass_on_fees: false,
+        pass_on_fees: PAYMONGO_PASS_ON_FEES,
       },
     });
 

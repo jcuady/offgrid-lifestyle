@@ -12,6 +12,9 @@ import type { PayMongoTransactionStatus } from "@/src/types/payments";
 
 export const PAYMONGO_API_BASE = "https://api.paymongo.com/v1";
 
+/** Must stay false — merchant absorbs QR Ph processing fee (mirrors Edge checkout payload). */
+export const PAYMONGO_PASS_ON_FEES = false as const;
+
 export type PayMongoPaymentKind = "full" | "deposit" | "balance";
 
 export interface CreatePayMongoCheckoutInput {

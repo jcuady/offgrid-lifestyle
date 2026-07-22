@@ -45,15 +45,13 @@ export function HomePage() {
   return (
     <>
       <OffgridHero
-        badge={hero.badge}
         title={titleText}
         titleLine2={hero.titleLine2}
         mark={titleMark}
         tagline={hero.tagline}
         locality={hero.locality}
-        description={hero.description}
+        description=""
         titleStyle={cmsTypographyStyle(heroTypography, "heading")}
-        descriptionStyle={cmsTypographyStyle(heroTypography, "body")}
         videoSrc={hero.videoSrc}
         imageSrc={hero.imageSrc}
         primaryCta={{ label: hero.ctaShopLabel, onClick: () => followCmsCta(navigate, hero.ctaShopHref) }}

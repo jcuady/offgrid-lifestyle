@@ -308,11 +308,12 @@ export const LANDING_COLLECTION_IDS: LandingCollectionId[] = [
 
 export const initialLandingContent: LandingContent = {
   hero: {
-    badge: "Filipino sportswear · Built for play",
+    // ponytail: badge + long description stay empty so the first viewport is brand + title + tagline + CTAs only.
+    badge: "",
     titleLine1: "OFFGRID®",
     titleLine2: "LIFESTYLE",
     tagline: "Play different. Live OFFGRID.",
-    description: "Sportswear for ultimate frisbee, pickleball, golf, and running — plus custom team kits.",
+    description: "",
     locality: "EST. MANILA, PH",
     videoSrc: "",
     imageSrc: COMMUNITY_PHOTO_PATHS.ultimateCatch,

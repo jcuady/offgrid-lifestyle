@@ -727,39 +727,43 @@ export const usePortalStore = create<PortalState>()(
       updatePaymentSettings: (patch) =>
         set((state) => {
           const actor = state.currentUser;
+          // Only portal staff/admin may write audit rows (RLS). Hydrate from storefront
+          // also calls this — never persist audit for customers.
+          const shouldAudit =
+            actor &&
+            (actor.role === "admin" || actor.role === "staff") &&
+            (patch.gcashQrImageUrl !== undefined ||
+              patch.gcashInstructions !== undefined ||
+              patch.paymongo !== undefined ||
+              patch.cod !== undefined);
           return {
             paymentSettings: { ...state.paymentSettings, ...patch },
-            auditLogs:
-              actor &&
-              (patch.gcashQrImageUrl !== undefined ||
-                patch.gcashInstructions !== undefined ||
-                patch.paymongo !== undefined ||
-                patch.cod !== undefined)
-                ? appendAudit(state.auditLogs, {
-                    action: "payment.settings_updated",
-                    actorId: actor.id,
-                    actorEmail: actor.email,
-                    actorRole: actor.role,
-                    targetType: "payment",
-                    targetId:
-                      patch.paymongo !== undefined
-                        ? "global-paymongo"
-                        : patch.cod !== undefined
-                          ? "global-cod"
-                          : "global-gcash",
-                    summary:
-                      patch.paymongo !== undefined
-                        ? "Updated PayMongo payment settings"
-                        : patch.cod !== undefined
-                          ? "Updated COD payment settings"
-                          : "Updated global GCash payment settings",
-                    metadata: {
-                      fields: Object.keys(patch),
-                      paymongoEnabled: patch.paymongo?.enabled,
-                      codEnabled: patch.cod?.enabled,
-                    },
-                  })
-                : state.auditLogs,
+            auditLogs: shouldAudit
+              ? appendAudit(state.auditLogs, {
+                  action: "payment.settings_updated",
+                  actorId: actor.id,
+                  actorEmail: actor.email,
+                  actorRole: actor.role,
+                  targetType: "payment",
+                  targetId:
+                    patch.paymongo !== undefined
+                      ? "global-paymongo"
+                      : patch.cod !== undefined
+                        ? "global-cod"
+                        : "global-gcash",
+                  summary:
+                    patch.paymongo !== undefined
+                      ? "Updated PayMongo payment settings"
+                      : patch.cod !== undefined
+                        ? "Updated COD payment settings"
+                        : "Updated global GCash payment settings",
+                  metadata: {
+                    fields: Object.keys(patch),
+                    paymongoEnabled: patch.paymongo?.enabled,
+                    codEnabled: patch.cod?.enabled,
+                  },
+                })
+              : state.auditLogs,
           };
         }),
     }),

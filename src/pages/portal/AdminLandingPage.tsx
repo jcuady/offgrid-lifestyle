@@ -120,8 +120,12 @@ export function AdminLandingPage() {
       />
 
       <div className="space-y-8">
-        <CmsSectionPanel title="Hero" description="Full-viewport intro, CTAs, and stats bar labels.">
-          <CmsField label="Badge" className="sm:col-span-2">
+        <CmsSectionPanel title="Hero" description="Full-viewport intro and CTAs. Keep the first screen lean — title, tagline, and buttons only.">
+          <CmsField
+            label="Badge (not shown on storefront)"
+            hint="Kept for content history. Storefront hero omits this for a cleaner first viewport."
+            className="sm:col-span-2"
+          >
             <CmsTextInput value={landing.hero.badge} onChange={(v) => updateHero({ badge: v })} />
           </CmsField>
           <CmsField label="Title line 1">
@@ -133,7 +137,11 @@ export function AdminLandingPage() {
           <CmsField label="Tagline" className="sm:col-span-2">
             <CmsTextInput value={landing.hero.tagline} onChange={(v) => updateHero({ tagline: v })} />
           </CmsField>
-          <CmsField label="Description" className="sm:col-span-2">
+          <CmsField
+            label="Description (not shown on storefront)"
+            hint="Kept for content history. Long hero copy is hidden so the photo and brand stay dominant."
+            className="sm:col-span-2"
+          >
             <CmsTextInput
               value={landing.hero.description}
               onChange={(v) => updateHero({ description: v })}

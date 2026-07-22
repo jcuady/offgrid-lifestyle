@@ -11,6 +11,7 @@ import {
 } from "../_shared/paymongo.ts";
 import {
   amountsMatchCentavos,
+  PAYMONGO_PASS_ON_FEES,
   resolvePaidOrderUpdate,
   resolvePaymentKindFromSession,
   type PaymentKind,
@@ -177,7 +178,7 @@ Deno.serve(async (req: Request) => {
                       payment_kind: kind,
                       last_event: "client_sync",
                       fee_centavos: paidPayment?.attributes?.fee ?? null,
-                      pass_on_fees: false,
+                      pass_on_fees: PAYMONGO_PASS_ON_FEES,
                     },
                   })
                   .eq("provider_checkout_session_id", sessionId);

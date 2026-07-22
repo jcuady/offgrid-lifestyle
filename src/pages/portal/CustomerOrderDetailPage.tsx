@@ -1,6 +1,6 @@
 import { type Attributes, type ChangeEvent, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { QrCode, Star, Upload } from "lucide-react";
+import { Star, Upload } from "lucide-react";
 import { usePortalStore, type PortalUser } from "@/src/store/usePortalStore";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { reviewService } from "@/src/services/reviewService";
@@ -87,9 +87,8 @@ function PayMongoPayButton({
         type="button"
         disabled={busy}
         onClick={() => void onPay()}
-        className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-offgrid-lime px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-white transition-colors hover:bg-offgrid-gold disabled:opacity-60 sm:w-auto"
+        className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center rounded-xl bg-offgrid-lime px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-white transition-colors hover:bg-offgrid-gold disabled:opacity-60 sm:w-auto"
       >
-        <QrCode className="h-3.5 w-3.5" />
         {busy ? "Starting QR Ph…" : label}
       </button>
       <p className="text-[11px] text-offgrid-green/55">

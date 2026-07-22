@@ -1,4 +1,5 @@
 import type { FabricType as ProductFabricType, GarmentCut as ProductGarmentCut } from "@/src/data/products";
+import { retailOrderTotalsCentavos } from "@/src/lib/retailOrderTotals";
 import type { PaymentProvider, RetailPaymentMethod } from "@/src/types/payments";
 import { isRetailPaymentMethod, resolvePaymentProvider } from "@/src/types/payments";
 
@@ -163,14 +164,16 @@ export function toRetailOrderPayload(
     productId: item.productId,
     name: item.name,
     image: item.image,
+    // item.price is catalog selling price (discounted when basePrice > price)
     priceSnapshot: { amount: item.price, currency: "PHP" },
     size: item.size,
     color: item.color,
     quantity: item.quantity,
   }));
 
-  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shippingCost = subtotal >= 2000 ? 0 : 150;
+  const totals = retailOrderTotalsCentavos(
+    cart.map((item) => ({ sellingPricePesos: item.price, quantity: item.quantity })),
+  );
 
   return {
     id: orderId,
@@ -178,10 +181,10 @@ export function toRetailOrderPayload(
     status: "pending_deposit",
     paymentStatus: "unpaid",
     lines,
-    subtotal: { amount: subtotal, currency: "PHP" },
-    shipping: { amount: shippingCost, currency: "PHP" },
+    subtotal: { amount: totals.subtotalCentavos / 100, currency: "PHP" },
+    shipping: { amount: totals.shippingCentavos / 100, currency: "PHP" },
     tax: { amount: 0, currency: "PHP" },
-    total: { amount: subtotal + shippingCost, currency: "PHP" },
+    total: { amount: totals.totalCentavos / 100, currency: "PHP" },
     shippingInfo: shipping,
     paymentMethod,
     paymentProvider: provider,

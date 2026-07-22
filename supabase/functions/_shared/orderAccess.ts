@@ -1,10 +1,13 @@
 /**
  * Authorize PayMongo edge calls for an order.
- * Staff/service always pass. Owners pass. Guests must claim matching email within window.
+ * Staff/service always pass. Owners pass (portal id OR matching email).
+ * Guests must claim matching email within window.
  */
 import { createClient, type SupabaseClient } from "jsr:@supabase/supabase-js@2";
-
-const GUEST_ACCESS_WINDOW_MS = 24 * 60 * 60 * 1000;
+import {
+  decideOrderPaymentAccess,
+  type OrderPaymentAccessDecision,
+} from "./orderPaymentAccessDecision.ts";
 
 export type OrderAccessRow = {
   id: string;
@@ -13,9 +16,8 @@ export type OrderAccessRow = {
   created_at: string;
 };
 
-function normalizeEmail(value: string | null | undefined): string {
-  return (value ?? "").trim().toLowerCase();
-}
+export type { OrderPaymentAccessDecision };
+export { decideOrderPaymentAccess } from "./orderPaymentAccessDecision.ts";
 
 function getJwtRole(token: string): string | null {
   try {
@@ -31,7 +33,7 @@ export async function assertOrderPaymentAccess(input: {
   admin: SupabaseClient;
   order: OrderAccessRow;
   claimEmail?: string;
-}): Promise<{ ok: true } | { ok: false; status: number; error: string }> {
+}): Promise<OrderPaymentAccessDecision> {
   const authHeader = input.req.headers.get("Authorization");
   if (!authHeader?.startsWith("Bearer ")) {
     return { ok: false, status: 401, error: "Unauthorized." };
@@ -55,29 +57,29 @@ export async function assertOrderPaymentAccess(input: {
   });
   const { data: authData } = await userClient.auth.getUser(token);
   const user = authData.user;
-  const role = user?.app_metadata?.portal_role as string | undefined;
+  const role = (user?.app_metadata?.portal_role as string | undefined) ?? null;
 
-  if (role === "admin" || role === "staff") return { ok: true };
-  if (user?.id && input.order.customer_id && user.id === input.order.customer_id) {
-    return { ok: true };
-  }
-
-  // Guest checkout / return pages: email claim + fresh order.
-  const orderEmail = normalizeEmail(input.order.customer_email);
-  const claim = normalizeEmail(input.claimEmail);
-  if (!input.order.customer_id && orderEmail && claim && claim === orderEmail) {
-    const ageMs = Date.now() - new Date(input.order.created_at).getTime();
-    if (ageMs >= 0 && ageMs <= GUEST_ACCESS_WINDOW_MS) return { ok: true };
-    return { ok: false, status: 403, error: "Guest checkout window expired. Sign in to continue." };
-  }
-
+  // og_orders.customer_id = og_portal_users.id (not auth.users.id)
+  let portalUserId: string | null = null;
   if (user?.id) {
-    return { ok: false, status: 403, error: "You do not have access to this order." };
+    const { data: portal } = await input.admin
+      .from("og_portal_users")
+      .select("id")
+      .eq("auth_user_id", user.id)
+      .maybeSingle();
+    portalUserId = typeof portal?.id === "string" ? portal.id : null;
   }
 
-  return {
-    ok: false,
-    status: 403,
-    error: "Sign in or confirm the order email to continue payment.",
-  };
+  const orderAgeMs = Date.now() - new Date(input.order.created_at).getTime();
+
+  return decideOrderPaymentAccess({
+    portalRole: role,
+    authUserId: user?.id ?? null,
+    authEmail: user?.email ?? null,
+    portalUserId,
+    orderCustomerId: input.order.customer_id,
+    orderEmail: input.order.customer_email,
+    claimEmail: input.claimEmail,
+    orderAgeMs,
+  });
 }

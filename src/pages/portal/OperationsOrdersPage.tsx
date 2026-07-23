@@ -170,6 +170,7 @@ export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
                   orderId: id,
                   previousStatus: status,
                   next,
+                  customerId: row.entry.customerId,
                   applyStore: (value) => {
                     if (row.kind === "retail") updateRetailOrderStatus(id, value);
                     else updateCustomOrderStatus(id, value);
@@ -200,9 +201,15 @@ export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
                     orderId: id,
                     previousStatus: payment,
                     next,
+                    customerId: row.entry.customerId,
+                    previousFulfillmentStatus: status,
                     applyStore: (value) => {
                       if (row.kind === "retail") updateRetailPaymentStatus(id, value);
                       else updateCustomPaymentStatus(id, value);
+                    },
+                    applyFulfillmentStore: (value) => {
+                      if (row.kind === "retail") updateRetailOrderStatus(id, value);
+                      else updateCustomOrderStatus(id, value);
                     },
                   });
                   setFeedback(`Payment → ${formatPaymentStatus(next)}.`);

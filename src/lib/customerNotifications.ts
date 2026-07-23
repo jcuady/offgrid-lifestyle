@@ -1,14 +1,15 @@
 import { notifyUser } from "@/src/lib/notifications";
 import { logger } from "@/src/lib/logger";
 import { sendOrderUpdateEmail } from "@/src/services/emailService";
+import { supabase } from "@/src/lib/supabase";
+import type { CustomerOrderEvent } from "@/src/lib/customerNotifyEvents";
 
-export type CustomerOrderEvent =
-  | "order_confirmed"
-  | "in_production"
-  | "payment_confirmed"
-  | "quote_ready"
-  | "shipped"
-  | "delivered";
+export type { CustomerOrderEvent } from "@/src/lib/customerNotifyEvents";
+export {
+  customerEventForFulfillmentStatus,
+  customerEventForPaymentStatus,
+  fulfillmentAfterPaymentSettle,
+} from "@/src/lib/customerNotifyEvents";
 
 const MESSAGES: Record<CustomerOrderEvent, (orderId: string) => { title: string; body: string }> = {
   order_confirmed: (id) => ({
@@ -37,33 +38,47 @@ const MESSAGES: Record<CustomerOrderEvent, (orderId: string) => { title: string;
   }),
 };
 
-/** In-app + push + email notification for a customer order event. */
+async function resolveCustomerId(
+  orderId: string,
+  hint: string | null | undefined,
+): Promise<string | null> {
+  if (hint) return hint;
+  const { data } = await supabase
+    .from("og_orders")
+    .select("customer_id")
+    .eq("id", orderId)
+    .maybeSingle();
+  return data?.customer_id ?? null;
+}
+
+/** In-app + push + email. Actor-agnostic — works for admin, staff, or system callers. */
 export async function notifyCustomerOrderEvent(
   customerId: string | null | undefined,
   orderId: string,
   event: CustomerOrderEvent,
 ): Promise<void> {
   const { title, body } = MESSAGES[event](orderId);
+  const resolvedCustomerId = await resolveCustomerId(orderId, customerId);
 
-  if (customerId) {
+  if (resolvedCustomerId) {
     try {
-      await notifyUser(customerId, {
+      await notifyUser(resolvedCustomerId, {
         title,
         body,
         url: `/account/orders/${orderId}`,
         category: "order",
-        tagKey: `${event}-${Date.now()}`,
+        tagKey: `${event}-${orderId}`,
       });
       logger.info("Customer notification sent", {
         operation: "notifyCustomerOrderEvent",
-        userId: customerId,
+        userId: resolvedCustomerId,
         orderId,
         event,
       });
     } catch (err) {
       logger.warn("Customer notification failed", {
         operation: "notifyCustomerOrderEvent",
-        userId: customerId,
+        userId: resolvedCustomerId,
         orderId,
         event,
         error: err instanceof Error ? err.message : String(err),

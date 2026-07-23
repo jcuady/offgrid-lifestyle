@@ -12,7 +12,7 @@ import {
   unsubscribeFromPush,
 } from "@/src/lib/pushSubscription";
 import { getCookieConsent } from "@/src/lib/consent";
-import { canReceiveWebPush } from "@/src/lib/pwa";
+import { canReceiveWebPush, getPushUnsupportedReason, isIosDevice, openInstallGuide } from "@/src/lib/pwa";
 
 function formatWhen(iso: string): string {
   const d = new Date(iso);
@@ -79,7 +79,9 @@ export function NotificationBell({
           return;
         }
         if (!canReceiveWebPush()) {
-          setPushMessage("Push is not available on this browser or device.");
+          const reason = getPushUnsupportedReason() ?? "Push is not available on this browser or device.";
+          setPushMessage(reason);
+          if (isIosDevice()) openInstallGuide();
           return;
         }
         const result = await subscribeToPushDetailed();

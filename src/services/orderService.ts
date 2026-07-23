@@ -20,6 +20,7 @@ import { mergeCustomOrderDraftWithFiles } from "@/src/lib/customOrderSubmit";
 import { validateCustomOrderDraft, validateRetailCart, validateShippingInfo, sanitizeShippingInfo, normalizeShippingInfo, mergeCustomOrderShipping } from "@/src/lib/formValidation";
 import { checkoutPaymentConfigFromSettings, validateRetailPaymentMethod } from "@/src/types/payments";
 import { notifyStaffOrderEvent } from "@/src/lib/notifications";
+import { notifyCustomerOrderEvent } from "@/src/lib/customerNotifications";
 import { resolveStorageReference } from "@/src/lib/storageAccess";
 import { sendOrderReceiptEmail } from "@/src/services/emailService";
 import { normalizeOrderId } from "@/src/lib/orderId";
@@ -443,6 +444,11 @@ export const supabaseOrderService: OrderService = {
         orderId,
         error: error.message,
       });
+      throw new Error(error.message);
+    }
+
+    if (hasOfficial) {
+      void notifyCustomerOrderEvent(order.customerId, orderId, "quote_ready");
     }
   },
 };

@@ -30,6 +30,17 @@ export function isAndroidDevice(): boolean {
   return /android/i.test(navigator.userAgent);
 }
 
+/** iOS Safari Web Push requires 16.4+ (and Home Screen install). */
+export function iosSupportsWebPush(): boolean {
+  if (typeof navigator === "undefined") return false;
+  if (!isIosDevice()) return true;
+  const match = navigator.userAgent.match(/OS (\d+)[._](\d+)/i);
+  if (!match) return true; // unknown — let subscribe attempt surface the real error
+  const major = Number(match[1]);
+  const minor = Number(match[2]);
+  return major > 16 || (major === 16 && minor >= 4);
+}
+
 export function isPushCapableBrowser(): boolean {
   return typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window;
 }
@@ -38,7 +49,10 @@ export function isPushCapableBrowser(): boolean {
 export function canReceiveWebPush(): boolean {
   if (!isPushCapableBrowser() || typeof Notification === "undefined") return false;
   // iOS Safari only exposes push in an installed Home Screen PWA (16.4+).
-  if (isIosDevice() && !isStandalonePwa()) return false;
+  if (isIosDevice()) {
+    if (!iosSupportsWebPush()) return false;
+    if (!isStandalonePwa()) return false;
+  }
   return true;
 }
 
@@ -49,6 +63,9 @@ export function getPushUnsupportedReason(): string | null {
   }
   if (typeof Notification === "undefined") {
     return "Notifications are not available in this browser.";
+  }
+  if (isIosDevice() && !iosSupportsWebPush()) {
+    return "Push on iPhone/iPad needs iOS 16.4 or later. Update iOS, then add OffGrid to your Home Screen.";
   }
   if (isIosDevice() && !isStandalonePwa()) {
     return "On iPhone or iPad, add OffGrid to your Home Screen first, then enable notifications.";

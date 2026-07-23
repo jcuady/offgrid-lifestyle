@@ -95,7 +95,7 @@ self.addEventListener("push", (event) => {
     const tag =
       typeof payload.tag === "string" && payload.tag.trim()
         ? payload.tag.trim().slice(0, 120)
-        : `offgrid:${path}:${Date.now()}`;
+        : `offgrid:${path}`;
     const options: NotificationOptions & { renotify?: boolean } = {
       body: payload.body ?? "",
       icon: payload.icon ?? "/favicon_io/android-chrome-192x192.png",
@@ -122,7 +122,7 @@ self.addEventListener("push", (event) => {
       self.registration.showNotification("OffGrid Lifestyle", {
         body: text,
         icon: "/favicon_io/android-chrome-192x192.png",
-        tag: `offgrid-${Date.now()}`,
+        tag: "offgrid:plaintext",
         renotify: true,
       } as NotificationOptions),
     );

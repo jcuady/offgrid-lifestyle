@@ -143,12 +143,9 @@ export async function unsubscribeFromPush(): Promise<boolean> {
     const subscription = await registration.pushManager.getSubscription();
     if (!subscription) return true;
 
+    // Delete durable row first so a failed browser unsubscribe cannot leave orphans.
+    await supabase.from("og_push_subscriptions").delete().eq("endpoint", subscription.endpoint);
     await subscription.unsubscribe();
-
-    await supabase
-      .from("og_push_subscriptions")
-      .delete()
-      .eq("endpoint", subscription.endpoint);
 
     return true;
   } catch (err) {

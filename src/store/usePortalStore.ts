@@ -9,8 +9,6 @@ import type { CustomOrderDraft, Money, Order, OrderStatus, PaymentStatus, Shippi
 import type { AuditLogEntry, CreateStaffInput, ManagedStaffAccount, RegisterCustomerInput, RegisteredCustomer } from "@/src/types/portal";
 import { DEFAULT_COD_SETTINGS, DEFAULT_PAYMONGO_SETTINGS, type CodSettings, type PayMongoSettings } from "@/src/types/payments";
 import { appendAudit, type AuditInput } from "@/src/lib/portalAudit";
-import { notifyCustomerOrderEvent } from "@/src/lib/customerNotifications";
-
 export type UserRole = "customer" | "admin" | "staff";
 
 export interface PortalUser {
@@ -560,17 +558,6 @@ export const usePortalStore = create<PortalState>()(
                 })
               : state.auditLogs,
         }));
-        if (previous && previous.status !== status) {
-          if (status === "confirmed") {
-            void notifyCustomerOrderEvent(previous.customerId, orderId, "order_confirmed");
-          } else if (status === "in_production") {
-            void notifyCustomerOrderEvent(previous.customerId, orderId, "in_production");
-          } else if (status === "shipped") {
-            void notifyCustomerOrderEvent(previous.customerId, orderId, "shipped");
-          } else if (status === "delivered") {
-            void notifyCustomerOrderEvent(previous.customerId, orderId, "delivered");
-          }
-        }
       },
 
       updateRetailPaymentStatus: (orderId, paymentStatus) => {
@@ -596,13 +583,6 @@ export const usePortalStore = create<PortalState>()(
                 })
               : state.auditLogs,
         }));
-        if (
-          previous &&
-          previous.paymentStatus !== paymentStatus &&
-          (paymentStatus === "deposit_paid" || paymentStatus === "fully_paid")
-        ) {
-          void notifyCustomerOrderEvent(previous.customerId, orderId, "payment_confirmed");
-        }
       },
 
       updateCustomOrderStatus: (orderId, status) => {
@@ -626,17 +606,6 @@ export const usePortalStore = create<PortalState>()(
                 })
               : state.auditLogs,
         }));
-        if (previous && previous.status !== status) {
-          if (status === "confirmed") {
-            void notifyCustomerOrderEvent(previous.customerId, orderId, "order_confirmed");
-          } else if (status === "in_production") {
-            void notifyCustomerOrderEvent(previous.customerId, orderId, "in_production");
-          } else if (status === "shipped") {
-            void notifyCustomerOrderEvent(previous.customerId, orderId, "shipped");
-          } else if (status === "delivered") {
-            void notifyCustomerOrderEvent(previous.customerId, orderId, "delivered");
-          }
-        }
       },
 
       updateCustomPaymentStatus: (orderId, paymentStatus) => {
@@ -662,13 +631,6 @@ export const usePortalStore = create<PortalState>()(
                 })
               : state.auditLogs,
         }));
-        if (
-          previous &&
-          previous.paymentStatus !== paymentStatus &&
-          (paymentStatus === "deposit_paid" || paymentStatus === "fully_paid")
-        ) {
-          void notifyCustomerOrderEvent(previous.customerId, orderId, "payment_confirmed");
-        }
       },
 
       updateCustomOrderQuote: (orderId, update) => {
@@ -723,10 +685,6 @@ export const usePortalStore = create<PortalState>()(
               })
             : state.auditLogs,
         }));
-        if (hasOfficial) {
-          const order = get().customOrders.find((e) => e.id === orderId);
-          void notifyCustomerOrderEvent(order?.customerId, orderId, "quote_ready");
-        }
       },
 
       updatePaymentSettings: (patch) =>

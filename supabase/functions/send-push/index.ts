@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import webpush from "npm:web-push@3.6.7";
+import { corsHeadersFor, dedupeByEndpoint } from "../_shared/cors.ts";
 import { isServiceRoleBearer } from "../_shared/serviceRoleAuth.ts";
 
 const ORDER_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
@@ -20,22 +21,6 @@ function safeNavigationUrl(raw: unknown, fallback = "/"): string {
   } catch {
     return fallback;
   }
-}
-
-function corsHeadersFor(req: Request): Record<string, string> {
-  const defaults =
-    "https://www.oglifestyleph.com,https://oglifestyleph.com,https://offgrid-lifestyle.vercel.app,https://offgrid-lifestyle-jcuadys-projects.vercel.app,http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000";
-  const allowed = (Deno.env.get("ALLOWED_ORIGINS") ?? defaults)
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
-  const origin = req.headers.get("Origin") ?? "";
-  const allowOrigin = allowed.includes(origin) ? origin : (allowed[0] ?? "*");
-  return {
-    "Access-Control-Allow-Origin": allowOrigin,
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-    Vary: "Origin",
-  };
 }
 
 Deno.serve(async (req: Request) => {
@@ -87,7 +72,7 @@ Deno.serve(async (req: Request) => {
     const safeTag =
       typeof tag === "string" && tag.trim()
         ? tag.trim().slice(0, 120)
-        : `offgrid:${safeUrl}:${Date.now()}`;
+        : `offgrid:${safeUrl}`;
 
     const hasTargetedUsers = user_ids && Array.isArray(user_ids) && user_ids.length > 0;
     const hasOperationalAlert =
@@ -196,7 +181,7 @@ Deno.serve(async (req: Request) => {
 
     if (hasTargetedUsers) {
       if (isStaffOrAdmin) {
-        // Staff/admin may notify customers or other portal users.
+        // Staff/admin/service-role may notify customers or other portal users.
       } else if (authUser && callerPortalId) {
         const allSelf = (user_ids as string[]).every((id) => id === callerPortalId);
         if (!allSelf) {
@@ -234,6 +219,8 @@ Deno.serve(async (req: Request) => {
       });
     }
 
+    const uniqueSubs = dedupeByEndpoint(subscriptions);
+
     const payloadStr = JSON.stringify({
       title: safeTitle,
       body: safeBody,
@@ -245,7 +232,7 @@ Deno.serve(async (req: Request) => {
     let failed = 0;
     const stale: string[] = [];
 
-    for (const sub of subscriptions) {
+    for (const sub of uniqueSubs) {
       try {
         await webpush.sendNotification(
           {

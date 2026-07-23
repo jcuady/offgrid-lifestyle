@@ -376,6 +376,7 @@ export function OperationsOrderDetailPage() {
                         orderId: retail.id,
                         previousStatus: retail.status,
                         next,
+                        customerId: retail.customerId,
                         applyStore: (value) => updateRetailOrderStatus(retail.id, value),
                       });
                       setFeedback(`Order ${retail.id} → ${formatOrderStatus(next)}. Customer notified when applicable.`);
@@ -406,7 +407,10 @@ export function OperationsOrderDetailPage() {
                           orderId: retail.id,
                           previousStatus: retail.paymentStatus,
                           next,
+                          customerId: retail.customerId,
+                          previousFulfillmentStatus: retail.status,
                           applyStore: (value) => updateRetailPaymentStatus(retail.id, value),
+                          applyFulfillmentStore: (value) => updateRetailOrderStatus(retail.id, value),
                         });
                         setFeedback(`Payment → ${formatPaymentStatus(next)}.`);
                       } catch (err) {
@@ -528,19 +532,11 @@ export function OperationsOrderDetailPage() {
                 orderId: retail.id,
                 previousStatus: retail.paymentStatus,
                 next: nextStatus,
+                customerId: retail.customerId,
+                previousFulfillmentStatus: retail.status,
                 applyStore: (value) => updateRetailPaymentStatus(retail.id, value),
+                applyFulfillmentStore: (value) => updateRetailOrderStatus(retail.id, value),
               });
-              if (
-                (nextStatus === "deposit_paid" || nextStatus === "fully_paid") &&
-                (retail.status === "pending_deposit" || retail.status === "draft")
-              ) {
-                await persistOrderStatusUpdate({
-                  orderId: retail.id,
-                  previousStatus: retail.status,
-                  next: "confirmed",
-                  applyStore: (value) => updateRetailOrderStatus(retail.id, value),
-                });
-              }
               setFeedback(`Payment confirmed for order ${retail.id}.`);
             }}
           />
@@ -633,6 +629,7 @@ export function OperationsOrderDetailPage() {
                         orderId: custom.id,
                         previousStatus: custom.status,
                         next,
+                        customerId: custom.customerId,
                         applyStore: (value) => updateCustomOrderStatus(custom.id, value),
                       });
                       setFeedback(`Order ${custom.id} → ${formatOrderStatus(next)}. Customer notified when applicable.`);
@@ -663,7 +660,10 @@ export function OperationsOrderDetailPage() {
                           orderId: custom.id,
                           previousStatus: custom.paymentStatus,
                           next,
+                          customerId: custom.customerId,
+                          previousFulfillmentStatus: custom.status,
                           applyStore: (value) => updateCustomPaymentStatus(custom.id, value),
+                          applyFulfillmentStore: (value) => updateCustomOrderStatus(custom.id, value),
                         });
                         setFeedback(`Payment → ${formatPaymentStatus(next)}.`);
                       } catch (err) {
@@ -749,19 +749,11 @@ export function OperationsOrderDetailPage() {
                 orderId: custom.id,
                 previousStatus: custom.paymentStatus,
                 next: nextStatus,
+                customerId: custom.customerId,
+                previousFulfillmentStatus: custom.status,
                 applyStore: (value) => updateCustomPaymentStatus(custom.id, value),
+                applyFulfillmentStore: (value) => updateCustomOrderStatus(custom.id, value),
               });
-              if (
-                (nextStatus === "deposit_paid" || nextStatus === "fully_paid") &&
-                (custom.status === "pending_deposit" || custom.status === "draft")
-              ) {
-                await persistOrderStatusUpdate({
-                  orderId: custom.id,
-                  previousStatus: custom.status,
-                  next: "confirmed",
-                  applyStore: (value) => updateCustomOrderStatus(custom.id, value),
-                });
-              }
               setFeedback(`Payment → ${formatPaymentStatus(nextStatus)}.`);
             }}
           />

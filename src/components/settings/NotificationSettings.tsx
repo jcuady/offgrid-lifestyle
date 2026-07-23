@@ -86,6 +86,7 @@ export function NotificationSettings() {
         title: "OffGrid test notification",
         body: "Push is working on this device. You can dismiss this.",
         url: currentUser.role === "customer" ? "/account/orders" : "/portal",
+        tag: `test-${currentUser.role}-${currentUser.id.slice(0, 8)}`,
         userIds: [currentUser.id],
       });
       if (result.sent > 0) {

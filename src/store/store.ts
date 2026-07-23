@@ -191,7 +191,7 @@ export const useStore = create<StoreState>()(
     set({
       isCheckoutOpen: false,
       checkoutStep: 1,
-      shippingInfo: EMPTY_SHIPPING_INFO,
+      // Keep shipping for next checkout (DB is source of truth for signed-in customers).
       paymentMethod: "gcash",
       orderId: null,
       cart: [],

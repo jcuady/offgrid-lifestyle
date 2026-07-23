@@ -1,14 +1,14 @@
 import React, { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
-import { X, Check, Wallet, Banknote, Package, ChevronRight, MapPin, Truck, Zap, Loader2 } from "lucide-react";
+import { X, Check, Wallet, Banknote, Package, ChevronRight, ChevronDown, MapPin, Truck, Zap, Loader2 } from "lucide-react";
 import { useShallow } from "zustand/react/shallow";
 import { useStore } from "@/src/store/store";
 import { usePortalStore } from "@/src/store/usePortalStore";
 import { Button } from "./ui/Button";
 import { formatPrice } from "@/src/data/products";
 import { validateShippingInfoFields, validateRetailCart, normalizeShippingInfo, sanitizeShippingInfo, formatPhilippinePhoneInput, type ShippingFieldErrors } from "@/src/lib/formValidation";
-import { shouldShowEmptyCartGate } from "@/src/lib/checkoutUi";
+import { checkoutCartItemLabel, checkoutCartLineCount, shouldShowEmptyCartGate } from "@/src/lib/checkoutUi";
 import { EMPTY_SHIPPING_INFO, type ShippingInfo } from "@/src/types/commerce";
 import {
   checkoutPaymentConfigFromSettings,
@@ -16,6 +16,7 @@ import {
   RETAIL_PAYMENT_METHODS,
   validateRetailPaymentMethod,
 } from "@/src/types/payments";
+import { persistCheckoutShipping } from "@/src/services/customerShippingService";
 import { cn } from "@/src/lib/utils";
 import { electricBluePill } from "@/src/lib/brandLayout";
 
@@ -31,8 +32,9 @@ const PAYMENT_ICONS = {
   paymongo: Zap,
 } as const;
 
+/** 16px text prevents iOS zoom-on-focus; 44px min height for touch. */
 const inputClass =
-  "w-full rounded-xl border border-offgrid-green/20 bg-white px-3 py-2.5 text-sm text-offgrid-green outline-none transition-all focus:border-offgrid-green focus:ring-2 focus:ring-offgrid-green/20 sm:px-4 sm:py-3 sm:text-base";
+  "min-h-11 w-full rounded-xl border border-offgrid-green/20 bg-white px-3 py-2.5 text-base text-offgrid-green outline-none transition-all focus:border-offgrid-lime focus:ring-2 focus:ring-offgrid-lime/25";
 
 function contactInputClass(hasError: boolean) {
   return cn(
@@ -91,6 +93,7 @@ export function CheckoutModal() {
   const [fieldErrors, setFieldErrors] = useState<ShippingFieldErrors>({});
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [placingOrder, setPlacingOrder] = useState(false);
+  const [summaryOpen, setSummaryOpen] = useState(false);
   const shippingFormRef = useRef<HTMLFormElement>(null);
   const paymentSettings = usePortalStore((s) => s.paymentSettings);
   const checkoutPaymentConfig = useMemo(
@@ -127,6 +130,8 @@ export function CheckoutModal() {
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const shipping = subtotal >= 2000 ? 0 : 150;
   const total = subtotal + shipping;
+  const itemCount = checkoutCartLineCount(cart);
+  const itemLabel = checkoutCartItemLabel(itemCount);
 
   const handleClose = () => {
     closeCheckout();
@@ -165,6 +170,7 @@ export function CheckoutModal() {
     setCheckoutError(null);
     setFormData(sanitized);
     setShippingInfo(sanitized);
+    void persistCheckoutShipping(sanitized);
     setCheckoutStep(2);
   };
 
@@ -264,22 +270,23 @@ export function CheckoutModal() {
           className="flex h-[100dvh] w-full max-w-6xl flex-col overflow-hidden bg-transparent sm:h-auto sm:max-h-[min(92dvh,880px)]"
         >
           <div className="flex min-h-0 flex-1 flex-col px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-0 sm:py-0">
-            {/* Header */}
-            <div className="mb-3 flex shrink-0 items-center justify-between sm:mb-4">
-              <h1 className="text-2xl font-display font-black text-offgrid-cream sm:text-3xl md:text-4xl">
+            <div className="mb-2 flex shrink-0 items-center justify-between sm:mb-4">
+              <h1 className="font-display text-xl font-black text-offgrid-cream sm:text-3xl md:text-4xl">
                 {checkoutStep === 3 ? "Order Confirmed" : "Checkout"}
               </h1>
               <button
+                type="button"
                 onClick={handleClose}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-offgrid-cream/10 text-offgrid-cream transition-colors hover:bg-offgrid-cream/20 sm:h-10 sm:w-10"
+                aria-label="Close checkout"
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-offgrid-cream/10 text-offgrid-cream transition-colors hover:bg-offgrid-cream/20"
               >
-                <X className="h-4 w-4 sm:h-5 sm:w-5" />
+                <X className="h-5 w-5" />
               </button>
             </div>
 
             {/* Step Indicator */}
             {checkoutStep < 3 && (
-              <div className="mb-3 shrink-0 sm:mb-4">
+              <div className="mb-2 shrink-0 sm:mb-4">
                 <div className="flex items-center justify-center gap-2 sm:gap-4">
                   {[
                     { step: 1, label: "Shipping", icon: MapPin },
@@ -294,11 +301,11 @@ export function CheckoutModal() {
                             : "bg-offgrid-cream/10 text-offgrid-cream/40"
                         )}
                       >
-                        <item.icon className="h-3 w-3 sm:h-4 sm:w-4" />
-                        <span className="hidden sm:inline">{item.label}</span>
+                        <item.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        <span>{item.label}</span>
                       </div>
                       {index < 1 && (
-                        <ChevronRight className="h-5 w-5 text-offgrid-cream/30" />
+                        <ChevronRight className="h-4 w-4 text-offgrid-cream/30 sm:h-5 sm:w-5" />
                       )}
                     </div>
                   ))}
@@ -307,6 +314,78 @@ export function CheckoutModal() {
             )}
 
             <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-hidden lg:grid-cols-3 lg:gap-6">
+              {/* Mobile: compact order strip — keeps shipping form visible first */}
+              {checkoutStep < 3 ? (
+                <div className="shrink-0 lg:hidden">
+                  <div className="overflow-hidden rounded-2xl bg-offgrid-cream">
+                    <button
+                      type="button"
+                      onClick={() => setSummaryOpen((v) => !v)}
+                      className="flex min-h-11 w-full items-center gap-3 px-4 py-2.5 text-left"
+                      aria-expanded={summaryOpen}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/45">
+                          Order summary
+                        </p>
+                        <p className="truncate text-sm font-semibold text-offgrid-green">
+                          {itemLabel}
+                          {cart[0] ? ` · ${cart[0].name}` : ""}
+                          {cart.length > 1 ? ` +${cart.length - 1}` : ""}
+                        </p>
+                      </div>
+                      <span className="shrink-0 font-display text-base font-bold text-offgrid-green">
+                        {formatPrice(total)}
+                      </span>
+                      <ChevronDown
+                        className={cn(
+                          "h-4 w-4 shrink-0 text-offgrid-green/45 transition-transform",
+                          summaryOpen && "rotate-180",
+                        )}
+                        aria-hidden
+                      />
+                    </button>
+                    {summaryOpen ? (
+                      <div className="space-y-2 border-t border-offgrid-green/10 px-4 py-3">
+                        {cart.map((item) => (
+                          <div
+                            key={`${item.productId}-${item.size}-${item.color}`}
+                            className="flex gap-3"
+                          >
+                            <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-white">
+                              <img src={item.image} alt="" className="h-full w-full object-cover" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-xs font-bold text-offgrid-green">{item.name}</p>
+                              <p className="truncate text-[10px] text-offgrid-green/50">
+                                {item.size} · {item.color} · Qty {item.quantity}
+                              </p>
+                            </div>
+                            <p className="shrink-0 text-xs font-semibold text-offgrid-green">
+                              {formatPrice(item.price * item.quantity)}
+                            </p>
+                          </div>
+                        ))}
+                        <div className="space-y-1 border-t border-offgrid-green/10 pt-2 text-xs text-offgrid-green/65">
+                          <div className="flex justify-between">
+                            <span>Subtotal</span>
+                            <span>{formatPrice(subtotal)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Shipping</span>
+                            <span>{shipping === 0 ? "FREE" : formatPrice(shipping)}</span>
+                          </div>
+                          <div className="flex justify-between pt-1 font-display text-sm font-bold text-offgrid-green">
+                            <span>Total</span>
+                            <span>{formatPrice(total)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              ) : null}
+
               {/* Main Content — scrolls inside the card, not the page */}
               <div className="flex min-h-0 flex-col overflow-hidden lg:col-span-2">
                 <AnimatePresence mode="wait">
@@ -321,13 +400,17 @@ export function CheckoutModal() {
                     >
                       <div className="shrink-0 border-b border-offgrid-green/10 px-4 py-3 sm:px-6 sm:py-4">
                         <h2 className="text-lg font-display font-bold text-offgrid-green sm:text-xl">
-                          Shipping Information
+                          Where should we deliver?
                         </h2>
+                        <p className="mt-0.5 text-xs text-offgrid-green/55 sm:text-sm">
+                          Complete the fields below, then continue to payment.
+                        </p>
                       </div>
                       <form
                         ref={shippingFormRef}
                         onSubmit={handleShippingSubmit}
                         className="flex min-h-0 flex-1 flex-col"
+                        noValidate
                       >
                         <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-3 sm:space-y-4 sm:px-6 sm:py-4">
                           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 sm:gap-4">
@@ -424,7 +507,10 @@ export function CheckoutModal() {
                           </Suspense>
 
                           {shippingError ? (
-                            <p className="text-sm font-medium text-red-600" role="alert">
+                            <p
+                              className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm font-medium text-red-700"
+                              role="alert"
+                            >
                               {shippingError}
                             </p>
                           ) : null}
@@ -463,8 +549,11 @@ export function CheckoutModal() {
                     >
                       <div className="shrink-0 border-b border-offgrid-green/10 px-4 py-3 sm:px-6 sm:py-4">
                         <h2 className="text-lg font-display font-bold text-offgrid-green sm:text-xl">
-                          Payment Method
+                          How will you pay?
                         </h2>
+                        <p className="mt-0.5 text-xs text-offgrid-green/55 sm:text-sm">
+                          Choose a method, then place your order.
+                        </p>
                       </div>
                       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-3 sm:space-y-4 sm:px-6 sm:py-4">
                         {RETAIL_PAYMENT_METHODS.map((method) => {
@@ -479,7 +568,7 @@ export function CheckoutModal() {
                               disabled={!selectable}
                               onClick={() => selectable && setPaymentMethod(method.id)}
                               className={cn(
-                                "w-full flex items-center gap-3 sm:gap-4 p-4 sm:p-5 rounded-xl border-2 transition-all text-left",
+                                "flex w-full items-center gap-3 rounded-xl border-2 p-4 text-left transition-all sm:gap-4 sm:p-5",
                                 !selectable && "cursor-not-allowed opacity-60",
                                 isSelected && selectable
                                   ? "border-offgrid-green bg-offgrid-green/5"
@@ -489,24 +578,24 @@ export function CheckoutModal() {
                             >
                               <div
                                 className={cn(
-                                  "w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center flex-shrink-0",
+                                  "flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full sm:h-12 sm:w-12",
                                   isSelected && selectable
                                     ? "bg-offgrid-green text-offgrid-cream"
                                     : "bg-offgrid-green/10",
                                 )}
                               >
-                                <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
+                                <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
                               </div>
-                              <div className="flex-1 min-w-0">
+                              <div className="min-w-0 flex-1">
                                 <div className="flex flex-wrap items-center gap-2">
-                                  <p className="font-bold text-offgrid-green text-sm sm:text-base">{method.label}</p>
+                                  <p className="text-sm font-bold text-offgrid-green sm:text-base">{method.label}</p>
                                   {method.comingSoon && !selectable ? (
                                     <span className="rounded-full bg-offgrid-gold/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-offgrid-gold">
                                       Coming soon
                                     </span>
                                   ) : null}
                                 </div>
-                                <p className="text-[10px] sm:text-xs text-offgrid-green/60 truncate">{method.description}</p>
+                                <p className="text-[10px] text-offgrid-green/60 sm:text-xs">{method.description}</p>
                               </div>
                             </button>
                           );
@@ -516,7 +605,7 @@ export function CheckoutModal() {
                         <motion.div
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: "auto" }}
-                          className="mb-8 rounded-xl border border-offgrid-green/10 bg-white p-6"
+                          className="rounded-xl border border-offgrid-green/10 bg-white p-4 sm:p-6"
                         >
                           <p className="text-sm text-offgrid-green/70">{paymentSettings.paymongo.checkoutDescription}</p>
                           <p className="mt-2 text-xs text-offgrid-green/50">
@@ -526,12 +615,11 @@ export function CheckoutModal() {
                         </motion.div>
                       ) : null}
 
-                      {/* GCash QR */}
                       {paymentMethod === "gcash" && (
                         <motion.div
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: "auto" }}
-                          className="mb-8 rounded-xl border border-offgrid-green/10 bg-white p-6"
+                          className="rounded-xl border border-offgrid-green/10 bg-white p-4 sm:p-6"
                         >
                           <p className="text-xs font-semibold uppercase tracking-[0.15em] text-offgrid-green/55">
                             Scan to pay via GCash
@@ -540,7 +628,7 @@ export function CheckoutModal() {
                             <img
                               src={paymentSettings.gcashQrImageUrl}
                               alt="GCash QR code"
-                              className="h-48 w-48 rounded-xl border border-offgrid-green/10 bg-offgrid-cream object-contain"
+                              className="h-40 w-40 rounded-xl border border-offgrid-green/10 bg-offgrid-cream object-contain sm:h-48 sm:w-48"
                             />
                             <p className="max-w-md text-sm leading-relaxed text-offgrid-green/70">
                               {paymentSettings.gcashInstructions}
@@ -553,14 +641,17 @@ export function CheckoutModal() {
                         <motion.div
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: "auto" }}
-                          className="mb-8 rounded-xl border border-offgrid-green/10 bg-white p-6"
+                          className="rounded-xl border border-offgrid-green/10 bg-white p-4 sm:p-6"
                         >
                           <p className="text-sm text-offgrid-green/70">{paymentSettings.cod.checkoutDescription}</p>
                         </motion.div>
                       ) : null}
 
                       {checkoutError ? (
-                        <p className="mb-2 text-sm font-medium text-red-600" role="alert">
+                        <p
+                          className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm font-medium text-red-700"
+                          role="alert"
+                        >
                           {checkoutError}
                         </p>
                       ) : null}
@@ -607,21 +698,21 @@ export function CheckoutModal() {
                         animate={{ scale: 1 }}
                         transition={{ type: "spring", delay: 0.2, stiffness: 200 }}
                         className={cn(
-                          "w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-4 sm:mb-6 rounded-full flex items-center justify-center",
+                          "mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full sm:mb-6 sm:h-24 sm:w-24",
                           paymentMethod === "paymongo" && checkoutError
                             ? "bg-amber-500"
                             : "bg-offgrid-lime",
                         )}
                       >
-                        <Check className="w-10 h-10 sm:w-12 sm:h-12 text-white" strokeWidth={3} />
+                        <Check className="h-10 w-10 text-white sm:h-12 sm:w-12" strokeWidth={3} />
                       </motion.div>
 
-                      <h2 className="text-2xl sm:text-3xl font-display font-black text-offgrid-green mb-2 sm:mb-3">
+                      <h2 className="mb-2 font-display text-2xl font-black text-offgrid-green sm:mb-3 sm:text-3xl">
                         {paymentMethod === "paymongo" && checkoutError
                           ? "Order saved — payment needed"
                           : "Order Confirmed!"}
                       </h2>
-                      <p className="text-sm sm:text-base text-offgrid-green/60 mb-6 sm:mb-8">
+                      <p className="mb-6 text-sm text-offgrid-green/60 sm:mb-8 sm:text-base">
                         {paymentMethod === "gcash"
                           ? "Your order is placed. Pay via GCash QR, then upload your screenshot so we can confirm payment."
                           : paymentMethod === "paymongo" && checkoutError
@@ -641,23 +732,22 @@ export function CheckoutModal() {
                       ) : null}
 
                       {orderId && (
-                        <div className="bg-white rounded-xl p-4 sm:p-6 mb-6 sm:mb-8 inline-block">
-                          <p className="text-[10px] sm:text-xs font-semibold tracking-[0.2em] uppercase text-offgrid-green/50 mb-2">
+                        <div className="mb-6 inline-block rounded-xl bg-white p-4 sm:mb-8 sm:p-6">
+                          <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-green/50 sm:text-xs">
                             Order Number
                           </p>
-                          <p className="text-xl sm:text-2xl font-display font-black text-offgrid-green">
+                          <p className="font-display text-xl font-black text-offgrid-green sm:text-2xl">
                             {orderId}
                           </p>
                         </div>
                       )}
 
-                      {/* GCash payment next steps */}
                       {paymentMethod === "gcash" && (
-                        <div className="mb-6 sm:mb-8 rounded-xl border border-offgrid-lime/30 bg-offgrid-lime/8 p-4 sm:p-6 text-left">
-                          <p className="text-xs font-bold uppercase tracking-[0.16em] text-offgrid-green/60 mb-3">
+                        <div className="mb-6 rounded-xl border border-offgrid-lime/30 bg-offgrid-lime/8 p-4 text-left sm:mb-8 sm:p-6">
+                          <p className="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-offgrid-green/60">
                             Next step — Send payment proof
                           </p>
-                          <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
+                          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                             <img
                               src={paymentSettings.gcashQrImageUrl}
                               alt="GCash QR"
@@ -676,8 +766,8 @@ export function CheckoutModal() {
                       )}
 
                       {paymentMethod === "paymongo" && orderId ? (
-                        <div className="mb-6 sm:mb-8 rounded-xl border border-offgrid-lime/30 bg-offgrid-lime/8 p-4 sm:p-6 text-left">
-                          <p className="text-xs font-bold uppercase tracking-[0.16em] text-offgrid-green/60 mb-2">
+                        <div className="mb-6 rounded-xl border border-offgrid-lime/30 bg-offgrid-lime/8 p-4 text-left sm:mb-8 sm:p-6">
+                          <p className="mb-2 text-xs font-bold uppercase tracking-[0.16em] text-offgrid-green/60">
                             PayMongo QR Ph
                           </p>
                           <p className="text-sm text-offgrid-green/75">
@@ -694,28 +784,28 @@ export function CheckoutModal() {
                         </div>
                       ) : null}
 
-                      <div className="bg-offgrid-green/5 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8 text-left">
-                        <div className="flex items-start gap-3 mb-4">
-                          <Truck className="w-4 h-4 sm:w-5 sm:h-5 text-offgrid-lime flex-shrink-0 mt-0.5" />
+                      <div className="mb-6 rounded-xl bg-offgrid-green/5 p-4 text-left sm:mb-8 sm:p-6">
+                        <div className="mb-4 flex items-start gap-3">
+                          <Truck className="mt-0.5 h-4 w-4 flex-shrink-0 text-offgrid-lime sm:h-5 sm:w-5" />
                           <div>
-                            <p className="font-bold text-offgrid-green text-sm">Estimated Delivery</p>
-                            <p className="text-xs text-offgrid-green/60 mt-1">
+                            <p className="text-sm font-bold text-offgrid-green">Estimated Delivery</p>
+                            <p className="mt-1 text-xs text-offgrid-green/60">
                               3-5 business days via standard shipping
                             </p>
                           </div>
                         </div>
                         <div className="flex items-start gap-3">
-                          <Package className="w-4 h-4 sm:w-5 sm:h-5 text-offgrid-lime flex-shrink-0 mt-0.5" />
+                          <Package className="mt-0.5 h-4 w-4 flex-shrink-0 text-offgrid-lime sm:h-5 sm:w-5" />
                           <div>
-                            <p className="font-bold text-offgrid-green text-sm">Tracking Information</p>
-                            <p className="text-xs text-offgrid-green/60 mt-1">
+                            <p className="text-sm font-bold text-offgrid-green">Tracking Information</p>
+                            <p className="mt-1 text-xs text-offgrid-green/60">
                               Track this order anytime from My Orders after you sign in
                             </p>
                           </div>
                         </div>
                       </div>
 
-                      <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                      <div className="flex flex-col justify-center gap-3 sm:flex-row">
                         {paymentMethod === "gcash" && orderId ? (
                           <Button
                             variant="default"
@@ -743,9 +833,9 @@ export function CheckoutModal() {
                           Continue Shopping
                         </Button>
                       </div>
-                      <p className="text-xs text-offgrid-green/40 mt-4">
+                      <p className="mt-4 text-xs text-offgrid-green/40">
                         Need custom team gear?{" "}
-                        <a href="/custom" className="underline hover:text-offgrid-green transition-colors">
+                        <a href="/custom" className="underline transition-colors hover:text-offgrid-green">
                           Start a custom order
                         </a>
                       </p>
@@ -754,23 +844,23 @@ export function CheckoutModal() {
                 </AnimatePresence>
               </div>
 
-              {/* Order Summary Sidebar */}
+              {/* Desktop order summary sidebar */}
               {checkoutStep < 3 && (
-                <div className="order-first flex max-h-[32vh] min-h-0 flex-col overflow-hidden lg:order-last lg:col-span-1 lg:max-h-none">
+                <div className="hidden min-h-0 flex-col overflow-hidden lg:flex lg:col-span-1">
                   <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-offgrid-cream">
-                    <h3 className="shrink-0 border-b border-offgrid-green/10 px-4 py-3 text-base font-display font-bold text-offgrid-green sm:px-5 sm:text-lg">
+                    <h3 className="shrink-0 border-b border-offgrid-green/10 px-5 py-4 font-display text-lg font-bold text-offgrid-green">
                       Order Summary
                     </h3>
 
-                    <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-3 sm:px-5">
+                    <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-5 py-3">
                       {cart.map((item) => (
                         <div key={`${item.productId}-${item.size}-${item.color}`} className="flex gap-3">
-                          <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-white sm:h-16 sm:w-16">
+                          <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-white">
                             <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="truncate text-xs font-bold text-offgrid-green sm:text-sm">{item.name}</p>
-                            <p className="truncate text-[10px] text-offgrid-green/50 sm:text-xs">
+                            <p className="truncate text-sm font-bold text-offgrid-green">{item.name}</p>
+                            <p className="truncate text-xs text-offgrid-green/50">
                               {item.size} · {item.color} · Qty: {item.quantity}
                             </p>
                           </div>
@@ -778,16 +868,16 @@ export function CheckoutModal() {
                       ))}
                     </div>
 
-                    <div className="shrink-0 space-y-2 border-t border-offgrid-green/10 px-4 py-3 sm:px-5 sm:py-4">
-                      <div className="flex justify-between text-xs text-offgrid-green/60 sm:text-sm">
+                    <div className="shrink-0 space-y-2 border-t border-offgrid-green/10 px-5 py-4">
+                      <div className="flex justify-between text-sm text-offgrid-green/60">
                         <span>Subtotal</span>
                         <span>{formatPrice(subtotal)}</span>
                       </div>
-                      <div className="flex justify-between text-xs text-offgrid-green/60 sm:text-sm">
+                      <div className="flex justify-between text-sm text-offgrid-green/60">
                         <span>Shipping</span>
                         <span>{shipping === 0 ? "FREE" : formatPrice(shipping)}</span>
                       </div>
-                      <div className="flex justify-between border-t border-offgrid-green/10 pt-2 text-base font-display font-bold text-offgrid-green sm:pt-3 sm:text-lg">
+                      <div className="flex justify-between border-t border-offgrid-green/10 pt-3 font-display text-lg font-bold text-offgrid-green">
                         <span>Total</span>
                         <span>{formatPrice(total)}</span>
                       </div>

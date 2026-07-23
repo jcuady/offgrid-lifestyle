@@ -130,6 +130,14 @@ export function validateShippingInfo(info: ShippingInfo): string | null {
   return Object.values(errors)[0] ?? null;
 }
 
+/** Parse DB jsonb into a validated ShippingInfo, or null if missing/invalid. */
+export function parseSavedShipping(raw: unknown): ShippingInfo | null {
+  if (!raw || typeof raw !== "object") return null;
+  const normalized = sanitizeShippingInfo(normalizeShippingInfo(raw as Partial<ShippingInfo>));
+  if (Object.keys(validateShippingInfoFields(normalized)).length > 0) return null;
+  return normalized;
+}
+
 const DELIVERY_ADDRESS_KEYS = ["region", "province", "city", "barangay", "address", "zip"] as const;
 
 export type DeliveryAddressFieldErrors = Pick<ShippingFieldErrors, (typeof DELIVERY_ADDRESS_KEYS)[number]>;

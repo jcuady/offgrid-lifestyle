@@ -7,6 +7,7 @@ import { usePortalStore } from "@/src/store/usePortalStore";
 import { useStore } from "@/src/store/store";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { localOrderService } from "@/src/services";
+import { persistCheckoutShipping } from "@/src/services/customerShippingService";
 import { CUT_OPTIONS, MATERIAL_OPTIONS, PRINT_OPTIONS, estimateUnitPrice } from "@/src/data/customOptions";
 import { estimateHeadwearUnitPrice, isTowelHeadwearType, resolveHeadwearOptions, headwearOptionLabel } from "@/src/data/customHeadwearOptions";
 import { formatMoney, php } from "@/src/types/commerce";
@@ -161,6 +162,7 @@ export function StepSummary() {
       const result = await localOrderService.submitCustomOrder(submittedDraft);
       setSubmittedEmail(submittedDraft.contactEmail);
       setFileUploadWarnings(result.fileUploadWarnings);
+      void persistCheckoutShipping(submittedDraft.shippingInfo);
       resetDraft();
 
       if (currentUser?.role === "customer") {

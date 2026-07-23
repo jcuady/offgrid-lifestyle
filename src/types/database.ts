@@ -401,6 +401,7 @@ export type Database = {
           name: string
           phone: string | null
           role: string
+          shipping_info: Json | null
           status: string
           updated_at: string
         }
@@ -414,6 +415,7 @@ export type Database = {
           name: string
           phone?: string | null
           role: string
+          shipping_info?: Json | null
           status?: string
           updated_at?: string
         }
@@ -427,6 +429,7 @@ export type Database = {
           name?: string
           phone?: string | null
           role?: string
+          shipping_info?: Json | null
           status?: string
           updated_at?: string
         }

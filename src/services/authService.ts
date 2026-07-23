@@ -10,6 +10,10 @@ import { isValidEmail, validatePassword } from "@/src/lib/formValidation";
 import { supabase } from "@/src/lib/supabase";
 import { logger } from "@/src/lib/logger";
 import { usePortalStore, type PortalUser, type UserRole } from "@/src/store/usePortalStore";
+import {
+  clearLocalShipping,
+  hydrateCheckoutShipping,
+} from "@/src/services/customerShippingService";
 import { linkPushSubscriptionToUser } from "@/src/lib/pushSubscription";
 import type { PasswordResetAudience } from "@/src/lib/passwordReset";
 import { passwordResetRedirectUrl } from "@/src/lib/passwordReset";
@@ -151,6 +155,7 @@ export const supabaseAuthService: AuthService = {
       summary: `${portalUser.email} signed in`,
     });
     void linkPushSubscriptionToUser();
+    if (portalUser.role === "customer") void hydrateCheckoutShipping(portalUser.id);
     return { ok: true };
   },
 
@@ -360,14 +365,22 @@ export async function initAuthListener() {
     usePortalStore.getState().setAuthHydrated(true);
   }
 
+  // Hydrate saved shipping after session restore (SIGNED_IN may not fire on page load).
+  const restored = usePortalStore.getState().currentUser;
+  if (restored?.role === "customer") {
+    void hydrateCheckoutShipping(restored.id);
+  }
+
   supabase.auth.onAuthStateChange(async (event) => {
     if (event === "SIGNED_OUT") {
       usePortalStore.getState().setCurrentUser(null);
+      clearLocalShipping();
     } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
       const user = await resolvePortalUser();
       usePortalStore.getState().setCurrentUser(user);
       if (event === "SIGNED_IN" && user) {
         void linkPushSubscriptionToUser();
+        if (user.role === "customer") void hydrateCheckoutShipping(user.id);
       }
     }
   });

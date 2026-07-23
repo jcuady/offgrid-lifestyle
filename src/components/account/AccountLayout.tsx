@@ -94,7 +94,7 @@ export function AccountLayout({
             {/* Section nav */}
             <nav
               aria-label="Account sections"
-              className="mt-3 flex flex-col gap-1.5 lg:sticky lg:top-24 lg:self-start"
+              className="mt-3 flex flex-row gap-1.5 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] lg:flex-col lg:overflow-visible lg:pb-0 [&::-webkit-scrollbar]:hidden"
             >
               {NAV.map((item) => {
                 const Icon = item.icon;
@@ -105,7 +105,7 @@ export function AccountLayout({
                     to={item.to}
                     aria-current={isActive ? "page" : undefined}
                     className={cn(
-                      "inline-flex w-full items-center gap-2.5 rounded-xl px-4 py-3 text-[11px] font-bold uppercase tracking-[0.12em] transition-colors",
+                      "inline-flex shrink-0 items-center gap-2.5 rounded-xl px-4 py-3 text-[11px] font-bold uppercase tracking-[0.12em] transition-colors lg:w-full",
                       isActive
                         ? "bg-offgrid-green text-offgrid-cream shadow-sm"
                         : "bg-white text-offgrid-green/70 ring-1 ring-offgrid-green/10 hover:text-offgrid-green lg:ring-0 lg:hover:bg-offgrid-green/[0.06]",
@@ -119,7 +119,7 @@ export function AccountLayout({
               <button
                 type="button"
                 onClick={handleSignOut}
-                className="inline-flex w-full items-center gap-2.5 rounded-xl px-4 py-3 text-[11px] font-bold uppercase tracking-[0.12em] text-red-700 transition-colors hover:bg-red-50 lg:mt-2 lg:border-t lg:border-offgrid-green/10 lg:pt-4"
+                className="inline-flex shrink-0 items-center gap-2.5 rounded-xl px-4 py-3 text-[11px] font-bold uppercase tracking-[0.12em] text-red-700 transition-colors hover:bg-red-50 lg:mt-2 lg:w-full lg:border-t lg:border-offgrid-green/10 lg:pt-4"
               >
                 <LogOut className="h-4 w-4 shrink-0" strokeWidth={1.75} />
                 Sign out

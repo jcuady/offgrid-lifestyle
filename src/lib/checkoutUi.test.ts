@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { shouldShowEmptyCartGate } from "./checkoutUi";
+import {
+  checkoutCartItemLabel,
+  checkoutCartLineCount,
+  shouldShowEmptyCartGate,
+} from "./checkoutUi";
 
 describe("shouldShowEmptyCartGate", () => {
   it("shows gate only when cart is empty before confirmation", () => {
@@ -38,5 +42,20 @@ describe("shouldShowEmptyCartGate", () => {
         placingOrder: false,
       }),
     ).toBe(false);
+  });
+});
+
+describe("checkoutCartItemLabel", () => {
+  it("pluralizes item counts for the mobile summary", () => {
+    expect(checkoutCartItemLabel(0)).toBe("0 items");
+    expect(checkoutCartItemLabel(1)).toBe("1 item");
+    expect(checkoutCartItemLabel(3)).toBe("3 items");
+  });
+});
+
+describe("checkoutCartLineCount", () => {
+  it("sums quantities across cart lines", () => {
+    expect(checkoutCartLineCount([{ quantity: 1 }, { quantity: 2 }])).toBe(3);
+    expect(checkoutCartLineCount([])).toBe(0);
   });
 });

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, lazy, Suspense } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, lazy, Suspense, type ReactNode } from "react";
 import { ChevronDown, Loader2, MapPin, Navigation, Search } from "lucide-react";
 import type { ShippingInfo } from "@/src/types/commerce";
 import {
@@ -40,13 +40,39 @@ interface PhilippinesAddressFieldsProps {
   onClearError?: (field: AddressFieldKey) => void;
 }
 
-const selectClass =
-  "w-full rounded-xl border border-offgrid-green/20 bg-white px-3 py-2.5 text-sm text-offgrid-green outline-none transition-all focus:border-offgrid-green focus:ring-2 focus:ring-offgrid-green/20 sm:px-4 sm:py-3 sm:text-base disabled:cursor-not-allowed disabled:bg-offgrid-green/[0.04] disabled:text-offgrid-green/45";
+/** 16px text avoids iOS Safari zoom-on-focus; min 44px for touch. */
+const fieldBaseClass =
+  "min-h-11 w-full rounded-xl border border-offgrid-green/20 bg-white px-3 py-2.5 text-base text-offgrid-green outline-none transition-all focus:border-offgrid-lime focus:ring-2 focus:ring-offgrid-lime/25 disabled:cursor-not-allowed disabled:bg-offgrid-green/[0.04] disabled:text-offgrid-green/45";
 
-const labelClass = "mb-2 block text-xs font-semibold uppercase tracking-[0.15em] text-offgrid-green";
+const selectClass = cn(fieldBaseClass, "appearance-none bg-none pr-10");
+
+const labelClass =
+  "mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.15em] text-offgrid-green sm:mb-2 sm:text-xs";
 
 function fieldClass(hasError?: boolean) {
+  return cn(fieldBaseClass, hasError && "border-red-500 focus:border-red-500 focus:ring-red-500/20");
+}
+
+function selectFieldClass(hasError?: boolean) {
   return cn(selectClass, hasError && "border-red-500 focus:border-red-500 focus:ring-red-500/20");
+}
+
+function SelectShell({
+  children,
+  disabled,
+}: {
+  children: ReactNode;
+  disabled?: boolean;
+}) {
+  return (
+    <div className={cn("relative", disabled && "opacity-90")}>
+      {children}
+      <ChevronDown
+        className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-offgrid-green/45"
+        aria-hidden
+      />
+    </div>
+  );
 }
 
 function FieldError({ message, field }: { message?: string; field?: string }) {
@@ -369,43 +395,40 @@ export function PhilippinesAddressFields({
   };
 
   return (
-    <div className="space-y-4 sm:space-y-5">
-      <div className="rounded-xl border border-offgrid-green/15 bg-white/60 p-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-offgrid-green/70">Delivery address</p>
-            <p className="mt-1 text-sm text-offgrid-green/75">
-              Select from the dropdowns below, or use quick-fill tools to speed things up.
-            </p>
-          </div>
-          <span className="rounded-full bg-offgrid-green/8 px-3 py-1 text-xs font-semibold text-offgrid-green/70">
-            {progress.done}/{progress.total} complete
-          </span>
-        </div>
+    <div className="space-y-3 sm:space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-offgrid-green/12 bg-white/70 px-3 py-2.5 sm:px-4 sm:py-3">
+        <p className="text-xs text-offgrid-green/70 sm:text-sm">
+          Pick region → city → barangay, then street.
+        </p>
+        <span className="rounded-full bg-offgrid-green/8 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/70 sm:text-xs">
+          {progress.done}/{progress.total}
+        </span>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
         <div>
           <label className={labelClass} htmlFor="ph-region">
             Region *
           </label>
-          <select
-            id="ph-region"
-            required
-            disabled={!ready}
-            value={value.regionCode}
-            onChange={(e) => handleRegionChange(e.target.value)}
-            className={fieldClass(Boolean(errors.region))}
-            aria-invalid={Boolean(errors.region)}
-            aria-describedby={errors.region ? "ph-region-error" : undefined}
-          >
-            <option value="">{ready ? "Select region" : "Loading regions…"}</option>
-            {regions.map((region) => (
-              <option key={region.code} value={region.code}>
-                {region.name}
-              </option>
-            ))}
-          </select>
+          <SelectShell disabled={!ready}>
+            <select
+              id="ph-region"
+              required
+              disabled={!ready}
+              value={value.regionCode}
+              onChange={(e) => handleRegionChange(e.target.value)}
+              className={selectFieldClass(Boolean(errors.region))}
+              aria-invalid={Boolean(errors.region)}
+              aria-describedby={errors.region ? "ph-region-error" : undefined}
+            >
+              <option value="">{ready ? "Select region" : "Loading regions…"}</option>
+              {regions.map((region) => (
+                <option key={region.code} value={region.code}>
+                  {region.name}
+                </option>
+              ))}
+            </select>
+          </SelectShell>
           <FieldError message={errors.region} field="region" />
         </div>
 
@@ -413,37 +436,41 @@ export function PhilippinesAddressFields({
           <label className={labelClass} htmlFor="ph-province">
             Province *
           </label>
-          <select
-            id="ph-province"
-            required
-            disabled={!value.regionCode || isNcr}
-            value={isNcr ? NCR_PROVINCE_CODE : value.provinceCode}
-            onChange={(e) => {
-              const province = provinces.find((p) => p.code === e.target.value);
-              void applyPsgcSelection(
-                {
-                  provinceCode: province?.code ?? "",
-                  province: province?.name ?? "",
-                  cityCode: "",
-                  city: "",
-                  barangayCode: "",
-                  barangay: "",
-                },
-                ["province", "city", "barangay"],
-              );
-            }}
-            className={fieldClass(Boolean(errors.province))}
-            aria-invalid={Boolean(errors.province)}
-          >
-            <option value="">{value.regionCode ? "Select province" : "Select a region first"}</option>
-            {provinces.map((province) => (
-              <option key={province.code} value={province.code}>
-                {province.name}
-              </option>
-            ))}
-          </select>
+          <SelectShell disabled={!value.regionCode || isNcr}>
+            <select
+              id="ph-province"
+              required
+              disabled={!value.regionCode || isNcr}
+              value={isNcr ? NCR_PROVINCE_CODE : value.provinceCode}
+              onChange={(e) => {
+                const province = provinces.find((p) => p.code === e.target.value);
+                void applyPsgcSelection(
+                  {
+                    provinceCode: province?.code ?? "",
+                    province: province?.name ?? "",
+                    cityCode: "",
+                    city: "",
+                    barangayCode: "",
+                    barangay: "",
+                  },
+                  ["province", "city", "barangay"],
+                );
+              }}
+              className={selectFieldClass(Boolean(errors.province))}
+              aria-invalid={Boolean(errors.province)}
+            >
+              <option value="">{value.regionCode ? "Select province" : "Select a region first"}</option>
+              {provinces.map((province) => (
+                <option key={province.code} value={province.code}>
+                  {province.name}
+                </option>
+              ))}
+            </select>
+          </SelectShell>
           {isNcr ? (
             <p className="mt-1 text-xs text-offgrid-green/55">NCR uses Metro Manila — proceed to city.</p>
+          ) : !value.regionCode ? (
+            <p className="mt-1 text-xs text-offgrid-green/45">Select a region first.</p>
           ) : null}
           <FieldError message={errors.province} field="province" />
         </div>
@@ -452,36 +479,40 @@ export function PhilippinesAddressFields({
           <label className={labelClass} htmlFor="ph-city">
             City / Municipality *
           </label>
-          <select
-            id="ph-city"
-            required
-            disabled={!value.regionCode || (!isNcr && !value.provinceCode)}
-            value={value.cityCode}
-            onChange={(e) => {
-              const city = cities.find((c) => c.code === e.target.value);
-              setBarangayFilter("");
-              void applyPsgcSelection(
-                {
-                  cityCode: city?.code ?? "",
-                  city: city?.name ?? "",
-                  barangayCode: "",
-                  barangay: "",
-                },
-                ["city", "barangay"],
-              );
-            }}
-            className={fieldClass(Boolean(errors.city))}
-            aria-invalid={Boolean(errors.city)}
-          >
-            <option value="">
-              {value.regionCode && (isNcr || value.provinceCode) ? "Select city or municipality" : "Select province first"}
-            </option>
-            {cities.map((city) => (
-              <option key={city.code} value={city.code}>
-                {city.name}
+          <SelectShell disabled={!value.regionCode || (!isNcr && !value.provinceCode)}>
+            <select
+              id="ph-city"
+              required
+              disabled={!value.regionCode || (!isNcr && !value.provinceCode)}
+              value={value.cityCode}
+              onChange={(e) => {
+                const city = cities.find((c) => c.code === e.target.value);
+                setBarangayFilter("");
+                void applyPsgcSelection(
+                  {
+                    cityCode: city?.code ?? "",
+                    city: city?.name ?? "",
+                    barangayCode: "",
+                    barangay: "",
+                  },
+                  ["city", "barangay"],
+                );
+              }}
+              className={selectFieldClass(Boolean(errors.city))}
+              aria-invalid={Boolean(errors.city)}
+            >
+              <option value="">
+                {value.regionCode && (isNcr || value.provinceCode)
+                  ? "Select city or municipality"
+                  : "Select province first"}
               </option>
-            ))}
-          </select>
+              {cities.map((city) => (
+                <option key={city.code} value={city.code}>
+                  {city.name}
+                </option>
+              ))}
+            </select>
+          </SelectShell>
           <FieldError message={errors.city} field="city" />
         </div>
 
@@ -497,33 +528,38 @@ export function PhilippinesAddressFields({
               placeholder="Type to filter barangays…"
               disabled={!value.cityCode}
               className={cn(fieldClass(false), "mb-2")}
+              enterKeyHint="search"
             />
           ) : null}
-          <select
-            id="ph-barangay"
-            required
-            disabled={!value.cityCode}
-            value={value.barangayCode}
-            onChange={(e) => {
-              const barangay = filteredBarangays.find((b) => b.code === e.target.value) ?? barangays.find((b) => b.code === e.target.value);
-              patchField(
-                {
-                  barangayCode: barangay?.code ?? "",
-                  barangay: barangay?.name ?? "",
-                },
-                ["barangay"],
-              );
-            }}
-            className={fieldClass(Boolean(errors.barangay))}
-            aria-invalid={Boolean(errors.barangay)}
-          >
-            <option value="">{value.cityCode ? "Select barangay" : "Select city first"}</option>
-            {filteredBarangays.map((barangay) => (
-              <option key={barangay.code} value={barangay.code}>
-                {barangay.name}
-              </option>
-            ))}
-          </select>
+          <SelectShell disabled={!value.cityCode}>
+            <select
+              id="ph-barangay"
+              required
+              disabled={!value.cityCode}
+              value={value.barangayCode}
+              onChange={(e) => {
+                const barangay =
+                  filteredBarangays.find((b) => b.code === e.target.value) ??
+                  barangays.find((b) => b.code === e.target.value);
+                patchField(
+                  {
+                    barangayCode: barangay?.code ?? "",
+                    barangay: barangay?.name ?? "",
+                  },
+                  ["barangay"],
+                );
+              }}
+              className={selectFieldClass(Boolean(errors.barangay))}
+              aria-invalid={Boolean(errors.barangay)}
+            >
+              <option value="">{value.cityCode ? "Select barangay" : "Select city first"}</option>
+              {filteredBarangays.map((barangay) => (
+                <option key={barangay.code} value={barangay.code}>
+                  {barangay.name}
+                </option>
+              ))}
+            </select>
+          </SelectShell>
           {value.cityCode && filteredBarangays.length === 0 && barangayFilter ? (
             <p className="mt-1 text-xs text-offgrid-green/55">No barangay matches. Try a different spelling.</p>
           ) : null}

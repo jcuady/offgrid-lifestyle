@@ -41,7 +41,7 @@ import {
 } from "@/src/lib/portal";
 
 const inputCls =
-  "w-full rounded-xl border border-offgrid-green/20 bg-white px-3.5 py-2.5 text-sm text-offgrid-green outline-none transition-colors focus:border-offgrid-lime/60 focus:ring-2 focus:ring-offgrid-lime/20";
+  "min-h-11 w-full rounded-xl border border-offgrid-green/20 bg-white px-3.5 py-2.5 text-base text-offgrid-green outline-none transition-colors focus:border-offgrid-lime/60 focus:ring-2 focus:ring-offgrid-lime/20 sm:text-sm";
 
 function PayMongoPayButton({
   orderId,
@@ -113,7 +113,7 @@ function StarPicker({ value, onChange }: { value: number; onChange: (v: number) 
           type="button"
           onClick={() => onChange(n)}
           onMouseEnter={() => setHovered(n)}
-          className="p-0.5 transition-transform hover:scale-110"
+          className="inline-flex min-h-11 min-w-11 items-center justify-center p-1 transition-transform hover:scale-110"
           aria-label={`${n} star${n !== 1 ? "s" : ""}`}
         >
           <Star
@@ -345,7 +345,7 @@ function PaymentProofSection({
           <img
             src={proofUrl}
             alt="Payment screenshot"
-            className="max-h-80 rounded-xl border border-offgrid-green/10 object-contain shadow-sm"
+            className="max-h-80 max-w-full w-full rounded-xl border border-offgrid-green/10 object-contain shadow-sm"
           />
           {isPaid ? (
             <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-offgrid-lime/15 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-offgrid-lime">

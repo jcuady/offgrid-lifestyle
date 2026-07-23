@@ -131,7 +131,7 @@ export function AccountLayout({
             {backTo ? (
               <Link
                 to={backTo.to}
-                className="mb-5 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/55 transition-colors hover:text-offgrid-green"
+                className="mb-5 inline-flex min-h-11 items-center gap-2 px-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/55 transition-colors hover:text-offgrid-green"
               >
                 <ArrowLeft className="h-3.5 w-3.5 shrink-0" />
                 {backTo.label}

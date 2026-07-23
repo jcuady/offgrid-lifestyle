@@ -690,7 +690,7 @@ export function PhilippinesAddressFields({
                 <p className="mt-1 text-xs text-offgrid-green/55">No matches — use the dropdowns above instead.</p>
               ) : null}
               {searchOpen && searchResults.length > 0 ? (
-                <ul className="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-xl border border-offgrid-green/15 bg-white shadow-lg">
+                <ul className="relative z-20 mt-1 max-h-48 w-full overflow-y-auto rounded-xl border border-offgrid-green/15 bg-white shadow-lg">
                   {searchResults.map((result) => (
                     <li key={result.id}>
                       <button

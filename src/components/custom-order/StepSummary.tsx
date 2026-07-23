@@ -32,7 +32,7 @@ const PhilippinesAddressFields = lazy(() =>
 
 const contactInputClass = (hasError: boolean) =>
   cn(
-    "w-full rounded-xl border border-offgrid-green/20 bg-white px-4 py-3 text-sm text-offgrid-green outline-none transition-all focus:border-offgrid-lime focus:ring-2 focus:ring-offgrid-lime/25",
+    "min-h-11 w-full rounded-xl border border-offgrid-green/20 bg-white px-4 py-3 text-base text-offgrid-green outline-none transition-all focus:border-offgrid-lime focus:ring-2 focus:ring-offgrid-lime/25 sm:text-sm",
     hasError && "border-red-500 focus:border-red-500 focus:ring-red-500/20",
   );
 
@@ -277,7 +277,7 @@ export function StepSummary() {
               min={minQuantity}
               value={draft.quantity}
               onChange={(e) => updateDraft({ quantity: Math.max(minQuantity, Number(e.target.value)) })}
-              className="w-20 rounded-lg border border-offgrid-green/20 bg-white px-2 py-1 text-right text-sm text-offgrid-green outline-none transition-all focus:border-offgrid-lime focus:ring-2 focus:ring-offgrid-lime/25"
+              className="min-h-11 w-20 rounded-lg border border-offgrid-green/20 bg-white px-2 py-2 text-right text-base text-offgrid-green outline-none transition-all focus:border-offgrid-lime focus:ring-2 focus:ring-offgrid-lime/25 sm:text-sm"
             />
           }
         />
@@ -380,7 +380,7 @@ export function StepSummary() {
               type="text"
               value={draft.teamOrOrg}
               onChange={(e) => updateDraft({ teamOrOrg: e.target.value })}
-              className="w-full rounded-xl border border-offgrid-green/20 bg-white px-4 py-3 text-sm text-offgrid-green outline-none transition-all focus:border-offgrid-lime focus:ring-2 focus:ring-offgrid-lime/25"
+              className="min-h-11 w-full rounded-xl border border-offgrid-green/20 bg-white px-4 py-3 text-base text-offgrid-green outline-none transition-all focus:border-offgrid-lime focus:ring-2 focus:ring-offgrid-lime/25 sm:text-sm"
               placeholder="Boracay Dragons, Company XYZ…"
             />
           </div>

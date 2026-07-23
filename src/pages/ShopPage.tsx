@@ -556,7 +556,7 @@ function FilterChip({
       type="button"
       onClick={onClick}
       className={cn(
-        "rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all",
+        "min-h-11 rounded-full px-3.5 text-xs font-semibold transition-all",
         active
           ? "bg-offgrid-green text-offgrid-cream"
           : "border border-offgrid-green/15 bg-white text-offgrid-green/65 hover:bg-offgrid-green/5",
@@ -569,13 +569,13 @@ function FilterChip({
 
 function ActiveChip({ label, onRemove }: { label: string; onRemove: () => void }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-offgrid-green/10 py-1 pl-3 pr-1.5 text-xs font-semibold text-offgrid-green">
+    <span className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-offgrid-green/10 pl-3 pr-1 text-xs font-semibold text-offgrid-green">
       {label}
       <button
         type="button"
         onClick={onRemove}
         aria-label={`Remove ${label} filter`}
-        className="flex h-4 w-4 items-center justify-center rounded-full text-offgrid-green/60 hover:bg-offgrid-green hover:text-offgrid-cream"
+        className="flex h-11 w-11 items-center justify-center rounded-full text-offgrid-green/60 hover:bg-offgrid-green hover:text-offgrid-cream"
       >
         <X className="h-3 w-3" />
       </button>

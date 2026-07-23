@@ -56,7 +56,7 @@ export function OffgridHero({
           loop
           muted
           playsInline
-          preload="auto"
+          preload="metadata"
           aria-hidden
           className="absolute inset-0 h-full w-full object-cover"
           src={videoSrc}

@@ -45,7 +45,7 @@ export const monoLabelOnLight = `${monoLabel} text-offgrid-green/60`;
 
 /** High-contrast primary CTA used across storefront collection sections. */
 export const electricBluePill =
-  "inline-flex min-h-9 items-center justify-center gap-1.5 rounded-full bg-offgrid-lime px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-white shadow-sm transition-[background-color,transform,box-shadow] duration-200 hover:bg-offgrid-gold hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offgrid-lime focus-visible:ring-offset-2 active:translate-y-px";
+  "inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full bg-offgrid-lime px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-white shadow-sm transition-[background-color,transform,box-shadow] duration-200 hover:bg-offgrid-gold hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offgrid-lime focus-visible:ring-offset-2 active:translate-y-px";
 
 export const sectionTitle =
   "font-display font-black leading-[0.95] tracking-tight text-offgrid-green text-4xl sm:text-5xl md:text-6xl lg:text-7xl";

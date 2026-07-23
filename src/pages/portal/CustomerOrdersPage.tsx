@@ -128,7 +128,7 @@ export function CustomerOrdersPage() {
     >
       {/* Snapshot stats */}
       {stats.total > 0 ? (
-        <div className="mb-7 grid grid-cols-3 gap-3 sm:gap-4">
+        <div className="mb-7 grid grid-cols-1 gap-3 min-[380px]:grid-cols-3 sm:gap-4">
           <StatCard icon={Package2} label="Total orders" value={stats.total} />
           <StatCard icon={Truck} label="In progress" value={stats.active} accent />
           <StatCard icon={CheckCircle2} label="Delivered" value={stats.delivered} />
@@ -326,7 +326,7 @@ function RetailOrderCard({ order }: { order: ManagedRetailOrder }) {
                 className="relative h-11 w-11 shrink-0 overflow-hidden rounded-lg border border-offgrid-green/10 bg-offgrid-cream/50"
                 title={line.name}
               >
-                <img src={line.image} alt="" className="h-full w-full object-cover" />
+                <img src={line.image} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
               </span>
             ))}
             {order.lines.length > 4 ? (

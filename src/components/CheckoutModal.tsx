@@ -127,6 +127,15 @@ export function CheckoutModal() {
     }
   }, [checkoutStep, paymentMethod, checkoutPaymentConfig, setPaymentMethod]);
 
+  useEffect(() => {
+    if (!isCheckoutOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [isCheckoutOpen]);
+
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const shipping = subtotal >= 2000 ? 0 : 150;
   const total = subtotal + shipping;

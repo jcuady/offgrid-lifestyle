@@ -124,10 +124,10 @@ export function Footer() {
             <button
               type="button"
               onClick={scrollToTop}
-              className="group inline-flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-offgrid-cream transition-colors hover:text-white"
+              className="group inline-flex min-h-11 items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-offgrid-cream transition-colors hover:text-white"
             >
               Back to top
-              <span className="flex h-7 w-7 items-center justify-center rounded-full border border-offgrid-cream/30 transition-colors group-hover:border-offgrid-cream group-hover:bg-offgrid-cream group-hover:text-offgrid-lime">
+              <span className="flex h-11 w-11 items-center justify-center rounded-full border border-offgrid-cream/30 transition-colors group-hover:border-offgrid-cream group-hover:bg-offgrid-cream group-hover:text-offgrid-lime">
                 <ArrowUp className="h-3.5 w-3.5" />
               </span>
             </button>

@@ -36,7 +36,7 @@ export function StepIndicator() {
                 aria-current={isActive ? "step" : undefined}
                 aria-label={`Step ${stepNum}: ${step.label}`}
                 className={cn(
-                  "flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 transition-all sm:h-11 sm:w-11",
+                  "flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 transition-all",
                   isActive && "border-offgrid-lime bg-offgrid-lime text-white shadow-md",
                   isComplete && "border-offgrid-green bg-offgrid-green text-offgrid-cream",
                   !isActive && !isComplete && "border-offgrid-green/15 bg-white text-offgrid-green/35",

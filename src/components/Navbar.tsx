@@ -603,7 +603,7 @@ export function Navbar() {
                           setIsCartDropdownOpen(false);
                           toggleCart(true);
                         }}
-                        className="rounded-xl border border-offgrid-green/20 px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] transition-colors hover:bg-offgrid-green/5"
+                        className="min-h-11 rounded-xl border border-offgrid-green/20 px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] transition-colors hover:bg-offgrid-green/5"
                       >
                         View Cart
                       </button>
@@ -617,7 +617,7 @@ export function Navbar() {
                             toggleCart(true);
                           }
                         }}
-                        className="rounded-xl bg-offgrid-green px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-offgrid-cream transition-colors hover:bg-offgrid-dark"
+                        className="min-h-11 rounded-xl bg-offgrid-green px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-offgrid-cream transition-colors hover:bg-offgrid-dark"
                       >
                         Checkout
                       </button>

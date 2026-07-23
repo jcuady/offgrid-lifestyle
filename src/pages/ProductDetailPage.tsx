@@ -167,6 +167,8 @@ export function ProductDetailPage() {
                 <img
                   src={product.image}
                   alt={product.name}
+                  fetchPriority="high"
+                  decoding="async"
                   className="w-full h-full object-cover object-center"
                 />
               </motion.div>
@@ -245,7 +247,7 @@ export function ProductDetailPage() {
                             onClick={() => setSelectedColor(color.value)}
                             title={color.name}
                             className={cn(
-                              "w-10 h-10 rounded-full border-2 transition-all duration-200 flex items-center justify-center relative outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offgrid-green",
+                              "min-h-11 min-w-11 rounded-full border-2 transition-all duration-200 flex items-center justify-center relative outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offgrid-green",
                               isSelected
                                 ? "border-offgrid-green scale-110 shadow-md"
                                 : "border-offgrid-green/20 hover:border-offgrid-green/50 hover:scale-105"
@@ -278,7 +280,7 @@ export function ProductDetailPage() {
                         key={size}
                         onClick={() => setSelectedSize(size)}
                         className={cn(
-                          "min-w-[3rem] px-4 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offgrid-green",
+                          "min-h-11 min-w-[3rem] px-4 rounded-xl text-xs font-semibold transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offgrid-green",
                           selectedSize === size
                             ? "bg-offgrid-green text-offgrid-cream border-transparent shadow-md"
                             : "bg-white text-offgrid-green border border-offgrid-green/20 hover:border-offgrid-green/50 hover:bg-offgrid-green/5"
@@ -298,7 +300,7 @@ export function ProductDetailPage() {
                       onClick={() => setQuantity(Math.max(1, quantity - 1))}
                       disabled={quantity <= 1}
                       aria-label="Decrease quantity"
-                      className="grid h-10 w-10 place-items-center rounded-lg text-offgrid-green hover:bg-offgrid-green/5 hover:text-offgrid-lime disabled:opacity-30 disabled:cursor-not-allowed transition-colors outline-none"
+                      className="grid h-11 w-11 place-items-center rounded-lg text-offgrid-green hover:bg-offgrid-green/5 hover:text-offgrid-lime disabled:opacity-30 disabled:cursor-not-allowed transition-colors outline-none"
                     >
                       <Minus className="w-4 h-4" />
                     </button>
@@ -309,7 +311,7 @@ export function ProductDetailPage() {
                       onClick={() => setQuantity(Math.min(10, quantity + 1))}
                       disabled={quantity >= 10}
                       aria-label="Increase quantity"
-                      className="grid h-10 w-10 place-items-center rounded-lg text-offgrid-green hover:bg-offgrid-green/5 hover:text-offgrid-lime disabled:opacity-30 disabled:cursor-not-allowed transition-colors outline-none"
+                      className="grid h-11 w-11 place-items-center rounded-lg text-offgrid-green hover:bg-offgrid-green/5 hover:text-offgrid-lime disabled:opacity-30 disabled:cursor-not-allowed transition-colors outline-none"
                     >
                       <Plus className="w-4 h-4" />
                     </button>

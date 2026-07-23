@@ -35,7 +35,7 @@ export function PhilippinesLocationMap({
       const map = L.map(containerRef.current, {
         center: [initialLat, initialLon],
         zoom: latitude !== null ? 15 : 6,
-        scrollWheelZoom: true,
+        scrollWheelZoom: false,
         zoomControl: true,
       });
 

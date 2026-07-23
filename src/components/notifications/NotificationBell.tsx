@@ -101,7 +101,7 @@ export function NotificationBell({
 
   const isDark = variant === "dark";
   const triggerClass = cn(
-    "relative grid h-9 w-9 shrink-0 place-items-center rounded-full border transition-colors",
+    "relative grid h-11 w-11 shrink-0 place-items-center rounded-full border transition-colors",
     isDark
       ? "border-offgrid-cream/35 text-offgrid-cream hover:border-white hover:text-white"
       : "border-offgrid-green/15 bg-white text-offgrid-green hover:bg-offgrid-green/5",

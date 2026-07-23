@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { CheckCircle2, Loader2, QrCode, RefreshCw, XCircle } from "lucide-react";
-import { Navbar } from "@/src/components/Navbar";
-import { Footer } from "@/src/components/Footer";
 import { Button } from "@/src/components/ui/Button";
 import {
   createPayMongoCheckoutSession,
@@ -128,7 +126,6 @@ export function PayMongoReturnPage({ mode }: { mode: PageMode }) {
 
   return (
     <div className="min-h-screen bg-offgrid-cream">
-      <Navbar />
       <header className={marketingPageHero}>
         <div className={cn(siteContainer, "relative z-10")}>
           <p className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-offgrid-cream/60">
@@ -279,7 +276,6 @@ export function PayMongoReturnPage({ mode }: { mode: PageMode }) {
           ) : null}
         </div>
       </main>
-      <Footer />
     </div>
   );
 }

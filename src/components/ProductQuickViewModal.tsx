@@ -236,7 +236,7 @@ export function ProductQuickViewModal({ product, onClose }: ProductQuickViewModa
                                 setError(null);
                               }}
                               className={cn(
-                                "flex h-9 w-9 items-center justify-center rounded-full border-2 transition-all outline-none focus-visible:ring-2 focus-visible:ring-offgrid-lime focus-visible:ring-offset-2",
+                                "flex h-11 w-11 items-center justify-center rounded-full border-2 transition-all outline-none focus-visible:ring-2 focus-visible:ring-offgrid-lime focus-visible:ring-offset-2",
                                 isSelected
                                   ? "scale-110 border-offgrid-green shadow-md"
                                   : "border-offgrid-green/20 hover:border-offgrid-green/50",
@@ -274,7 +274,7 @@ export function ProductQuickViewModal({ product, onClose }: ProductQuickViewModa
                             setError(null);
                           }}
                           className={cn(
-                            "min-w-[2.75rem] rounded-xl px-3.5 py-2 text-xs font-semibold transition-all outline-none focus-visible:ring-2 focus-visible:ring-offgrid-lime focus-visible:ring-offset-2",
+                            "min-h-11 min-w-[2.75rem] rounded-xl px-3.5 text-xs font-semibold transition-all outline-none focus-visible:ring-2 focus-visible:ring-offgrid-lime focus-visible:ring-offset-2",
                             selectedSize === size
                               ? "bg-offgrid-green text-offgrid-cream shadow-md"
                               : "border border-offgrid-green/20 bg-white text-offgrid-green hover:border-offgrid-green/50 hover:bg-offgrid-green/5",
@@ -297,7 +297,7 @@ export function ProductQuickViewModal({ product, onClose }: ProductQuickViewModa
                         onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                         disabled={quantity <= 1}
                         aria-label="Decrease quantity"
-                        className="flex h-8 w-8 items-center justify-center rounded-full text-offgrid-green transition-colors hover:bg-offgrid-green/5 disabled:opacity-30"
+                        className="flex h-11 w-11 items-center justify-center rounded-full text-offgrid-green transition-colors hover:bg-offgrid-green/5 disabled:opacity-30"
                       >
                         <Minus className="h-3.5 w-3.5" />
                       </button>
@@ -307,7 +307,7 @@ export function ProductQuickViewModal({ product, onClose }: ProductQuickViewModa
                         onClick={() => setQuantity((q) => Math.min(10, q + 1))}
                         disabled={quantity >= 10}
                         aria-label="Increase quantity"
-                        className="flex h-8 w-8 items-center justify-center rounded-full text-offgrid-green transition-colors hover:bg-offgrid-green/5 disabled:opacity-30"
+                        className="flex h-11 w-11 items-center justify-center rounded-full text-offgrid-green transition-colors hover:bg-offgrid-green/5 disabled:opacity-30"
                       >
                         <Plus className="h-3.5 w-3.5" />
                       </button>

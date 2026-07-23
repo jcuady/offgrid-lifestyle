@@ -254,7 +254,7 @@ export function StepDesign() {
           rows={3}
           value={draft.designNotes}
           onChange={(e) => updateDraft({ designNotes: e.target.value })}
-          className="w-full resize-none rounded-xl border border-offgrid-green/20 bg-white px-4 py-3 text-sm text-offgrid-green outline-none transition-all focus:border-offgrid-lime focus:ring-2 focus:ring-offgrid-lime/25"
+          className="min-h-11 w-full resize-none rounded-xl border border-offgrid-green/20 bg-white px-4 py-3 text-base text-offgrid-green outline-none transition-all focus:border-offgrid-lime focus:ring-2 focus:ring-offgrid-lime/25 sm:text-sm"
           placeholder={copy.designNotesPlaceholder}
         />
       </div>

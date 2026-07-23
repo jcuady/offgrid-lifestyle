@@ -11,8 +11,6 @@ import { Footer } from "./components/Footer";
 import { ScrollToTop } from "./components/ScrollToTop";
 import { RouteSeo } from "./components/seo/RouteSeo";
 import { GoogleAnalytics } from "./components/seo/GoogleAnalytics";
-import { CartDrawer } from "./components/CartDrawer";
-import { CheckoutModal } from "./components/CheckoutModal";
 import { isAuthScreen, PORTAL_LOGIN_PATH } from "@/src/lib/authRoutes";
 import { usePortalStore, getPortalLandingByRole } from "./store/usePortalStore";
 import { RequirePortalRole } from "./components/portal/RequirePortalRole";
@@ -21,8 +19,17 @@ import { PushPermissionPrompt } from "./components/notifications/PushPermissionP
 import { PushNavigateListener } from "./components/notifications/PushNavigateListener";
 import { PwaInstallModal } from "./components/pwa/PwaInstallModal";
 import { PwaUpdateBanner } from "./components/pwa/PwaUpdateBanner";
-import { CustomTeamOrderModal } from "./components/CustomTeamOrderModal";
 import { initAuthListener } from "@/src/services/authService";
+
+const CartDrawer = lazy(() =>
+  import("./components/CartDrawer").then((m) => ({ default: m.CartDrawer })),
+);
+const CheckoutModal = lazy(() =>
+  import("./components/CheckoutModal").then((m) => ({ default: m.CheckoutModal })),
+);
+const CustomTeamOrderModal = lazy(() =>
+  import("./components/CustomTeamOrderModal").then((m) => ({ default: m.CustomTeamOrderModal })),
+);
 
 const HomePage = lazy(() => import("./pages/HomePage").then((m) => ({ default: m.HomePage })));
 const ProductDetailPage = lazy(() =>
@@ -300,9 +307,11 @@ function AppFrame() {
 
       {!hideStorefrontChrome && <Footer />}
 
-      <CartDrawer />
-      <CheckoutModal />
-      <CustomTeamOrderModal />
+      <Suspense fallback={null}>
+        <CartDrawer />
+        <CheckoutModal />
+        <CustomTeamOrderModal />
+      </Suspense>
       <PwaInstallModal />
       <PwaUpdateBanner />
       <CookieConsentBanner />

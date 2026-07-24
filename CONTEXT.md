@@ -8,3 +8,5 @@
 | **Post-login side effects** | Push subscription link + customer shipping hydrate; run once per new portal identity, never during recovery. |
 | **Auth callback kind** | `recovery` \| `signup_confirm` \| `session` \| `none` — from `classifyAuthCallback`. |
 | **Portal user** | Row in `og_portal_users` (not `auth.users`); roles: customer, staff, admin. |
+| **Must-ship** | Launch-blocking production readiness items in `PRODUCTION_READINESS.md` (money integrity, auth, legal, SW). |
+| **Order payment integrity** | DB triggers + PayMongo edge settle that keep customers from inventing paid state or rewriting staff quotes. |

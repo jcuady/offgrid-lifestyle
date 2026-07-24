@@ -23,7 +23,7 @@ import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { cn } from "@/src/lib/utils";
 
 const SHORTCUTS: { name: string; description: string; to: string; icon: typeof Home }[] = [
-  { name: "Payments", description: "GCash QR, PayMongo (coming soon)", to: "/portal/admin/payments", icon: QrCode },
+  { name: "Payments", description: "GCash QR and PayMongo QR Ph", to: "/portal/admin/payments", icon: QrCode },
   { name: "Homepage", description: "Hero, OG Signatures, and landing copy", to: "/portal/admin/homepage", icon: Home },
   { name: "Custom pages", description: "Ordering guide and custom-order copy", to: "/portal/admin/custom-pages", icon: Palette },
   { name: "Templates", description: "OG client template library CRUD", to: "/portal/admin/templates", icon: Package },

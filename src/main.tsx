@@ -4,12 +4,15 @@ import App from './App.tsx';
 import './index.css';
 import {initPwaInstall} from '@/src/lib/pwa';
 import {initServiceWorker} from '@/src/lib/serviceWorker';
+import {AppErrorBoundary} from '@/src/components/AppErrorBoundary';
 
 initPwaInstall();
 initServiceWorker();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <AppErrorBoundary>
+      <App />
+    </AppErrorBoundary>
   </StrictMode>,
 );

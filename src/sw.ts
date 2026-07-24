@@ -2,7 +2,7 @@
 import { cleanupOutdatedCaches, precacheAndRoute, createHandlerBoundToURL } from "workbox-precaching";
 import { clientsClaim, skipWaiting } from "workbox-core";
 import { NavigationRoute, registerRoute } from "workbox-routing";
-import { CacheFirst, NetworkFirst, StaleWhileRevalidate } from "workbox-strategies";
+import { CacheFirst, StaleWhileRevalidate } from "workbox-strategies";
 import { ExpirationPlugin } from "workbox-expiration";
 import { CacheableResponsePlugin } from "workbox-cacheable-response";
 import { absoluteNotificationUrl } from "./lib/pushPayload";
@@ -50,18 +50,8 @@ registerRoute(
   }),
 );
 
-// Supabase API requests — network-first for fresh data
-registerRoute(
-  ({ url }) => url.hostname.includes("supabase.co"),
-  new NetworkFirst({
-    cacheName: "supabase-api",
-    plugins: [
-      new CacheableResponsePlugin({ statuses: [0, 200] }),
-      new ExpirationPlugin({ maxEntries: 50, maxAgeSeconds: 24 * 60 * 60 }),
-    ],
-    networkTimeoutSeconds: 5,
-  }),
-);
+// Never cache Supabase/auth/API — stale sessions and RLS responses are worse than offline.
+// (Previous NetworkFirst supabase.co route removed intentionally.)
 
 // JS/CSS chunks — stale-while-revalidate
 registerRoute(

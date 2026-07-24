@@ -37,12 +37,13 @@ export function resolvePaymentKindFromSession(input: {
   return input.fallback ?? "full";
 }
 
-/** Reject under/over-payment vs ledger amount (1 centavo tolerance). */
+/** Reject under/over-payment vs ledger amount (1 centavo tolerance). Fail closed if either side missing. */
 export function amountsMatchCentavos(
   expected: number | null | undefined,
   paid: number | null | undefined,
 ): boolean {
-  if (expected == null || paid == null) return true; // ponytail: skip when PayMongo omits amount
+  if (expected == null || paid == null) return false;
+  if (!Number.isFinite(expected) || !Number.isFinite(paid)) return false;
   return Math.abs(expected - paid) <= 1;
 }
 

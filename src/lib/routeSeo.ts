@@ -69,6 +69,12 @@ const STATIC_ROUTE_SEO: Record<string, PageSeoInput> = {
       "Reach the OFFGRID team for custom orders, partnerships, and product questions. Visit us at 5 Mt Everest, Marikina, 1800 Metro Manila — ships nationwide.",
     path: "/contact",
   },
+  "/faq": {
+    title: `FAQ — Shipping, Custom Orders & Sizing | ${BRAND}`,
+    description:
+      "Answers on lead times, sizing, custom teamwear minimums, payments, and nationwide shipping for OFFGRID Lifestyle Philippines.",
+    path: "/faq",
+  },
   "/legal/terms": {
     title: `Terms & Conditions | ${BRAND}`,
     description: "Terms and conditions for shopping and custom orders at OFFGRID Lifestyle Philippines.",

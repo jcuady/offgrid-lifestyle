@@ -1,5 +1,8 @@
-/** Detect service-role callers for Edge Functions (send-push webhooks, etc.). */
+/** Detect service-role callers (mirrors edge `_shared/serviceRoleAuth.ts`). */
 
+/**
+ * Decode JWT payload role claim (diagnostic only — never authorize from this alone).
+ */
 export function readJwtRoleClaim(token: string): string | null {
   const parts = token.split(".");
   if (parts.length < 2 || !parts[1]) return null;
@@ -15,11 +18,10 @@ export function readJwtRoleClaim(token: string): string | null {
 }
 
 /**
- * True when the Authorization bearer is the platform service role key,
- * or a JWT whose `role` claim is `service_role` (legacy JWT vs sb_secret mismatch).
+ * True only when the Authorization bearer equals the platform service role key.
+ * Unsigned JWT `role: service_role` claims are NOT accepted (forgery risk).
  */
 export function isServiceRoleBearer(token: string, serviceRoleKey: string): boolean {
   if (!token || !serviceRoleKey) return false;
-  if (token === serviceRoleKey) return true;
-  return readJwtRoleClaim(token) === "service_role";
+  return token === serviceRoleKey;
 }

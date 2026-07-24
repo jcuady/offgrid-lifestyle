@@ -44,7 +44,8 @@ export function amountsMatchCentavos(
   expected: number | null | undefined,
   paid: number | null | undefined,
 ): boolean {
-  if (expected == null || paid == null) return true;
+  if (expected == null || paid == null) return false;
+  if (!Number.isFinite(expected) || !Number.isFinite(paid)) return false;
   return Math.abs(expected - paid) <= 1;
 }
 

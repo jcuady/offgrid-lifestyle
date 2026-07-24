@@ -184,7 +184,7 @@ export function FocusRail({
                   opacity,
                   filter: `blur(${blur}px) brightness(${brightness})`,
                 }}
-                transition={(key) => (key === "scale" ? TAP_SPRING : BASE_SPRING)}
+                transition={BASE_SPRING}
                 style={{ transformStyle: "preserve-3d" }}
                 onClick={() => {
                   if (offset !== 0) setActive((p) => p + offset);

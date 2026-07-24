@@ -19,15 +19,6 @@ export type OrderAccessRow = {
 export type { OrderPaymentAccessDecision };
 export { decideOrderPaymentAccess } from "./orderPaymentAccessDecision.ts";
 
-function getJwtRole(token: string): string | null {
-  try {
-    const payload = JSON.parse(atob(token.split(".")[1] ?? ""));
-    return typeof payload.role === "string" ? payload.role : null;
-  } catch {
-    return null;
-  }
-}
-
 export async function assertOrderPaymentAccess(input: {
   req: Request;
   admin: SupabaseClient;
@@ -41,7 +32,8 @@ export async function assertOrderPaymentAccess(input: {
 
   const token = authHeader.slice("Bearer ".length).trim();
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-  if (token && (token === serviceKey || getJwtRole(token) === "service_role")) {
+  // Exact key only — never trust unsigned JWT role claims.
+  if (token && serviceKey && token === serviceKey) {
     return { ok: true };
   }
 

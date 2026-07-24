@@ -19,10 +19,10 @@ describe("serviceRoleAuth", () => {
     expect(isServiceRoleBearer("sb_secret_abc", "other")).toBe(false);
   });
 
-  it("accepts JWT bearer with role service_role when secrets differ", () => {
+  it("rejects forged JWT with role service_role (regression: unsigned claim bypass)", () => {
     const jwt = fakeJwt({ role: "service_role", ref: "sswz" });
     expect(readJwtRoleClaim(jwt)).toBe("service_role");
-    expect(isServiceRoleBearer(jwt, "sb_secret_other")).toBe(true);
+    expect(isServiceRoleBearer(jwt, "sb_secret_other")).toBe(false);
   });
 
   it("rejects JWT bearer with other roles", () => {

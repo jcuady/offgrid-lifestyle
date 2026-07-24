@@ -230,15 +230,14 @@ Deno.serve(async (req: Request) => {
 
   try {
     const webhookSecret = await resolvePayMongoWebhookSecret(admin);
-    if (webhookSecret) {
-      const header = req.headers.get("Paymongo-Signature") ?? req.headers.get("paymongo-signature");
-      const ok = await verifyPaymongoSignature(rawBody, header, webhookSecret);
-      if (!ok) {
-        return jsonResponse({ error: "Invalid signature." }, 401, {});
-      }
-    } else {
-      // ponytail: bootstrap only — rotate webhook secret in vault for prod.
-      console.warn("PAYMONGO_WEBHOOK_SECRET missing — skipping signature verification");
+    if (!webhookSecret) {
+      console.error("PAYMONGO_WEBHOOK_SECRET missing — refusing unsigned webhook");
+      return jsonResponse({ error: "Webhook secret not configured." }, 500, {});
+    }
+    const header = req.headers.get("Paymongo-Signature") ?? req.headers.get("paymongo-signature");
+    const ok = await verifyPaymongoSignature(rawBody, header, webhookSecret);
+    if (!ok) {
+      return jsonResponse({ error: "Invalid signature." }, 401, {});
     }
 
     let payload: unknown;

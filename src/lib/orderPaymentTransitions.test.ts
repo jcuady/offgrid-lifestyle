@@ -72,11 +72,12 @@ describe("resolvePaymentKindFromSession", () => {
 });
 
 describe("amountsMatchCentavos", () => {
-  it("allows 1-centavo tolerance and skips when either side missing", () => {
+  it("allows 1-centavo tolerance and fails closed when either side missing", () => {
     expect(amountsMatchCentavos(10000, 10000)).toBe(true);
     expect(amountsMatchCentavos(10000, 10001)).toBe(true);
     expect(amountsMatchCentavos(10000, 10002)).toBe(false);
-    expect(amountsMatchCentavos(null, 10000)).toBe(true);
+    expect(amountsMatchCentavos(null, 10000)).toBe(false);
+    expect(amountsMatchCentavos(10000, null)).toBe(false);
   });
 });
 

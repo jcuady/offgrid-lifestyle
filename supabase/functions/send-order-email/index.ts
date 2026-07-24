@@ -115,7 +115,8 @@ Deno.serve(async (req: Request) => {
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const siteUrl = (Deno.env.get("SITE_URL") ?? "https://www.oglifestyleph.com").replace(/\/$/, "");
     const token = authHeader.replace("Bearer ", "");
-    const isServiceRole = token === serviceRoleKey || getJwtRole(token) === "service_role";
+    // Exact service role key only — never trust unsigned JWT role claims.
+    const isServiceRole = Boolean(serviceRoleKey) && token === serviceRoleKey;
 
     const adminClient = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false },
@@ -272,12 +273,3 @@ Deno.serve(async (req: Request) => {
     });
   }
 });
-
-function getJwtRole(token: string): string | null {
-  try {
-    const payload = JSON.parse(atob(token.split(".")[1] ?? ""));
-    return typeof payload.role === "string" ? payload.role : null;
-  } catch {
-    return null;
-  }
-}

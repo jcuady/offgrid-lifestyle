@@ -15,6 +15,7 @@ import {
   markPasswordRecoveryIntent,
   stashRecoveryTokensFromUrl,
 } from "@/src/lib/passwordReset";
+import { subscribeRecoverySessionReady } from "@/src/lib/authSessionBootstrap";
 import { localAuthService } from "@/src/services";
 import { supabase } from "@/src/lib/supabase";
 import { AuthPage } from "@/src/components/ui/auth-page";
@@ -59,7 +60,6 @@ export function ResetPasswordPage() {
         return;
       }
 
-      // detectSessionInUrl may already have a session; otherwise restore from stash.
       const ok = await ensureRecoverySession(supabase);
       if (cancelled) return;
       if (ok) {
@@ -79,17 +79,16 @@ export function ResetPasswordPage() {
 
     void verifySession();
 
-    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!canContinuePasswordRecovery() && event !== "PASSWORD_RECOVERY") return;
-      if (event === "PASSWORD_RECOVERY" || (event === "SIGNED_IN" && session)) {
-        markReady();
-      }
+    // Single GoTrue listener lives in authSessionBootstrap — subscribe to its signal.
+    const unsubReady = subscribeRecoverySessionReady(() => {
+      if (!canContinuePasswordRecovery()) return;
+      markReady();
     });
 
     return () => {
       cancelled = true;
       if (timeoutId) clearTimeout(timeoutId);
-      sub.subscription.unsubscribe();
+      unsubReady();
     };
   }, []);
 

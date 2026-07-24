@@ -160,6 +160,17 @@ const NotFoundPage = lazy(() =>
 
 function PortalIndexRedirect() {
   const user = usePortalStore((state) => state.currentUser);
+  const authHydrated = usePortalStore((state) => state.authHydrated);
+
+  // Wait for session bootstrap — same gate as RequirePortalRole (all roles).
+  if (!authHydrated) {
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center bg-offgrid-cream px-6 text-sm text-offgrid-green/60">
+        Signing you in…
+      </div>
+    );
+  }
+
   if (!user) return <Navigate to={PORTAL_LOGIN_PATH} replace />;
   return <Navigate to={getPortalLandingByRole(user.role)} replace />;
 }

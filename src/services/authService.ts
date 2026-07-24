@@ -11,21 +11,11 @@ import { supabase } from "@/src/lib/supabase";
 import { logger } from "@/src/lib/logger";
 import { usePortalStore, type PortalUser, type UserRole } from "@/src/store/usePortalStore";
 import {
-  clearLocalShipping,
-  hydrateCheckoutShipping,
-} from "@/src/services/customerShippingService";
-import { linkPushSubscriptionToUser } from "@/src/lib/pushSubscription";
+  applyPostLoginSideEffectsIfNeeded,
+  bootstrapAuthSession,
+} from "@/src/lib/authSessionBootstrap";
 import type { PasswordResetAudience } from "@/src/lib/passwordReset";
-import {
-  ensureRecoverySession,
-  isRecoveryAuthBootstrap,
-  markPasswordRecoveryIntent,
-  passwordResetRedirectUrl,
-  shouldSkipPostLoginSideEffects,
-  stashRecoveryTokensFromUrl,
-} from "@/src/lib/passwordReset";
-import { authCallbackRedirectPath, classifyAuthCallback } from "@/src/lib/authCallbackRouting";
-import { markEmailConfirmHandoffTab } from "@/src/lib/authTabSync";
+import { passwordResetRedirectUrl } from "@/src/lib/passwordReset";
 import type { RegisterCustomerInput } from "@/src/types/portal";
 
 export interface AuthService {
@@ -146,6 +136,7 @@ export const supabaseAuthService: AuthService = {
     if (error) {
       return { ok: false, message: mapSignInErrorMessage(error.message) };
     }
+    const previousPortalUserId = usePortalStore.getState().currentUser?.id ?? null;
     const portalUser = await resolvePortalUser();
     if (!portalUser) {
       await supabase.auth.signOut();
@@ -161,8 +152,8 @@ export const supabaseAuthService: AuthService = {
       targetId: portalUser.id,
       summary: `${portalUser.email} signed in`,
     });
-    void linkPushSubscriptionToUser();
-    if (portalUser.role === "customer") void hydrateCheckoutShipping(portalUser.id);
+    // Side effects are deduped with onAuthStateChange SIGNED_IN via identity check.
+    applyPostLoginSideEffectsIfNeeded(portalUser, previousPortalUserId);
     return { ok: true };
   },
 
@@ -236,6 +227,7 @@ export const supabaseAuthService: AuthService = {
     }
 
     if (!emailConfirmationRequired && data.session && portalUser) {
+      const previousPortalUserId = usePortalStore.getState().currentUser?.id ?? null;
       usePortalStore.getState().setCurrentUser(portalUser);
       usePortalStore.getState().recordAudit({
         action: "auth.register",
@@ -247,7 +239,7 @@ export const supabaseAuthService: AuthService = {
         summary: `Customer account created for ${portalUser.email}`,
         metadata: { customerId: portalUser.id },
       });
-      void linkPushSubscriptionToUser();
+      applyPostLoginSideEffectsIfNeeded(portalUser, previousPortalUserId);
     }
 
     return { ok: true, userId: portalUser.id, emailConfirmationRequired };
@@ -357,83 +349,7 @@ export const supabaseAuthService: AuthService = {
   },
 };
 
-/** Initialize auth state from existing session on app load. */
-export async function initAuthListener() {
-  // Route signup confirm → /account/orders and recovery → /account/reset-password.
-  // Never treat signup tokens as password recovery.
-  if (typeof window !== "undefined") {
-    // Snapshot hash tokens BEFORE detectSessionInUrl clears them.
-    stashRecoveryTokensFromUrl();
-    const { pathname, hash, search } = window.location;
-    if (isRecoveryAuthBootstrap({ pathname, hash, search })) {
-      markPasswordRecoveryIntent();
-      // Clear portal chrome only. Never signOut here — it races detectSessionInUrl
-      // and wipes the recovery session after the hash is already empty.
-      usePortalStore.getState().setCurrentUser(null);
-    }
-  }
-
-  redirectAuthCallback();
-
-  try {
-    // Ensures PKCE/hash from the confirm-email link is exchanged before route guards run.
-    await supabase.auth.getSession();
-    if (shouldSkipPostLoginSideEffects()) {
-      await ensureRecoverySession(supabase);
-    } else {
-      const portalUser = await resolvePortalUser();
-      usePortalStore.getState().setCurrentUser(portalUser);
-    }
-  } finally {
-    usePortalStore.getState().setAuthHydrated(true);
-  }
-
-  // Hydrate saved shipping after session restore (SIGNED_IN may not fire on page load).
-  const restored = usePortalStore.getState().currentUser;
-  if (restored?.role === "customer" && !shouldSkipPostLoginSideEffects()) {
-    void hydrateCheckoutShipping(restored.id);
-  }
-
-  supabase.auth.onAuthStateChange(async (event) => {
-    if (event === "SIGNED_OUT") {
-      usePortalStore.getState().setCurrentUser(null);
-      clearLocalShipping();
-      return;
-    }
-
-    if (event === "PASSWORD_RECOVERY") {
-      markPasswordRecoveryIntent();
-      // Keep recovery session for updateUser(password); do not treat as a normal login.
-      return;
-    }
-
-    if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
-      if (shouldSkipPostLoginSideEffects()) {
-        // Recovery session may emit SIGNED_IN — stay on reset page, no push link.
-        return;
-      }
-      const user = await resolvePortalUser();
-      usePortalStore.getState().setCurrentUser(user);
-      if (event === "SIGNED_IN" && user) {
-        void linkPushSubscriptionToUser();
-        if (user.role === "customer") void hydrateCheckoutShipping(user.id);
-      }
-    }
-  });
-}
-
-function redirectAuthCallback(): void {
-  if (typeof window === "undefined") return;
-  const { pathname, hash, search } = window.location;
-  const kind = classifyAuthCallback({ pathname, hash, search });
-  if (kind === "signup_confirm") {
-    markEmailConfirmHandoffTab();
-  }
-  if (kind === "recovery") {
-    stashRecoveryTokensFromUrl();
-    markPasswordRecoveryIntent();
-  }
-  const target = authCallbackRedirectPath({ pathname, hash, search });
-  if (!target) return;
-  window.location.replace(target);
+/** Initialize auth state from existing session on app load (singleton bootstrap). */
+export function initAuthListener(): Promise<void> {
+  return bootstrapAuthSession({ resolvePortalUser });
 }

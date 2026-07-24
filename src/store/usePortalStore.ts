@@ -140,7 +140,7 @@ function migrateManagedCustomOrderRecord(raw: unknown): ManagedCustomOrder {
 interface PortalState {
   demoAccounts: DemoAccount[];
   currentUser: PortalUser | null;
-  /** False until initAuthListener finishes (prevents auth-callback bounce to login). */
+  /** False until auth session bootstrap finishes (prevents auth-callback bounce to login). */
   authHydrated: boolean;
   retailOrders: ManagedRetailOrder[];
   customOrders: ManagedCustomOrder[];

@@ -16,8 +16,7 @@ import {
   type PaymentKind,
 } from "../_shared/orderPayment.ts";
 import { dispatchPaymentReceiptEmail } from "../_shared/dispatchPaymentReceipt.ts";
-import { dispatchPaymentConfirmedPush } from "../_shared/dispatchPaymentPush.ts";
-import { resolvePaymentPushUserIds } from "../_shared/paymentPushRecipients.ts";
+import { notifyPaymentConfirmed } from "../_shared/notifyPaymentConfirmed.ts";
 
 type CheckoutSessionData = {
   id?: string;
@@ -87,47 +86,6 @@ function resolvePaymentKind(session: CheckoutSessionData): PaymentKind {
     metadata: session.attributes?.metadata,
     referenceNumber: session.attributes?.reference_number,
   });
-}
-
-async function notifyPaymentConfirmed(
-  admin: ReturnType<typeof createServiceClient>,
-  orderId: string,
-  customerId: string | null,
-  customerEmail: string | null,
-): Promise<void> {
-  const emailMatchedUserIds: string[] = [];
-  const email = customerEmail?.trim();
-  if (email) {
-    const { data } = await admin
-      .from("og_portal_users")
-      .select("id")
-      .eq("role", "customer")
-      .eq("status", "active")
-      .ilike("email", email);
-    for (const row of data ?? []) {
-      if (row.id) emailMatchedUserIds.push(row.id);
-    }
-  }
-
-  const recipientIds = resolvePaymentPushUserIds({
-    customerId,
-    emailMatchedUserIds,
-  });
-
-  for (const userId of recipientIds) {
-    await admin.from("og_notifications").insert({
-      user_id: userId,
-      title: "Payment confirmed",
-      body: `We received your payment for order ${orderId}. A receipt is on the way to your email.`,
-      url: `/account/orders/${orderId}`,
-      category: "order",
-    }).then(({ error }) => {
-      if (error) console.error("og_notifications insert", error);
-    });
-  }
-
-  void dispatchPaymentConfirmedPush(orderId, recipientIds);
-  await dispatchPaymentReceiptEmail(orderId);
 }
 
 async function markOrderPaid(

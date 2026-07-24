@@ -192,6 +192,7 @@ export type Database = {
           rating: number
           title: string
           body: string
+          image_url: string | null
           status: string
           created_at: string
           updated_at: string
@@ -207,6 +208,7 @@ export type Database = {
           rating: number
           title: string
           body: string
+          image_url?: string | null
           status?: string
           created_at?: string
           updated_at?: string
@@ -222,6 +224,7 @@ export type Database = {
           rating?: number
           title?: string
           body?: string
+          image_url?: string | null
           status?: string
           created_at?: string
           updated_at?: string

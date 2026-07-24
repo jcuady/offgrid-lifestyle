@@ -421,6 +421,15 @@ export function ProductDetailPage() {
                     </div>
                     <p className="font-semibold text-sm text-offgrid-green">{review.title}</p>
                     <p className="mt-1.5 text-sm text-offgrid-green/70 leading-relaxed line-clamp-4">{review.body}</p>
+                    {review.imageUrl ? (
+                      <img
+                        src={review.imageUrl}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        className="mt-3 max-h-40 w-full rounded-xl object-cover"
+                      />
+                    ) : null}
                     <p className="mt-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/40">
                       {review.customerName} · {new Date(review.createdAt).toLocaleDateString("en-PH", { month: "short", year: "numeric" })}
                     </p>

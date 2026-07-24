@@ -65,9 +65,10 @@ export async function resolvePayMongoWebhookSecret(admin: SupabaseClient): Promi
 
 export function siteBaseUrl(req?: Request): string {
   const fromEnv = Deno.env.get("SITE_URL")?.trim();
-  if (fromEnv) return fromEnv.replace(/\/$/, "");
+  // Character class form — safer for MCP JSON deploy round-trips
+  if (fromEnv) return fromEnv.replace(/[/]$/, "");
   const origin = req?.headers.get("Origin")?.trim();
-  if (origin && /^https?:\/\//i.test(origin)) return origin.replace(/\/$/, "");
+  if (origin && /^https?:[/][/]/i.test(origin)) return origin.replace(/[/]$/, "");
   return "https://www.oglifestyleph.com";
 }
 

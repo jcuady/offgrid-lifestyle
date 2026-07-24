@@ -139,6 +139,8 @@ function ReviewCard({
   const [rating, setRating] = useState(5);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -151,6 +153,27 @@ function ReviewCard({
     });
   }, [orderId, line.productId, user]);
 
+  useEffect(() => {
+    return () => {
+      if (imagePreview) URL.revokeObjectURL(imagePreview);
+    };
+  }, [imagePreview]);
+
+  const handleImagePick = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const validation = validateUploadedFile(file, "imageAsset");
+    if (validation.ok === false) {
+      setError(validation.error);
+      e.target.value = "";
+      return;
+    }
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+    setError(null);
+  };
+
   const handleSubmit = async () => {
     if (!user) return;
     if (!title.trim() || !body.trim()) {
@@ -159,22 +182,43 @@ function ReviewCard({
     }
     setError(null);
     setSubmitting(true);
-    const result = await reviewService.submit({
-      productId: line.productId,
-      productName: line.name,
-      orderId,
-      customerId: user.id,
-      customerName: user.name,
-      customerEmail: user.email,
-      rating,
-      title,
-      body,
-    });
-    setSubmitting(false);
-    if (result.ok) {
-      setSubmitted(true);
-    } else {
-      setError(result.message ?? "Could not submit review.");
+    try {
+      let imageUrl: string | null = null;
+      if (imageFile) {
+        const { data: authData } = await supabase.auth.getUser();
+        const authId = authData.user?.id;
+        if (!authId) throw new Error("Sign in again to upload a review photo.");
+        const safeName = imageFile.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const path = `${authId}/${orderId}/${line.productId}-${Date.now()}-${safeName}`;
+        const { data, error: storageErr } = await supabase.storage
+          .from("review-images")
+          .upload(path, imageFile, { upsert: false });
+        if (storageErr) throw storageErr;
+        const { data: pub } = supabase.storage.from("review-images").getPublicUrl(data.path);
+        imageUrl = pub.publicUrl;
+      }
+
+      const result = await reviewService.submit({
+        productId: line.productId,
+        productName: line.name,
+        orderId,
+        customerId: user.id,
+        customerName: user.name,
+        customerEmail: user.email,
+        rating,
+        title,
+        body,
+        imageUrl,
+      });
+      if (result.ok) {
+        setSubmitted(true);
+      } else {
+        setError(result.message ?? "Could not submit review.");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not submit review.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -229,12 +273,35 @@ function ReviewCard({
             className={cn(inputCls, "resize-y")}
           />
         </div>
+        <div>
+          <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/50">
+            Photo <span className="normal-case tracking-normal text-offgrid-green/40">(optional)</span>
+          </p>
+          <label className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-offgrid-green/25 bg-offgrid-cream/40 px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-offgrid-green transition-colors hover:border-offgrid-lime/50 sm:w-auto">
+            <Upload className="h-3.5 w-3.5" />
+            {imageFile ? "Change photo" : "Add photo"}
+            <input
+              type="file"
+              accept={fileAcceptAttribute("imageAsset")}
+              className="hidden"
+              onChange={handleImagePick}
+              disabled={submitting}
+            />
+          </label>
+          {imagePreview ? (
+            <img
+              src={imagePreview}
+              alt="Review preview"
+              className="mt-3 max-h-48 w-full max-w-xs rounded-xl border border-offgrid-green/10 object-cover"
+            />
+          ) : null}
+        </div>
         {error ? <p className="text-xs text-red-600">{error}</p> : null}
         <button
           type="button"
           onClick={handleSubmit}
           disabled={submitting}
-          className="inline-flex items-center gap-2 rounded-xl bg-offgrid-green px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-offgrid-cream transition-colors hover:bg-offgrid-dark disabled:opacity-60"
+          className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-offgrid-green px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-offgrid-cream transition-colors hover:bg-offgrid-dark disabled:opacity-60"
         >
           {submitting ? "Submitting…" : "Submit review"}
         </button>

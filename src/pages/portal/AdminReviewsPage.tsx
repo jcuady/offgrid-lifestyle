@@ -167,6 +167,15 @@ export function AdminReviewsPage() {
               </div>
               <p className="mt-2 font-semibold text-sm text-offgrid-green">{review.title}</p>
               <p className="mt-1 text-sm text-offgrid-green/70 leading-relaxed">{review.body}</p>
+              {review.imageUrl ? (
+                <img
+                  src={review.imageUrl}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  className="mt-3 max-h-56 max-w-full rounded-xl border border-offgrid-green/10 object-contain"
+                />
+              ) : null}
               <p className="mt-3 text-[10px] text-offgrid-green/40">
                 Submitted {new Date(review.createdAt).toLocaleString("en-PH", { dateStyle: "medium", timeStyle: "short" })}
               </p>

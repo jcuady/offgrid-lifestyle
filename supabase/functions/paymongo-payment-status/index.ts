@@ -17,6 +17,7 @@ import {
   type PaymentKind,
 } from "../_shared/orderPayment.ts";
 import { dispatchPaymentReceiptEmail } from "../_shared/dispatchPaymentReceipt.ts";
+import { notifyPaymentConfirmed } from "../_shared/notifyPaymentConfirmed.ts";
 
 type CheckoutSessionData = {
   id?: string;
@@ -204,7 +205,12 @@ Deno.serve(async (req: Request) => {
                 synced = true;
                 order.payment_status = next.paymentStatus;
                 order.status = next.status;
-                await dispatchPaymentReceiptEmail(orderId);
+                await notifyPaymentConfirmed(
+                  admin,
+                  orderId,
+                  order.customer_id,
+                  order.customer_email,
+                );
               }
             } else {
               await dispatchPaymentReceiptEmail(orderId);

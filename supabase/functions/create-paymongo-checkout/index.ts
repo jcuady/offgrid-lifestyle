@@ -18,6 +18,7 @@ import {
   resolvePayMongoSecretKey,
   siteBaseUrl,
 } from "../_shared/paymongo.ts";
+import { notifyPaymentConfirmed } from "../_shared/notifyPaymentConfirmed.ts";
 
 type OrderRow = {
   id: string;
@@ -145,6 +146,13 @@ async function settleFromPaidSession(
       payment_provider_ref: sessionId,
     })
     .eq("id", order.id);
+
+  await notifyPaymentConfirmed(
+    admin,
+    order.id,
+    order.customer_id,
+    order.customer_email,
+  );
 
   return {
     ...order,

@@ -19,6 +19,7 @@ export interface ProductReview {
   rating: number;
   title: string;
   body: string;
+  imageUrl: string | null;
   status: ReviewStatus;
   createdAt: string;
   updatedAt: string;
@@ -34,6 +35,7 @@ export interface SubmitReviewInput {
   rating: number;
   title: string;
   body: string;
+  imageUrl?: string | null;
 }
 
 function rowToReview(row: ReviewRow): ProductReview {
@@ -48,6 +50,7 @@ function rowToReview(row: ReviewRow): ProductReview {
     rating: row.rating,
     title: row.title,
     body: row.body,
+    imageUrl: row.image_url ?? null,
     status: row.status as ReviewStatus,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -82,6 +85,7 @@ export const reviewService = {
       rating: input.rating,
       title: input.title.trim(),
       body: input.body.trim(),
+      image_url: input.imageUrl?.trim() || null,
       status: "pending",
     };
 

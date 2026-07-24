@@ -209,6 +209,11 @@ export function CheckoutModal() {
       return;
     }
 
+    if (paymentMethod === "gcash" && !paymentSettings.gcashQrImageUrl?.trim()) {
+      setCheckoutError("GCash QR is not set up yet. Choose PayMongo QR Ph, or ask the shop to upload a GCash QR.");
+      return;
+    }
+
     try {
       setPlacingOrder(true);
       setCheckoutError(null);
@@ -633,16 +638,22 @@ export function CheckoutModal() {
                           <p className="text-xs font-semibold uppercase tracking-[0.15em] text-offgrid-green/55">
                             Scan to pay via GCash
                           </p>
-                          <div className="mt-3 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
-                            <img
-                              src={paymentSettings.gcashQrImageUrl}
-                              alt="GCash QR code"
-                              className="h-40 w-40 rounded-xl border border-offgrid-green/10 bg-offgrid-cream object-contain sm:h-48 sm:w-48"
-                            />
-                            <p className="max-w-md text-sm leading-relaxed text-offgrid-green/70">
-                              {paymentSettings.gcashInstructions}
+                          {paymentSettings.gcashQrImageUrl?.trim() ? (
+                            <div className="mt-3 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+                              <img
+                                src={paymentSettings.gcashQrImageUrl}
+                                alt="GCash QR code"
+                                className="h-40 w-40 rounded-xl border border-offgrid-green/10 bg-offgrid-cream object-contain sm:h-48 sm:w-48"
+                              />
+                              <p className="max-w-md text-sm leading-relaxed text-offgrid-green/70">
+                                {paymentSettings.gcashInstructions}
+                              </p>
+                            </div>
+                          ) : (
+                            <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-900" role="status">
+                              GCash QR is not uploaded yet. Use PayMongo QR Ph instead, or contact the shop.
                             </p>
-                          </div>
+                          )}
                         </motion.div>
                       )}
 

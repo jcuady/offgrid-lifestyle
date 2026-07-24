@@ -44,7 +44,8 @@ async function getSettingsRowId(): Promise<string | null> {
 export async function hydratePaymentSettingsFromSupabase(): Promise<void> {
   const { data, error } = await supabase.from("og_payment_settings").select("*").limit(1).maybeSingle();
   if (error || !data) return;
-  usePortalStore.getState().updatePaymentSettings(rowToSettings(data));
+  // Silent: never audit on hydrate (App boot + admin page mount).
+  usePortalStore.setState({ paymentSettings: rowToSettings(data) });
 }
 
 export async function persistPaymentSettings(patch: Partial<PaymentSettings>): Promise<void> {
@@ -56,8 +57,6 @@ export async function persistPaymentSettings(patch: Partial<PaymentSettings>): P
     paymongo: { ...current.paymongo, ...patch.paymongo },
   };
 
-  usePortalStore.getState().updatePaymentSettings(merged);
-
   const rowId = await getSettingsRowId();
   const dbPatch = settingsToRow(merged);
 
@@ -67,5 +66,35 @@ export async function persistPaymentSettings(patch: Partial<PaymentSettings>): P
 
   if (error) {
     throw new Error(`Could not save payment settings: ${error.message}`);
+  }
+
+  usePortalStore.getState().updatePaymentSettings(merged);
+
+  const actor = usePortalStore.getState().currentUser;
+  if (actor && (actor.role === "admin" || actor.role === "staff")) {
+    usePortalStore.getState().recordAudit({
+      action: "payment.settings_updated",
+      actorId: actor.id,
+      actorEmail: actor.email,
+      actorRole: actor.role,
+      targetType: "payment",
+      targetId:
+        patch.paymongo !== undefined
+          ? "global-paymongo"
+          : patch.cod !== undefined
+            ? "global-cod"
+            : "global-gcash",
+      summary:
+        patch.paymongo !== undefined
+          ? "Updated PayMongo payment settings"
+          : patch.cod !== undefined
+            ? "Updated COD payment settings"
+            : "Updated global GCash payment settings",
+      metadata: {
+        fields: Object.keys(patch),
+        paymongoEnabled: patch.paymongo?.enabled,
+        codEnabled: patch.cod?.enabled,
+      },
+    });
   }
 }

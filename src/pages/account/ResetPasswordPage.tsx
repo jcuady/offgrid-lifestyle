@@ -6,7 +6,13 @@ import {
   PORTAL_FORGOT_PASSWORD_PATH,
   PORTAL_LOGIN_PATH,
 } from "@/src/lib/authRoutes";
-import { hasPasswordRecoveryUrlHint, isPortalPasswordReset } from "@/src/lib/passwordReset";
+import {
+  canContinuePasswordRecovery,
+  clearPasswordRecoveryIntent,
+  isPasswordRecoveryUrlHint,
+  isPortalPasswordReset,
+  markPasswordRecoveryIntent,
+} from "@/src/lib/passwordReset";
 import { localAuthService } from "@/src/services";
 import { supabase } from "@/src/lib/supabase";
 import { AuthPage } from "@/src/components/ui/auth-page";
@@ -35,12 +41,18 @@ export function ResetPasswordPage() {
     const markReady = () => {
       if (cancelled) return;
       if (timeoutId) clearTimeout(timeoutId);
+      markPasswordRecoveryIntent();
       setReady(true);
       setError(null);
     };
 
     const verifySession = async () => {
-      if (!hasPasswordRecoveryUrlHint()) {
+      // Sticky flag before detectSessionInUrl clears hash/?code=
+      if (isPasswordRecoveryUrlHint()) {
+        markPasswordRecoveryIntent();
+      }
+
+      if (!canContinuePasswordRecovery()) {
         failExpired();
         return;
       }
@@ -62,7 +74,7 @@ export function ResetPasswordPage() {
     void verifySession();
 
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!hasPasswordRecoveryUrlHint() && event !== "PASSWORD_RECOVERY") return;
+      if (!canContinuePasswordRecovery() && event !== "PASSWORD_RECOVERY") return;
       if (event === "PASSWORD_RECOVERY" || (event === "SIGNED_IN" && session)) {
         markReady();
       }
@@ -94,6 +106,7 @@ export function ResetPasswordPage() {
         setError(result.message ?? "Could not update password.");
         return;
       }
+      clearPasswordRecoveryIntent();
       await localAuthService.logout();
       const loginPath = isPortal ? PORTAL_LOGIN_PATH : CUSTOMER_SIGN_IN_PATH;
       navigate(`${loginPath}?reset=1`, { replace: true });
@@ -103,9 +116,7 @@ export function ResetPasswordPage() {
   };
 
   const forgotHref = isPortal ? PORTAL_FORGOT_PASSWORD_PATH : CUSTOMER_FORGOT_PASSWORD_PATH;
-  const statusMessage = ready
-    ? error
-    : error ?? "Verifying your reset link…";
+  const statusMessage = ready ? error : (error ?? "Verifying your reset link…");
 
   return (
     <AuthPage

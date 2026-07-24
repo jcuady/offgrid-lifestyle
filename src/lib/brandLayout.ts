@@ -18,6 +18,14 @@ export const headerNavLinkClass =
 /** Account / portal customer pages — fluid width, capped readable line length. */
 export const accountContainer = "mx-auto w-full max-w-6xl min-w-0 px-4 sm:px-6 md:px-8 lg:px-10";
 
+/** Shared surface for customer account panels (profile, settings, order cards). */
+export const accountPanel =
+  "min-w-0 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-offgrid-green/[0.08] sm:p-6";
+
+/** Mobile account bottom dock clearance (nav + safe area). */
+export const accountMobileDockPad =
+  "pb-[max(5.5rem,calc(4.25rem+env(safe-area-inset-bottom,0px)))] lg:pb-20";
+
 /** Inner marketing page heroes (Shop, About, Contact, Custom…) — not the home OffgridHero. */
 export const marketingPageHero =
   "relative overflow-hidden bg-offgrid-green pb-12 pt-[max(7rem,calc(var(--og-header-height,4.5rem)+1.75rem))] text-offgrid-cream sm:pb-16";

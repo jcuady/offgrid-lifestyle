@@ -105,15 +105,11 @@ async function saveSubscription(subscription: PushSubscription): Promise<void> {
     throw new Error("Sign in before enabling push notifications.");
   }
 
-  const { error } = await supabase.from("og_push_subscriptions").upsert(
-    {
-      endpoint: subscription.endpoint,
-      keys_p256dh: keys.p256dh,
-      keys_auth: keys.auth,
-      user_id: portalUserId,
-    },
-    { onConflict: "endpoint" },
-  );
+  const { error } = await supabase.rpc("og_upsert_my_push_subscription", {
+    p_endpoint: subscription.endpoint,
+    p_keys_p256dh: keys.p256dh,
+    p_keys_auth: keys.auth,
+  });
 
   if (error) throw error;
 }

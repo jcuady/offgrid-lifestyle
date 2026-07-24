@@ -767,6 +767,10 @@ export type Database = {
       og_portal_role: { Args: Record<string, never>; Returns: string }
       og_staff_admin_user_ids: { Args: Record<string, never>; Returns: string[] }
       og_submit_payment_proof: { Args: { p_order_id: string; p_proof_url: string }; Returns: undefined }
+      og_upsert_my_push_subscription: {
+        Args: { p_endpoint: string; p_keys_p256dh: string; p_keys_auth: string }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

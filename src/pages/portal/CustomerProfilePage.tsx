@@ -1,5 +1,13 @@
 import { lazy, Suspense, useEffect, useState, type FormEvent } from "react";
-import { Loader2 } from "lucide-react";
+import {
+  Bell,
+  ChevronRight,
+  Loader2,
+  Lock,
+  Mail,
+  MapPin,
+  UserRound,
+} from "lucide-react";
 import { useStore } from "@/src/store/store";
 import { usePortalStore } from "@/src/store/usePortalStore";
 import { Button } from "@/src/components/ui/Button";
@@ -16,6 +24,7 @@ import {
 } from "@/src/lib/formValidation";
 import { EMPTY_SHIPPING_INFO, type ShippingInfo } from "@/src/types/commerce";
 import { saveCustomerShipping } from "@/src/services/customerShippingService";
+import { accountPanel } from "@/src/lib/brandLayout";
 import { cn } from "@/src/lib/utils";
 
 const PhilippinesAddressFields = lazy(() =>
@@ -28,6 +37,13 @@ const fieldLabel = "text-[10px] font-semibold uppercase tracking-[0.14em] text-o
 
 const inputClass =
   "min-h-11 w-full rounded-xl border border-offgrid-green/20 bg-white px-3 py-2.5 text-base text-offgrid-green outline-none transition-all focus:border-offgrid-lime focus:ring-2 focus:ring-offgrid-lime/25";
+
+const PROFILE_JUMP = [
+  { id: "shipping", label: "Shipping details", hint: "Checkout autofill address", icon: MapPin },
+  { id: "notifications", label: "Push notifications", hint: "Order and delivery alerts", icon: Bell },
+  { id: "email", label: "Change email", hint: "Update sign-in email", icon: Mail },
+  { id: "password", label: "Change password", hint: "Keep your account secure", icon: Lock },
+] as const;
 
 function contactInputClass(hasError: boolean) {
   return cn(inputClass, hasError && "border-red-500 focus:border-red-500 focus:ring-red-500/20");
@@ -124,6 +140,13 @@ export function CustomerProfilePage() {
     setMessage(null);
   };
 
+  const shippingReady = Boolean(
+    shipping.fullName?.trim() &&
+      shipping.phone?.trim() &&
+      shipping.address?.trim() &&
+      shipping.city?.trim(),
+  );
+
   return (
     <AccountLayout
       active="profile"
@@ -131,9 +154,65 @@ export function CustomerProfilePage() {
       title="Account details"
       description="Your sign-in identity and the shipping address we use to autofill checkout."
     >
+      {/* Mobile jump list — app-profile pattern */}
+      <nav
+        aria-label="Profile sections"
+        className="mb-5 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-offgrid-green/[0.08] lg:hidden"
+      >
+        {PROFILE_JUMP.map((item, index) => {
+          const Icon = item.icon;
+          return (
+            <a
+              key={item.id}
+              href={`#${item.id}`}
+              className={cn(
+                "flex min-h-14 cursor-pointer items-center gap-3 px-4 py-3.5 transition-colors duration-200 hover:bg-offgrid-cream/50",
+                index > 0 && "border-t border-offgrid-green/[0.07]",
+              )}
+            >
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-offgrid-green/[0.06] text-offgrid-green">
+                <Icon className="h-[1.125rem] w-[1.125rem]" strokeWidth={1.75} />
+              </span>
+              <span className="min-w-0 flex-1 text-left">
+                <span className="block text-sm font-semibold text-offgrid-green">{item.label}</span>
+                <span className="block text-xs text-offgrid-green/50">{item.hint}</span>
+              </span>
+              <ChevronRight className="h-4 w-4 shrink-0 text-offgrid-green/30" aria-hidden />
+            </a>
+          );
+        })}
+      </nav>
+
+      {/* Quick facts */}
+      <div className="mb-5 grid grid-cols-2 gap-2.5 sm:gap-3 lg:mb-6 lg:grid-cols-3">
+        <div className="rounded-2xl bg-offgrid-lime/15 px-3.5 py-3.5 sm:px-4">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/50">Role</p>
+          <p className="mt-1 font-display text-base font-bold text-offgrid-green sm:text-lg">
+            {user?.role ? user.role[0].toUpperCase() + user.role.slice(1) : "—"}
+          </p>
+        </div>
+        <div className="rounded-2xl bg-offgrid-green/[0.07] px-3.5 py-3.5 sm:px-4">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/50">Shipping</p>
+          <p className="mt-1 font-display text-base font-bold text-offgrid-green sm:text-lg">
+            {shippingReady ? "Saved" : "Not set"}
+          </p>
+        </div>
+        <div className="col-span-2 rounded-2xl bg-offgrid-gold/15 px-3.5 py-3.5 sm:px-4 lg:col-span-1">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/50">Email</p>
+          <p className="mt-1 truncate font-display text-base font-bold text-offgrid-green sm:text-lg">
+            {user?.email ?? "—"}
+          </p>
+        </div>
+      </div>
+
       <div className="grid gap-5 lg:grid-cols-2">
-        <section className="min-w-0 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-offgrid-green/[0.08] sm:p-6">
-          <h2 className="font-display text-lg font-bold text-offgrid-green">Account identity</h2>
+        <section className={cn(accountPanel, "hidden lg:block")}>
+          <div className="flex items-center gap-3">
+            <span className="grid h-10 w-10 place-items-center rounded-xl bg-offgrid-green/[0.06] text-offgrid-green">
+              <UserRound className="h-5 w-5" strokeWidth={1.75} />
+            </span>
+            <h2 className="font-display text-lg font-bold text-offgrid-green">Account identity</h2>
+          </div>
           <dl className="mt-5 space-y-4">
             <Field label="Name" value={user?.name ?? "N/A"} />
             <Field label="Email" value={user?.email ?? "N/A"} />
@@ -141,14 +220,12 @@ export function CustomerProfilePage() {
           </dl>
         </section>
 
-        <section className="min-w-0 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-offgrid-green/[0.08] sm:p-6 lg:col-span-2">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <h2 className="font-display text-lg font-bold text-offgrid-green">Shipping details</h2>
-              <p className="mt-1 text-sm text-offgrid-green/60">
-                Save once — checkout and custom orders will use this address next time.
-              </p>
-            </div>
+        <section id="shipping" className={cn(accountPanel, "scroll-mt-28 lg:col-span-2")}>
+          <div>
+            <h2 className="font-display text-lg font-bold text-offgrid-green">Shipping details</h2>
+            <p className="mt-1 text-sm text-offgrid-green/60">
+              Save once — checkout and custom orders will use this address next time.
+            </p>
           </div>
 
           <form onSubmit={handleSave} className="mt-5 space-y-4" noValidate>
@@ -274,9 +351,15 @@ export function CustomerProfilePage() {
           </form>
         </section>
 
-        <NotificationSettings />
-        <ChangeEmailForm />
-        <ChangePasswordForm />
+        <div id="notifications" className="scroll-mt-28">
+          <NotificationSettings />
+        </div>
+        <div id="email" className="scroll-mt-28">
+          <ChangeEmailForm />
+        </div>
+        <div id="password" className="scroll-mt-28 lg:col-span-2">
+          <ChangePasswordForm />
+        </div>
       </div>
     </AccountLayout>
   );

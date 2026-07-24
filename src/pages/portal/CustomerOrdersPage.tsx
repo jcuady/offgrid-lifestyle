@@ -126,12 +126,12 @@ export function CustomerOrdersPage() {
       title={firstName ? `Welcome back, ${firstName}` : "My orders"}
       description="Track your online purchases and custom requests in one place — delivery status, payment, and full details for every order."
     >
-      {/* Snapshot stats */}
+      {/* Snapshot stats — compact chips on phone, fuller cards on web */}
       {stats.total > 0 ? (
-        <div className="mb-7 grid grid-cols-1 gap-3 min-[380px]:grid-cols-3 sm:gap-4">
-          <StatCard icon={Package2} label="Total orders" value={stats.total} />
-          <StatCard icon={Truck} label="In progress" value={stats.active} accent />
-          <StatCard icon={CheckCircle2} label="Delivered" value={stats.delivered} />
+        <div className="mb-6 grid grid-cols-3 gap-2 sm:mb-7 sm:gap-3 lg:gap-4">
+          <StatCard icon={Package2} label="Total" value={stats.total} tone="mint" />
+          <StatCard icon={Truck} label="Active" value={stats.active} tone="sky" />
+          <StatCard icon={CheckCircle2} label="Done" value={stats.delivered} tone="sand" />
         </div>
       ) : null}
 
@@ -194,25 +194,24 @@ function StatCard({
   icon: Icon,
   label,
   value,
-  accent,
+  tone,
 }: {
   icon: typeof Package2;
   label: string;
   value: number;
-  accent?: boolean;
+  tone: "mint" | "sky" | "sand";
 }) {
+  const toneClass =
+    tone === "mint"
+      ? "bg-offgrid-lime/15"
+      : tone === "sky"
+        ? "bg-offgrid-green/[0.07]"
+        : "bg-offgrid-gold/15";
+
   return (
-    <div
-      className={cn(
-        "rounded-2xl p-3.5 ring-1 sm:p-5",
-        accent ? "bg-offgrid-lime/10 ring-offgrid-lime/30" : "bg-white ring-offgrid-green/[0.08]",
-      )}
-    >
-      <Icon
-        className={cn("h-4 w-4 sm:h-5 sm:w-5", accent ? "text-offgrid-green" : "text-offgrid-green/40")}
-        strokeWidth={1.75}
-      />
-      <p className="mt-2 font-display text-2xl font-black tabular-nums text-offgrid-green sm:text-3xl">
+    <div className={cn("rounded-2xl px-3 py-3.5 sm:p-5", toneClass)}>
+      <Icon className="hidden h-5 w-5 text-offgrid-green/55 sm:block" strokeWidth={1.75} />
+      <p className="font-display text-2xl font-black tabular-nums text-offgrid-green sm:mt-2 sm:text-3xl">
         {value}
       </p>
       <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/50">

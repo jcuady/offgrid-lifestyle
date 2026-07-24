@@ -57,7 +57,7 @@ export function ChangeEmailForm() {
   };
 
   return (
-    <section className="min-w-0 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-offgrid-green/[0.08]">
+    <section className="min-w-0 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-offgrid-green/[0.08] sm:p-6 lg:h-full">
       <h2 className="font-display text-lg font-bold text-offgrid-green">Change email</h2>
       <p className="mt-1 text-sm text-offgrid-green/60">
         Current sign-in email: <span className="font-medium text-offgrid-green">{currentEmail || "—"}</span>

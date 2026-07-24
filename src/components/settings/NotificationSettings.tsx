@@ -113,7 +113,7 @@ export function NotificationSettings() {
           : "Not asked yet";
 
   return (
-    <section className="min-w-0 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-offgrid-green/[0.08] sm:p-6">
+    <section className="min-w-0 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-offgrid-green/[0.08] sm:p-6 lg:h-full">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-offgrid-green/8 text-offgrid-green">
           {subscribed ? <Bell className="h-5 w-5" /> : <BellOff className="h-5 w-5" />}

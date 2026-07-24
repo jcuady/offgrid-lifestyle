@@ -9,15 +9,17 @@ import {
 import {
   canContinuePasswordRecovery,
   clearPasswordRecoveryIntent,
+  ensureRecoverySession,
   isPasswordRecoveryUrlHint,
   isPortalPasswordReset,
   markPasswordRecoveryIntent,
+  stashRecoveryTokensFromUrl,
 } from "@/src/lib/passwordReset";
 import { localAuthService } from "@/src/services";
 import { supabase } from "@/src/lib/supabase";
 import { AuthPage } from "@/src/components/ui/auth-page";
 
-const RECOVERY_TIMEOUT_MS = 8000;
+const RECOVERY_TIMEOUT_MS = 12000;
 
 export function ResetPasswordPage() {
   const navigate = useNavigate();
@@ -47,7 +49,7 @@ export function ResetPasswordPage() {
     };
 
     const verifySession = async () => {
-      // Sticky flag before detectSessionInUrl clears hash/?code=
+      stashRecoveryTokensFromUrl();
       if (isPasswordRecoveryUrlHint()) {
         markPasswordRecoveryIntent();
       }
@@ -57,17 +59,21 @@ export function ResetPasswordPage() {
         return;
       }
 
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      // detectSessionInUrl may already have a session; otherwise restore from stash.
+      const ok = await ensureRecoverySession(supabase);
       if (cancelled) return;
-      if (session) {
+      if (ok) {
         markReady();
         return;
       }
 
       timeoutId = setTimeout(() => {
-        if (!cancelled) failExpired();
+        void (async () => {
+          if (cancelled) return;
+          const retry = await ensureRecoverySession(supabase);
+          if (retry) markReady();
+          else failExpired();
+        })();
       }, RECOVERY_TIMEOUT_MS);
     };
 
@@ -101,6 +107,12 @@ export function ResetPasswordPage() {
 
     setBusy(true);
     try {
+      const established = await ensureRecoverySession(supabase);
+      if (!established) {
+        setError("Reset link is invalid or expired. Request a new one from the forgot password page.");
+        setReady(false);
+        return;
+      }
       const result = await localAuthService.updatePassword(password);
       if (!result.ok) {
         setError(result.message ?? "Could not update password.");

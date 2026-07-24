@@ -125,9 +125,15 @@ export async function linkPushSubscriptionToUser(): Promise<void> {
       await saveSubscription(subscription);
     }
   } catch (err) {
+    const message =
+      err instanceof Error
+        ? err.message
+        : typeof err === "object" && err && "message" in err
+          ? String((err as { message: unknown }).message)
+          : JSON.stringify(err);
     logger.warn("Failed to link push subscription", {
       operation: "linkPushSubscriptionToUser",
-      error: err instanceof Error ? err.message : String(err),
+      error: message,
     });
   }
 }

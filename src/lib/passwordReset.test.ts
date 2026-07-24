@@ -2,11 +2,15 @@
 import {
   canContinuePasswordRecovery,
   clearPasswordRecoveryIntent,
+  ensureRecoverySession,
   hasPasswordRecoveryIntent,
   markPasswordRecoveryIntent,
   mustClearSessionBeforeRecovery,
+  parseImplicitAuthHash,
   passwordResetRedirectUrl,
+  readStashedRecoveryTokens,
   shouldSkipPostLoginSideEffects,
+  stashRecoveryTokensFromUrl,
 } from "./passwordReset";
 
 describe("passwordResetRedirectUrl", () => {
@@ -29,7 +33,21 @@ describe("passwordResetRedirectUrl", () => {
   });
 });
 
-describe("password recovery intent flag", () => {
+describe("parseImplicitAuthHash", () => {
+  it("extracts access and refresh tokens from recovery hash", () => {
+    expect(
+      parseImplicitAuthHash(
+        "#access_token=aaa&refresh_token=bbb&type=recovery&expires_in=3600&token_type=bearer",
+      ),
+    ).toEqual({ access_token: "aaa", refresh_token: "bbb", type: "recovery" });
+  });
+
+  it("returns null when tokens missing", () => {
+    expect(parseImplicitAuthHash("#type=recovery")).toBeNull();
+  });
+});
+
+describe("password recovery stash + intent", () => {
   const store = new Map();
 
   beforeEach(() => {
@@ -40,7 +58,12 @@ describe("password recovery intent flag", () => {
         setItem: (k, v) => { store.set(k, v); },
         removeItem: (k) => { store.delete(k); },
       },
-      location: { pathname: "/", hash: "", search: "" },
+      location: {
+        pathname: "/account/reset-password",
+        hash: "#access_token=tok&refresh_token=ref&type=recovery",
+        search: "",
+      },
+      history: { replaceState: vi.fn(), state: null },
     });
   });
 
@@ -48,24 +71,48 @@ describe("password recovery intent flag", () => {
     vi.unstubAllGlobals();
   });
 
+  it("stashes tokens so recovery survives hash clear (regression: race with detectSessionInUrl)", () => {
+    const tokens = stashRecoveryTokensFromUrl();
+    expect(tokens?.access_token).toBe("tok");
+    expect(readStashedRecoveryTokens()?.refresh_token).toBe("ref");
+    expect(hasPasswordRecoveryIntent()).toBe(true);
+    // Simulate Supabase clearing the hash
+    window.location.hash = "";
+    expect(canContinuePasswordRecovery()).toBe(true);
+    expect(readStashedRecoveryTokens()?.access_token).toBe("tok");
+  });
+
+  it("ensureRecoverySession falls back to stashed tokens via setSession", async () => {
+    stashRecoveryTokensFromUrl();
+    window.location.hash = "";
+    const setSession = vi.fn().mockResolvedValue({ data: { session: {} }, error: null });
+    const getSession = vi.fn().mockResolvedValue({ data: { session: null }, error: null });
+    const ok = await ensureRecoverySession({ auth: { getSession, setSession } });
+    expect(ok).toBe(true);
+    expect(setSession).toHaveBeenCalledWith({ access_token: "tok", refresh_token: "ref" });
+  });
+
   it("survives after URL tokens are cleared (regression: false expired on reset page)", () => {
+    clearPasswordRecoveryIntent();
+    window.location.hash = "";
     expect(canContinuePasswordRecovery()).toBe(false);
     markPasswordRecoveryIntent();
-    expect(hasPasswordRecoveryIntent()).toBe(true);
     expect(canContinuePasswordRecovery()).toBe(true);
     clearPasswordRecoveryIntent();
     expect(canContinuePasswordRecovery()).toBe(false);
   });
 
   it("skips post-login side effects while recovery intent is set", () => {
+    clearPasswordRecoveryIntent();
+    window.location.hash = "";
     expect(shouldSkipPostLoginSideEffects()).toBe(false);
     markPasswordRecoveryIntent();
     expect(shouldSkipPostLoginSideEffects()).toBe(true);
   });
 });
 
-describe("mustClearSessionBeforeRecovery", () => {
-  it("is true for recovery hash so stale signed-in sessions are dropped", () => {
+describe("mustClearSessionBeforeRecovery / isRecoveryAuthBootstrap", () => {
+  it("is true for recovery hash", () => {
     expect(
       mustClearSessionBeforeRecovery({
         pathname: "/",
@@ -85,7 +132,7 @@ describe("mustClearSessionBeforeRecovery", () => {
     ).toBe(true);
   });
 
-  it("is false for normal homepage loads (regression: would sign everyone out)", () => {
+  it("is false for normal homepage loads", () => {
     expect(
       mustClearSessionBeforeRecovery({
         pathname: "/",
@@ -95,7 +142,7 @@ describe("mustClearSessionBeforeRecovery", () => {
     ).toBe(false);
   });
 
-  it("is false for signup confirm (must not clear session)", () => {
+  it("is false for signup confirm", () => {
     expect(
       mustClearSessionBeforeRecovery({
         pathname: "/",

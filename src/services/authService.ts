@@ -17,10 +17,12 @@ import {
 import { linkPushSubscriptionToUser } from "@/src/lib/pushSubscription";
 import type { PasswordResetAudience } from "@/src/lib/passwordReset";
 import {
+  ensureRecoverySession,
+  isRecoveryAuthBootstrap,
   markPasswordRecoveryIntent,
-  mustClearSessionBeforeRecovery,
   passwordResetRedirectUrl,
   shouldSkipPostLoginSideEffects,
+  stashRecoveryTokensFromUrl,
 } from "@/src/lib/passwordReset";
 import { authCallbackRedirectPath, classifyAuthCallback } from "@/src/lib/authCallbackRouting";
 import { markEmailConfirmHandoffTab } from "@/src/lib/authTabSync";
@@ -359,15 +361,16 @@ export const supabaseAuthService: AuthService = {
 export async function initAuthListener() {
   // Route signup confirm → /account/orders and recovery → /account/reset-password.
   // Never treat signup tokens as password recovery.
-  const { pathname, hash, search } = typeof window !== "undefined"
-    ? window.location
-    : { pathname: "/", hash: "", search: "" };
-
-  if (mustClearSessionBeforeRecovery({ pathname, hash, search })) {
-    markPasswordRecoveryIntent();
-    // Drop the already-signed-in tab session so recovery tokens can take over.
-    await supabase.auth.signOut({ scope: "local" });
-    usePortalStore.getState().setCurrentUser(null);
+  if (typeof window !== "undefined") {
+    // Snapshot hash tokens BEFORE detectSessionInUrl clears them.
+    stashRecoveryTokensFromUrl();
+    const { pathname, hash, search } = window.location;
+    if (isRecoveryAuthBootstrap({ pathname, hash, search })) {
+      markPasswordRecoveryIntent();
+      // Clear portal chrome only. Never signOut here — it races detectSessionInUrl
+      // and wipes the recovery session after the hash is already empty.
+      usePortalStore.getState().setCurrentUser(null);
+    }
   }
 
   redirectAuthCallback();
@@ -375,7 +378,9 @@ export async function initAuthListener() {
   try {
     // Ensures PKCE/hash from the confirm-email link is exchanged before route guards run.
     await supabase.auth.getSession();
-    if (!shouldSkipPostLoginSideEffects()) {
+    if (shouldSkipPostLoginSideEffects()) {
+      await ensureRecoverySession(supabase);
+    } else {
       const portalUser = await resolvePortalUser();
       usePortalStore.getState().setCurrentUser(portalUser);
     }
@@ -425,6 +430,7 @@ function redirectAuthCallback(): void {
     markEmailConfirmHandoffTab();
   }
   if (kind === "recovery") {
+    stashRecoveryTokensFromUrl();
     markPasswordRecoveryIntent();
   }
   const target = authCallbackRedirectPath({ pathname, hash, search });

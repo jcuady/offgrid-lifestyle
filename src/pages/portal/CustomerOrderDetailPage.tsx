@@ -38,7 +38,10 @@ import {
   orderStatusClassCustomer,
   paymentStatusClassCustomer,
   hasOfficialCustomQuote,
+  customOrderGCashAmountDue,
 } from "@/src/lib/portal";
+
+const FILE_WARN_KEY = (orderId: string) => `og-file-warn:${orderId}`;
 
 const inputCls =
   "min-h-11 w-full rounded-xl border border-offgrid-green/20 bg-white px-3.5 py-2.5 text-base text-offgrid-green outline-none transition-colors focus:border-offgrid-lime/60 focus:ring-2 focus:ring-offgrid-lime/20 sm:text-sm";
@@ -437,7 +440,25 @@ const quotePendingLight =
 export function CustomerOrderDetailPage() {
   const { orderId } = useParams<{ orderId: string }>();
   const user = usePortalStore((state) => state.currentUser);
+  const paymentSettings = usePortalStore((s) => s.paymentSettings);
+  const headwearOptions = resolveHeadwearOptions(useSiteContentStore((s) => s.customHeadwearOptions));
   const { retail: fetchedRetail, custom: fetchedCustom, loading } = useOrderDetail(orderId);
+  const [fileWarnings, setFileWarnings] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!orderId) return;
+    try {
+      const raw = sessionStorage.getItem(FILE_WARN_KEY(orderId));
+      if (!raw) return;
+      sessionStorage.removeItem(FILE_WARN_KEY(orderId));
+      const parsed = JSON.parse(raw) as unknown;
+      if (Array.isArray(parsed)) {
+        setFileWarnings(parsed.filter((item): item is string => typeof item === "string"));
+      }
+    } catch {
+      // ponytail: ignore corrupt sessionStorage
+    }
+  }, [orderId]);
 
   const retail = fetchedRetail &&
     !!user &&
@@ -481,8 +502,6 @@ export function CustomerOrderDetailPage() {
 
   const activeOrder = retail ?? custom!;
   const orderKind = retail ? "Retail order" : "Custom order";
-  const paymentSettings = usePortalStore((s) => s.paymentSettings);
-  const headwearOptions = resolveHeadwearOptions(useSiteContentStore((s) => s.customHeadwearOptions));
   const hasLegacyCustomSpecs = Boolean(
     custom && (custom.cut || custom.material || custom.printMethod || custom.category),
   );
@@ -518,6 +537,19 @@ export function CustomerOrderDetailPage() {
         </div>
       }
     >
+      {fileWarnings.length > 0 ? (
+        <div className="mb-5 rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm text-amber-950" role="status">
+          <p className="font-semibold">Order saved — some files did not upload</p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-xs">
+            {fileWarnings.map((warning) => (
+              <li key={warning}>{warning}</li>
+            ))}
+          </ul>
+          <p className="mt-2 text-xs text-amber-900/80">
+            Contact support or re-send files if the OG team cannot download them.
+          </p>
+        </div>
+      ) : null}
       {retail ? (
         <>
           <div className="rounded-2xl border border-offgrid-green/10 bg-white p-5 shadow-sm sm:p-6">
@@ -820,32 +852,55 @@ export function CustomerOrderDetailPage() {
                       />
                     </div>
                   ) : null}
-                  <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/45">
-                      Or pay deposit via GCash
-                    </p>
-                    <p className="mt-1 text-xs text-offgrid-green/60">{paymentSettings.gcashInstructions}</p>
-                    <img
-                      src={paymentSettings.gcashQrImageUrl}
-                      alt="GCash QR"
-                      className="mt-2 h-28 w-28 rounded-lg border border-offgrid-green/10 bg-white object-contain"
-                    />
-                    {hasOfficialCustomQuote(custom.officialTotal) && custom.officialDeposit ? (
-                      <p className="mt-2 text-sm font-semibold text-offgrid-green">
-                        Amount due now: {formatMoney(custom.officialDeposit)}
-                      </p>
-                    ) : custom.depositRequired ? (
-                      <p className="mt-2 text-sm font-semibold text-offgrid-green">
-                        Estimated deposit: {formatMoney(custom.depositRequired)}
-                      </p>
-                    ) : null}
-                  </div>
+                  {(() => {
+                    const due = customOrderGCashAmountDue({
+                      paymentStatus: custom.paymentStatus,
+                      officialTotal: custom.officialTotal,
+                      officialDeposit: custom.officialDeposit,
+                    });
+                    const qrReady = Boolean(paymentSettings.gcashQrImageUrl?.trim());
+                    if (!due || !qrReady) {
+                      if (!hasOfficialCustomQuote(custom.officialTotal)) {
+                        return (
+                          <p className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 px-3 py-2.5 text-xs text-offgrid-green/60">
+                            GCash payment opens after OG posts your official quote.
+                          </p>
+                        );
+                      }
+                      if (!qrReady) {
+                        return (
+                          <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-900">
+                            GCash QR is not set up yet. Use PayMongo QR Ph above.
+                          </p>
+                        );
+                      }
+                      return null;
+                    }
+                    return (
+                      <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/45">
+                          {due.kind === "balance" ? "Or pay remaining balance via GCash" : "Or pay deposit via GCash"}
+                        </p>
+                        <p className="mt-1 text-xs text-offgrid-green/60">{paymentSettings.gcashInstructions}</p>
+                        <img
+                          src={paymentSettings.gcashQrImageUrl}
+                          alt="GCash QR"
+                          className="mt-2 h-28 w-28 rounded-lg border border-offgrid-green/10 bg-white object-contain"
+                        />
+                        <p className="mt-2 text-sm font-semibold text-offgrid-green">
+                          Amount due now: {formatMoney(php(due.amount))}
+                        </p>
+                      </div>
+                    );
+                  })()}
                 </div>
               ) : null}
             </div>
           </div>
 
-          {custom.paymentStatus !== "fully_paid" && custom.paymentStatus !== "refunded" ? (
+          {hasOfficialCustomQuote(custom.officialTotal) &&
+          custom.paymentStatus !== "fully_paid" &&
+          custom.paymentStatus !== "refunded" ? (
             <PaymentProofSection
               orderId={custom.id}
               paymentMethod={null}

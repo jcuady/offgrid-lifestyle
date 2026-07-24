@@ -168,3 +168,26 @@ export function formatCityProvinceZipLine(info: ShippingInfo | null | undefined)
 export function hasOfficialCustomQuote(officialTotal: { amount: number; currency: string } | null | undefined): boolean {
   return officialTotal !== null && officialTotal !== undefined && officialTotal.amount > 0;
 }
+
+/** Amount the customer should pay now via GCash (deposit or remaining balance). */
+export function customOrderGCashAmountDue(input: {
+  paymentStatus: string;
+  officialTotal?: { amount: number; currency: string } | null;
+  officialDeposit?: { amount: number; currency: string } | null;
+}): { amount: number; currency: string; kind: "deposit" | "balance" } | null {
+  if (!hasOfficialCustomQuote(input.officialTotal) || !input.officialTotal) return null;
+  const currency = input.officialTotal.currency || "PHP";
+  if (input.paymentStatus === "deposit_paid") {
+    const deposit = input.officialDeposit?.amount ?? 0;
+    const remaining = Math.max(0, Math.round(input.officialTotal.amount - deposit));
+    if (remaining <= 0) return null;
+    return { amount: remaining, currency, kind: "balance" };
+  }
+  if (input.paymentStatus === "unpaid") {
+    const deposit = input.officialDeposit?.amount ?? 0;
+    if (deposit <= 0) return null;
+    return { amount: deposit, currency, kind: "deposit" };
+  }
+  return null;
+}
+

@@ -166,6 +166,16 @@ export function StepSummary() {
       resetDraft();
 
       if (currentUser?.role === "customer") {
+        if (result.fileUploadWarnings.length > 0) {
+          try {
+            sessionStorage.setItem(
+              `og-file-warn:${result.orderId}`,
+              JSON.stringify(result.fileUploadWarnings),
+            );
+          } catch {
+            // ignore quota
+          }
+        }
         navigate(`/account/orders/${result.orderId}`);
         return;
       }

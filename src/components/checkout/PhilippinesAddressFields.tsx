@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, lazy, Suspense, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, Suspense, type ReactNode } from "react";
 import { ChevronDown, Loader2, MapPin, Navigation, Search } from "lucide-react";
 import type { ShippingInfo } from "@/src/types/commerce";
 import {
@@ -21,6 +21,7 @@ import {
 } from "@/src/lib/philippinesAddress";
 import type { ShippingFieldErrors } from "@/src/lib/formValidation";
 import { cn } from "@/src/lib/utils";
+import { lazyRetry as lazy } from "@/src/lib/lazyRetry";
 
 const PhilippinesLocationMap = lazy(() =>
   import("@/src/components/checkout/PhilippinesLocationMap").then((m) => ({

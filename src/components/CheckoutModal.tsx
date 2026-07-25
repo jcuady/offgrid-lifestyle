@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import React, { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { X, Check, Wallet, Banknote, Package, ChevronRight, ChevronDown, MapPin, Truck, Zap, Loader2 } from "lucide-react";
@@ -19,6 +19,7 @@ import {
 import { persistCheckoutShipping } from "@/src/services/customerShippingService";
 import { cn } from "@/src/lib/utils";
 import { electricBluePill } from "@/src/lib/brandLayout";
+import { lazyRetry as lazy } from "@/src/lib/lazyRetry";
 
 const PhilippinesAddressFields = lazy(() =>
   import("@/src/components/checkout/PhilippinesAddressFields").then((m) => ({

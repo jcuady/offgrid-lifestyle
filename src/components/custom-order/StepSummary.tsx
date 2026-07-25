@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import React, { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Send, Check, AlertCircle, RotateCcw, Loader2 } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
@@ -23,6 +23,7 @@ import {
 import { formatCityProvinceZipLine } from "@/src/lib/portal";
 import { CUSTOMER_SIGN_IN_PATH } from "@/src/lib/authRoutes";
 import { cn } from "@/src/lib/utils";
+import { lazyRetry as lazy } from "@/src/lib/lazyRetry";
 
 const PhilippinesAddressFields = lazy(() =>
   import("@/src/components/checkout/PhilippinesAddressFields").then((m) => ({

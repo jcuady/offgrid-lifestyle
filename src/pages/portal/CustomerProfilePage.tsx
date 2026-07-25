@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState, type FormEvent } from "react";
+import { Suspense, useEffect, useState, type FormEvent } from "react";
 import {
   Bell,
   ChevronRight,
@@ -26,6 +26,7 @@ import { EMPTY_SHIPPING_INFO, type ShippingInfo } from "@/src/types/commerce";
 import { saveCustomerShipping } from "@/src/services/customerShippingService";
 import { accountPanel } from "@/src/lib/brandLayout";
 import { cn } from "@/src/lib/utils";
+import { lazyRetry as lazy } from "@/src/lib/lazyRetry";
 
 const PhilippinesAddressFields = lazy(() =>
   import("@/src/components/checkout/PhilippinesAddressFields").then((m) => ({

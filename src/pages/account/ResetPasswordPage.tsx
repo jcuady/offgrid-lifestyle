@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   CUSTOMER_FORGOT_PASSWORD_PATH,
   CUSTOMER_SIGN_IN_PATH,
@@ -23,7 +22,6 @@ import { AuthPage } from "@/src/components/ui/auth-page";
 const RECOVERY_TIMEOUT_MS = 12000;
 
 export function ResetPasswordPage() {
-  const navigate = useNavigate();
   const isPortal = isPortalPasswordReset();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -120,7 +118,8 @@ export function ResetPasswordPage() {
       clearPasswordRecoveryIntent();
       await localAuthService.logout();
       const loginPath = isPortal ? PORTAL_LOGIN_PATH : CUSTOMER_SIGN_IN_PATH;
-      navigate(`${loginPath}?reset=1`, { replace: true });
+      // Full navigation — avoid client-side lazy import from a stale deploy shell.
+      window.location.replace(`${loginPath}?reset=1`);
     } finally {
       setBusy(false);
     }

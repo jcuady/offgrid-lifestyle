@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { lazy, Suspense, useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { hydratePaymentSettingsFromSupabase } from "@/src/services";
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Navbar } from "./components/Navbar";
@@ -12,6 +12,7 @@ import { ScrollToTop } from "./components/ScrollToTop";
 import { RouteSeo } from "./components/seo/RouteSeo";
 import { GoogleAnalytics } from "./components/seo/GoogleAnalytics";
 import { isAuthScreen, PORTAL_LOGIN_PATH } from "@/src/lib/authRoutes";
+import { lazyRetry as lazy } from "@/src/lib/lazyRetry";
 import { usePortalStore, getPortalLandingByRole } from "./store/usePortalStore";
 import { RequirePortalRole } from "./components/portal/RequirePortalRole";
 import { CookieConsentBanner } from "./components/consent/CookieConsentBanner";

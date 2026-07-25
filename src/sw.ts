@@ -1,8 +1,8 @@
 /// <reference lib="webworker" />
 import { cleanupOutdatedCaches, precacheAndRoute, createHandlerBoundToURL } from "workbox-precaching";
 import { clientsClaim, skipWaiting } from "workbox-core";
-import { NavigationRoute, registerRoute } from "workbox-routing";
-import { CacheFirst, StaleWhileRevalidate } from "workbox-strategies";
+import { registerRoute } from "workbox-routing";
+import { CacheFirst, NetworkFirst } from "workbox-strategies";
 import { ExpirationPlugin } from "workbox-expiration";
 import { CacheableResponsePlugin } from "workbox-cacheable-response";
 import { absoluteNotificationUrl } from "./lib/pushPayload";
@@ -14,12 +14,28 @@ cleanupOutdatedCaches();
 precacheAndRoute(self.__WB_MANIFEST);
 clientsClaim();
 
-// SPA navigation — serve cached shell when offline
-const navigationHandler = createHandlerBoundToURL("/index.html");
+const offlineShell = createHandlerBoundToURL("/index.html");
+
+// Navigations: network first so auth/email links get current chunk hashes after deploy.
+// Offline → precached SPA shell.
 registerRoute(
-  new NavigationRoute(navigationHandler, {
-    denylist: [/^\/api\//, /^\/functions\//],
-  }),
+  ({ request }) => request.mode === "navigate",
+  async (options) => {
+    try {
+      const fresh = await new NetworkFirst({
+        cacheName: "html-navigations",
+        networkTimeoutSeconds: 3,
+        plugins: [
+          new CacheableResponsePlugin({ statuses: [200] }),
+          new ExpirationPlugin({ maxEntries: 8, maxAgeSeconds: 24 * 60 * 60 }),
+        ],
+      }).handle(options);
+      if (fresh) return fresh;
+    } catch {
+      // fall through to shell
+    }
+    return offlineShell(options);
+  },
 );
 
 // Static assets (fonts, icons) — cache-first, long TTL
@@ -50,22 +66,8 @@ registerRoute(
   }),
 );
 
-// Never cache Supabase/auth/API — stale sessions and RLS responses are worse than offline.
-// (Previous NetworkFirst supabase.co route removed intentionally.)
-
-// JS/CSS chunks — stale-while-revalidate
-registerRoute(
-  ({ request }) =>
-    request.destination === "script" ||
-    request.destination === "style",
-  new StaleWhileRevalidate({
-    cacheName: "js-css-cache",
-    plugins: [
-      new CacheableResponsePlugin({ statuses: [0, 200] }),
-      new ExpirationPlugin({ maxEntries: 60, maxAgeSeconds: 7 * 24 * 60 * 60 }),
-    ],
-  }),
-);
+// Hashed JS/CSS live in the precache manifest — do NOT runtime-cache them
+// (StaleWhileRevalidate caused blank screens after deploys).
 
 // Web Push notification handler
 self.addEventListener("push", (event) => {

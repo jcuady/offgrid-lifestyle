@@ -37,13 +37,6 @@ const BASE_SPRING: Transition = {
   mass: 1,
 };
 
-const TAP_SPRING: Transition = {
-  type: "spring",
-  stiffness: 450,
-  damping: 18,
-  mass: 1,
-};
-
 export function FocusRail({
   items,
   initialIndex = 0,

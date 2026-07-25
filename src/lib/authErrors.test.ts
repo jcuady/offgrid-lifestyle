@@ -3,6 +3,7 @@ import {
   AUTH_ACCOUNT_EXISTS,
   isDuplicateSignUpUser,
   isEmailConfirmationPending,
+  mapCredentialUpdateErrorMessage,
   mapSignInErrorMessage,
   mapSignUpErrorMessage,
 } from "./authErrors";
@@ -59,5 +60,14 @@ describe("mapSignInErrorMessage", () => {
 describe("mapSignUpErrorMessage", () => {
   it("maps already-registered copy to the shared account-exists message", () => {
     expect(mapSignUpErrorMessage("User already registered")).toBe(AUTH_ACCOUNT_EXISTS);
+  });
+});
+
+describe("mapCredentialUpdateErrorMessage", () => {
+  it("maps duplicate email and reauth failures for change-email/password UI", () => {
+    expect(mapCredentialUpdateErrorMessage("Email address has already been registered")).toMatch(
+      /already in use/i,
+    );
+    expect(mapCredentialUpdateErrorMessage("AAM reauthentication required")).toMatch(/current password/i);
   });
 });

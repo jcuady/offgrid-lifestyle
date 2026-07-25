@@ -68,3 +68,36 @@ export function mapSignUpErrorMessage(raw: string): string {
   const trimmed = raw.trim();
   return trimmed || "Unable to create account. Please try again.";
 }
+
+/** Map GoTrue errors from change-email / change-password (never leak internals). */
+export function mapCredentialUpdateErrorMessage(raw: string): string {
+  const m = raw.toLowerCase();
+  if (m.includes("same password") || (m.includes("different") && m.includes("password"))) {
+    return "New password must be different from your current password.";
+  }
+  if (
+    m.includes("already been registered") ||
+    m.includes("already registered") ||
+    m.includes("email address has already") ||
+    m.includes("duplicate")
+  ) {
+    return "That email is already in use. Try a different address.";
+  }
+  if (m.includes("invalid email") || m.includes("unable to validate email")) {
+    return "Enter a valid email address.";
+  }
+  if (m.includes("password") && (m.includes("weak") || m.includes("least") || m.includes("characters"))) {
+    return "Choose a stronger password (at least 8 characters).";
+  }
+  if (m.includes("reauth") || m.includes("reauthentication") || m.includes("session is not recent")) {
+    return "For security, enter your current password again and retry.";
+  }
+  if (m.includes("rate limit") || m.includes("too many")) {
+    return "Too many attempts. Wait a few minutes and try again.";
+  }
+  if (m.includes("network") || m.includes("fetch")) {
+    return "Network error. Check your connection and try again.";
+  }
+  const trimmed = raw.trim();
+  return trimmed || "Unable to update account. Please try again.";
+}

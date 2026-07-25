@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { Button } from "@/src/components/ui/Button";
 import { PasswordField } from "@/src/components/ui/PasswordField";
 import { validateChangePasswordInput } from "@/src/lib/accountCredentials";
@@ -12,7 +12,8 @@ export function ChangePasswordForm() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e?: FormEvent) => {
+    e?.preventDefault();
     setError(null);
     setMessage(null);
 
@@ -44,6 +45,8 @@ export function ChangePasswordForm() {
       setNewPassword("");
       setConfirmPassword("");
       setMessage("Password updated successfully.");
+    } catch {
+      setError("Something went wrong updating your password. Please try again.");
     } finally {
       setBusy(false);
     }
@@ -56,7 +59,7 @@ export function ChangePasswordForm() {
         Update your account password. You will stay signed in on this device.
       </p>
 
-      <div className="mt-5 space-y-3">
+      <form className="mt-5 space-y-3" onSubmit={(e) => void handleSubmit(e)} noValidate>
         <div>
           <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/50">
             Current password
@@ -90,14 +93,14 @@ export function ChangePasswordForm() {
             placeholder="Re-enter password"
           />
         </div>
-      </div>
 
-      {error ? <p className="mt-3 text-xs text-red-600">{error}</p> : null}
-      {message ? <p className="mt-3 text-xs font-medium text-offgrid-green">{message}</p> : null}
+        {error ? <p className="text-xs text-red-600" role="alert">{error}</p> : null}
+        {message ? <p className="text-xs font-medium text-offgrid-green" role="status">{message}</p> : null}
 
-      <Button size="sm" className="mt-4" disabled={busy} onClick={() => void handleSubmit()}>
-        {busy ? "Saving…" : "Update password"}
-      </Button>
+        <Button type="submit" size="sm" className="mt-1" disabled={busy}>
+          {busy ? "Saving…" : "Update password"}
+        </Button>
+      </form>
     </section>
   );
 }

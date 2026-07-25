@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/input";
 import { PasswordField } from "@/src/components/ui/PasswordField";
@@ -15,7 +15,8 @@ export function ChangeEmailForm() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e?: FormEvent) => {
+    e?.preventDefault();
     setError(null);
     setMessage(null);
 
@@ -51,6 +52,8 @@ export function ChangeEmailForm() {
       setConfirmEmail("");
       setCurrentPassword("");
       setMessage(result.message ?? "Email updated.");
+    } catch {
+      setError("Something went wrong updating your email. Please try again.");
     } finally {
       setBusy(false);
     }
@@ -63,7 +66,7 @@ export function ChangeEmailForm() {
         Current sign-in email: <span className="font-medium text-offgrid-green">{currentEmail || "—"}</span>
       </p>
 
-      <div className="mt-5 space-y-3">
+      <form className="mt-5 space-y-3" onSubmit={(e) => void handleSubmit(e)} noValidate>
         <div>
           <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/50">
             New email
@@ -74,6 +77,7 @@ export function ChangeEmailForm() {
             onChange={(e) => setNewEmail(e.target.value)}
             autoComplete="email"
             placeholder="new.email@example.com"
+            disabled={busy}
           />
         </div>
         <div>
@@ -86,6 +90,7 @@ export function ChangeEmailForm() {
             onChange={(e) => setConfirmEmail(e.target.value)}
             autoComplete="email"
             placeholder="Re-enter new email"
+            disabled={busy}
           />
         </div>
         <div>
@@ -99,14 +104,14 @@ export function ChangeEmailForm() {
             placeholder="Confirm with your password"
           />
         </div>
-      </div>
 
-      {error ? <p className="mt-3 text-xs text-red-600">{error}</p> : null}
-      {message ? <p className="mt-3 text-xs font-medium text-offgrid-green">{message}</p> : null}
+        {error ? <p className="text-xs text-red-600" role="alert">{error}</p> : null}
+        {message ? <p className="text-xs font-medium text-offgrid-green" role="status">{message}</p> : null}
 
-      <Button size="sm" className="mt-4" disabled={busy} onClick={() => void handleSubmit()}>
-        {busy ? "Saving…" : "Update email"}
-      </Button>
+        <Button type="submit" size="sm" className="mt-1" disabled={busy}>
+          {busy ? "Saving…" : "Update email"}
+        </Button>
+      </form>
     </section>
   );
 }

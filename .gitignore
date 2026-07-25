@@ -37,6 +37,8 @@ result-webhook.json
 out-*.txt
 tmp-*.json
 tmp-*.txt
+tmp-*.ts
+tmp-part-*.json
 _mcp_args_only.json
 deploy-submit.json
 tmp-deploy-*.json

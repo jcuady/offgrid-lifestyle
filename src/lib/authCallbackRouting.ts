@@ -3,7 +3,7 @@
  * Signup confirm must NOT be treated as password recovery.
  */
 
-export type AuthCallbackKind = "recovery" | "signup_confirm" | "session" | "none";
+export type AuthCallbackKind = "recovery" | "signup_confirm" | "email_change" | "session" | "none";
 
 export function classifyAuthCallback(input: {
   pathname: string;
@@ -14,6 +14,7 @@ export function classifyAuthCallback(input: {
   const type = (hashParams.get("type") ?? "").toLowerCase();
 
   if (type === "recovery") return "recovery";
+  if (type === "email_change") return "email_change";
   if (type === "signup" || type === "email" || type === "invite" || type === "magiclink") {
     return "signup_confirm";
   }
@@ -25,6 +26,13 @@ export function classifyAuthCallback(input: {
   // PKCE: emailRedirectTo path is the source of truth (type is not in the URL).
   if (hasCode) {
     if (input.pathname.startsWith("/account/reset-password")) return "recovery";
+    if (
+      input.pathname.startsWith("/account/profile") ||
+      input.pathname.startsWith("/portal/admin/settings") ||
+      input.pathname.startsWith("/portal/staff")
+    ) {
+      return "email_change";
+    }
     if (
       input.pathname.startsWith("/account/orders") ||
       input.pathname.startsWith("/account/sign-in") ||
@@ -62,6 +70,18 @@ export function authCallbackRedirectPath(input: {
     params.delete("confirmed");
     const q = params.toString();
     return `/account/orders${q ? `?${q}` : ""}${hash}`;
+  }
+
+  if (kind === "email_change") {
+    if (
+      input.pathname.startsWith("/account/profile") ||
+      input.pathname.startsWith("/portal/admin/settings") ||
+      input.pathname.startsWith("/portal/staff")
+    ) {
+      return null;
+    }
+    const q = params.toString();
+    return `/account/profile${q ? `?${q}` : ""}${hash}`;
   }
 
   return null;

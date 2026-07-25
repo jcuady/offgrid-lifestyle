@@ -1,6 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { Webhook } from "https://esm.sh/standardwebhooks@1.0.0";
-import { authActionEmail } from "../_shared/emailTemplates.ts";
+import { authActionEmail } from "../_shared/authEmailTemplates.ts";
 import { sendViaResend } from "../_shared/resend.ts";
 
 type EmailData = {
@@ -15,8 +15,31 @@ type EmailData = {
 
 type HookUser = {
   email: string;
+  new_email?: string;
   user_metadata?: { name?: string };
 };
+
+/** Keep in sync with src/lib/emailChangeDispatch.ts planEmailChangeSends. */
+function planEmailChangeSends(input: {
+  currentEmail: string;
+  newEmail?: string | null;
+  tokenHash: string;
+  token?: string;
+  tokenHashNew?: string;
+  tokenNew?: string;
+}): Array<{ to: string; tokenHash: string; otp?: string }> {
+  const current = input.currentEmail.trim();
+  const next = input.newEmail?.trim() || "";
+  const hasDual = Boolean(input.tokenHashNew?.trim() && input.tokenNew?.trim());
+  if (hasDual) {
+    const sends: Array<{ to: string; tokenHash: string; otp?: string }> = [
+      { to: current, tokenHash: input.tokenHashNew!.trim(), otp: input.token },
+    ];
+    if (next) sends.push({ to: next, tokenHash: input.tokenHash.trim(), otp: input.tokenNew });
+    return sends;
+  }
+  return [{ to: next || current, tokenHash: input.tokenHash.trim(), otp: input.token }];
+}
 
 Deno.serve(async (req: Request) => {
   if (req.method !== "POST") {
@@ -44,9 +67,12 @@ Deno.serve(async (req: Request) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const siteUrl = (Deno.env.get("SITE_URL") ?? "https://www.oglifestyleph.com").replace(/\/$/, "");
+    const action = email_data.email_action_type;
     const redirectTo =
       email_data.redirect_to ||
-      `${siteUrl}/account/sign-in?confirmed=1`;
+      (action === "email_change"
+        ? `${siteUrl}/account/profile`
+        : `${siteUrl}/account/sign-in?confirmed=1`);
     const name = (user.user_metadata?.name as string) ?? "";
 
     const sendOne = async (
@@ -67,13 +93,17 @@ Deno.serve(async (req: Request) => {
       await sendViaResend({ to, subject: mail.subject, html: mail.html, text: mail.text });
     };
 
-    const action = email_data.email_action_type;
-
-    if (action === "email_change" && email_data.token_hash_new && email_data.token_new) {
-      await sendOne(user.email, action, email_data.token_hash_new, email_data.token);
-      const newEmail = (user as HookUser & { new_email?: string }).new_email;
-      if (newEmail) {
-        await sendOne(newEmail, action, email_data.token_hash, email_data.token_new);
+    if (action === "email_change") {
+      const sends = planEmailChangeSends({
+        currentEmail: user.email,
+        newEmail: user.new_email,
+        tokenHash: email_data.token_hash,
+        token: email_data.token,
+        tokenHashNew: email_data.token_hash_new,
+        tokenNew: email_data.token_new,
+      });
+      for (const send of sends) {
+        await sendOne(send.to, action, send.tokenHash, send.otp);
       }
     } else {
       await sendOne(user.email, action, email_data.token_hash, action === "signup" ? undefined : email_data.token);

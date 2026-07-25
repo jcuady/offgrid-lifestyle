@@ -36,6 +36,26 @@ describe("classifyAuthCallback", () => {
     ).toBe("signup_confirm");
   });
 
+  it("treats type=email_change as email change (not signup/recovery)", () => {
+    expect(
+      classifyAuthCallback({
+        pathname: "/",
+        hash: "#access_token=tok&type=email_change",
+        search: "",
+      }),
+    ).toBe("email_change");
+  });
+
+  it("classifies PKCE on profile as email_change", () => {
+    expect(
+      classifyAuthCallback({
+        pathname: "/account/profile",
+        hash: "",
+        search: "?code=abc",
+      }),
+    ).toBe("email_change");
+  });
+
   it("does not treat bare access_token as recovery", () => {
     expect(
       classifyAuthCallback({
@@ -120,5 +140,15 @@ describe("authCallbackRedirectPath", () => {
         search: "?confirmed=1&code=pkce",
       }),
     ).toBe("/account/orders?code=pkce");
+  });
+
+  it("sends email_change hash from / to /account/profile", () => {
+    expect(
+      authCallbackRedirectPath({
+        pathname: "/",
+        hash: "#access_token=tok&type=email_change",
+        search: "",
+      }),
+    ).toBe("/account/profile#access_token=tok&type=email_change");
   });
 });

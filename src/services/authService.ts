@@ -3,9 +3,11 @@ import {
   AUTH_ACCOUNT_EXISTS,
   isDuplicateSignUpUser,
   isEmailConfirmationPending,
+  mapCredentialUpdateErrorMessage,
   mapSignInErrorMessage,
   mapSignUpErrorMessage,
 } from "@/src/lib/authErrors";
+import { emailChangeRedirectUrl } from "@/src/lib/emailChangeDispatch";
 import { isValidEmail, validatePassword } from "@/src/lib/formValidation";
 import { supabase } from "@/src/lib/supabase";
 import { logger } from "@/src/lib/logger";
@@ -272,7 +274,7 @@ export const supabaseAuthService: AuthService = {
 
     const { error } = await supabase.auth.updateUser({ password: newPassword.trim() });
     if (error) {
-      return { ok: false, message: error.message.trim() || "Unable to update password. Please try again." };
+      return { ok: false, message: mapCredentialUpdateErrorMessage(error.message) };
     }
     return { ok: true };
   },
@@ -300,23 +302,44 @@ export const supabaseAuthService: AuthService = {
     if (!isValidEmail(normalized)) {
       return { ok: false, message: "Enter a valid email address." };
     }
-    const current = usePortalStore.getState().currentUser?.email?.trim().toLowerCase();
+    const currentUser = usePortalStore.getState().currentUser;
+    const current = currentUser?.email?.trim().toLowerCase();
     if (current && normalized === current) {
       return { ok: false, message: "New email must be different from your current email." };
     }
 
-    const { data, error } = await supabase.auth.updateUser({ email: normalized });
+    const emailRedirectTo = emailChangeRedirectUrl(
+      window.location.origin,
+      currentUser?.role ?? "customer",
+    );
+    const { data, error } = await supabase.auth.updateUser(
+      { email: normalized },
+      { emailRedirectTo },
+    );
     if (error) {
-      return { ok: false, message: error.message.trim() || "Unable to update email. Please try again." };
+      return { ok: false, message: mapCredentialUpdateErrorMessage(error.message) };
     }
 
     // Immediate email change (no confirm) — sync portal row now.
     // Confirm-required flows keep the old email until the user clicks the link.
     const confirmedEmail = data.user?.email?.trim().toLowerCase();
     if (confirmedEmail === normalized) {
-      const portalId = usePortalStore.getState().currentUser?.id;
+      const portalId = currentUser?.id;
       if (portalId) {
-        await supabase.from("og_portal_users").update({ email: normalized }).eq("id", portalId);
+        const { error: portalErr } = await supabase
+          .from("og_portal_users")
+          .update({ email: normalized })
+          .eq("id", portalId);
+        if (portalErr) {
+          logger.warn("Portal email sync failed after auth update", {
+            operation: "updateEmail",
+            error: portalErr.message,
+          });
+          return {
+            ok: false,
+            message: "Email updated in sign-in, but profile sync failed. Refresh and try again.",
+          };
+        }
         const user = usePortalStore.getState().currentUser;
         if (user) {
           usePortalStore.getState().setCurrentUser({ ...user, email: normalized });
@@ -327,7 +350,8 @@ export const supabaseAuthService: AuthService = {
 
     return {
       ok: true,
-      message: "Check your new inbox to confirm the email change, then sign in with the new address.",
+      message:
+        "Check your inbox to confirm the email change. If Secure Email Change is on, confirm from both your current and new address.",
     };
   },
 

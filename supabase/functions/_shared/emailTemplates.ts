@@ -211,6 +211,14 @@ export function authActionEmail(params: {
       <p style="color:${muted};line-height:1.65;margin:0 0 16px;">Use the button below to sign in to your account. This link expires soon.</p>
       ${emailCta(params.verifyUrl, "Sign in")}`;
     textBody = `Sign in: ${params.verifyUrl}${emailTextFooter(siteUrl)}`;
+  } else if (params.actionType === "email_change") {
+    title = "Confirm email change";
+    preheader = "Confirm your OFF GRID® email address change.";
+    body = `<p style="color:${muted};line-height:1.65;margin:0 0 12px;">${greeting}</p>
+      <p style="color:${muted};line-height:1.65;margin:0 0 16px;">Confirm this email change for your OFF GRID® account. If you didn&rsquo;t request it, you can ignore this message.</p>
+      ${params.otp ? `<p style="margin:0 0 20px;font-family:monospace;font-size:18px;font-weight:700;color:${EMAIL_BRAND.text};">${escapeHtml(params.otp)}</p>` : ""}
+      ${emailCta(params.verifyUrl, "Confirm email change")}`;
+    textBody = `Confirm email change: ${params.verifyUrl}${emailTextFooter(siteUrl)}`;
   } else {
     preheader = "Complete your OFF GRID® account action.";
     body = `<p style="color:${muted};line-height:1.65;margin:0 0 12px;">${greeting}</p>

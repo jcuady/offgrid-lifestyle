@@ -18,6 +18,12 @@ import {
   sectionEyebrowOnDark,
 } from "@/src/lib/brandLayout";
 import { CUSTOMER_SIGN_IN_PATH, CUSTOMER_SIGN_UP_PATH, PORTAL_LOGIN_PATH } from "@/src/lib/authRoutes";
+import {
+  CUSTOMER_ACCOUNT_MENU_PATHS,
+  NAVBAR_HEADER_Z,
+  NAVBAR_MOBILE_DRAWER_Z,
+  NAVBAR_SCRIM_Z,
+} from "@/src/lib/navbarLayers";
 import { NotificationBell } from "@/src/components/notifications/NotificationBell";
 import { usePwaStandalone } from "@/src/hooks/usePwaStandalone";
 import { openInstallGuide } from "@/src/lib/pwa";
@@ -222,9 +228,9 @@ export function Navbar() {
     }
     if (currentUser.role === "customer") {
       return withInstall([
-        { label: "My Orders", onSelect: () => handleNavigate("/account/orders") },
-        { label: "Profile", onSelect: () => handleNavigate("/account/profile") },
-        { label: "Custom Order", onSelect: () => handleNavigate("/custom") },
+        { label: "My Orders", onSelect: () => handleNavigate(CUSTOMER_ACCOUNT_MENU_PATHS.orders) },
+        { label: "Profile", onSelect: () => handleNavigate(CUSTOMER_ACCOUNT_MENU_PATHS.profile) },
+        { label: "Custom Order", onSelect: () => handleNavigate(CUSTOMER_ACCOUNT_MENU_PATHS.customOrder) },
         { label: "Sign out", onSelect: handleSignOut, tone: "danger" },
       ]);
     }
@@ -286,7 +292,10 @@ export function Navbar() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="fixed inset-0 z-[55] bg-offgrid-dark/40 sm:hidden"
+            // Scrim must stay below header (NAVBAR_SCRIM_Z < NAVBAR_HEADER_Z) or
+            // mobile taps on Profile/Orders hit the overlay and never navigate.
+            className="fixed inset-0 bg-offgrid-dark/40 sm:hidden"
+            style={{ zIndex: NAVBAR_SCRIM_Z }}
             aria-hidden
             onClick={() => {
               setIsCartDropdownOpen(false);
@@ -297,8 +306,9 @@ export function Navbar() {
       </AnimatePresence>
       <header
         ref={headerRef}
+        style={{ zIndex: NAVBAR_HEADER_Z }}
         className={cn(
-          "fixed left-0 right-0 top-0 z-50 transition-[background-color,box-shadow,padding,backdrop-filter] duration-300 ease-out",
+          "fixed left-0 right-0 top-0 transition-[background-color,box-shadow,padding,backdrop-filter] duration-300 ease-out",
           isStandalone && "pt-[env(safe-area-inset-top)]",
           navSolid
             ? "border-b border-white/10 bg-offgrid-green/95 py-[clamp(0.55rem,1.2vw,0.85rem)] shadow-sm backdrop-blur-md supports-[backdrop-filter]:bg-offgrid-green/88"
@@ -477,7 +487,7 @@ export function Navbar() {
                 className="shrink-0"
                 settingsHref={
                   currentUser.role === "customer"
-                    ? "/account/profile"
+                    ? CUSTOMER_ACCOUNT_MENU_PATHS.profile
                     : currentUser.role === "admin"
                       ? "/portal/admin/settings"
                       : "/portal/staff"
@@ -646,7 +656,8 @@ export function Navbar() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-40 flex flex-col bg-offgrid-green px-4 pt-[calc(var(--og-header-height,4.5rem)+0.75rem)] pb-[env(safe-area-inset-bottom,0px)] sm:px-6"
+            style={{ zIndex: NAVBAR_MOBILE_DRAWER_Z }}
+            className="fixed inset-0 flex flex-col bg-offgrid-green px-4 pt-[calc(var(--og-header-height,4.5rem)+0.75rem)] pb-[env(safe-area-inset-bottom,0px)] sm:px-6"
           >
             <nav className="flex flex-1 flex-col gap-8 overflow-y-auto text-center">
               <button

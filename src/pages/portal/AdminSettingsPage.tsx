@@ -18,6 +18,7 @@ import { PortalPageHeader } from "@/src/components/portal/PortalPageHeader";
 import { NotificationSettings } from "@/src/components/settings/NotificationSettings";
 import { ChangePasswordForm } from "@/src/components/account/ChangePasswordForm";
 import { ChangeEmailForm } from "@/src/components/account/ChangeEmailForm";
+import { ChangeDisplayNameForm } from "@/src/components/account/ChangeDisplayNameForm";
 import { usePortalStore } from "@/src/store/usePortalStore";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { cn } from "@/src/lib/utils";
@@ -133,11 +134,12 @@ export function AdminSettingsPage() {
           </span>
         </div>
         <p className="mt-4 text-xs text-offgrid-green/55">
-          Change your own email or password below. Manage other staff and customer credentials in Staff.
+          Change your display name, email, or password below. Manage other staff and customer credentials in Staff.
         </p>
       </section>
 
       <section className="mb-8 grid gap-5 lg:grid-cols-2">
+        <ChangeDisplayNameForm />
         <ChangeEmailForm />
         <ChangePasswordForm />
       </section>

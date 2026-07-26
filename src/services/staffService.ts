@@ -90,10 +90,25 @@ export const supabaseStaffService: StaffService = {
       email: patch.email,
       password: patch.password,
     });
-    if (result.ok) {
-      const accounts = await supabaseStaffService.list();
-      usePortalStore.setState({ managedStaffAccounts: accounts });
+    if (!result.ok) return result;
+
+    const actor = usePortalStore.getState().currentUser;
+    if (actor) {
+      const fields = Object.keys(patch).filter((k) => patch[k as keyof typeof patch] != null);
+      usePortalStore.getState().recordAudit({
+        action: patch.email ? "staff.email_changed" : "staff.updated",
+        actorId: actor.id,
+        actorEmail: actor.email,
+        actorRole: actor.role,
+        targetType: "user",
+        targetId: staffId,
+        summary: `Updated staff ${staffId}${fields.length ? ` (${fields.join(", ")})` : ""}`,
+        metadata: { fields },
+      });
     }
-    return result;
+
+    const accounts = await supabaseStaffService.list();
+    usePortalStore.setState({ managedStaffAccounts: accounts });
+    return { ok: true };
   },
 };

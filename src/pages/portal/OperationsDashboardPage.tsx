@@ -17,6 +17,7 @@ import { useEnsureOrdersLoaded } from "@/src/hooks/useEnsureOrdersLoaded";
 import { NotificationSettings } from "@/src/components/settings/NotificationSettings";
 import { ChangePasswordForm } from "@/src/components/account/ChangePasswordForm";
 import { ChangeEmailForm } from "@/src/components/account/ChangeEmailForm";
+import { ChangeDisplayNameForm } from "@/src/components/account/ChangeDisplayNameForm";
 import { cn } from "@/src/lib/utils";
 import {
   buildCustomSalesRows,
@@ -508,6 +509,7 @@ export function OperationsDashboardPage({ role }: OperationsDashboardPageProps) 
 
       {role === "staff" ? (
         <div className="mt-6 grid gap-5 lg:grid-cols-2">
+          <ChangeDisplayNameForm />
           <ChangeEmailForm />
           <ChangePasswordForm />
           <div className="lg:col-span-2">

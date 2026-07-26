@@ -47,11 +47,14 @@ async function ensurePortalUserRow(user: User): Promise<PortalUser | null> {
 
   const { data: existing } = await supabase
     .from("og_portal_users")
-    .select("id, name, email, role")
+    .select("id, name, email, role, status")
     .eq("auth_user_id", user.id)
     .maybeSingle();
 
   if (existing) {
+    if (existing.status === "inactive") {
+      return null;
+    }
     const authEmail = (user.email ?? existing.email).trim().toLowerCase();
     if (authEmail && authEmail !== existing.email.toLowerCase()) {
       // Keep portal directory in sync after confirmed email changes.
@@ -142,7 +145,10 @@ export const supabaseAuthService: AuthService = {
     const portalUser = await resolvePortalUser();
     if (!portalUser) {
       await supabase.auth.signOut();
-      return { ok: false, message: "Could not load your account profile. Please try again." };
+      return {
+        ok: false,
+        message: "This account is inactive or could not be loaded. Contact support if you need access.",
+      };
     }
     usePortalStore.getState().setCurrentUser(portalUser);
     usePortalStore.getState().recordAudit({

@@ -43,16 +43,18 @@ export function ChangeDisplayNameForm() {
       }
 
       setCurrentUser({ ...user, name: trimmed });
-      recordAudit({
-        action: "staff.updated",
-        actorId: user.id,
-        actorEmail: user.email,
-        actorRole: user.role,
-        targetType: "user",
-        targetId: user.id,
-        summary: `Updated display name to ${trimmed}`,
-        metadata: { field: "name", from: user.name, to: trimmed },
-      });
+      if (user.role === "admin" || user.role === "staff") {
+        recordAudit({
+          action: "staff.updated",
+          actorId: user.id,
+          actorEmail: user.email,
+          actorRole: user.role,
+          targetType: "user",
+          targetId: user.id,
+          summary: `Updated display name to ${trimmed}`,
+          metadata: { field: "name", from: user.name, to: trimmed },
+        });
+      }
       setMessage("Name updated.");
     } catch {
       setError("Something went wrong updating your name. Please try again.");

@@ -15,6 +15,7 @@ import { AccountLayout } from "@/src/components/account/AccountLayout";
 import { NotificationSettings } from "@/src/components/settings/NotificationSettings";
 import { ChangePasswordForm } from "@/src/components/account/ChangePasswordForm";
 import { ChangeEmailForm } from "@/src/components/account/ChangeEmailForm";
+import { ChangeDisplayNameForm } from "@/src/components/account/ChangeDisplayNameForm";
 import {
   formatPhilippinePhoneInput,
   normalizeShippingInfo,
@@ -352,6 +353,9 @@ export function CustomerProfilePage() {
           </form>
         </section>
 
+        <div id="display-name" className="scroll-mt-28">
+          <ChangeDisplayNameForm />
+        </div>
         <div id="notifications" className="scroll-mt-28">
           <NotificationSettings />
         </div>

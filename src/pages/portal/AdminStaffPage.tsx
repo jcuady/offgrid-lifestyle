@@ -402,7 +402,7 @@ export function AdminStaffPage() {
       setFormError("Password must be at least 8 characters.");
       return;
     }
-    const result = await userService.resetPassword(resetTarget.id, newPassword);
+    const result = await localStaffService.resetPassword(resetTarget.id, newPassword);
     if (!result.ok) {
       setFormError(result.message ?? "Could not reset password.");
       return;

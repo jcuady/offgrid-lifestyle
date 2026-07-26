@@ -163,11 +163,27 @@ export const userService = {
     });
   },
 
-  deleteUser(portalUserId: string) {
-    return callManageUser({
+  async deleteUser(portalUserId: string) {
+    const result = await callManageUser({
       action: "delete",
       portalUserId,
     });
+    if (!result.ok) return result;
+
+    const actor = usePortalStore.getState().currentUser;
+    if (actor) {
+      usePortalStore.getState().recordAudit({
+        action: "staff.deactivated",
+        actorId: actor.id,
+        actorEmail: actor.email,
+        actorRole: actor.role,
+        targetType: "user",
+        targetId: portalUserId,
+        summary: `Deleted / banned portal user ${portalUserId}`,
+        metadata: { via: "manage-user.delete" },
+      });
+    }
+    return { ok: true };
   },
 
   async setStatus(portalUserId: string, status: PortalUserRow["status"]) {

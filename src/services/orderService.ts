@@ -64,7 +64,19 @@ type OrderRow = {
   custom_payload: Json | null;
   created_at: string;
   updated_at: string;
+  /** Staff-only embed; customers get null/empty via RLS. */
+  og_order_quote_internal_notes?: { notes: string } | { notes: string }[] | null;
 };
+
+const ORDER_SELECT_WITH_NOTES =
+  "*, og_order_quote_internal_notes ( notes )" as const;
+
+function internalNotesFromRow(row: OrderRow): string {
+  const embed = row.og_order_quote_internal_notes;
+  if (!embed) return "";
+  const one = Array.isArray(embed) ? embed[0] : embed;
+  return typeof one?.notes === "string" ? one.notes : "";
+}
 
 function mapRetailOrderRow(row: OrderRow): ManagedRetailOrder {
   return {
@@ -94,9 +106,10 @@ function mapRetailOrderRow(row: OrderRow): ManagedRetailOrder {
 
 function mapCustomOrderRow(row: OrderRow): ManagedCustomOrder {
   const p = (row.custom_payload ?? {}) as Record<string, unknown>;
-  // Staff/admin keep internal notes; customers never see them in the mapped order.
+  // Staff/admin keep internal notes from staff-only table; customers never see them.
   const role = usePortalStore.getState().currentUser?.role;
   const includeInternalNotes = role === "admin" || role === "staff";
+  const notesFromTable = internalNotesFromRow(row);
   return {
     id: row.id,
     type: "custom",
@@ -125,7 +138,7 @@ function mapCustomOrderRow(row: OrderRow): ManagedCustomOrder {
     officialTotal: (p.officialTotal as Money | null) ?? null,
     officialDeposit: (p.officialDeposit as Money | null) ?? null,
     quoteCustomerNotes: (p.quoteCustomerNotes as string) ?? "",
-    quoteInternalNotes: includeInternalNotes ? ((p.quoteInternalNotes as string) ?? "") : "",
+    quoteInternalNotes: includeInternalNotes ? notesFromTable : "",
     quotedAt: (p.quotedAt as string) ?? null,
     quotedBy: (p.quotedBy as string) ?? null,
     shippingInfo: row.shipping_info
@@ -161,6 +174,12 @@ export interface OrderService {
   listOrders: () => Promise<{ retailOrders: ManagedRetailOrder[]; customOrders: ManagedCustomOrder[] }>;
   fetchOrderById: (orderId: string) => Promise<{ retail?: ManagedRetailOrder; custom?: ManagedCustomOrder } | null>;
   updateOrderField: (id: string, patch: { status?: string; payment_status?: string; payment_proof_url?: string }) => Promise<void>;
+  adminOverrideOrderPayment: (input: {
+    orderId: string;
+    paymentStatus: PaymentStatus;
+    fulfillmentStatus?: OrderStatus;
+  }) => Promise<void>;
+  claimMyGuestOrders: () => Promise<number>;
   fetchOrderProofUrl: (orderId: string) => Promise<string | null>;
   persistCustomOrderQuote: (orderId: string, update: CustomOrderQuoteUpdate, order: ManagedCustomOrder) => Promise<void>;
 }
@@ -324,9 +343,14 @@ export const supabaseOrderService: OrderService = {
   },
 
   listOrders: async () => {
+    const role = usePortalStore.getState().currentUser?.role;
+    if (role === "customer") {
+      await supabaseOrderService.claimMyGuestOrders();
+    }
+
     const { data, error } = await supabase
       .from("og_orders")
-      .select("*")
+      .select(ORDER_SELECT_WITH_NOTES)
       .order("created_at", { ascending: false });
 
     // ponytail: no local fallback as truth — failed fetch must not invent a durable queue
@@ -351,7 +375,14 @@ export const supabaseOrderService: OrderService = {
   fetchOrderById: async (orderId) => {
     const id = normalizeOrderId(orderId);
     if (!id) return null;
-    const { data, error } = await supabase.from("og_orders").select("*").eq("id", id).maybeSingle();
+    if (usePortalStore.getState().currentUser?.role === "customer") {
+      await supabaseOrderService.claimMyGuestOrders();
+    }
+    const { data, error } = await supabase
+      .from("og_orders")
+      .select(ORDER_SELECT_WITH_NOTES)
+      .eq("id", id)
+      .maybeSingle();
     if (error || !data) return null;
 
     const row = data as OrderRow;
@@ -368,6 +399,19 @@ export const supabaseOrderService: OrderService = {
     return null;
   },
 
+  claimMyGuestOrders: async () => {
+    const { data, error } = await supabase.rpc("og_claim_my_guest_orders");
+    if (error) {
+      logger.warn("Guest order claim failed", {
+        service: "orderService",
+        operation: "orders.claimMyGuestOrders",
+        error: error.message,
+      });
+      return 0;
+    }
+    return typeof data === "number" ? data : 0;
+  },
+
   updateOrderField: async (id, patch) => {
     const orderId = normalizeOrderId(id);
     if (!orderId) throw new Error("Missing order id");
@@ -381,6 +425,17 @@ export const supabaseOrderService: OrderService = {
     }
 
     const { error } = await supabase.from("og_orders").update(patch).eq("id", orderId);
+    if (error) throw new Error(error.message);
+  },
+
+  adminOverrideOrderPayment: async ({ orderId, paymentStatus, fulfillmentStatus }) => {
+    const id = normalizeOrderId(orderId);
+    if (!id) throw new Error("Missing order id");
+    const { error } = await supabase.rpc("og_admin_override_order_payment", {
+      p_order_id: id,
+      p_payment_status: paymentStatus,
+      p_fulfillment_status: fulfillmentStatus ?? null,
+    });
     if (error) throw new Error(error.message);
   },
 
@@ -434,11 +489,35 @@ export const supabaseOrderService: OrderService = {
       throw new Error(error.message);
     }
 
+    const notes = hasOfficial ? (update.quoteInternalNotes ?? "").trim() : "";
+    if (hasOfficial) {
+      const { error: notesError } = await supabase.from("og_order_quote_internal_notes").upsert(
+        {
+          order_id: orderId,
+          notes,
+          updated_at: now,
+          updated_by: actor?.id ?? null,
+        },
+        { onConflict: "order_id" },
+      );
+      if (notesError) {
+        throw new Error(notesError.message);
+      }
+    } else {
+      const { error: delError } = await supabase
+        .from("og_order_quote_internal_notes")
+        .delete()
+        .eq("order_id", orderId);
+      if (delError) {
+        throw new Error(delError.message);
+      }
+    }
+
     usePortalStore.getState().updateCustomOrderQuote(orderId, {
       officialTotal: payload.officialTotal,
       officialDeposit: payload.officialDeposit,
       quoteCustomerNotes: payload.quoteCustomerNotes,
-      quoteInternalNotes: payload.quoteInternalNotes,
+      quoteInternalNotes: notes,
     });
 
     if (hasOfficial) {

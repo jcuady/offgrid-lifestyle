@@ -15,6 +15,8 @@
 | **Pending deposit** | Custom order has an official quote and still needs deposit (or retail “Order placed” alias for `pending_deposit`). |
 | **Admin override** | Admin may set any fulfillment/payment status and skip the customer quote → pay pipeline for ops corrections. |
 | **Custom payload write** | Explicit merge-patch of durable custom-order keys into `custom_payload` (no ManagedCustomOrder dump). |
-| **Quote internal notes** | Staff/admin-only text on the quote; stripped from customer-mapped orders. |
+| **Quote internal notes** | Staff/admin-only text on the quote; stored in `og_order_quote_internal_notes` (RLS), never in customer-readable `custom_payload`. |
+| **Guest order claim** | `og_claim_my_guest_orders` attaches null-`customer_id` orders to the signed-in customer when emails match. |
+| **Admin payment override** | Admin may set any payment/fulfillment status via `og_admin_override_order_payment` (manual ledger row). |
 | **Towel order kit** | Towel custom orders skip the roster sheet; customer notes piece count; print method locked to sublimation. |
 | **Bath towel** | Default towel type `towel-bath` alongside face and hand towels. |

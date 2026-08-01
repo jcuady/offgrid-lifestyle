@@ -23,5 +23,6 @@ Local `supabase/migrations/` and remote `supabase_migrations.schema_migrations` 
 | `20260801140100` | consolidate portal_users RLS |
 | `20260801100000` | lock custom quote notes in order UPDATE trigger |
 | `20260801170000` | event capacity trigger + review product_id check |
+| `20260801180000` | guest claim RPC + internal notes table + admin payment override |
 
 Mark those with `migration repair --status applied` after confirming objects exist on the linked project.

@@ -31,8 +31,6 @@ export type CustomPayloadWrite = {
   officialTotal: Money | null;
   officialDeposit: Money | null;
   quoteCustomerNotes: string;
-  /** Staff-only; still stored for admin/ops — stripped on customer map. */
-  quoteInternalNotes: string;
   quotedAt: string | null;
   quotedBy: string | null;
   createdAt: string;
@@ -66,7 +64,6 @@ export function customPayloadFromManaged(order: ManagedCustomOrder): CustomPaylo
     officialTotal: order.officialTotal,
     officialDeposit: order.officialDeposit,
     quoteCustomerNotes: order.quoteCustomerNotes ?? "",
-    quoteInternalNotes: order.quoteInternalNotes ?? "",
     quotedAt: order.quotedAt,
     quotedBy: order.quotedBy,
     createdAt: order.createdAt,
@@ -97,7 +94,6 @@ export function applyQuoteToCustomPayload(
     officialTotal: hasOfficial ? update.officialTotal ?? null : null,
     officialDeposit: hasOfficial ? officialDeposit : null,
     quoteCustomerNotes: hasOfficial ? update.quoteCustomerNotes ?? "" : "",
-    quoteInternalNotes: hasOfficial ? update.quoteInternalNotes ?? "" : "",
     quotedAt: hasOfficial ? meta.quotedAt : null,
     quotedBy: hasOfficial ? meta.quotedBy : null,
     updatedAt: meta.updatedAt,

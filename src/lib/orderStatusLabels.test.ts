@@ -61,14 +61,14 @@ function sampleOrder(partial: Partial<ManagedCustomOrder> = {}): ManagedCustomOr
 }
 
 describe("customPayloadFromManaged", () => {
-  it("does not include portal-only channel fields", () => {
+  it("does not put internal notes in customer-readable payload", () => {
     const payload = customPayloadFromManaged(sampleOrder());
     expect(payload).not.toHaveProperty("customerName");
+    expect(payload).not.toHaveProperty("quoteInternalNotes");
     expect(payload.contactName).toBe("A");
-    expect(payload.quoteInternalNotes).toBe("secret staff note");
   });
 
-  it("applyQuoteToCustomPayload merge-patches quote keys only", () => {
+  it("applyQuoteToCustomPayload merge-patches quote keys only (no internal notes)", () => {
     const base = customPayloadFromManaged(sampleOrder());
     const next = applyQuoteToCustomPayload(
       base,
@@ -84,5 +84,6 @@ describe("customPayloadFromManaged", () => {
     expect(next.officialDeposit?.amount).toBe(3000);
     expect(next.cuts).toEqual(["short_sleeve"]);
     expect(next.quoteCustomerNotes).toBe("Hi");
+    expect(next).not.toHaveProperty("quoteInternalNotes");
   });
 });

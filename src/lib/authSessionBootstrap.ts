@@ -65,6 +65,9 @@ function runPostLoginSideEffects(user: PortalUser): void {
   void linkPushSubscriptionToUser();
   if (user.role === "customer") {
     void hydrateCheckoutShipping(user.id);
+    void import("@/src/services/orderService").then(({ supabaseOrderService }) =>
+      supabaseOrderService.claimMyGuestOrders(),
+    );
   }
 }
 

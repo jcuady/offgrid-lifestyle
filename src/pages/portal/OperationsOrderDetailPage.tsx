@@ -23,8 +23,10 @@ import {
   paymentStatusClass,
 } from "@/src/lib/portal";
 import {
+  ADMIN_ORDER_TRANSITIONS,
   ORDER_TRANSITIONS,
   PAYMENT_TRANSITIONS,
+  canOverridePaymentStatus,
   canTransitionStatus,
 } from "@/src/lib/operationsOrderFlow";
 import { Button } from "@/src/components/ui/Button";
@@ -276,9 +278,11 @@ function AdminQuoteEditor({
 export function OperationsOrderDetailPage() {
   const { orderId: rawOrderId } = useParams<{ orderId: string }>();
   const location = useLocation();
-  const isAdmin = location.pathname.startsWith("/portal/admin");
-  const basePath = isAdmin ? "/portal/admin" : "/portal/staff";
+  const role = usePortalStore((s) => s.currentUser?.role);
+  const isAdmin = role === "admin";
+  const basePath = location.pathname.startsWith("/portal/admin") ? "/portal/admin" : "/portal/staff";
   const transitionOpts = isAdmin ? { unrestricted: true } : undefined;
+  const statusOptions = isAdmin ? ADMIN_ORDER_TRANSITIONS : ORDER_TRANSITIONS;
 
   const { retail, custom, loading, found, orderId } = useOrderDetail(rawOrderId);
 
@@ -392,7 +396,7 @@ export function OperationsOrderDetailPage() {
                 }}
                 className="mt-1 block min-h-11 w-full min-w-0 rounded-xl border border-offgrid-green/20 px-3 py-2 text-sm sm:w-auto"
               >
-                {ORDER_TRANSITIONS.map((s) => (
+                {statusOptions.map((s) => (
                   <option key={s} value={s}>
                     {formatOrderStatus(s, "retail")}
                   </option>
@@ -401,12 +405,16 @@ export function OperationsOrderDetailPage() {
             </div>
             {isAdmin ? (
               <div className="min-w-0">
-                <label className="text-[10px] font-semibold uppercase tracking-[0.18em] text-offgrid-green/45">Payment status</label>
+                <label className="text-[10px] font-semibold uppercase tracking-[0.18em] text-offgrid-green/45">Payment status (admin override)</label>
                 <select
                   value={retail.paymentStatus}
                   onChange={(e) => {
                     void (async () => {
                       const next = e.target.value as (typeof retail)["paymentStatus"];
+                      if (!canOverridePaymentStatus(next, transitionOpts)) {
+                        setFeedback("Payment override requires admin.");
+                        return;
+                      }
                       try {
                         await persistOrderPaymentUpdate({
                           orderId: retail.id,
@@ -414,10 +422,11 @@ export function OperationsOrderDetailPage() {
                           next,
                           customerId: retail.customerId,
                           previousFulfillmentStatus: retail.status,
+                          adminOverride: true,
                           applyStore: (value) => updateRetailPaymentStatus(retail.id, value),
                           applyFulfillmentStore: (value) => updateRetailOrderStatus(retail.id, value),
                         });
-                        setFeedback(`Payment → ${formatPaymentStatus(next)}.`);
+                        setFeedback(`Payment → ${formatPaymentStatus(next)} (ledger override recorded).`);
                       } catch (err) {
                         setFeedback(err instanceof Error ? err.message : "Could not update payment status.");
                       }
@@ -438,7 +447,7 @@ export function OperationsOrderDetailPage() {
           </div>
           <p className="text-xs text-offgrid-green/55">
             {isAdmin
-              ? "Admin can set any fulfillment or payment status. Customers get push + inbox when status moves to confirmed, production, shipped, delivered, or paid."
+              ? "Admin can set any fulfillment or payment status. Override writes a manual ledger row. Customers get push + inbox when status moves to confirmed, production, shipped, delivered, or paid."
               : "Fulfillment follows the ops pipeline. Payment updates: admin only."}
           </p>
 
@@ -539,6 +548,7 @@ export function OperationsOrderDetailPage() {
                 next: nextStatus,
                 customerId: retail.customerId,
                 previousFulfillmentStatus: retail.status,
+                adminOverride: true,
                 applyStore: (value) => updateRetailPaymentStatus(retail.id, value),
                 applyFulfillmentStore: (value) => updateRetailOrderStatus(retail.id, value),
               });
@@ -651,7 +661,7 @@ export function OperationsOrderDetailPage() {
                 }}
                 className="mt-1 block rounded-xl border border-offgrid-green/20 px-3 py-2 text-sm"
               >
-                {ORDER_TRANSITIONS.map((s) => (
+                {statusOptions.map((s) => (
                   <option key={s} value={s}>
                     {formatOrderStatus(s, "custom", {
                       hasOfficialQuote: hasOfficialCustomQuote(custom.officialTotal),
@@ -670,6 +680,10 @@ export function OperationsOrderDetailPage() {
                   onChange={(e) => {
                     void (async () => {
                       const next = e.target.value as (typeof custom)["paymentStatus"];
+                      if (!canOverridePaymentStatus(next, transitionOpts)) {
+                        setFeedback("Payment override requires admin.");
+                        return;
+                      }
                       try {
                         await persistOrderPaymentUpdate({
                           orderId: custom.id,
@@ -677,10 +691,11 @@ export function OperationsOrderDetailPage() {
                           next,
                           customerId: custom.customerId,
                           previousFulfillmentStatus: custom.status,
+                          adminOverride: true,
                           applyStore: (value) => updateCustomPaymentStatus(custom.id, value),
                           applyFulfillmentStore: (value) => updateCustomOrderStatus(custom.id, value),
                         });
-                        setFeedback(`Payment → ${formatPaymentStatus(next)}.`);
+                        setFeedback(`Payment → ${formatPaymentStatus(next)} (ledger override recorded).`);
                       } catch (err) {
                         setFeedback(err instanceof Error ? err.message : "Could not update payment status.");
                       }
@@ -702,7 +717,7 @@ export function OperationsOrderDetailPage() {
           <p className="text-xs text-offgrid-green/55">
             Fulfillment and payment are tracked separately.
             {isAdmin
-              ? " Admin override: set any fulfillment or payment status without following the customer quote → deposit pipeline. Official quote is optional for ops corrections."
+              ? " Admin override: set any fulfillment or payment status (manual ledger row). Official quote is optional for ops corrections."
               : " Staff follow the fulfillment pipeline; payment and official quote are admin-managed."}
           </p>
 
@@ -767,6 +782,7 @@ export function OperationsOrderDetailPage() {
                 next: nextStatus,
                 customerId: custom.customerId,
                 previousFulfillmentStatus: custom.status,
+                adminOverride: true,
                 applyStore: (value) => updateCustomPaymentStatus(custom.id, value),
                 applyFulfillmentStore: (value) => updateCustomOrderStatus(custom.id, value),
               });

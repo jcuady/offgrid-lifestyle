@@ -334,7 +334,44 @@ export type Database = {
           total_centavos?: number | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "og_order_quote_internal_notes_order_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "og_order_quote_internal_notes"
+            referencedColumns: ["order_id"]
+          },
+        ]
+      }
+      og_order_quote_internal_notes: {
+        Row: {
+          order_id: string
+          notes: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          order_id: string
+          notes?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          order_id?: string
+          notes?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "og_order_quote_internal_notes_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "og_orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       og_payment_settings: {
         Row: {
@@ -863,6 +900,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      og_admin_override_order_payment: {
+        Args: {
+          p_order_id: string
+          p_payment_status: string
+          p_fulfillment_status?: string | null
+        }
+        Returns: undefined
+      }
+      og_claim_my_guest_orders: { Args: Record<string, never>; Returns: number }
       og_delete_catalog_term: {
         Args: { p_kind: string; p_label: string }
         Returns: undefined

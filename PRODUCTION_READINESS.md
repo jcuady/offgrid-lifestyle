@@ -71,8 +71,8 @@ Last audited: 2026-07-24 · Commit hardening wave: launch P0 security + UX shell
 
 | # | Item | Notes |
 |---|------|-------|
-| L1 | Guest payment access → signed short-lived token | Reduces email+orderId guessing |
-| L2 | Drop or token-bind anon UPDATE of guest custom orders | |
+| L1 | Guest payment access → signed short-lived token | Partially closed: `og_claim_my_guest_orders` on login/list; Edge email claim remains for 24h guests |
+| L2 | Drop or token-bind anon UPDATE of guest custom orders | Money still trigger-locked; claim attaches ownership after sign-in |
 | L3 | Product URLs in sitemap | Dynamic |
 | L4 | Feature flags | Env gates today |
 | L5 | Immutable audit writer (SECURITY DEFINER only) | |

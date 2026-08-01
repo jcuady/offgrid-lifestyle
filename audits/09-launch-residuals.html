@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>OFFGRID — Audit 09 launch residuals closed</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-stone-50 text-slate-900">
+<main class="mx-auto max-w-5xl space-y-8 px-6 py-12">
+  <header>
+    <p class="font-mono text-xs uppercase tracking-[0.2em] text-slate-500">Audit 09 · 2026-08-01</p>
+    <h1 class="mt-2 text-3xl font-bold">Launch residuals — claim, notes SELECT, admin override</h1>
+  </header>
+  <section class="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-sm">
+    <p class="font-semibold">Fixed this pass</p>
+    <ul class="mt-2 list-disc pl-5 space-y-1">
+      <li><code>og_claim_my_guest_orders</code> — email-matched guest → <code>customer_id</code></li>
+      <li><code>og_order_quote_internal_notes</code> staff-only table; stripped from <code>custom_payload</code> (0 rows left with key)</li>
+      <li><code>og_admin_override_order_payment</code> — any payment status + manual ledger row</li>
+      <li>Admin override UI uses portal <code>role === "admin"</code> (not URL path); draft in status select</li>
+    </ul>
+  </section>
+  <section class="text-sm space-y-2">
+    <p class="font-semibold">Still ops (not code)</p>
+    <ul class="list-disc pl-5">
+      <li>Upload real GCash QR</li>
+      <li>Promote live PayMongo keys (still <code>pk_test_*</code>)</li>
+      <li>Browser E2E smoke (S10)</li>
+    </ul>
+  </section>
+  <section class="text-sm">
+    <p class="font-semibold">Verify</p>
+    <p>vitest 61/282 exit 0 · tsc exit 0 · migration <code>20260801180000</code> applied</p>
+  </section>
+</main>
+</body>
+</html>

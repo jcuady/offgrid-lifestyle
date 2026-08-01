@@ -9,6 +9,9 @@ export const ORDER_TRANSITIONS: OrderStatus[] = [
   "cancelled",
 ];
 
+/** Admin override select — every durable fulfillment status, including draft. */
+export const ADMIN_ORDER_TRANSITIONS: OrderStatus[] = ["draft", ...ORDER_TRANSITIONS];
+
 export const PAYMENT_TRANSITIONS: PaymentStatus[] = ["unpaid", "deposit_paid", "fully_paid", "refunded"];
 
 export const STATUS_FLOW: Record<OrderStatus, OrderStatus[]> = {
@@ -21,7 +24,7 @@ export const STATUS_FLOW: Record<OrderStatus, OrderStatus[]> = {
   cancelled: [],
 };
 
-/** Staff follow the pipeline; admin may set any listed status (ops correction). */
+/** Staff follow the pipeline; admin may set any durable status (ops correction). */
 export function canTransitionStatus(
   current: OrderStatus,
   next: OrderStatus,
@@ -29,7 +32,16 @@ export function canTransitionStatus(
 ): boolean {
   if (current === next) return true;
   if (opts?.unrestricted) {
-    return ORDER_TRANSITIONS.includes(next) || next === "draft";
+    return ADMIN_ORDER_TRANSITIONS.includes(next);
   }
   return STATUS_FLOW[current]?.includes(next) ?? false;
+}
+
+/** Admin may set any payment status; staff have no payment override UI. */
+export function canOverridePaymentStatus(
+  next: PaymentStatus,
+  opts?: { unrestricted?: boolean },
+): boolean {
+  if (!opts?.unrestricted) return false;
+  return PAYMENT_TRANSITIONS.includes(next);
 }

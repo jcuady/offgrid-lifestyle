@@ -1,5 +1,5 @@
 import { normalizeOrderId } from "@/src/lib/orderId";
-import { canTransitionStatus } from "@/src/lib/operationsOrderFlow";
+import { canOverridePaymentStatus, canTransitionStatus } from "@/src/lib/operationsOrderFlow";
 
 function assert(cond: boolean, msg: string) {
   if (!cond) throw new Error(msg);
@@ -14,6 +14,9 @@ assert(normalizeOrderId("") === "", "empty");
 assert(!canTransitionStatus("delivered", "shipped"), "staff flow blocks delivered→shipped");
 assert(canTransitionStatus("delivered", "shipped", { unrestricted: true }), "admin may set any");
 assert(canTransitionStatus("confirmed", "shipped", { unrestricted: true }), "admin skip steps");
+assert(canTransitionStatus("delivered", "draft", { unrestricted: true }), "admin may set draft");
 assert(canTransitionStatus("pending_deposit", "confirmed"), "normal forward still ok");
+assert(canOverridePaymentStatus("refunded", { unrestricted: true }), "admin may refund");
+assert(!canOverridePaymentStatus("fully_paid"), "staff cannot override payment");
 
 console.log("orderId + canTransitionStatus selfcheck ok");

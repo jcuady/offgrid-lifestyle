@@ -33,7 +33,7 @@ export async function persistOrderStatusUpdate(params: {
 
 /**
  * Persist payment status, mirror DB advance-on-payment in the store, then notify.
- * Store updates only after durable write.
+ * Admin path uses override RPC (order + manual ledger). Store updates only after durable write.
  */
 export async function persistOrderPaymentUpdate(params: {
   orderId: string;
@@ -41,6 +41,8 @@ export async function persistOrderPaymentUpdate(params: {
   next: PaymentStatus;
   customerId?: string | null;
   previousFulfillmentStatus?: OrderStatus;
+  /** When true, write via og_admin_override_order_payment (ledger + any status). */
+  adminOverride?: boolean;
   applyStore: (status: PaymentStatus) => void;
   applyFulfillmentStore?: (status: OrderStatus) => void;
 }): Promise<void> {
@@ -53,7 +55,15 @@ export async function persistOrderPaymentUpdate(params: {
         )
       : null;
 
-  await supabaseOrderService.updateOrderField(params.orderId, { payment_status: params.next });
+  if (params.adminOverride) {
+    await supabaseOrderService.adminOverrideOrderPayment({
+      orderId: params.orderId,
+      paymentStatus: params.next,
+      fulfillmentStatus: advanced ?? undefined,
+    });
+  } else {
+    await supabaseOrderService.updateOrderField(params.orderId, { payment_status: params.next });
+  }
 
   params.applyStore(params.next);
   if (advanced && params.applyFulfillmentStore) {

@@ -45,12 +45,11 @@ sequenceDiagram
     </section>
 
     <section class="rounded-2xl border border-emerald-200 bg-emerald-50 p-6 text-sm">
-      <h2 class="font-semibold text-emerald-950">Advisors (post wave-4 hygiene)</h2>
+      <h2 class="font-semibold text-emerald-950">Advisors (post wave-5)</h2>
       <p class="mt-2 text-emerald-950/90">
-        Cleared: anon DEFINER EXECUTE, public storage listing, CMS multiple-permissive SELECT from FOR ALL admin writes,
-        <code>og_orders_customer_update_own</code> initplan. Remaining WARNs are intentional
-        (authenticated DEFINER RPCs, dual-role policies on orders/portal_users) or dashboard
-        (leaked-password protection). See <code>docs/MIGRATION_DRIFT.md</code>.
+        <strong>multiple_permissive_policies: 0</strong> on linked project after consolidating orders/payments/reviews/notifications/push/portal_users.
+        Remaining WARNs: intentional authenticated DEFINER RPCs (5) + Auth leaked-password dashboard toggle (1).
+        See <code>docs/MIGRATION_DRIFT.md</code>.
       </p>
     </section>
 

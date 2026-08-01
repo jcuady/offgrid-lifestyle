@@ -19,5 +19,7 @@ Local `supabase/migrations/` and remote `supabase_migrations.schema_migrations` 
 | `20260801065719` | event registrations |
 | `20260801070932` | plan board |
 | `20260801134500` | advisor security hygiene |
+| `20260801140000` | consolidate remaining RLS |
+| `20260801140100` | consolidate portal_users RLS |
 
 Mark those with `migration repair --status applied` after confirming objects exist on the linked project.

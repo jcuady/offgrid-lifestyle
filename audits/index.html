@@ -32,7 +32,8 @@
         <li><strong>Done:</strong> Plan board routed for admin/staff against <code>og_plan_cards</code></li>
         <li><strong>Done:</strong> Order intake — session cache only; Supabase is SSoT (no localStorage order queue)</li>
         <li><strong>Done:</strong> Advisor hygiene — revoked anon DEFINER EXECUTE, dropped public storage listing, split CMS FOR ALL writes, repaired recent migration stamps</li>
-        <li><strong>Ops only:</strong> Upload real GCash QR in Admin → Payments; enable PayMongo/COD when ready; optionally enable Auth leaked-password protection in dashboard</li>
+        <li><strong>Done:</strong> Consolidated remaining multi-permissive RLS on orders/payments/reviews/notifications/push/portal_users</li>
+        <li><strong>Ops only:</strong> Upload real GCash QR; live PayMongo key when leaving test; enable COD only if ops can fulfill; optional Auth leaked-password toggle</li>
       </ul>
     </section>
 
@@ -106,14 +107,16 @@ flowchart TB
       </ul>
     </section>
 
-    <section class="rounded-2xl border border-red-200 bg-red-50 p-6">
-      <h2 class="text-lg font-semibold text-red-900">Must-fix before calling launch “complete”</h2>
-      <ol class="mt-3 list-decimal space-y-2 pl-5 text-red-950/90">
-        <li><strong>Events Register</strong> — <code>EventsPage.handleRegister</code> only sets local success; no DB/edge write.</li>
-        <li><strong>GCash QR</strong> — default <code>placehold.co</code> until Admin → Payments upload.</li>
-        <li><strong>PayMongo / COD</strong> — disabled by default; enable + keys before promising those methods.</li>
-        <li><strong>Analytics</strong> — <code>/portal/*/analytics</code> redirects; <code>OperationsAnalyticsPage</code> orphaned.</li>
-        <li><strong>Plan board</strong> — <code>og_plan_cards</code> exists in DB; UI/service untracked / not routed.</li>
+    <section class="rounded-2xl border border-emerald-200 bg-emerald-50 p-6">
+      <h2 class="text-lg font-semibold text-emerald-950">Launch status</h2>
+      <p class="mt-2 text-emerald-950/90">
+        Audited engineering blockers are closed (events, analytics, plan board, payment gates, order SSoT, advisor hygiene).
+      </p>
+      <ol class="mt-3 list-decimal space-y-2 pl-5 text-emerald-950/90">
+        <li><strong>Ops — GCash QR:</strong> <code>og_payment_settings.gcash_qr_image_url</code> is empty. Upload in Admin → Payments before promising GCash checkout.</li>
+        <li><strong>Ops — PayMongo:</strong> already <code>paymongo_enabled=true</code> with test public key (<code>pk_test_…</code>). Switch to live key + edge secrets for production.</li>
+        <li><strong>Ops — COD:</strong> still disabled (intentional until ops can fulfill).</li>
+        <li><strong>Optional:</strong> enable Auth leaked-password protection in Supabase dashboard.</li>
       </ol>
     </section>
   </main>

@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Audit · Customer flows</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, theme: "neutral", securityLevel: "loose" });
+  </script>
+</head>
+<body class="bg-stone-50 text-slate-900">
+  <main class="mx-auto max-w-5xl space-y-10 px-6 py-12">
+    <p><a class="text-sm text-emerald-700 underline" href="./index.html">← Audit index</a></p>
+    <header>
+      <p class="font-mono text-xs uppercase tracking-[0.2em] text-slate-500">Persona · Customer</p>
+      <h1 class="mt-2 text-3xl font-bold">Pages, buttons, validation</h1>
+    </header>
+
+    <section class="rounded-2xl border border-slate-200 bg-white p-6">
+      <h2 class="font-semibold">Happy path</h2>
+      <pre class="mermaid mt-4">
+sequenceDiagram
+  participant U as Customer
+  participant S as Shop/Cart
+  participant C as Checkout
+  participant DB as og_orders
+  participant A as Account
+  U->>S: Add to cart
+  U->>C: Shipping + payment
+  C->>DB: insert retail (DEFINER validate)
+  alt PayMongo enabled
+    C->>U: Hosted QR Ph
+  else GCash
+    U->>A: Upload proof
+  end
+  U->>A: Track / review
+      </pre>
+    </section>
+
+    <section class="space-y-4">
+      <h2 class="text-xl font-semibold">Page matrix</h2>
+      <div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+        <table class="min-w-full text-left text-sm">
+          <thead class="bg-slate-100 font-mono text-xs uppercase tracking-wider text-slate-600">
+            <tr><th class="p-3">Page</th><th class="p-3">Primary buttons</th><th class="p-3">Validation</th><th class="p-3">Status</th></tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            <tr><td class="p-3 font-medium">Home / Shop / PDP</td><td class="p-3">Add to cart, Quick view, Size guide</td><td class="p-3">Size required; stock/purchasable gate</td><td class="p-3 text-emerald-700">Functional</td></tr>
+            <tr><td class="p-3 font-medium">Checkout modal</td><td class="p-3">Continue, Place order, Pay methods</td><td class="p-3"><code>validateShippingInfoFields</code>, payment method</td><td class="p-3 text-amber-700">PayMongo/COD off by default</td></tr>
+            <tr><td class="p-3 font-medium">Custom order wizard</td><td class="p-3">Steps 1–3, upload design/sheet</td><td class="p-3"><code>validateCustomOrderDraft</code>, <code>fileValidation</code>, multi-cut/fabric</td><td class="p-3 text-emerald-700">Functional (recent)</td></tr>
+            <tr><td class="p-3 font-medium">Sign up / Sign in</td><td class="p-3">Create account, Sign in</td><td class="p-3"><code>formValidation</code> email/phone/password/terms</td><td class="p-3 text-emerald-700">Functional</td></tr>
+            <tr><td class="p-3 font-medium">Forgot / Reset password</td><td class="p-3">Send link, Update password</td><td class="p-3">password strength + recovery session</td><td class="p-3 text-emerald-700">Hardened (recent bugs fixed)</td></tr>
+            <tr><td class="p-3 font-medium">Account orders</td><td class="p-3">View order, Shop, Custom</td><td class="p-3">—</td><td class="p-3 text-emerald-700">Functional</td></tr>
+            <tr><td class="p-3 font-medium">Order detail</td><td class="p-3">PayMongo, GCash QR, Upload proof, Review</td><td class="p-3">proof <code>fileValidation</code>; quote-gated amounts</td><td class="p-3 text-amber-700">Needs real GCash QR asset</td></tr>
+            <tr><td class="p-3 font-medium">Profile</td><td class="p-3">Save shipping, change email/password, push</td><td class="p-3">shipping + <code>accountCredentials</code></td><td class="p-3 text-emerald-700">Functional</td></tr>
+            <tr><td class="p-3 font-medium">Contact</td><td class="p-3">Send message</td><td class="p-3">name/email/message → edge</td><td class="p-3 text-emerald-700">Functional</td></tr>
+            <tr><td class="p-3 font-medium">Community events</td><td class="p-3"><strong>Register</strong></td><td class="p-3">Local form only</td><td class="p-3 text-red-700">Non-functional (no persist)</td></tr>
+            <tr><td class="p-3 font-medium">FAQ / About / Legal / Testimonials</td><td class="p-3">Nav / CMS CTAs</td><td class="p-3">—</td><td class="p-3 text-emerald-700">Content OK</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="rounded-2xl border border-red-200 bg-red-50 p-6">
+      <h2 class="font-semibold text-red-900">Bugs similar to past incidents</h2>
+      <ul class="mt-3 list-disc space-y-2 pl-5 text-sm text-red-950/90">
+        <li><strong>RLS + INVOKER stock lock</strong> — fixed via SECURITY DEFINER retail validate (ce73d58 / 2026080112*). Watch for any new FOR UPDATE under RLS.</li>
+        <li><strong>Auth recovery wipe</strong> — fixed; retest password reset on mobile PWA after deploy.</li>
+        <li><strong>Fake success UX</strong> — Events Register repeats the “looks done, wrote nothing” class of bug.</li>
+        <li><strong>Payment method flags</strong> — customer sees “Coming soon” unless admin enables; easy to misread as broken checkout.</li>
+      </ul>
+    </section>
+
+    <section class="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-700">
+      <h2 class="font-semibold text-slate-900">Input / error validation coverage</h2>
+      <p class="mt-2">Covered: shipping (PSGC), retail cart qty, custom draft (cuts/materials/print/qty/sheet), files (design/sheet/proof/product image), auth credentials, contact.</p>
+      <p class="mt-2">Gaps: Events register has no server validation; checkout shows disabled methods as “Coming soon” rather than hiding; no client retry UX for transient edge 5xx beyond PayMongo return page.</p>
+    </section>
+  </main>
+</body>
+</html>

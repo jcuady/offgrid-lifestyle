@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Audit · Admin flows</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, theme: "neutral", securityLevel: "loose" });
+  </script>
+</head>
+<body class="bg-stone-50 text-slate-900">
+  <main class="mx-auto max-w-5xl space-y-10 px-6 py-12">
+    <p><a class="text-sm text-emerald-700 underline" href="./index.html">← Audit index</a></p>
+    <header>
+      <p class="font-mono text-xs uppercase tracking-[0.2em] text-slate-500">Persona · Admin</p>
+      <h1 class="mt-2 text-3xl font-bold">Portal pages, buttons, CRUD</h1>
+      <p class="mt-2 text-slate-600">Guard: <code>RequirePortalRole roles=["admin"]</code> · Landing <code>/portal/admin</code></p>
+    </header>
+
+    <section class="rounded-2xl border border-slate-200 bg-white p-6">
+      <pre class="mermaid">
+flowchart LR
+  Login["/portal/login"] --> Dash[Dashboard]
+  Dash --> Orders
+  Dash --> Products
+  Dash --> Payments
+  Dash --> CMS[Homepage / Pages / Templates]
+  Dash --> Staff
+  Dash --> Reviews
+  Dash --> Events
+  Dash --> Settings
+  Products --> Terms[og_catalog_terms CRUD]
+  Payments --> Flags[PayMongo / COD / GCash QR]
+  Analytics["/analytics"] -->|redirect| Dash
+      </pre>
+    </section>
+
+    <section class="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+      <table class="min-w-full text-left text-sm">
+        <thead class="bg-slate-100 font-mono text-xs uppercase tracking-wider text-slate-600">
+          <tr><th class="p-3">Page</th><th class="p-3">Buttons / actions</th><th class="p-3">Validation</th><th class="p-3">Status</th></tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          <tr><td class="p-3 font-medium">Dashboard</td><td class="p-3">Range filters, deep links to orders</td><td class="p-3">—</td><td class="p-3 text-emerald-700">Functional</td></tr>
+          <tr><td class="p-3 font-medium">Orders + detail</td><td class="p-3">Status/payment, confirm pay, official quote/deposit</td><td class="p-3">Quote alerts; DB locks quote fields</td><td class="p-3 text-emerald-700">Functional</td></tr>
+          <tr><td class="p-3 font-medium">Products</td><td class="p-3">Add/Edit/Delete, size multi, image upload, tag/sport CRUD, filters</td><td class="p-3"><code>validateProductDraft</code>, JPG/PNG upload</td><td class="p-3 text-emerald-700">Functional (6740162)</td></tr>
+          <tr><td class="p-3 font-medium">Payments</td><td class="p-3">Upload QR, toggle methods, save public key</td><td class="p-3">Admin-only RLS write</td><td class="p-3 text-amber-700">Must configure before go-live payments</td></tr>
+          <tr><td class="p-3 font-medium">Events</td><td class="p-3">CRUD CMS events</td><td class="p-3">Local CMS fields</td><td class="p-3 text-amber-700">Admin OK; public register broken</td></tr>
+          <tr><td class="p-3 font-medium">Staff</td><td class="p-3">Create/edit/reset/deactivate</td><td class="p-3">Edge <code>create-staff</code> / <code>manage-user</code></td><td class="p-3 text-emerald-700">Functional</td></tr>
+          <tr><td class="p-3 font-medium">Homepage / Custom pages / Templates / Testimonials</td><td class="p-3">CMS save/reset/delete/upload</td><td class="p-3">CMS image upload rules</td><td class="p-3 text-emerald-700">Functional</td></tr>
+          <tr><td class="p-3 font-medium">Reviews</td><td class="p-3">Moderate / delete</td><td class="p-3">Confirm dialogs</td><td class="p-3 text-emerald-700">Functional</td></tr>
+          <tr><td class="p-3 font-medium">Audit logs</td><td class="p-3">Search</td><td class="p-3">—</td><td class="p-3 text-emerald-700">Functional</td></tr>
+          <tr><td class="p-3 font-medium">Settings</td><td class="p-3">Credentials + readiness checklist</td><td class="p-3"><code>accountCredentials</code></td><td class="p-3 text-amber-700">Checklist still labels Coming soon items</td></tr>
+          <tr><td class="p-3 font-medium">Analytics</td><td class="p-3">—</td><td class="p-3">—</td><td class="p-3 text-red-700">Dead route (redirect)</td></tr>
+          <tr><td class="p-3 font-medium">Custom-content</td><td class="p-3">—</td><td class="p-3">—</td><td class="p-3 text-slate-500">Legacy redirect → templates</td></tr>
+          <tr><td class="p-3 font-medium">Plan board</td><td class="p-3">DB table exists</td><td class="p-3">RLS admin/staff</td><td class="p-3 text-red-700">No routed UI (WIP files)</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="rounded-2xl border border-slate-200 bg-white p-6 text-sm">
+      <h2 class="font-semibold">Admin launch checklist (ops)</h2>
+      <ol class="mt-3 list-decimal space-y-1 pl-5 text-slate-700">
+        <li>Upload real GCash QR in Payments</li>
+        <li>Enable PayMongo only with live/test public key + edge secrets</li>
+        <li>Enable COD only if ops can fulfill</li>
+        <li>Seed active products with images/stock</li>
+        <li>Disable or wire Events registration before marketing events hard</li>
+      </ol>
+    </section>
+  </main>
+</body>
+</html>

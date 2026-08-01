@@ -5,6 +5,7 @@ import {
   ClipboardList,
   LogOut,
   Package,
+  BarChart3,
   CalendarDays,
   Palette,
   Home,
@@ -52,6 +53,7 @@ const navByRole: Record<Exclude<UserRole, "customer">, NavSection[]> = {
       label: "Overview",
       items: [
         { name: "Dashboard", to: "/portal/admin", icon: LayoutDashboard },
+        { name: "Analytics", to: "/portal/admin/analytics", icon: BarChart3 },
       ],
     },
     {
@@ -87,6 +89,7 @@ const navByRole: Record<Exclude<UserRole, "customer">, NavSection[]> = {
       label: "Overview",
       items: [
         { name: "Dashboard", to: "/portal/staff", icon: LayoutDashboard },
+        { name: "Analytics", to: "/portal/staff/analytics", icon: BarChart3 },
       ],
     },
     {

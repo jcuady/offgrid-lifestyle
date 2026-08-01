@@ -14,6 +14,10 @@ import { cn } from "@/src/lib/utils";
 import type { SiteEvent } from "@/src/data/events";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { hydrateSiteContentFromSupabase } from "@/src/services";
+import {
+  submitEventRegistration,
+  type EventSkillLevel,
+} from "@/src/services/eventRegistrationService";
 
 export function EventsPage() {
   const navigate = useNavigate();
@@ -28,27 +32,47 @@ export function EventsPage() {
   const [selectedEvent, setSelectedEvent] = useState<SiteEvent | null>(null);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [registrationComplete, setRegistrationComplete] = useState(false);
+  const [registerBusy, setRegisterBusy] = useState(false);
+  const [registerError, setRegisterError] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "upcoming" | "past">("all");
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone: "",
-    skillLevel: "beginner"
+    skillLevel: "beginner" as EventSkillLevel,
   });
 
   const upcomingEvents = events.filter(e => e.status === "upcoming");
   const pastEvents = events.filter(e => e.status === "past");
   const featuredEvent = events.find(e => e.featured);
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    setRegistrationComplete(true);
-    setTimeout(() => {
-      setIsRegisterOpen(false);
-      setSelectedEvent(null);
-      setRegistrationComplete(false);
-      setFormData({ name: "", email: "", phone: "", skillLevel: "beginner" });
-    }, 3000);
+    if (!selectedEvent) return;
+    setRegisterError(null);
+    setRegisterBusy(true);
+    try {
+      await submitEventRegistration({
+        eventId: selectedEvent.id,
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        skillLevel: formData.skillLevel,
+      });
+      setRegistrationComplete(true);
+      // Refresh CMS so denormalized registered count updates on cards.
+      void hydrateSiteContentFromSupabase();
+      setTimeout(() => {
+        setIsRegisterOpen(false);
+        setSelectedEvent(null);
+        setRegistrationComplete(false);
+        setFormData({ name: "", email: "", phone: "", skillLevel: "beginner" });
+      }, 2500);
+    } catch (err) {
+      setRegisterError(err instanceof Error ? err.message : "Registration failed.");
+    } finally {
+      setRegisterBusy(false);
+    }
   };
 
   const getCategoryIcon = (category: SiteEvent["category"]) => {
@@ -543,7 +567,7 @@ export function EventsPage() {
                     {selectedEvent.title} — {selectedEvent.date}
                   </p>
 
-                  <form onSubmit={handleRegister} className="space-y-4">
+                  <form onSubmit={(e) => void handleRegister(e)} className="space-y-4">
                     <div>
                       <label className="block text-xs font-semibold tracking-[0.15em] uppercase text-offgrid-green mb-2">
                         Full Name *
@@ -592,7 +616,9 @@ export function EventsPage() {
                       </label>
                       <select
                         value={formData.skillLevel}
-                        onChange={(e) => setFormData({ ...formData, skillLevel: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, skillLevel: e.target.value as EventSkillLevel })
+                        }
                         className="w-full px-4 py-3 rounded-xl border border-offgrid-green/20 focus:border-offgrid-green focus:ring-2 focus:ring-offgrid-green/20 outline-none transition-all text-sm text-offgrid-green bg-white cursor-pointer"
                       >
                         <option value="beginner">Beginner</option>
@@ -601,8 +627,14 @@ export function EventsPage() {
                       </select>
                     </div>
 
-                    <Button variant="default" size="lg" type="submit" className="w-full mt-6">
-                      Complete Registration
+                    {registerError ? (
+                      <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700" role="alert">
+                        {registerError}
+                      </p>
+                    ) : null}
+
+                    <Button variant="default" size="lg" type="submit" className="w-full mt-6" disabled={registerBusy}>
+                      {registerBusy ? "Submitting…" : "Complete Registration"}
                       <Check className="ml-2 w-5 h-5" />
                     </Button>
                   </form>
@@ -625,7 +657,7 @@ export function EventsPage() {
                     You're In!
                   </h3>
                   <p className="text-sm text-offgrid-green/60">
-                    Check your email for confirmation and event details.
+                    You&apos;re on the list for this event. See you there!
                   </p>
                 </motion.div>
               )}

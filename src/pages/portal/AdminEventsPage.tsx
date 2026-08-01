@@ -1,8 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { CalendarDays, MapPin, Plus, Pencil, Trash2, Search, Star } from "lucide-react";
+import { CalendarDays, MapPin, Plus, Pencil, Trash2, Search, Star, Users } from "lucide-react";
 import type { SiteEvent } from "@/src/data/events";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { hydrateSiteContentFromSupabase, localContentService } from "@/src/services";
+import {
+  listEventRegistrations,
+  type EventRegistration,
+} from "@/src/services/eventRegistrationService";
 import { cn } from "@/src/lib/utils";
 import { PortalPageHeader } from "@/src/components/portal/PortalPageHeader";
 import { PortalDrawer } from "@/src/components/portal/PortalDrawer";
@@ -39,6 +43,24 @@ export function AdminEventsPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [regsFor, setRegsFor] = useState<SiteEvent | null>(null);
+  const [regs, setRegs] = useState<EventRegistration[]>([]);
+  const [regsBusy, setRegsBusy] = useState(false);
+  const [regsError, setRegsError] = useState<string | null>(null);
+
+  const openRegistrations = async (event: SiteEvent) => {
+    setRegsFor(event);
+    setRegs([]);
+    setRegsError(null);
+    setRegsBusy(true);
+    try {
+      setRegs(await listEventRegistrations(event.id));
+    } catch (err) {
+      setRegsError(err instanceof Error ? err.message : "Could not load registrations.");
+    } finally {
+      setRegsBusy(false);
+    }
+  };
 
   const sorted = useMemo(() => [...events].sort((a, b) => a.title.localeCompare(b.title)), [events]);
   const filtered = sorted.filter((event) =>
@@ -208,6 +230,14 @@ export function AdminEventsPage() {
                 </p>
                 <div className="mt-4 flex gap-2 border-t border-offgrid-green/10 pt-3">
                   <button
+                    type="button"
+                    onClick={() => void openRegistrations(event)}
+                    className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-offgrid-green/20 px-3 py-2 text-xs font-semibold uppercase tracking-[0.1em] text-offgrid-green transition-colors hover:bg-offgrid-green/5"
+                  >
+                    <Users className="h-3.5 w-3.5" />
+                    Signups
+                  </button>
+                  <button
                     onClick={() => openEdit(event)}
                     className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-offgrid-green/20 px-3 py-2 text-xs font-semibold uppercase tracking-[0.1em] text-offgrid-green transition-colors hover:bg-offgrid-green/5"
                   >
@@ -227,6 +257,33 @@ export function AdminEventsPage() {
           ))}
         </div>
       )}
+
+      <PortalDrawer
+        open={Boolean(regsFor)}
+        onClose={() => setRegsFor(null)}
+        title={regsFor ? `Signups · ${regsFor.title}` : "Signups"}
+        description="Public registrations for this event."
+      >
+        {regsBusy ? (
+          <p className="text-sm text-offgrid-green/60">Loading…</p>
+        ) : regsError ? (
+          <p className="text-sm text-red-600" role="alert">{regsError}</p>
+        ) : regs.length === 0 ? (
+          <p className="text-sm text-offgrid-green/60">No registrations yet.</p>
+        ) : (
+          <ul className="space-y-3">
+            {regs.map((reg) => (
+              <li key={reg.id} className="rounded-xl border border-offgrid-green/10 bg-white p-3 text-sm">
+                <p className="font-semibold text-offgrid-green">{reg.name}</p>
+                <p className="text-offgrid-green/70">{reg.email}</p>
+                <p className="text-offgrid-green/55">
+                  {reg.phone} · {reg.skillLevel} · {new Date(reg.createdAt).toLocaleString()}
+                </p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </PortalDrawer>
 
       <PortalDrawer
         open={drawerOpen}

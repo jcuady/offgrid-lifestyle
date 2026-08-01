@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Architecture review — offgrid-lifestyle</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, theme: "neutral", securityLevel: "loose" });
+  </script>
+  <style>
+    .seam { stroke-dasharray: 4 4; }
+  </style>
+</head>
+<body class="bg-stone-50 text-slate-900 font-sans">
+  <main class="max-w-5xl mx-auto px-6 py-12 space-y-12">
+    <p><a class="text-sm text-emerald-700 underline" href="./index.html">← Audit index</a></p>
+    <header class="space-y-2">
+      <p class="font-mono text-xs uppercase tracking-[0.2em] text-slate-500">Architecture deepening · hotspots from recent commits</p>
+      <h1 class="text-3xl font-bold tracking-tight">Improve codebase architecture</h1>
+      <p class="text-sm text-slate-600">Vocabulary: module · interface · depth · seam · adapter · locality · leverage. Domain terms from CONTEXT.md (Portal user, Order payment integrity, Auth session bootstrap).</p>
+      <div class="flex flex-wrap gap-2 text-xs">
+        <span class="rounded-full bg-slate-900 px-2 py-1 text-white">module</span>
+        <span class="rounded-full border border-dashed border-slate-400 px-2 py-1">seam</span>
+        <span class="rounded-full bg-red-100 px-2 py-1 text-red-800">leak</span>
+        <span class="rounded-full bg-emerald-100 px-2 py-1 text-emerald-800">Strong</span>
+        <span class="rounded-full bg-amber-100 px-2 py-1 text-amber-900">Worth exploring</span>
+      </div>
+    </header>
+
+    <section id="candidates" class="space-y-10">
+      <article class="rounded-2xl border border-slate-200 bg-white p-6 space-y-4">
+        <div class="flex flex-wrap items-center gap-2">
+          <h2 class="text-xl font-semibold">1. Collapse Order intake into one deep module</h2>
+          <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-800">Strong</span>
+          <span class="rounded-full bg-slate-100 px-2 py-0.5 text-xs">in-process</span>
+        </div>
+        <p class="font-mono text-xs text-slate-500">src/store/store.ts · src/services/orderService.ts · src/store/usePortalStore.ts · edge paymongo-*</p>
+        <div class="grid gap-4 md:grid-cols-2">
+          <div class="rounded-lg border border-slate-200 p-3">
+            <p class="mb-2 text-xs font-semibold uppercase text-slate-500">Before</p>
+            <pre class="mermaid">
+flowchart LR
+  Cart --> ZustandStore
+  ZustandStore --> OrderService
+  OrderService --> PortalStore
+  PortalStore -.leak.-> LocalMirror
+  OrderService --> Edge
+            </pre>
+          </div>
+          <div class="rounded-lg border border-slate-900 bg-slate-900 p-3 text-slate-100">
+            <p class="mb-2 text-xs font-semibold uppercase text-slate-300">After</p>
+            <pre class="mermaid">
+flowchart LR
+  Cart --> OrderIntake
+  OrderIntake --> DB[(Supabase)]
+  OrderIntake --> Edge
+            </pre>
+          </div>
+        </div>
+        <p><strong>Problem:</strong> Order payment integrity logic is split across client stores; bugs hide in sync, not validators.</p>
+        <p><strong>Solution:</strong> One Order intake module interface: <code>placeRetail</code> / <code>placeCustom</code> / <code>refreshMine</code>; portal store becomes a thin view adapter.</p>
+        <ul class="list-disc pl-5 text-sm space-y-1">
+          <li>Tests hit one interface</li>
+          <li>Locality for money bugs</li>
+          <li>Delete shallow mirror paths</li>
+        </ul>
+      </article>
+
+      <article class="rounded-2xl border border-slate-200 bg-white p-6 space-y-4">
+        <div class="flex flex-wrap items-center gap-2">
+          <h2 class="text-xl font-semibold">2. Server-side Catalog query seam</h2>
+          <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-800">Strong</span>
+          <span class="rounded-full bg-slate-100 px-2 py-0.5 text-xs">ports &amp; adapters</span>
+        </div>
+        <p class="font-mono text-xs text-slate-500">src/pages/portal/AdminProductsPage.tsx · src/lib/adminProductFilters.ts · catalogService</p>
+        <div class="grid gap-4 md:grid-cols-2">
+          <div class="rounded-lg border border-slate-200 p-3 text-sm">
+            <p class="text-xs font-semibold uppercase text-slate-500">Before</p>
+            <p class="mt-2">Download all products → filter in browser. Filter helpers are deep; call site is shallow for scale.</p>
+          </div>
+          <div class="rounded-lg border border-slate-900 bg-slate-900 p-3 text-sm text-slate-100">
+            <p class="text-xs font-semibold uppercase text-slate-300">After</p>
+            <p class="mt-2">Catalog query interface: <code>search({q,status,sport,tag,stock,page})</code> using GIN + indexes. Keep pure filter helpers as offline fallback only.</p>
+          </div>
+        </div>
+        <p><strong>Wins:</strong> Leverage GIN indexes · pagination locality · admin UI stays thin</p>
+      </article>
+
+      <article class="rounded-2xl border border-slate-200 bg-white p-6 space-y-4">
+        <div class="flex flex-wrap items-center gap-2">
+          <h2 class="text-xl font-semibold">3. Events registration as real intake module</h2>
+          <span class="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-900">Worth exploring</span>
+        </div>
+        <p class="font-mono text-xs text-slate-500">src/pages/EventsPage.tsx · (missing) og_event_registrations</p>
+        <p><strong>Problem:</strong> UI module pretends success; no seam to persistence — deletion test fails (deleting code removes the lie, not complexity).</p>
+        <p><strong>Solution:</strong> Deep Event registration module: validate → insert → email ack. Or remove the button until built.</p>
+      </article>
+
+      <article class="rounded-2xl border border-slate-200 bg-white p-6 space-y-4">
+        <div class="flex flex-wrap items-center gap-2">
+          <h2 class="text-xl font-semibold">4. Auth session bootstrap already deepened — protect it</h2>
+          <span class="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-semibold text-slate-700">Speculative</span>
+        </div>
+        <p class="font-mono text-xs text-slate-500">CONTEXT.md · recent auth commits</p>
+        <p><strong>Problem:</strong> Temptation to re-scatter recovery flags into pages.</p>
+        <p><strong>Solution:</strong> Keep single GoTrue owner; new features only call the bootstrap interface. Offer ADR if someone proposes a second listener.</p>
+      </article>
+    </section>
+
+    <section id="top-recommendation" class="rounded-2xl border-2 border-slate-900 bg-white p-6">
+      <h2 class="text-xl font-bold">Top recommendation</h2>
+      <p class="mt-2 text-slate-700">Tackle <strong>#1 Order intake</strong> first — recent money/RLS bugs clustered there; highest leverage and locality payoff. Then #2 Catalog query before product count grows.</p>
+      <p class="mt-4 text-sm text-slate-600">Which of these would you like to explore?</p>
+    </section>
+  </main>
+</body>
+</html>

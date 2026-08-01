@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Audit · Supabase RLS & scale</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, theme: "neutral", securityLevel: "loose" });
+  </script>
+</head>
+<body class="bg-stone-50 text-slate-900">
+  <main class="mx-auto max-w-5xl space-y-10 px-6 py-12">
+    <p><a class="text-sm text-emerald-700 underline" href="./index.html">← Audit index</a></p>
+    <header>
+      <p class="font-mono text-xs uppercase tracking-[0.2em] text-slate-500">Linked · sswzfwfpnyhnvstabteo</p>
+      <h1 class="mt-2 text-3xl font-bold">RLS, DEFINER, advisors, scalability</h1>
+    </header>
+
+    <section class="rounded-2xl border border-emerald-200 bg-emerald-50 p-6 text-sm">
+      <h2 class="font-semibold text-emerald-950">Verified this session</h2>
+      <ul class="mt-2 list-disc space-y-1 pl-5 text-emerald-950/90">
+        <li>All sampled <code>og_*</code> tables have <code>rowsecurity = true</code>.</li>
+        <li><code>og_catalog_terms</code>: policies <code>public_read</code> + <code>admin_write</code>.</li>
+        <li>DEFINER = true: <code>og_validate_retail_order_insert</code>, <code>og_apply_live_retail_prices</code>, <code>og_restore_retail_stock_on_cancel</code>, <code>og_portal_role</code>, catalog rename/delete.</li>
+        <li><code>og_products_public_read</code> uses <code>status = 'active'</code> (drafts hidden).</li>
+        <li><code>og_orders</code> customer select/update scoped by email or portal user id.</li>
+      </ul>
+    </section>
+
+    <section class="rounded-2xl border border-slate-200 bg-white p-6">
+      <h2 class="font-semibold">Retail money path (past bug class)</h2>
+      <pre class="mermaid mt-4">
+sequenceDiagram
+  participant Client
+  participant Trigger as Validate DEFINER
+  participant Products as og_products
+  Client->>Trigger: INSERT retail order
+  Note over Trigger: SECURITY DEFINER bypasses RLS FOR UPDATE
+  Trigger->>Products: lock + decrement stock
+  Trigger-->>Client: OK or exception
+      </pre>
+      <p class="mt-3 text-sm text-slate-600">Same class of bug as “Invalid or inactive product: …” when INVOKER + RLS hid rows during FOR UPDATE. Fixed; do not reintroduce INVOKER stock mutations.</p>
+    </section>
+
+    <section class="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm">
+      <h2 class="font-semibold text-amber-950">Advisors (WARN)</h2>
+      <p class="mt-2 text-amber-950/90">
+        Supabase linter reported <strong>multiple_permissive_policies</strong> on CMS tables (e.g. featured spotlight, testimonials).
+        Impact: extra policy evaluation cost on SELECT — not an open write hole. Worth consolidating for scale; not a launch blocker.
+      </p>
+    </section>
+
+    <section class="rounded-2xl border border-slate-200 bg-white p-6 text-sm space-y-3">
+      <h2 class="font-semibold">Scalability / optimization notes</h2>
+      <ul class="list-disc space-y-2 pl-5 text-slate-700">
+        <li><strong>Good:</strong> GIN on <code>og_products.sports</code> / <code>tags</code>; portal list indexes migration; denormalized labels on products + term registry.</li>
+        <li><strong>Risk:</strong> Admin product filter/search is client-side over full <code>listProducts()</code> — fine for hundreds of SKUs, not tens of thousands. Next step: server-side <code>ilike</code> + filters + pagination query.</li>
+        <li><strong>Risk:</strong> Dual store (<code>usePortalStore</code> + Supabase services) increases sync bugs under concurrency.</li>
+        <li><strong>Risk:</strong> Migration history local≠remote timestamps — use <code>db query -f</code> carefully; avoid naive <code>db push</code>.</li>
+        <li><strong>Conn:</strong> Browser uses anon key; edge functions use service role — correct split. Never expose service role in Vite.</li>
+      </ul>
+    </section>
+
+    <section class="rounded-2xl border border-slate-200 bg-white p-6 text-sm">
+      <h2 class="font-semibold">Remaining Supabase-shaped gaps</h2>
+      <ul class="mt-2 list-disc space-y-1 pl-5 text-slate-700">
+        <li>No DB persistence for event registrations (table/edge missing).</li>
+        <li><code>og_plan_cards</code> RLS ready; UI not shipped.</li>
+        <li>Payment settings public-readable (expected for QR/public key); secrets must stay in Vault/edge only.</li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>

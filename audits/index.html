@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OFFGRID — System Audit Index</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, theme: "neutral", securityLevel: "loose" });
+  </script>
+</head>
+<body class="bg-stone-50 text-slate-900">
+  <main class="mx-auto max-w-5xl space-y-10 px-6 py-12">
+    <header class="space-y-3">
+      <p class="font-mono text-xs uppercase tracking-[0.2em] text-slate-500">Audit pack · 2026-08-01</p>
+      <h1 class="text-3xl font-bold tracking-tight">OFFGRID Lifestyle — system readiness</h1>
+      <p class="max-w-3xl text-slate-600">
+        Evidence from this session: route inventory, RLS policy query on linked project
+        <code class="rounded bg-slate-200 px-1">sswzfwfpnyhnvstabteo</code>,
+        SECURITY DEFINER function check, Supabase advisors (WARN: multiple permissive policies),
+        and static button/flow scan. This is <strong>not</strong> a substitute for clicking every control in a staging browser session.
+      </p>
+    </header>
+
+    <section class="rounded-2xl border border-emerald-200 bg-emerald-50 p-6">
+      <h2 class="text-lg font-semibold text-emerald-950">Wave progress (2026-08-01)</h2>
+      <ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-emerald-950/90">
+        <li><strong>Done:</strong> Events Register persists to <code>og_event_registrations</code> + admin Signups drawer</li>
+        <li><strong>Done:</strong> Analytics routes restored for admin/staff (no longer dead redirects)</li>
+        <li><strong>Next wave:</strong> GCash QR / PayMongo readiness gates, plan board ship-or-hide, Order intake deepen</li>
+      </ul>
+    </section>
+
+    <section class="rounded-2xl border border-amber-300 bg-amber-50 p-6">
+      <h2 class="text-lg font-semibold text-amber-950">Verdict</h2>
+      <p class="mt-2 text-amber-950/90">
+        <strong>Conditionally ready for use</strong> for core commerce (shop → checkout → account orders → ops confirm)
+        after recent retail RLS/stock DEFINER fixes. <strong>Not</strong> “100% bug-free.”
+        Remaining: default GCash placeholder QR, PayMongo/COD off until admin enables,
+        unrouted plan board, Order intake dual-store complexity.
+      </p>
+    </section>
+
+    <section class="grid gap-4 sm:grid-cols-2">
+      <a class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:border-emerald-400" href="./01-customer-flows.html">
+        <h3 class="font-semibold">01 · Customer flows</h3>
+        <p class="mt-1 text-sm text-slate-600">Storefront, auth, cart, custom order, account payments/reviews</p>
+      </a>
+      <a class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:border-emerald-400" href="./02-admin-flows.html">
+        <h3 class="font-semibold">02 · Admin flows</h3>
+        <p class="mt-1 text-sm text-slate-600">Catalog, CMS, payments, staff, audits, settings</p>
+      </a>
+      <a class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:border-emerald-400" href="./03-staff-flows.html">
+        <h3 class="font-semibold">03 · Staff flows</h3>
+        <p class="mt-1 text-sm text-slate-600">Ops dashboard + order pipeline only</p>
+      </a>
+      <a class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:border-emerald-400" href="./04-supabase-rls.html">
+        <h3 class="font-semibold">04 · Supabase / RLS</h3>
+        <p class="mt-1 text-sm text-slate-600">Policies, DEFINER triggers, advisors, scalability notes</p>
+      </a>
+      <a class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:border-emerald-400 sm:col-span-2" href="./05-architecture.html">
+        <h3 class="font-semibold">05 · Architecture deepening</h3>
+        <p class="mt-1 text-sm text-slate-600">Shallow modules, dual stores, seams to deepen next</p>
+      </a>
+    </section>
+
+    <section class="rounded-2xl border border-slate-200 bg-white p-6">
+      <h2 class="mb-4 text-lg font-semibold">System map</h2>
+      <pre class="mermaid">
+flowchart TB
+  subgraph public [Public]
+    Shop --> Cart
+    Cart --> Checkout
+    Custom --> Wizard
+    Events["Events / Community"]
+  end
+  subgraph customer [Customer]
+    AccOrders[Account orders]
+    AccPay[Pay / proof / review]
+    AccProf[Profile]
+  end
+  subgraph ops [Portal]
+    Admin[Admin]
+    Staff[Staff]
+  end
+  Checkout --> AccOrders
+  Wizard --> AccOrders
+  AccOrders --> AccPay
+  AccPay --> Staff
+  Admin --> Staff
+  Events -.->|UI only no persist| FakeReg[Fake register success]
+      </pre>
+    </section>
+
+    <section class="rounded-2xl border border-slate-200 bg-white p-6">
+      <h2 class="text-lg font-semibold">Evidence commands (this session)</h2>
+      <ul class="mt-3 list-disc space-y-1 pl-5 font-mono text-xs text-slate-700">
+        <li>npx supabase db query --linked … pg_tables / pg_policy / pg_proc</li>
+        <li>npx supabase db advisors --linked</li>
+        <li>Route inventory from src/App.tsx + portal pages</li>
+        <li>Prior push 6740162 + retail DEFINER migrations 2026080112*</li>
+      </ul>
+    </section>
+
+    <section class="rounded-2xl border border-red-200 bg-red-50 p-6">
+      <h2 class="text-lg font-semibold text-red-900">Must-fix before calling launch “complete”</h2>
+      <ol class="mt-3 list-decimal space-y-2 pl-5 text-red-950/90">
+        <li><strong>Events Register</strong> — <code>EventsPage.handleRegister</code> only sets local success; no DB/edge write.</li>
+        <li><strong>GCash QR</strong> — default <code>placehold.co</code> until Admin → Payments upload.</li>
+        <li><strong>PayMongo / COD</strong> — disabled by default; enable + keys before promising those methods.</li>
+        <li><strong>Analytics</strong> — <code>/portal/*/analytics</code> redirects; <code>OperationsAnalyticsPage</code> orphaned.</li>
+        <li><strong>Plan board</strong> — <code>og_plan_cards</code> exists in DB; UI/service untracked / not routed.</li>
+      </ol>
+    </section>
+  </main>
+</body>
+</html>

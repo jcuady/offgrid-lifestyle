@@ -630,6 +630,36 @@ export type Database = {
         }
         Relationships: []
       }
+      og_event_registrations: {
+        Row: {
+          created_at: string
+          email: string
+          event_id: string
+          id: string
+          name: string
+          phone: string
+          skill_level: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          event_id: string
+          id?: string
+          name: string
+          phone?: string
+          skill_level?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          event_id?: string
+          id?: string
+          name?: string
+          phone?: string
+          skill_level?: string
+        }
+        Relationships: []
+      }
       og_events: {
         Row: {
           id: string

@@ -363,10 +363,11 @@ export const initialCustomPageContent: CustomPageContent = {
       successTitle: "Team Order Submitted",
       successBody:
         "Our team will review your files and completed order sheet, then send your quote and production confirmation steps within 1–2 business days.",
-      depositTitle: "Production starts after confirmation",
-      depositBody: "We confirm quote, mockup, and deposit schedule before full production starts.",
+      depositTitle: "How payment works",
+      depositBody:
+        "After we send your official quote, sign in to My orders to pay the deposit via PayMongo QR Ph or GCash QR (then upload proof). Wizard estimates are not charged.",
       accountHint:
-        "After sign in, open My orders to track review, official quote, and shipping updates.",
+        "Sign in with this email to open your order. Payment unlocks only after the official quote — not at submit.",
       newOrderButton: "Start New Order",
       backButton: "Back",
     },

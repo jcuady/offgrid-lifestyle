@@ -231,7 +231,12 @@ export function StepSummary() {
         <p className="text-xs text-offgrid-green/55 max-w-md mx-auto leading-relaxed">{copy.accountHint}</p>
         <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
           <Button variant="default" size="lg" asChild>
-            <Link to={`${CUSTOMER_SIGN_IN_PATH}?email=${encodeURIComponent(submittedEmail)}`}>Sign in to track</Link>
+            <Link
+              to={`${CUSTOMER_SIGN_IN_PATH}?email=${encodeURIComponent(submittedEmail)}`}
+              state={{ from: `/account/orders/${submittedOrderId}` }}
+            >
+              Sign in to track &amp; pay
+            </Link>
           </Button>
           <Button variant="outline" size="lg" asChild>
             <Link to="/custom">Back to ordering guide</Link>

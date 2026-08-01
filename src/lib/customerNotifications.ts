@@ -26,7 +26,7 @@ const MESSAGES: Record<CustomerOrderEvent, (orderId: string) => { title: string;
   }),
   quote_ready: (id) => ({
     title: "Your custom quote is ready",
-    body: `Review the official quote and deposit details for order ${id}.`,
+    body: `Official quote for ${id} is ready. Open the order to pay your deposit via PayMongo QR Ph or GCash.`,
   }),
   shipped: (id) => ({
     title: "Order shipped",

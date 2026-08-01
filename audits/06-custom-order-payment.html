@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Custom order payment seam</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, theme: "neutral", securityLevel: "loose" });
+  </script>
+</head>
+<body class="bg-stone-50 text-slate-900">
+  <main class="mx-auto max-w-3xl space-y-8 px-6 py-12">
+    <p><a class="text-sm text-emerald-700 underline" href="./index.html">← Audit index</a></p>
+    <header class="space-y-2">
+      <p class="font-mono text-xs uppercase tracking-[0.2em] text-slate-500">Principal · payment seam</p>
+      <h1 class="text-3xl font-bold tracking-tight">Custom order → PayMongo / GCash</h1>
+      <p class="text-slate-600">Money authority is the ops official quote. Wizard estimates are never charged.</p>
+    </header>
+    <pre class="mermaid rounded-2xl border border-slate-200 bg-white p-4">
+flowchart LR
+  W[Wizard submit] --> Q[pending_deposit unpaid]
+  Q --> O[Ops official quote]
+  O --> P{Signed-in account detail}
+  P --> M[PayMongo deposit/balance]
+  P --> G[GCash QR + proof]
+  M --> S[deposit_paid / fully_paid]
+  G --> S
+    </pre>
+    <ul class="list-disc space-y-2 pl-5 text-sm text-slate-700">
+      <li><strong>Do not</strong> collect payment method at wizard submit — amounts are not binding.</li>
+      <li>Pay CTAs live on <code>/account/orders/:id</code> after <code>hasOfficialCustomQuote</code>.</li>
+      <li>Helpers: <code>src/lib/customOrderPayment.ts</code> (phase + gate PayMongo/GCash).</li>
+      <li>Edge already charges custom deposit/balance from <code>custom_payload.official*</code>.</li>
+      <li>Guest path: sign-in with <code>state.from</code> to the order, then pay.</li>
+      <li>RLS: <code>og_orders_anon_update_recent_custom</code> still present for guest file patch.</li>
+    </ul>
+  </main>
+</body>
+</html>

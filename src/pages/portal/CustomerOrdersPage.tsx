@@ -14,6 +14,10 @@ import {
   paymentStatusClassCustomer,
 } from "@/src/lib/portal";
 import {
+  customOrderPaymentCtaLabel,
+  resolveCustomOrderPaymentPhase,
+} from "@/src/lib/customOrderPayment";
+import {
   announceEmailConfirmed,
   consumeEmailConfirmHandoffTab,
   hasPendingSignupPeer,
@@ -342,6 +346,12 @@ function RetailOrderCard({ order }: { order: ManagedRetailOrder }) {
 
 function CustomOrderCard({ order }: { order: ManagedCustomOrder }) {
   const quoted = hasOfficialCustomQuote(order.officialTotal);
+  const payCta = customOrderPaymentCtaLabel(
+    resolveCustomOrderPaymentPhase({
+      paymentStatus: order.paymentStatus,
+      officialTotal: order.officialTotal,
+    }),
+  );
   return (
     <OrderCardShell
       badge="Custom request"
@@ -350,16 +360,23 @@ function CustomOrderCard({ order }: { order: ManagedCustomOrder }) {
       paymentStatus={order.paymentStatus}
       type="custom"
       extraBadge={
-        <span
-          className={cn(
-            "rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em]",
-            quoted
-              ? "border-offgrid-green/25 bg-offgrid-lime/25 text-offgrid-green"
-              : "border-offgrid-green/15 bg-offgrid-cream text-offgrid-green/70",
-          )}
-        >
-          {quoted ? "Official quote" : "Quote pending"}
-        </span>
+        <>
+          <span
+            className={cn(
+              "rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em]",
+              quoted
+                ? "border-offgrid-green/25 bg-offgrid-lime/25 text-offgrid-green"
+                : "border-offgrid-green/15 bg-offgrid-cream text-offgrid-green/70",
+            )}
+          >
+            {quoted ? "Official quote" : "Quote pending"}
+          </span>
+          {payCta ? (
+            <span className="rounded-full border border-offgrid-lime/40 bg-offgrid-lime/30 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green">
+              {payCta}
+            </span>
+          ) : null}
+        </>
       }
       total={
         quoted

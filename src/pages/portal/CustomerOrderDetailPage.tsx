@@ -40,6 +40,12 @@ import {
   hasOfficialCustomQuote,
   customOrderGCashAmountDue,
 } from "@/src/lib/portal";
+import {
+  customOrderPayMongoKind,
+  isCustomOrderGCashActionAvailable,
+  isCustomOrderPayMongoActionAvailable,
+  resolveCustomOrderPaymentPhase,
+} from "@/src/lib/customOrderPayment";
 
 const FILE_WARN_KEY = (orderId: string) => `og-file-warn:${orderId}`;
 
@@ -473,6 +479,27 @@ export function CustomerOrderDetailPage() {
     ? fetchedCustom
     : undefined;
 
+  const customPaymentPhase = custom
+    ? resolveCustomOrderPaymentPhase({
+        paymentStatus: custom.paymentStatus,
+        officialTotal: custom.officialTotal,
+      })
+    : null;
+  const customPayMongoKind = customPaymentPhase
+    ? customOrderPayMongoKind(customPaymentPhase)
+    : null;
+  const customShowPayMongo =
+    !!customPaymentPhase &&
+    isCustomOrderPayMongoActionAvailable(customPaymentPhase, paymentSettings.paymongo);
+  const customShowGcash =
+    !!custom &&
+    !!customPaymentPhase &&
+    isCustomOrderGCashActionAvailable(customPaymentPhase, paymentSettings.gcashQrImageUrl, {
+      paymentStatus: custom.paymentStatus,
+      officialTotal: custom.officialTotal,
+      officialDeposit: custom.officialDeposit,
+    });
+
   const backTo = { to: "/account/orders", label: "Back to my orders" };
 
   if (loading) {
@@ -780,8 +807,8 @@ export function CustomerOrderDetailPage() {
               <h2 className="text-lg font-display font-bold text-offgrid-green">Payment & quote</h2>
               {!hasOfficialCustomQuote(custom.officialTotal) ? (
                 <p className="mt-3 rounded-xl border border-offgrid-green/10 bg-offgrid-cream/50 px-3 py-2 text-xs text-offgrid-green/70">
-                  Your wizard estimate is below. When our team finalizes pricing, the official total and deposit will
-                  appear here — check back in My orders or wait for our email.
+                  Wizard estimates are non-binding. After our team posts your official quote, you can pay the deposit
+                  here via PayMongo QR Ph or GCash QR — we&apos;ll also email you when it&apos;s ready.
                 </p>
               ) : null}
               <dl className="mt-4 space-y-3 text-sm text-offgrid-green/80">
@@ -834,18 +861,16 @@ export function CustomerOrderDetailPage() {
               </dl>
               {custom.paymentStatus !== "fully_paid" ? (
                 <div className="mt-4 space-y-3">
-                  {isPayMongoCheckoutAvailable("paymongo", paymentSettings.paymongo) &&
-                  hasOfficialCustomQuote(custom.officialTotal) &&
-                  (custom.paymentStatus === "unpaid" || custom.paymentStatus === "deposit_paid") ? (
+                  {customShowPayMongo && customPayMongoKind ? (
                     <div className="rounded-xl border border-offgrid-lime/25 bg-offgrid-lime/[0.06] p-3">
                       <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/45">
                         PayMongo QR Ph
                       </p>
                       <PayMongoPayButton
                         orderId={custom.id}
-                        paymentKind={custom.paymentStatus === "deposit_paid" ? "balance" : "deposit"}
+                        paymentKind={customPayMongoKind}
                         label={
-                          custom.paymentStatus === "deposit_paid"
+                          customPayMongoKind === "balance"
                             ? "Pay remaining balance via QR Ph"
                             : "Pay deposit via QR Ph"
                         }
@@ -860,7 +885,7 @@ export function CustomerOrderDetailPage() {
                       officialDeposit: custom.officialDeposit,
                     });
                     const qrReady = isGcashQrReady(paymentSettings.gcashQrImageUrl);
-                    if (!due || !qrReady) {
+                    if (!customShowGcash) {
                       if (!hasOfficialCustomQuote(custom.officialTotal)) {
                         return (
                           <p className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 px-3 py-2.5 text-xs text-offgrid-green/60">
@@ -880,7 +905,7 @@ export function CustomerOrderDetailPage() {
                     return (
                       <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3">
                         <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/45">
-                          {due.kind === "balance" ? "Or pay remaining balance via GCash" : "Or pay deposit via GCash"}
+                          {due!.kind === "balance" ? "Or pay remaining balance via GCash" : "Or pay deposit via GCash"}
                         </p>
                         <p className="mt-1 text-xs text-offgrid-green/60">{paymentSettings.gcashInstructions}</p>
                         <img
@@ -889,7 +914,7 @@ export function CustomerOrderDetailPage() {
                           className="mt-2 h-28 w-28 rounded-lg border border-offgrid-green/10 bg-white object-contain"
                         />
                         <p className="mt-2 text-sm font-semibold text-offgrid-green">
-                          Amount due now: {formatMoney(php(due.amount))}
+                          Amount due now: {formatMoney(php(due!.amount))}
                         </p>
                       </div>
                     );

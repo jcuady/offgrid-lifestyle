@@ -5,7 +5,7 @@ import { Button } from "@/src/components/ui/Button";
 import { CustomOrderWizard } from "@/src/components/custom-order/CustomOrderWizard";
 import { hydrateSiteContentFromSupabase } from "@/src/services";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
-import { siteContainer, sectionEyebrow, marketingPageHero } from "@/src/lib/brandLayout";
+import { siteContainer, marketingPageHero } from "@/src/lib/brandLayout";
 import { cn } from "@/src/lib/utils";
 
 export function CustomOrderPage() {
@@ -57,15 +57,11 @@ export function CustomOrderPage() {
         <div className={cn(siteContainer, "relative z-10")}>
           <Link
             to="/custom"
-            className="mb-6 inline-flex items-center font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-offgrid-cream/70 transition-colors hover:text-white"
+            className="mb-8 inline-flex items-center font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-offgrid-cream/70 transition-colors hover:text-white"
           >
             <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
             {hero.backLink}
           </Link>
-          <span className="mb-5 inline-flex items-center gap-2 rounded-full border border-offgrid-cream/25 bg-offgrid-cream/10 px-3.5 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-cream backdrop-blur-md">
-            <span className="inline-block h-1.5 w-1.5 rounded-full bg-offgrid-lime" />
-            {hero.badge}
-          </span>
           <h1 className="max-w-3xl text-4xl sm:text-5xl md:text-6xl font-display font-black leading-[0.95] tracking-tight text-offgrid-cream">
             {hero.title}
           </h1>
@@ -76,7 +72,6 @@ export function CustomOrderPage() {
       <section className="bg-offgrid-cream py-12 sm:py-16">
         <div className={cn(siteContainer, "space-y-8")}>
           <div className="max-w-3xl">
-            <p className={sectionEyebrow}>How team orders work</p>
             <h2 className="text-3xl font-display font-black tracking-tight text-offgrid-green sm:text-4xl">
               Team order system
             </h2>

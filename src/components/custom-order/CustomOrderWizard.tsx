@@ -34,10 +34,7 @@ export function CustomOrderWizard() {
     <section id="order-flow" className="scroll-mt-28 border-t border-offgrid-green/8 bg-offgrid-cream py-12 sm:py-20">
       <div className={cn(siteContainer, "max-w-3xl")}>
         <div className="mb-8 text-center sm:text-left">
-          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-green/45">
-            {intro.eyebrow}
-          </p>
-          <h2 className="mt-2 font-display text-3xl font-black leading-tight text-offgrid-green sm:text-4xl">
+          <h2 className="font-display text-3xl font-black leading-tight text-offgrid-green sm:text-4xl">
             {intro.title}
           </h2>
           <p className="mt-2 max-w-lg text-sm text-offgrid-green/60">{intro.description}</p>

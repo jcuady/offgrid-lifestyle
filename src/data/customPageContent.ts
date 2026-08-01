@@ -76,7 +76,6 @@ export interface CustomHubPageContent {
 
 export interface CustomOrderHeroContent {
   backLink: string;
-  badge: string;
   title: string;
   description: string;
 }
@@ -194,6 +193,9 @@ export function normalizeCustomPageContent(page: CustomPageContent): CustomPageC
     stepLabels.push(initialCustomPageContent.wizard.stepLabels[stepLabels.length] ?? `Step ${stepLabels.length + 1}`);
   }
 
+  const seedOrder = initialCustomPageContent.orderHero;
+  const orderIn = { ...seedOrder, ...page.orderHero };
+
   return {
     ...page,
     hub: {
@@ -219,6 +221,12 @@ export function normalizeCustomPageContent(page: CustomPageContent): CustomPageC
       primaryClosingSecondaryHref: sanitizeCmsHref(hubIn.primaryClosingSecondaryHref, seedHub.primaryClosingSecondaryHref),
       bottomCtaHref: sanitizeCmsHref(hubIn.bottomCtaHref, seedHub.bottomCtaHref),
       processSteps: processSteps.slice(0, CUSTOM_PROCESS_STEP_COUNT),
+    },
+    // Drop legacy hero.badge — restates the H1 and clutters the first viewport.
+    orderHero: {
+      backLink: orderIn.backLink || seedOrder.backLink,
+      title: orderIn.title || seedOrder.title,
+      description: orderIn.description || seedOrder.description,
     },
     wizard: {
       ...page.wizard,
@@ -308,7 +316,6 @@ export const initialCustomPageContent: CustomPageContent = {
   },
   orderHero: {
     backLink: "Back to ordering guide",
-    badge: "Team orders",
     title: "Submit your team order",
     description: "Use our order kit to collect full roster details, then submit your design and completed sheet for review.",
   },

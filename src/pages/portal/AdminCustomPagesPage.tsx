@@ -487,9 +487,6 @@ export function AdminCustomPagesPage() {
           <CmsField label="Back link">
             <CmsTextInput value={orderHero.backLink} onChange={(v) => updateOrderHero({ backLink: v })} />
           </CmsField>
-          <CmsField label="Badge">
-            <CmsTextInput value={orderHero.badge} onChange={(v) => updateOrderHero({ badge: v })} />
-          </CmsField>
           <CmsField label="Title" className="sm:col-span-2">
             <CmsTextInput value={orderHero.title} onChange={(v) => updateOrderHero({ title: v })} />
           </CmsField>

@@ -4,7 +4,7 @@ import { ArrowLeft, ArrowRight, Download, ImageIcon } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import type { CustomTemplateAsset } from "@/src/store/useSiteContentStore";
-import { siteContainer, sectionEyebrow, sectionEyebrowOnDark, marketingPageHero } from "@/src/lib/brandLayout";
+import { siteContainer, sectionEyebrow, marketingPageHero } from "@/src/lib/brandLayout";
 import { resolveCanonicalTemplates } from "@/src/lib/canonicalTemplates";
 import { triggerTemplateDownload } from "@/src/lib/resolveTemplateDownload";
 import { hydrateSiteContentFromSupabase } from "@/src/services";
@@ -63,12 +63,11 @@ export function CustomTemplatesPage() {
         <div className={cn(siteContainer, "relative z-10")}>
           <Link
             to="/custom"
-            className="mb-6 inline-flex items-center font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-offgrid-cream/70 transition-colors hover:text-white"
+            className="mb-8 inline-flex items-center font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-offgrid-cream/70 transition-colors hover:text-white"
           >
             <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
             {page.backLink}
           </Link>
-          <p className={sectionEyebrowOnDark}>{page.eyebrow}</p>
           <h1 className="text-5xl md:text-7xl font-display font-black text-offgrid-cream leading-[0.9]">
             {page.title}
           </h1>

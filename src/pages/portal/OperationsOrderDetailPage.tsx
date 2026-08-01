@@ -285,7 +285,6 @@ export function OperationsOrderDetailPage() {
   const updateRetailPaymentStatus = usePortalStore((s) => s.updateRetailPaymentStatus);
   const updateCustomOrderStatus = usePortalStore((s) => s.updateCustomOrderStatus);
   const updateCustomPaymentStatus = usePortalStore((s) => s.updateCustomPaymentStatus);
-  const updateCustomOrderQuote = usePortalStore((s) => s.updateCustomOrderQuote);
   const paymentSettings = usePortalStore((s) => s.paymentSettings);
   const headwearOptions = resolveHeadwearOptions(useSiteContentStore((s) => s.customHeadwearOptions));
 
@@ -693,7 +692,6 @@ export function OperationsOrderDetailPage() {
             <AdminQuoteEditor
               order={custom}
               onSave={async (payload) => {
-                updateCustomOrderQuote(custom.id, payload);
                 await localOrderService.persistCustomOrderQuote(custom.id, payload, custom);
                 setFeedback("Official quote saved.");
               }}
@@ -704,7 +702,6 @@ export function OperationsOrderDetailPage() {
                   quoteCustomerNotes: "",
                   quoteInternalNotes: "",
                 };
-                updateCustomOrderQuote(custom.id, cleared);
                 await localOrderService.persistCustomOrderQuote(custom.id, cleared, custom);
                 setFeedback("Official quote cleared.");
               }}

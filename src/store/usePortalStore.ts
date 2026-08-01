@@ -1,7 +1,6 @@
 /**
- * Portal orders (`retailOrders`, `customOrders`) persist in localStorage (`og-portal`).
- * All admins share the same queue only on this browser profile. For multi-device staff,
- * replace with a shared API (e.g. Supabase) and optional email (e.g. Resend) on submit.
+ * Portal session cache: `retailOrders` / `customOrders` are in-memory only.
+ * Supabase (`og_orders`) is the source of truth — hydrated via listOrders / fetchOrderById.
  */
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
@@ -81,8 +80,6 @@ export interface PaymentSettings {
 
 type PersistedPortalSlice = {
   currentUser: PortalUser | null;
-  retailOrders: ManagedRetailOrder[];
-  customOrders: ManagedCustomOrder[];
   paymentSettings: PaymentSettings;
   managedStaffAccounts: ManagedStaffAccount[];
   registeredCustomers: RegisteredCustomer[];
@@ -114,45 +111,6 @@ function defaultQuoteFields(): Pick<
     quotedAt: null,
     quotedBy: null,
   };
-}
-
-function migrateManagedCustomOrderRecord(raw: unknown): ManagedCustomOrder {
-  const c = raw as Partial<ManagedCustomOrder> & {
-    id: string;
-    cut?: string | null;
-    material?: string | null;
-  };
-  const cuts =
-    Array.isArray(c.cuts) && c.cuts.length
-      ? c.cuts
-      : c.cut
-        ? [c.cut as CustomOrderDraft["cuts"][number]]
-        : [];
-  const materials =
-    Array.isArray(c.materials) && c.materials.length
-      ? c.materials
-      : c.material
-        ? [c.material as CustomOrderDraft["materials"][number]]
-        : [];
-  return {
-    ...c,
-    category: c.category ?? "apparel",
-    headwearType: c.headwearType ?? null,
-    cuts,
-    materials,
-    orderSheetFileName: c.orderSheetFileName ?? null,
-    orderSheetFileKey: c.orderSheetFileKey ?? null,
-    designFileKey: c.designFileKey ?? null,
-    designFileUrl: c.designFileUrl ?? null,
-    orderSheetFileUrl: c.orderSheetFileUrl ?? null,
-    officialTotal: c.officialTotal ?? null,
-    officialDeposit: c.officialDeposit ?? null,
-    quoteCustomerNotes: c.quoteCustomerNotes ?? "",
-    quoteInternalNotes: c.quoteInternalNotes ?? "",
-    quotedAt: c.quotedAt ?? null,
-    quotedBy: c.quotedBy ?? null,
-    shippingInfo: c.shippingInfo ?? null,
-  } as ManagedCustomOrder;
 }
 
 interface PortalState {
@@ -712,11 +670,9 @@ export const usePortalStore = create<PortalState>()(
     }),
     {
       name: "og-portal",
-      version: 6,
+      version: 7,
       partialize: (state): PersistedPortalSlice => ({
         currentUser: state.currentUser,
-        retailOrders: state.retailOrders,
-        customOrders: state.customOrders,
         paymentSettings: state.paymentSettings,
         managedStaffAccounts: state.managedStaffAccounts,
         registeredCustomers: state.registeredCustomers,
@@ -726,10 +682,6 @@ export const usePortalStore = create<PortalState>()(
         const p = (persistedState ?? {}) as Partial<PersistedPortalSlice>;
         const base: PersistedPortalSlice = {
           currentUser: p.currentUser ?? null,
-          retailOrders: Array.isArray(p.retailOrders) ? p.retailOrders : [],
-          customOrders: Array.isArray(p.customOrders)
-            ? p.customOrders.map((row) => migrateManagedCustomOrderRecord(row))
-            : [],
           paymentSettings: {
             ...DEFAULT_PAYMENT_SETTINGS,
             ...p.paymentSettings,
@@ -746,6 +698,7 @@ export const usePortalStore = create<PortalState>()(
           registeredCustomers: Array.isArray(p.registeredCustomers) ? p.registeredCustomers : [],
           auditLogs: Array.isArray(p.auditLogs) ? p.auditLogs : [],
         };
+        // ponytail: v7 drops durable order mirrors — stale localStorage queues cannot win over DB
         if (version < 6) {
           base.registeredCustomers = base.registeredCustomers ?? [];
         }
@@ -761,7 +714,6 @@ export const usePortalStore = create<PortalState>()(
             ...base.paymentSettings.paymongo,
           };
         }
-        if (version < 3) return base;
         return base;
       },
     },

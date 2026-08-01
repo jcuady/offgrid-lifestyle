@@ -136,7 +136,7 @@ describe("opsOrderUpdate", () => {
       }),
     ).rejects.toThrow("db down");
     expect(notifyCustomerOrderEvent).not.toHaveBeenCalled();
-    expect(applyStore).toHaveBeenLastCalledWith("confirmed");
+    expect(applyStore).not.toHaveBeenCalled();
   });
 
   it("notifies payment + auto-confirm when payment settles pending_deposit", async () => {

@@ -23,6 +23,7 @@ import { notifyCustomerOrderEvent } from "@/src/lib/customerNotifications";
 import { resolveStorageReference } from "@/src/lib/storageAccess";
 import { sendOrderReceiptEmail } from "@/src/services/emailService";
 import { normalizeOrderId } from "@/src/lib/orderId";
+import { upsertById } from "@/src/lib/orderStoreMerge";
 
 export interface RetailCartLineInput {
   productId: string;
@@ -135,11 +136,13 @@ function mapCustomOrderRow(row: OrderRow): ManagedCustomOrder {
 
 function mergeOrderIntoStore(retail?: ManagedRetailOrder, custom?: ManagedCustomOrder): void {
   const state = usePortalStore.getState();
-  if (retail && !state.retailOrders.some((o) => o.id === retail.id)) {
-    usePortalStore.setState({ retailOrders: [retail, ...state.retailOrders] });
+  if (retail) {
+    usePortalStore.setState({ retailOrders: upsertById(state.retailOrders, retail) });
   }
-  if (custom && !state.customOrders.some((o) => o.id === custom.id)) {
-    usePortalStore.setState({ customOrders: [custom, ...state.customOrders] });
+  if (custom) {
+    usePortalStore.setState({
+      customOrders: upsertById(usePortalStore.getState().customOrders, custom),
+    });
   }
 }
 
@@ -322,20 +325,15 @@ export const supabaseOrderService: OrderService = {
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (error || !data) {
-      logger.warn("Supabase orders fetch failed, falling back", {
-        service: "orderService",
-        operation: "orders.list",
-        error: error?.message,
-      });
-      const s = usePortalStore.getState();
-      return { retailOrders: s.retailOrders, customOrders: s.customOrders };
+    // ponytail: no local fallback as truth — failed fetch must not invent a durable queue
+    if (error) {
+      throw new Error(error.message);
     }
 
     const retailOrders: ManagedRetailOrder[] = [];
     const customOrders: ManagedCustomOrder[] = [];
 
-    for (const row of data) {
+    for (const row of data ?? []) {
       if (row.order_type === "retail") {
         retailOrders.push(mapRetailOrderRow(row as OrderRow));
       } else if (row.order_type === "custom") {
@@ -445,6 +443,13 @@ export const supabaseOrderService: OrderService = {
       });
       throw new Error(error.message);
     }
+
+    usePortalStore.getState().updateCustomOrderQuote(orderId, {
+      officialTotal: hasOfficial ? update.officialTotal ?? null : null,
+      officialDeposit: hasOfficial ? officialDeposit : null,
+      quoteCustomerNotes: hasOfficial ? update.quoteCustomerNotes ?? "" : "",
+      quoteInternalNotes: hasOfficial ? update.quoteInternalNotes ?? "" : "",
+    });
 
     if (hasOfficial) {
       void notifyCustomerOrderEvent(order.customerId, orderId, "quote_ready");

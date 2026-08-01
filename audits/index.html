@@ -30,7 +30,8 @@
         <li><strong>Done:</strong> Analytics routes restored for admin/staff (no longer dead redirects)</li>
         <li><strong>Done:</strong> Payment gates — empty/placeholder GCash QR blocked; PayMongo/COD only when enabled</li>
         <li><strong>Done:</strong> Plan board routed for admin/staff against <code>og_plan_cards</code></li>
-        <li><strong>Next wave:</strong> Order intake dual-store deepen (<code>store</code> ↔ <code>orderService</code> ↔ portal)</li>
+        <li><strong>Done:</strong> Order intake — session cache only; Supabase is SSoT (no localStorage order queue)</li>
+        <li><strong>Next wave:</strong> Ops enable real GCash QR / PayMongo when ready; advisor WARN / migration drift hygiene</li>
       </ul>
     </section>
 
@@ -39,7 +40,8 @@
       <p class="mt-2 text-amber-950/90">
         <strong>Conditionally ready for use</strong> for core commerce (shop → checkout → account orders → ops confirm)
         after recent retail RLS/stock DEFINER fixes. <strong>Not</strong> “100% bug-free.”
-        Remaining launch gap: Order intake dual-store complexity; ops must upload a real GCash QR (and enable PayMongo/COD) before those methods appear live.
+        Remaining: ops must upload a real GCash QR (and enable PayMongo/COD) before those methods appear live;
+        migration history drift + advisor WARN cleanup.
       </p>
     </section>
 

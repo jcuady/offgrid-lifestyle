@@ -12,6 +12,7 @@ export { CUSTOM_ORDER_SUBMIT_PHASES, mergeCustomOrderDraftWithFiles } from "@/sr
 /**
  * Persist fulfillment status, then notify the customer.
  * Actor-agnostic: admin and staff share this path; notify runs only after durable write.
+ * Store mirror updates after DB success so local cache cannot lead Supabase.
  */
 export async function persistOrderStatusUpdate(params: {
   orderId: string;
@@ -20,13 +21,8 @@ export async function persistOrderStatusUpdate(params: {
   customerId?: string | null;
   applyStore: (status: OrderStatus) => void;
 }): Promise<void> {
+  await supabaseOrderService.updateOrderField(params.orderId, { status: params.next });
   params.applyStore(params.next);
-  try {
-    await supabaseOrderService.updateOrderField(params.orderId, { status: params.next });
-  } catch (err) {
-    params.applyStore(params.previousStatus);
-    throw err;
-  }
 
   if (params.previousStatus === params.next) return;
   const event = customerEventForFulfillmentStatus(params.next);
@@ -37,6 +33,7 @@ export async function persistOrderStatusUpdate(params: {
 
 /**
  * Persist payment status, mirror DB advance-on-payment in the store, then notify.
+ * Store updates only after durable write.
  */
 export async function persistOrderPaymentUpdate(params: {
   orderId: string;
@@ -56,19 +53,11 @@ export async function persistOrderPaymentUpdate(params: {
         )
       : null;
 
+  await supabaseOrderService.updateOrderField(params.orderId, { payment_status: params.next });
+
   params.applyStore(params.next);
   if (advanced && params.applyFulfillmentStore) {
     params.applyFulfillmentStore(advanced);
-  }
-
-  try {
-    await supabaseOrderService.updateOrderField(params.orderId, { payment_status: params.next });
-  } catch (err) {
-    params.applyStore(params.previousStatus);
-    if (advanced && params.applyFulfillmentStore && params.previousFulfillmentStatus) {
-      params.applyFulfillmentStore(params.previousFulfillmentStatus);
-    }
-    throw err;
   }
 
   if (params.previousStatus === params.next) return;

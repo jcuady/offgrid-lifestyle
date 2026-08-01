@@ -4,42 +4,36 @@ import { usePortalStore } from "@/src/store/usePortalStore";
 import { useEnsureOrdersLoaded } from "@/src/hooks/useEnsureOrdersLoaded";
 import { normalizeOrderId } from "@/src/lib/orderId";
 
-/** Resolve an order by ID, fetching from Supabase when the store is empty (deep links). */
+/** Resolve an order by ID; always refresh from Supabase so stale session cache cannot win. */
 export function useOrderDetail(rawOrderId: string | undefined) {
   useEnsureOrdersLoaded();
   const orderId = normalizeOrderId(rawOrderId) || undefined;
 
   const retail = usePortalStore((s) => s.retailOrders.find((o) => o.id === orderId));
   const custom = usePortalStore((s) => s.customOrders.find((o) => o.id === orderId));
-  const [loading, setLoading] = useState(Boolean(orderId) && !retail && !custom);
-  const [lookupDone, setLookupDone] = useState(false);
+  const [loading, setLoading] = useState(Boolean(orderId));
 
   useEffect(() => {
     if (!orderId) {
       setLoading(false);
       return;
     }
-    if (retail || custom) {
-      setLoading(false);
-      return;
-    }
-    if (lookupDone) {
-      setLoading(false);
-      return;
-    }
 
     let cancelled = false;
+    const hasLocal = Boolean(
+      usePortalStore.getState().retailOrders.some((o) => o.id === orderId) ||
+        usePortalStore.getState().customOrders.some((o) => o.id === orderId),
+    );
+    if (!hasLocal) setLoading(true);
+
     localOrderService.fetchOrderById(orderId).finally(() => {
-      if (!cancelled) {
-        setLookupDone(true);
-        setLoading(false);
-      }
+      if (!cancelled) setLoading(false);
     });
 
     return () => {
       cancelled = true;
     };
-  }, [orderId, retail, custom, lookupDone]);
+  }, [orderId]);
 
   return {
     retail,

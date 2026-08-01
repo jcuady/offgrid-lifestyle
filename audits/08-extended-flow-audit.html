@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OFFGRID — Full flow audit 08</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-stone-50 text-slate-900">
+<main class="mx-auto max-w-5xl space-y-8 px-6 py-12">
+  <header>
+    <p class="font-mono text-xs uppercase tracking-[0.2em] text-slate-500">Audit 08 · 2026-08-01</p>
+    <h1 class="mt-2 text-3xl font-bold">Extended flow audit (auth, events, contact, reviews, catalog)</h1>
+  </header>
+  <section class="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-sm">
+    <p class="font-semibold">Fixed this pass</p>
+    <ul class="mt-2 list-disc pl-5 space-y-1">
+      <li>P0 unlimited product stock no longer coerced to 0 on admin save</li>
+      <li>Guest email owner can send payment_proof push (send-push + pushAuth)</li>
+      <li>Event capacity enforced (UI + BEFORE INSERT trigger + RLS)</li>
+      <li>Contact auto-reply failure no longer 500s after staff mail sent</li>
+      <li>Reviews require productId in delivered order line_items</li>
+      <li>Sign-up fails closed if portal profile row cannot be created</li>
+      <li>CMS template publish blocked without a real file</li>
+      <li>Admin stock filter treats unlimited as in-stock</li>
+    </ul>
+  </section>
+  <section class="text-sm space-y-2">
+    <p class="font-semibold">Deployed live</p>
+    <p><code>send-order-email</code>, <code>send-push</code>, <code>submit-contact</code> on sswzfwfpnyhnvstabteo</p>
+    <p>Migration <code>20260801170000</code> applied + repaired</p>
+  </section>
+  <section class="text-sm space-y-2">
+    <p class="font-semibold">Still residual</p>
+    <ul class="list-disc pl-5">
+      <li>Durable guest → customer_id claim RPC (column trigger blocks self-attach)</li>
+      <li>quoteInternalNotes still in JSON SELECT (UI strip + UPDATE lock only)</li>
+      <li>Ops: real GCash QR + live PayMongo key</li>
+    </ul>
+  </section>
+</main>
+</body>
+</html>

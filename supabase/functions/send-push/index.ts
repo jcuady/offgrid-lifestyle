@@ -134,7 +134,7 @@ Deno.serve(async (req: Request) => {
 
       const { data: order, error: orderErr } = await adminClient
         .from("og_orders")
-        .select("customer_id, created_at")
+        .select("customer_id, customer_email, created_at")
         .eq("id", orderId)
         .maybeSingle();
 
@@ -147,7 +147,14 @@ Deno.serve(async (req: Request) => {
 
       const orderAgeMs = Date.now() - new Date(order.created_at).getTime();
       const isRecentGuest = !order.customer_id && orderAgeMs >= 0 && orderAgeMs < 10 * 60 * 1000;
-      const isOwner = Boolean(order.customer_id && callerPortalId === order.customer_id);
+      const orderEmail = typeof order.customer_email === "string" ? order.customer_email.trim().toLowerCase() : "";
+      const callerEmail = typeof authUser?.email === "string" ? authUser.email.trim().toLowerCase() : "";
+      const isIdOwner = Boolean(order.customer_id && callerPortalId === order.customer_id);
+      const isEmailOwner =
+        !order.customer_id &&
+        callerPortalRole === "customer" &&
+        Boolean(orderEmail && callerEmail && orderEmail === callerEmail);
+      const isOwner = isIdOwner || isEmailOwner;
       // Mirror src/lib/pushAuth.ts canDispatchOperationalPush — owner may alert for new orders + proof.
       const isOwnerOperationalAlert =
         isOwner &&

@@ -187,7 +187,11 @@ export function normalizeProductDraft(draft: Product, editingId: string | null):
     tags,
     tag: tags[0] || undefined,
     sold: Math.max(0, Math.floor(Number(draft.sold) || 0)),
-    stock: Math.max(0, Math.floor(Number(draft.stock) || 0)),
+    // null/undefined = unlimited inventory (DB trigger treats null as unlimited)
+    stock:
+      draft.stock === null || draft.stock === undefined
+        ? undefined
+        : Math.max(0, Math.floor(Number(draft.stock))),
     homeBestSellerRank:
       typeof draft.homeBestSellerRank === "number" && draft.homeBestSellerRank > 0
         ? Math.min(20, Math.floor(draft.homeBestSellerRank))

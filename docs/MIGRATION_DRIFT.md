@@ -21,5 +21,7 @@ Local `supabase/migrations/` and remote `supabase_migrations.schema_migrations` 
 | `20260801134500` | advisor security hygiene |
 | `20260801140000` | consolidate remaining RLS |
 | `20260801140100` | consolidate portal_users RLS |
+| `20260801100000` | lock custom quote notes in order UPDATE trigger |
+| `20260801170000` | event capacity trigger + review product_id check |
 
 Mark those with `migration repair --status applied` after confirming objects exist on the linked project.

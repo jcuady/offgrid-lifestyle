@@ -26,4 +26,11 @@ describe("catalog protocol v2", () => {
       "Discount price cannot exceed the regular price.",
     );
   });
+
+  it("preserves unlimited stock (undefined/null) instead of coercing to 0", () => {
+    const draft = { ...products[0], stock: undefined };
+    expect(normalizeProductDraft(draft, draft.id).stock).toBeUndefined();
+    expect(normalizeProductDraft({ ...draft, stock: null as unknown as undefined }, draft.id).stock).toBeUndefined();
+    expect(normalizeProductDraft({ ...draft, stock: 4 }, draft.id).stock).toBe(4);
+  });
 });

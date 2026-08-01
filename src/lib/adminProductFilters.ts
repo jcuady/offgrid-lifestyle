@@ -49,9 +49,14 @@ export function filterAdminProducts(
       if (!tags.some((tag) => tag.toLowerCase() === filters.tag.toLowerCase())) return false;
     }
 
-    const stock = product.stock ?? 0;
-    if (filters.stock === "in" && stock <= 0) return false;
-    if (filters.stock === "out" && stock > 0) return false;
+    const stock = product.stock;
+    if (filters.stock === "in") {
+      // Unlimited (null/undefined) counts as in stock
+      if (stock !== null && stock !== undefined && stock <= 0) return false;
+    }
+    if (filters.stock === "out") {
+      if (stock === null || stock === undefined || stock > 0) return false;
+    }
 
     if (q && !haystack(product).includes(q)) return false;
     return true;

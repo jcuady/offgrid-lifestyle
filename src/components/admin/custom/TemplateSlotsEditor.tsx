@@ -341,8 +341,13 @@ export function TemplateSlotsEditor() {
   };
 
   const togglePublish = async (template: CustomTemplateAsset) => {
+    const publishing = !template.isPublished;
+    if (publishing && (!template.fileUrl || template.fileUrl === "#")) {
+      window.alert("Upload a template file before publishing.");
+      return;
+    }
     setBusy(true);
-    const err = await localContentService.updateTemplate(template.id, { isPublished: !template.isPublished });
+    const err = await localContentService.updateTemplate(template.id, { isPublished: publishing });
     setBusy(false);
     if (err) window.alert(err);
   };

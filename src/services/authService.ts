@@ -30,8 +30,8 @@ export interface AuthService {
     message?: string;
     userId?: string;
     emailConfirmationRequired?: boolean;
-    /** Present when sign-up failed because the email is already registered. */
-    code?: "email_exists";
+    /** Present when sign-up failed because the email is already registered, or portal profile row failed. */
+    code?: "email_exists" | "portal_profile";
   }>;
   requestPasswordReset: (email: string, audience?: PasswordResetAudience) => Promise<{ ok: boolean; message?: string }>;
   /** Re-authenticate with the current account password (no audit side effects). */
@@ -223,15 +223,13 @@ export const supabaseAuthService: AuthService = {
     let portalUser: PortalUser | null = null;
     if (data.session && data.user) {
       portalUser = await ensurePortalUserRow(data.user);
-    }
-
-    if (!portalUser) {
-      portalUser = {
-        id: authUserId,
-        name,
-        email,
-        role: "customer",
-      };
+      if (!portalUser) {
+        return {
+          ok: false,
+          message: "Account created, but profile setup failed. Sign in again or contact support.",
+          code: "portal_profile",
+        };
+      }
     }
 
     if (!emailConfirmationRequired && data.session && portalUser) {
@@ -250,7 +248,11 @@ export const supabaseAuthService: AuthService = {
       applyPostLoginSideEffectsIfNeeded(portalUser, previousPortalUserId);
     }
 
-    return { ok: true, userId: portalUser.id, emailConfirmationRequired };
+    return {
+      ok: true,
+      userId: portalUser?.id ?? authUserId,
+      emailConfirmationRequired,
+    };
   },
 
   requestPasswordReset: async (email, audience = "customer") => {

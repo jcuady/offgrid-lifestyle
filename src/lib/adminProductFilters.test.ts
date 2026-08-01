@@ -51,4 +51,14 @@ describe("admin product filters + smart search", () => {
     expect(filterAdminProducts(catalog, { ...base, stock: "out" }).map((p) => p.id)).toEqual(["1"]);
     expect(filterAdminProducts(catalog, { ...base, stock: "in" }).map((p) => p.id)).toEqual(["2", "3"]);
   });
+
+  it("treats unlimited stock (undefined) as in-stock, not out", () => {
+    const withUnlimited = [
+      stub({ id: "1", name: "Limited", stock: 0 }),
+      stub({ id: "u", name: "Unlimited", stock: undefined }),
+    ];
+    const base: AdminProductFilters = { query: "", status: "all", sport: "all", tag: "all", stock: "all" };
+    expect(filterAdminProducts(withUnlimited, { ...base, stock: "in" }).map((p) => p.id)).toEqual(["u"]);
+    expect(filterAdminProducts(withUnlimited, { ...base, stock: "out" }).map((p) => p.id)).toEqual(["1"]);
+  });
 });

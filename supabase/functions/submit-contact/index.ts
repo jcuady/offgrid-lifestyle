@@ -60,13 +60,17 @@ Deno.serve(async (req: Request) => {
       replyTo,
     });
 
-    const auto = contactAutoReplyEmail({ name, topic: topicLabel, siteUrl });
-    await sendViaResend({
-      to: email,
-      subject: auto.subject,
-      html: auto.html,
-      text: auto.text,
-    });
+    try {
+      const auto = contactAutoReplyEmail({ name, topic: topicLabel, siteUrl });
+      await sendViaResend({
+        to: email,
+        subject: auto.subject,
+        html: auto.html,
+        text: auto.text,
+      });
+    } catch (autoErr) {
+      console.error("contact auto-reply failed", autoErr);
+    }
 
     return new Response(JSON.stringify({ ok: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

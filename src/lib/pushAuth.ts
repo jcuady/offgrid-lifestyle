@@ -10,6 +10,9 @@ export interface OperationalPushContext {
   alertType: OperationalAlertType;
   callerPortalId: string | null;
   callerRole: "admin" | "staff" | "customer" | null;
+  /** When customer_id is null, email match still owns the order for proof alerts. */
+  orderEmail?: string | null;
+  callerEmail?: string | null;
   nowMs?: number;
 }
 
@@ -19,10 +22,21 @@ export function isRecentGuestOrder(customerId: string | null, createdAt: string,
   return ageMs >= 0 && ageMs < RECENT_GUEST_ORDER_MS;
 }
 
+function emailsMatch(a: string | null | undefined, b: string | null | undefined): boolean {
+  const left = a?.trim().toLowerCase();
+  const right = b?.trim().toLowerCase();
+  return Boolean(left && right && left === right);
+}
+
 /** Whether the caller may trigger a staff operational Web Push for this order. */
 export function canDispatchOperationalPush(ctx: OperationalPushContext): boolean {
   const isStaffOrAdmin = ctx.callerRole === "admin" || ctx.callerRole === "staff";
-  const isOwner = Boolean(ctx.orderCustomerId && ctx.callerPortalId === ctx.orderCustomerId);
+  const isIdOwner = Boolean(ctx.orderCustomerId && ctx.callerPortalId === ctx.orderCustomerId);
+  const isEmailOwner =
+    !ctx.orderCustomerId &&
+    ctx.callerRole === "customer" &&
+    emailsMatch(ctx.orderEmail, ctx.callerEmail);
+  const isOwner = isIdOwner || isEmailOwner;
   // Order owner may alert staff for new order + payment proof on their own order.
   const isOwnerOperationalAlert =
     isOwner &&

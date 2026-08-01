@@ -18,6 +18,7 @@ import {
   submitEventRegistration,
   type EventSkillLevel,
 } from "@/src/services/eventRegistrationService";
+import { isEventRegistrationFull } from "@/src/lib/eventCapacity";
 
 export function EventsPage() {
   const navigate = useNavigate();
@@ -49,6 +50,10 @@ export function EventsPage() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedEvent) return;
+    if (isEventRegistrationFull(selectedEvent)) {
+      setRegisterError("This event is full.");
+      return;
+    }
     setRegisterError(null);
     setRegisterBusy(true);
     try {
@@ -219,12 +224,14 @@ export function EventsPage() {
                     variant="secondary"
                     size="lg"
                     className="w-full sm:w-auto group"
+                    disabled={isEventRegistrationFull(featuredEvent)}
                     onClick={(e) => {
                       e.stopPropagation();
+                      if (isEventRegistrationFull(featuredEvent)) return;
                       setSelectedEvent(featuredEvent);
                     }}
                   >
-                    Register Now
+                    {isEventRegistrationFull(featuredEvent) ? "Event full" : "Register Now"}
                     <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </div>
@@ -521,9 +528,13 @@ export function EventsPage() {
                       variant="default"
                       size="lg"
                       className="w-full"
-                      onClick={() => setIsRegisterOpen(true)}
+                      disabled={isEventRegistrationFull(selectedEvent)}
+                      onClick={() => {
+                        if (isEventRegistrationFull(selectedEvent)) return;
+                        setIsRegisterOpen(true);
+                      }}
                     >
-                      Register Now
+                      {isEventRegistrationFull(selectedEvent) ? "Event full" : "Register Now"}
                       <Ticket className="ml-2 w-5 h-5" />
                     </Button>
                   )}

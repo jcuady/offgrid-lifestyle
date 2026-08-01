@@ -102,6 +102,36 @@ describe("pushAuth", () => {
       ).toBe(false);
     });
 
+    it("allows email-matched customers to send payment_proof on guest orders", () => {
+      expect(
+        canDispatchOperationalPush({
+          orderCustomerId: null,
+          orderCreatedAt: STALE_CREATED,
+          alertType: "payment_proof",
+          callerPortalId: "cust-1",
+          callerRole: "customer",
+          orderEmail: "guest@example.com",
+          callerEmail: "guest@example.com",
+          nowMs: NOW,
+        }),
+      ).toBe(true);
+    });
+
+    it("denies email mismatch on guest payment_proof", () => {
+      expect(
+        canDispatchOperationalPush({
+          orderCustomerId: null,
+          orderCreatedAt: STALE_CREATED,
+          alertType: "payment_proof",
+          callerPortalId: "cust-1",
+          callerRole: "customer",
+          orderEmail: "guest@example.com",
+          callerEmail: "other@example.com",
+          nowMs: NOW,
+        }),
+      ).toBe(false);
+    });
+
     it("denies unrelated customers", () => {
       expect(
         canDispatchOperationalPush({

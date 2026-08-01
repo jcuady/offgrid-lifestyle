@@ -44,11 +44,13 @@ sequenceDiagram
       <p class="mt-3 text-sm text-slate-600">Same class of bug as “Invalid or inactive product: …” when INVOKER + RLS hid rows during FOR UPDATE. Fixed; do not reintroduce INVOKER stock mutations.</p>
     </section>
 
-    <section class="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm">
-      <h2 class="font-semibold text-amber-950">Advisors (WARN)</h2>
-      <p class="mt-2 text-amber-950/90">
-        Supabase linter reported <strong>multiple_permissive_policies</strong> on CMS tables (e.g. featured spotlight, testimonials).
-        Impact: extra policy evaluation cost on SELECT — not an open write hole. Worth consolidating for scale; not a launch blocker.
+    <section class="rounded-2xl border border-emerald-200 bg-emerald-50 p-6 text-sm">
+      <h2 class="font-semibold text-emerald-950">Advisors (post wave-4 hygiene)</h2>
+      <p class="mt-2 text-emerald-950/90">
+        Cleared: anon DEFINER EXECUTE, public storage listing, CMS multiple-permissive SELECT from FOR ALL admin writes,
+        <code>og_orders_customer_update_own</code> initplan. Remaining WARNs are intentional
+        (authenticated DEFINER RPCs, dual-role policies on orders/portal_users) or dashboard
+        (leaked-password protection). See <code>docs/MIGRATION_DRIFT.md</code>.
       </p>
     </section>
 

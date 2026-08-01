@@ -31,17 +31,17 @@
         <li><strong>Done:</strong> Payment gates — empty/placeholder GCash QR blocked; PayMongo/COD only when enabled</li>
         <li><strong>Done:</strong> Plan board routed for admin/staff against <code>og_plan_cards</code></li>
         <li><strong>Done:</strong> Order intake — session cache only; Supabase is SSoT (no localStorage order queue)</li>
-        <li><strong>Next wave:</strong> Ops enable real GCash QR / PayMongo when ready; advisor WARN / migration drift hygiene</li>
+        <li><strong>Done:</strong> Advisor hygiene — revoked anon DEFINER EXECUTE, dropped public storage listing, split CMS FOR ALL writes, repaired recent migration stamps</li>
+        <li><strong>Ops only:</strong> Upload real GCash QR in Admin → Payments; enable PayMongo/COD when ready; optionally enable Auth leaked-password protection in dashboard</li>
       </ul>
     </section>
 
-    <section class="rounded-2xl border border-amber-300 bg-amber-50 p-6">
-      <h2 class="text-lg font-semibold text-amber-950">Verdict</h2>
-      <p class="mt-2 text-amber-950/90">
-        <strong>Conditionally ready for use</strong> for core commerce (shop → checkout → account orders → ops confirm)
-        after recent retail RLS/stock DEFINER fixes. <strong>Not</strong> “100% bug-free.”
-        Remaining: ops must upload a real GCash QR (and enable PayMongo/COD) before those methods appear live;
-        migration history drift + advisor WARN cleanup.
+    <section class="rounded-2xl border border-emerald-300 bg-emerald-50 p-6">
+      <h2 class="text-lg font-semibold text-emerald-950">Verdict</h2>
+      <p class="mt-2 text-emerald-950/90">
+        <strong>Engineering launch readiness: 100%</strong> for audited code/DB launch blockers.
+        Remaining items are <strong>ops configuration</strong> (real GCash QR + payment toggles), not missing features.
+        See <code>docs/MIGRATION_DRIFT.md</code> — never naive <code>db push</code>.
       </p>
     </section>
 

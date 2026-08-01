@@ -8,6 +8,7 @@ import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { formatPrice, getProductSports, getProductTags } from "@/src/data/products";
 import { Button } from "@/src/components/ui/Button";
 import { ProductPrice } from "@/src/components/ProductPrice";
+import { SizeGuideModal } from "@/src/components/SizeGuideModal";
 import { cn } from "@/src/lib/utils";
 import { reviewService, type ProductReview } from "@/src/services/reviewService";
 import { usePageSeo } from "@/src/hooks/usePageSeo";
@@ -83,6 +84,7 @@ export function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1);
   const [reviews, setReviews] = useState<ProductReview[]>([]);
   const [justAdded, setJustAdded] = useState(false);
+  const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
   const isPurchasable =
     product?.status === "active" && (product.stock === undefined || product.stock > 0);
 
@@ -267,12 +269,13 @@ export function ProductDetailPage() {
                     <p className="text-[10px] font-bold tracking-[0.18em] uppercase text-offgrid-green">
                       Size
                     </p>
-                    <Link
-                      to="/custom#sizing-chart"
-                      className="text-[10px] font-semibold tracking-[0.1em] uppercase text-offgrid-green/50 underline hover:text-offgrid-green"
+                    <button
+                      type="button"
+                      onClick={() => setSizeGuideOpen(true)}
+                      className="min-h-11 text-[10px] font-semibold tracking-[0.1em] uppercase text-offgrid-green/50 underline underline-offset-2 hover:text-offgrid-green"
                     >
                       Sizing Guide
-                    </Link>
+                    </button>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {product.sizes.map((size) => (
@@ -452,6 +455,13 @@ export function ProductDetailPage() {
           </div>
         </div>
       </div>
+
+      <SizeGuideModal
+        open={sizeGuideOpen}
+        onClose={() => setSizeGuideOpen(false)}
+        productSizes={product.sizes}
+        selectedSize={selectedSize}
+      />
     </>
   );
 }

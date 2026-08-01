@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { X, Minus, Plus, Star, ArrowRight, Zap } from "lucide-react";
+import { X, Minus, Plus, Star, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useShallow } from "zustand/react/shallow";
 import { formatPrice, getProductSports, getProductTags, type Product } from "@/src/data/products";
@@ -8,6 +8,7 @@ import { useStore } from "@/src/store/store";
 import { Button } from "@/src/components/ui/Button";
 import { cn } from "@/src/lib/utils";
 import { ProductPrice } from "@/src/components/ProductPrice";
+import { SizeGuideModal } from "@/src/components/SizeGuideModal";
 
 interface ProductQuickViewModalProps {
   product: Product | null;
@@ -26,6 +27,7 @@ export function ProductQuickViewModal({ product, onClose }: ProductQuickViewModa
   const [selectedColor, setSelectedColor] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [error, setError] = useState<string | null>(null);
+  const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
 
   useEffect(() => {
     if (!product) return;
@@ -33,13 +35,19 @@ export function ProductQuickViewModal({ product, onClose }: ProductQuickViewModa
     setSelectedColor(product.colors[0]?.value ?? "");
     setQuantity(1);
     setError(null);
+    setSizeGuideOpen(false);
   }, [product]);
 
   useEffect(() => {
     if (!product) return;
 
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key !== "Escape") return;
+      if (sizeGuideOpen) {
+        setSizeGuideOpen(false);
+        return;
+      }
+      onClose();
     };
 
     const prevOverflow = document.body.style.overflow;
@@ -50,7 +58,7 @@ export function ProductQuickViewModal({ product, onClose }: ProductQuickViewModa
       document.body.style.overflow = prevOverflow;
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, [product, onClose]);
+  }, [product, onClose, sizeGuideOpen]);
 
   const activeColor = product?.colors.find((c) => c.value === selectedColor) ?? product?.colors[0];
   const lineTotal = (product?.price ?? 0) * quantity;
@@ -256,13 +264,13 @@ export function ProductQuickViewModal({ product, onClose }: ProductQuickViewModa
                       <p className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-offgrid-green">
                         Size
                       </p>
-                      <Link
-                        to="/custom#sizing-chart"
-                        onClick={onClose}
-                        className="font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-offgrid-green/50 underline-offset-2 hover:text-offgrid-green hover:underline"
+                      <button
+                        type="button"
+                        onClick={() => setSizeGuideOpen(true)}
+                        className="min-h-11 font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-offgrid-green/50 underline-offset-2 transition-colors hover:text-offgrid-green hover:underline"
                       >
                         Sizing guide
-                      </Link>
+                      </button>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {product.sizes.map((size) => (
@@ -349,14 +357,20 @@ export function ProductQuickViewModal({ product, onClose }: ProductQuickViewModa
                   variant="outline"
                   size="lg"
                   onClick={handleBuyNow}
-                  className="group h-12 w-full border-offgrid-green/30 sm:h-14 sm:flex-1"
+                  className="h-12 w-full border-offgrid-green/30 sm:h-14 sm:flex-1"
                 >
-                  <Zap className="mr-1.5 h-4 w-4 shrink-0 transition-transform group-hover:scale-110" />
                   Buy now
                 </Button>
               </div>
             </div>
           </motion.div>
+
+          <SizeGuideModal
+            open={sizeGuideOpen}
+            onClose={() => setSizeGuideOpen(false)}
+            productSizes={product.sizes}
+            selectedSize={selectedSize}
+          />
         </>
       )}
     </AnimatePresence>

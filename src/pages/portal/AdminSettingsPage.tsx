@@ -21,6 +21,7 @@ import { ChangeEmailForm } from "@/src/components/account/ChangeEmailForm";
 import { ChangeDisplayNameForm } from "@/src/components/account/ChangeDisplayNameForm";
 import { usePortalStore } from "@/src/store/usePortalStore";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
+import { isGcashQrReady } from "@/src/types/payments";
 import { cn } from "@/src/lib/utils";
 
 const SHORTCUTS: { name: string; description: string; to: string; icon: typeof Home }[] = [
@@ -49,9 +50,7 @@ export function AdminSettingsPage() {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 
   const checklist = useMemo<ChecklistItem[]>(() => {
-    const qrConfigured =
-      Boolean(paymentSettings.gcashQrImageUrl) &&
-      !paymentSettings.gcashQrImageUrl.includes("placehold.co");
+    const qrConfigured = isGcashQrReady(paymentSettings.gcashQrImageUrl);
     const activeProducts = products.filter((p) => p.status === "active").length;
     return [
       {

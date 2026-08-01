@@ -146,6 +146,9 @@ const AdminAuditLogsPage = lazy(() =>
 const AdminSettingsPage = lazy(() =>
   import("./pages/portal/AdminSettingsPage").then((m) => ({ default: m.AdminSettingsPage })),
 );
+const AdminPlanBoardPage = lazy(() =>
+  import("./pages/portal/AdminPlanBoardPage").then((m) => ({ default: m.AdminPlanBoardPage })),
+);
 const AdminReviewsPage = lazy(() =>
   import("./pages/portal/AdminReviewsPage").then((m) => ({ default: m.AdminReviewsPage })),
 );
@@ -290,6 +293,7 @@ function AppFrame() {
           <Route path="orders" element={<OperationsOrdersPage role="admin" />} />
           <Route path="orders/:orderId" element={<OperationsOrderDetailPage />} />
           <Route path="analytics" element={<OperationsAnalyticsPage role="admin" />} />
+          <Route path="plan-board" element={<AdminPlanBoardPage role="admin" />} />
           <Route path="products" element={<AdminProductsPage />} />
           <Route path="payments" element={<AdminPaymentsPage />} />
           <Route path="events" element={<AdminEventsPage />} />
@@ -314,6 +318,7 @@ function AppFrame() {
           <Route path="orders" element={<OperationsOrdersPage role="staff" />} />
           <Route path="orders/:orderId" element={<OperationsOrderDetailPage />} />
           <Route path="analytics" element={<OperationsAnalyticsPage role="staff" />} />
+          <Route path="plan-board" element={<AdminPlanBoardPage role="staff" />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
         <Route path="*" element={<NotFoundPage />} />

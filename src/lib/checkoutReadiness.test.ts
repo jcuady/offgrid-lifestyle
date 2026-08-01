@@ -123,21 +123,42 @@ describe("payment gateway readiness — payment methods", () => {
   const disabledConfig = checkoutPaymentConfigFromSettings({
     cod: DEFAULT_COD_SETTINGS,
     paymongo: DEFAULT_PAYMONGO_SETTINGS,
+    gcashQrImageUrl: "",
   });
 
-  it("allows GCash by default", () => {
-    expect(validateRetailPaymentMethod("gcash", disabledConfig)).toBeNull();
+  it("blocks GCash until a real QR is uploaded", () => {
+    expect(validateRetailPaymentMethod("gcash", disabledConfig)).toMatch(/GCash QR is not set up/i);
+    expect(
+      validateRetailPaymentMethod(
+        "gcash",
+        checkoutPaymentConfigFromSettings({
+          cod: DEFAULT_COD_SETTINGS,
+          paymongo: DEFAULT_PAYMONGO_SETTINGS,
+          gcashQrImageUrl: "https://placehold.co/640x640/png?text=Upload+GCash+QR",
+        }),
+      ),
+    ).toMatch(/GCash QR is not set up/i);
+  });
+
+  it("allows GCash when a real QR URL is configured", () => {
+    const ready = checkoutPaymentConfigFromSettings({
+      cod: DEFAULT_COD_SETTINGS,
+      paymongo: DEFAULT_PAYMONGO_SETTINGS,
+      gcashQrImageUrl: "https://sswzfwfpnyhnvstabteo.supabase.co/storage/v1/object/public/payment-assets/gcash-qr.png",
+    });
+    expect(validateRetailPaymentMethod("gcash", ready)).toBeNull();
   });
 
   it("blocks COD and PayMongo until admin enables them", () => {
     expect(validateRetailPaymentMethod("cod", disabledConfig)).toMatch(/coming soon/i);
-    expect(validateRetailPaymentMethod("paymongo", disabledConfig)).toMatch(/not available|GCash/i);
+    expect(validateRetailPaymentMethod("paymongo", disabledConfig)).toMatch(/not available/i);
   });
 
   it("allows PayMongo when enabled with public key", () => {
     const enabled = checkoutPaymentConfigFromSettings({
       cod: DEFAULT_COD_SETTINGS,
       paymongo: { ...DEFAULT_PAYMONGO_SETTINGS, enabled: true, publicKey: "pk_test_abc" },
+      gcashQrImageUrl: "",
     });
     expect(validateRetailPaymentMethod("paymongo", enabled)).toBeNull();
   });

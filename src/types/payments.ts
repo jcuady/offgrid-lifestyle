@@ -48,6 +48,8 @@ export const DEFAULT_PAYMONGO_SETTINGS: PayMongoSettings = {
 export interface CheckoutPaymentConfig {
   cod: CodSettings;
   paymongo: PayMongoSettings;
+  /** Empty or placeholder URL means GCash is not ready for checkout. */
+  gcashQrImageUrl: string;
 }
 
 export interface RetailPaymentMethodMeta {
@@ -58,12 +60,13 @@ export interface RetailPaymentMethodMeta {
   provider: PaymentProvider | null;
 }
 
-/** Active checkout options: GCash (live), PayMongo + COD (coming soon until admin enables). */
+/** Active checkout options: GCash (when QR uploaded), PayMongo + COD (until admin enables). */
 export const RETAIL_PAYMENT_METHODS: RetailPaymentMethodMeta[] = [
   {
     id: "gcash",
     label: "GCash",
     description: "Scan QR and pay via GCash wallet",
+    comingSoon: true,
     provider: "manual",
   },
   {
@@ -90,6 +93,21 @@ export function resolvePaymentProvider(method: RetailPaymentMethod): PaymentProv
   return method === "paymongo" ? "paymongo" : "manual";
 }
 
+/** True when a real GCash QR is configured (rejects empty + placehold.co stubs). */
+export function isGcashQrReady(url: string | null | undefined): boolean {
+  const v = (url ?? "").trim();
+  if (!v) return false;
+  if (/placehold\.co/i.test(v)) return false;
+  return true;
+}
+
+export function isGcashCheckoutAvailable(
+  method: RetailPaymentMethod,
+  config: CheckoutPaymentConfig,
+): boolean {
+  return method === "gcash" && isGcashQrReady(config.gcashQrImageUrl);
+}
+
 export function isPayMongoCheckoutAvailable(
   method: RetailPaymentMethod,
   paymongo: PayMongoSettings,
@@ -105,7 +123,7 @@ export function isRetailPaymentMethodSelectable(
   method: RetailPaymentMethod,
   config: CheckoutPaymentConfig,
 ): boolean {
-  if (method === "gcash") return true;
+  if (method === "gcash") return isGcashCheckoutAvailable(method, config);
   if (method === "paymongo") return isPayMongoCheckoutAvailable(method, config.paymongo);
   if (method === "cod") return isCodCheckoutAvailable(method, config.cod);
   return false;
@@ -118,11 +136,14 @@ export function validateRetailPaymentMethod(method: string, config: CheckoutPaym
   if (isRetailPaymentMethodSelectable(method, config)) {
     return null;
   }
+  if (method === "gcash") {
+    return "GCash QR is not set up yet. Choose another method, or ask the shop to upload a GCash QR.";
+  }
   if (method === "cod") {
     return "Cash on delivery is coming soon. Pay via GCash or PayMongo.";
   }
   if (method === "paymongo") {
-    return "PayMongo QR Ph is not available yet. Pay via GCash for now.";
+    return "PayMongo QR Ph is not available yet. Pay via GCash once the shop uploads a QR, or ask them to enable PayMongo.";
   }
   return "This payment method is not available.";
 }
@@ -130,6 +151,11 @@ export function validateRetailPaymentMethod(method: string, config: CheckoutPaym
 export function checkoutPaymentConfigFromSettings(settings: {
   cod: CodSettings;
   paymongo: PayMongoSettings;
+  gcashQrImageUrl?: string;
 }): CheckoutPaymentConfig {
-  return { cod: settings.cod, paymongo: settings.paymongo };
+  return {
+    cod: settings.cod,
+    paymongo: settings.paymongo,
+    gcashQrImageUrl: settings.gcashQrImageUrl ?? "",
+  };
 }

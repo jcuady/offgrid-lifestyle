@@ -33,6 +33,7 @@ describe("paymongo client helpers", () => {
       validateRetailPaymentMethod("paymongo", {
         cod: { enabled: false, checkoutDescription: "" },
         paymongo: DEFAULT_PAYMONGO_SETTINGS,
+        gcashQrImageUrl: "",
       }),
     ).toMatch(/not available|GCash/i);
 
@@ -44,6 +45,7 @@ describe("paymongo client helpers", () => {
           enabled: true,
           publicKey: "pk_test_abc",
         },
+        gcashQrImageUrl: "",
       }),
     ).toBeNull();
   });

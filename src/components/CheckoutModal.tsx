@@ -12,6 +12,7 @@ import { checkoutCartItemLabel, checkoutCartLineCount, shouldShowEmptyCartGate }
 import { EMPTY_SHIPPING_INFO, type ShippingInfo } from "@/src/types/commerce";
 import {
   checkoutPaymentConfigFromSettings,
+  isGcashQrReady,
   isRetailPaymentMethodSelectable,
   RETAIL_PAYMENT_METHODS,
   validateRetailPaymentMethod,
@@ -210,7 +211,7 @@ export function CheckoutModal() {
       return;
     }
 
-    if (paymentMethod === "gcash" && !paymentSettings.gcashQrImageUrl?.trim()) {
+    if (paymentMethod === "gcash" && !isGcashQrReady(paymentSettings.gcashQrImageUrl)) {
       setCheckoutError("GCash QR is not set up yet. Choose PayMongo QR Ph, or ask the shop to upload a GCash QR.");
       return;
     }
@@ -639,7 +640,7 @@ export function CheckoutModal() {
                           <p className="text-xs font-semibold uppercase tracking-[0.15em] text-offgrid-green/55">
                             Scan to pay via GCash
                           </p>
-                          {paymentSettings.gcashQrImageUrl?.trim() ? (
+                          {isGcashQrReady(paymentSettings.gcashQrImageUrl) ? (
                             <div className="mt-3 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
                               <img
                                 src={paymentSettings.gcashQrImageUrl}

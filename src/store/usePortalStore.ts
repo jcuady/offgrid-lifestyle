@@ -90,7 +90,7 @@ type PersistedPortalSlice = {
 };
 
 const DEFAULT_PAYMENT_SETTINGS: PaymentSettings = {
-  gcashQrImageUrl: "https://placehold.co/640x640/png?text=Upload+GCash+QR",
+  gcashQrImageUrl: "",
   gcashInstructions:
     "Scan the QR with GCash, complete the payment, then keep your receipt for verification. Orders move once payment is confirmed.",
   cod: { ...DEFAULT_COD_SETTINGS },

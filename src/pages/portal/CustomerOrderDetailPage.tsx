@@ -22,7 +22,7 @@ import {
   createPayMongoCheckoutSession,
   redirectToPayMongoCheckout,
 } from "@/src/lib/paymongo";
-import { isPayMongoCheckoutAvailable } from "@/src/types/payments";
+import { isGcashQrReady, isPayMongoCheckoutAvailable } from "@/src/types/payments";
 import { AccountLayout } from "@/src/components/account/AccountLayout";
 import { OrderTracker } from "@/src/components/account/OrderTracker";
 import { CustomOrderFileButton } from "@/src/components/custom-order/CustomOrderFileButton";
@@ -859,7 +859,7 @@ export function CustomerOrderDetailPage() {
                       officialTotal: custom.officialTotal,
                       officialDeposit: custom.officialDeposit,
                     });
-                    const qrReady = Boolean(paymentSettings.gcashQrImageUrl?.trim());
+                    const qrReady = isGcashQrReady(paymentSettings.gcashQrImageUrl);
                     if (!due || !qrReady) {
                       if (!hasOfficialCustomQuote(custom.officialTotal)) {
                         return (

@@ -7,6 +7,7 @@ import {
   Package,
   BarChart3,
   CalendarDays,
+  KanbanSquare,
   Palette,
   Home,
   MessageSquare,
@@ -54,6 +55,7 @@ const navByRole: Record<Exclude<UserRole, "customer">, NavSection[]> = {
       items: [
         { name: "Dashboard", to: "/portal/admin", icon: LayoutDashboard },
         { name: "Analytics", to: "/portal/admin/analytics", icon: BarChart3 },
+        { name: "Plan board", to: "/portal/admin/plan-board", icon: KanbanSquare },
       ],
     },
     {
@@ -90,6 +92,7 @@ const navByRole: Record<Exclude<UserRole, "customer">, NavSection[]> = {
       items: [
         { name: "Dashboard", to: "/portal/staff", icon: LayoutDashboard },
         { name: "Analytics", to: "/portal/staff/analytics", icon: BarChart3 },
+        { name: "Plan board", to: "/portal/staff/plan-board", icon: KanbanSquare },
       ],
     },
     {

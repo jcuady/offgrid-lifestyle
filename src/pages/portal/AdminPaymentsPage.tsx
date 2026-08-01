@@ -7,6 +7,7 @@ import { fileAcceptAttribute, fileRuleHint, validateUploadedFile } from "@/src/l
 import { paymongoWebhookPath } from "@/src/lib/paymongo";
 import { maskPaymongoPublicKey, paymongoKeyConfigured } from "@/src/lib/paymongoKeyDisplay";
 import type { PayMongoMode } from "@/src/types/payments";
+import { isGcashQrReady } from "@/src/types/payments";
 import { hydratePaymentSettingsFromSupabase, persistPaymentSettings } from "@/src/services";
 import { supabase } from "@/src/lib/supabase";
 import { cn } from "@/src/lib/utils";
@@ -145,9 +146,7 @@ export function AdminPaymentsPage() {
     ? maskPaymongoPublicKey(paymentSettings.paymongo.publicKey)
     : "Not configured";
 
-  const hasQr =
-    Boolean(paymentSettings.gcashQrImageUrl) &&
-    !paymentSettings.gcashQrImageUrl.includes("placehold.co");
+  const hasQr = isGcashQrReady(paymentSettings.gcashQrImageUrl);
 
   return (
     <div className="min-w-0 overflow-x-hidden p-4 sm:p-6 lg:p-10">

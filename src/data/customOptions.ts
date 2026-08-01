@@ -7,6 +7,8 @@ export interface SelectableOption<T extends string> {
   priceModifier: number;
 }
 
+const BASE_UNIT_PRICE = 500;
+
 export const CUT_OPTIONS: SelectableOption<GarmentCut>[] = [
   { id: "short_sleeve",  label: "Short Sleeve",  description: "Classic athletic fit, full range of motion",            priceModifier: 1.0 },
   { id: "long_sleeve",   label: "Long Sleeve",   description: "Full-arm coverage, UV protection for outdoor sport",    priceModifier: 1.15 },
@@ -31,15 +33,26 @@ export const PRINT_OPTIONS: SelectableOption<PrintMethod>[] = [
   { id: "digital_print", label: "Digital Print",  description: "On-demand, full-color, ideal for complex artwork",      priceModifier: 1.15 },
 ];
 
-const BASE_UNIT_PRICE = 500;
+/** Quote ceiling: highest selected cut × fabric × print modifiers. */
+export function estimateUnitPriceFromSelections(
+  cuts: readonly GarmentCut[],
+  materials: readonly FabricType[],
+  printMethod: PrintMethod | null,
+): number {
+  const maxMod = (ids: readonly string[], options: readonly SelectableOption<string>[]) => {
+    if (!ids.length) return 1;
+    return Math.max(...ids.map((id) => options.find((o) => o.id === id)?.priceModifier ?? 1));
+  };
+  const printMod = PRINT_OPTIONS.find((o) => o.id === printMethod)?.priceModifier ?? 1;
+  return Math.round(
+    BASE_UNIT_PRICE * maxMod(cuts, CUT_OPTIONS) * maxMod(materials, MATERIAL_OPTIONS) * printMod,
+  );
+}
 
 export function estimateUnitPrice(
   cut: GarmentCut | null,
   material: FabricType | null,
   printMethod: PrintMethod | null,
 ): number {
-  const cutMod = CUT_OPTIONS.find((o) => o.id === cut)?.priceModifier ?? 1;
-  const matMod = MATERIAL_OPTIONS.find((o) => o.id === material)?.priceModifier ?? 1;
-  const printMod = PRINT_OPTIONS.find((o) => o.id === printMethod)?.priceModifier ?? 1;
-  return Math.round(BASE_UNIT_PRICE * cutMod * matMod * printMod);
+  return estimateUnitPriceFromSelections(cut ? [cut] : [], material ? [material] : [], printMethod);
 }

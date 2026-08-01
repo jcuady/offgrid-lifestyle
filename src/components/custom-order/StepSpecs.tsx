@@ -20,7 +20,8 @@ export function StepSpecs() {
   const copy = useSiteContentStore((s) => s.customPageContent.wizard.step2);
   const headwearRaw = useSiteContentStore((s) => s.customHeadwearOptions);
   const headwearOptions = useMemo(() => resolveHeadwearOptions(headwearRaw), [headwearRaw]);
-  const { draft, setCut, setMaterial, setPrintMethod, updateDraft, nextStep, prevStep } = useCustomOrderStore();
+  const { draft, toggleCut, toggleMaterial, setPrintMethod, updateDraft, nextStep, prevStep } =
+    useCustomOrderStore();
   const [uploadBusy, setUploadBusy] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const isApparel = draft.category === "apparel";
@@ -31,7 +32,7 @@ export function StepSpecs() {
       : orderSheetProductTypeForHeadwear(draft.headwearType, headwearOptions);
 
   const productSpecsComplete = isApparel
-    ? Boolean(draft.cut && draft.material && draft.printMethod)
+    ? draft.cuts.length > 0 && draft.materials.length > 0 && Boolean(draft.printMethod)
     : Boolean(draft.printMethod);
 
   const specsComplete = productSpecsComplete && Boolean(draft.orderSheetFileName);
@@ -71,17 +72,19 @@ export function StepSpecs() {
         {isApparel ? (
           <>
             <div>
-              <h3 className="mb-3 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-offgrid-green/50">
+              <h3 className="mb-1 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-offgrid-green/50">
                 {copy.cutHeading}
               </h3>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <p className="mb-3 text-[11px] text-offgrid-green/50">Select all that apply</p>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2" role="group" aria-label={copy.cutHeading}>
                 {CUT_OPTIONS.map((opt) => (
                   <div key={opt.id}>
                     <OptionCard
                       label={opt.label}
                       description={opt.description}
-                      selected={draft.cut === opt.id}
-                      onClick={() => setCut(opt.id)}
+                      selected={draft.cuts.includes(opt.id)}
+                      selectionMode="multi"
+                      onClick={() => toggleCut(opt.id)}
                     />
                   </div>
                 ))}
@@ -89,17 +92,19 @@ export function StepSpecs() {
             </div>
 
             <div>
-              <h3 className="mb-3 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-offgrid-green/50">
+              <h3 className="mb-1 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-offgrid-green/50">
                 {copy.fabricHeading}
               </h3>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <p className="mb-3 text-[11px] text-offgrid-green/50">Select all that apply</p>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2" role="group" aria-label={copy.fabricHeading}>
                 {MATERIAL_OPTIONS.map((opt) => (
                   <div key={opt.id}>
                     <OptionCard
                       label={opt.label}
                       description={opt.description}
-                      selected={draft.material === opt.id}
-                      onClick={() => setMaterial(opt.id)}
+                      selected={draft.materials.includes(opt.id)}
+                      selectionMode="multi"
+                      onClick={() => toggleMaterial(opt.id)}
                     />
                   </div>
                 ))}
@@ -109,16 +114,22 @@ export function StepSpecs() {
         ) : null}
 
         <div>
-          <h3 className="mb-3 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-offgrid-green/50">
+          <h3 className="mb-1 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-offgrid-green/50">
             {copy.printHeading}
           </h3>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <p className="mb-3 text-[11px] text-offgrid-green/50">Choose one</p>
+          <div
+            className="grid grid-cols-1 gap-3 sm:grid-cols-2"
+            role="radiogroup"
+            aria-label={copy.printHeading}
+          >
             {PRINT_OPTIONS.map((opt) => (
               <div key={opt.id}>
                 <OptionCard
                   label={opt.label}
                   description={opt.description}
                   selected={draft.printMethod === opt.id}
+                  selectionMode="single"
                   onClick={() => setPrintMethod(opt.id)}
                 />
               </div>

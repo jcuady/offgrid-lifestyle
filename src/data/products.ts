@@ -1,4 +1,5 @@
-export type SizeCode = "2XS" | "XS" | "S" | "M" | "L" | "XL" | "2XL" | "3XL" | "4XL" | "5XL";
+/** Apparel size label. Presets live in `SIZE_PRESETS`; custom values (e.g. YOUTH-10) are allowed. */
+export type SizeCode = string;
 
 export type GarmentCut = "long_sleeve" | "short_sleeve" | "sleeveless" | "polo" | "tank" | "shorts" | "cap";
 

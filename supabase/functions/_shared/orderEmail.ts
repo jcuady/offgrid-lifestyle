@@ -9,6 +9,20 @@ function formatPhp(amountCentavos: number | null | undefined): string {
   );
 }
 
+/** Prefer jsonb array fields; fall back to legacy scalar strings. */
+function formatSpecList(multi: unknown, legacy: unknown): string | null {
+  const fromMulti = Array.isArray(multi)
+    ? multi.filter((v): v is string => typeof v === "string" && v.trim().length > 0)
+    : [];
+  if (fromMulti.length) {
+    return [...new Set(fromMulti)].map((v) => v.replaceAll("_", " ")).join(", ");
+  }
+  if (typeof legacy === "string" && legacy.trim()) {
+    return legacy.trim().replaceAll("_", " ");
+  }
+  return null;
+}
+
 export type ShippingSnapshot = {
   fullName?: string;
   email?: string;
@@ -44,6 +58,7 @@ export type OrderEmailContext = {
   teamOrOrg?: string;
   quantity?: number;
   category?: string;
+  /** Display string — may list multiple cuts/fabrics joined by comma. */
   cut?: string | null;
   material?: string | null;
   printMethod?: string | null;
@@ -147,8 +162,8 @@ export function buildOrderSummaryHtml(ctx: OrderEmailContext): string {
     if (ctx.teamOrOrg) html += metaRow("Team / org", escapeHtml(ctx.teamOrOrg));
     if (ctx.quantity) html += metaRow("Quantity", String(ctx.quantity));
     if (ctx.category) html += metaRow("Category", escapeHtml(ctx.category.replaceAll("_", " ")));
-    if (ctx.cut) html += metaRow("Cut", escapeHtml(ctx.cut.replaceAll("_", " ")));
-    if (ctx.material) html += metaRow("Fabric", escapeHtml(ctx.material.replaceAll("_", " ")));
+    if (ctx.cut) html += metaRow("Cuts", escapeHtml(ctx.cut));
+    if (ctx.material) html += metaRow("Fabrics", escapeHtml(ctx.material));
     if (ctx.printMethod) html += metaRow("Print", escapeHtml(ctx.printMethod.replaceAll("_", " ")));
     if (ctx.officialTotalCentavos != null) {
       html += metaRow("Quote total", formatPhp(ctx.officialTotalCentavos));
@@ -226,8 +241,8 @@ export function buildOrderEmailContextFromRow(row: OrderDbRow): OrderEmailContex
     teamOrOrg: (payload.teamOrOrg as string) ?? "",
     quantity: (payload.quantity as number) ?? undefined,
     category: (payload.category as string) ?? undefined,
-    cut: (payload.cut as string) ?? null,
-    material: (payload.material as string) ?? null,
+    cut: formatSpecList(payload.cuts, payload.cut),
+    material: formatSpecList(payload.materials, payload.material),
     printMethod: (payload.printMethod as string) ?? null,
     designNotes: (payload.designNotes as string) ?? "",
     shippingInfo: shippingRaw,
@@ -269,8 +284,8 @@ export function buildOrderSummaryText(ctx: OrderEmailContext): string {
     if (ctx.teamOrOrg) lines.push(`Team / org: ${ctx.teamOrOrg}`);
     if (ctx.quantity) lines.push(`Quantity: ${ctx.quantity}`);
     if (ctx.category) lines.push(`Category: ${ctx.category.replaceAll("_", " ")}`);
-    if (ctx.cut) lines.push(`Cut: ${ctx.cut.replaceAll("_", " ")}`);
-    if (ctx.material) lines.push(`Fabric: ${ctx.material.replaceAll("_", " ")}`);
+    if (ctx.cut) lines.push(`Cuts: ${ctx.cut}`);
+    if (ctx.material) lines.push(`Fabrics: ${ctx.material}`);
     if (ctx.printMethod) lines.push(`Print: ${ctx.printMethod.replaceAll("_", " ")}`);
     if (ctx.officialTotalCentavos != null) {
       lines.push(`Quote total: ${formatPhp(ctx.officialTotalCentavos)}`);

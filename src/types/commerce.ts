@@ -87,8 +87,11 @@ export interface CustomOrderDraft {
   orderSheetFileKey: string | null;
   orderSheetFileUrl: string | null;
   designNotes: string;
-  cut: GarmentCut | null;
-  material: FabricType | null;
+  /** Apparel cuts — multi-select (empty when headwear). */
+  cuts: GarmentCut[];
+  /** Apparel fabrics — multi-select (empty when headwear). */
+  materials: FabricType[];
+  /** Single print method for the whole order. */
   printMethod: PrintMethod | null;
   quantity: number;
   contactName: string;
@@ -145,6 +148,12 @@ export interface CheckoutProfile {
 export function toCustomOrderPayload(draft: CustomOrderDraft) {
   return {
     ...draft,
+    cuts: draft.cuts,
+    materials: draft.materials,
+    // Legacy scalar aliases for older readers / email templates.
+    cut: draft.cuts[0] ?? null,
+    material: draft.materials[0] ?? null,
+    printMethod: draft.printMethod,
     createdAt: draft.createdAt ?? new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };

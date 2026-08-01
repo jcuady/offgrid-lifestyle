@@ -1,8 +1,6 @@
 import {
   toRetailOrderPayload,
   type CustomOrderDraft,
-  type FabricType,
-  type GarmentCut,
   type Money,
   type OrderStatus,
   type PaymentStatus,
@@ -17,6 +15,7 @@ import { logger } from "@/src/lib/logger";
 import { supabase } from "@/src/lib/supabase";
 import { finalizeCustomOrderFiles } from "@/src/lib/customOrderFiles";
 import { mergeCustomOrderDraftWithFiles } from "@/src/lib/customOrderSubmit";
+import { parseCutsFromPayload, parseMaterialsFromPayload } from "@/src/lib/customOrderSpecs";
 import { validateCustomOrderDraft, validateRetailCart, validateShippingInfo, sanitizeShippingInfo, normalizeShippingInfo, mergeCustomOrderShipping } from "@/src/lib/formValidation";
 import { checkoutPaymentConfigFromSettings, validateRetailPaymentMethod } from "@/src/types/payments";
 import { notifyStaffOrderEvent } from "@/src/lib/notifications";
@@ -106,8 +105,8 @@ function mapCustomOrderRow(row: OrderRow): ManagedCustomOrder {
     quantity: (p.quantity as number) ?? 0,
     category: (p.category as "apparel" | "headwear_towels") ?? "apparel",
     headwearType: (p.headwearType as string) ?? null,
-    cut: (p.cut as GarmentCut | null) ?? null,
-    material: (p.material as FabricType | null) ?? null,
+    cuts: parseCutsFromPayload(p),
+    materials: parseMaterialsFromPayload(p),
     printMethod: (p.printMethod as PrintMethod | null) ?? null,
     designFileName: (p.designFileName as string) ?? null,
     designFileKey: (p.designFileKey as string) ?? null,

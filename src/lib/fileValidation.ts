@@ -1,6 +1,11 @@
 /** Shared upload rules for custom orders, templates, and admin image assets. */
 
-export type FileUploadKind = "customDesign" | "customOrderSheet" | "templateAsset" | "imageAsset";
+export type FileUploadKind =
+  | "customDesign"
+  | "customOrderSheet"
+  | "templateAsset"
+  | "imageAsset"
+  | "productImage";
 
 interface FileRule {
   label: string;
@@ -39,6 +44,12 @@ const RULES: Record<FileUploadKind, FileRule> = {
     maxBytes: 5 * 1024 * 1024,
     extensions: [".jpg", ".jpeg", ".png", ".webp", ".gif"],
     mimePrefixes: ["image/"],
+  },
+  productImage: {
+    label: "product image",
+    maxBytes: 5 * 1024 * 1024,
+    extensions: [".jpg", ".jpeg", ".png"],
+    mimePrefixes: ["image/jpeg", "image/png"],
   },
 };
 
@@ -94,7 +105,7 @@ export function validateUploadedFile(file: File, kind: FileUploadKind): FileVali
   }
 
   // Image assets need a real image MIME; design/sheet files are gated by extension (browsers mislabel .ai, .xlsx, etc.).
-  if (kind === "imageAsset" && !mimeAllowed(file.type, rule)) {
+  if ((kind === "imageAsset" || kind === "productImage") && !mimeAllowed(file.type, rule)) {
     return {
       ok: false,
       error: `File type does not match ${ext}. Please upload a valid ${rule.label}.`,

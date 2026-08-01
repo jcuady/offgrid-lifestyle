@@ -37,6 +37,25 @@ export async function uploadCmsImage(file: File, section: string): Promise<CmsIm
   return { ok: true, publicUrl: pub.publicUrl };
 }
 
+/** Product catalog images — JPG/PNG only, stored under site-cms/products/. */
+export async function uploadProductImage(file: File): Promise<CmsImageUploadResult> {
+  const check = validateUploadedFile(file, "productImage");
+  if (check.ok === false) return { ok: false, error: check.error };
+
+  const path = buildCmsImagePath("products", file.name);
+  const { data, error } = await supabase.storage.from(CMS_IMAGE_BUCKET).upload(path, file, {
+    upsert: false,
+    contentType: file.type || undefined,
+  });
+
+  if (error) {
+    return { ok: false, error: error.message || "Upload failed." };
+  }
+
+  const { data: pub } = supabase.storage.from(CMS_IMAGE_BUCKET).getPublicUrl(data.path);
+  return { ok: true, publicUrl: pub.publicUrl };
+}
+
 export async function uploadTemplateFile(file: File, templateId: string): Promise<CmsImageUploadResult> {
   const check = validateUploadedFile(file, "templateAsset");
   if (check.ok === false) return { ok: false, error: check.error };

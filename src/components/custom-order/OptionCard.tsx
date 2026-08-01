@@ -8,12 +8,25 @@ interface OptionCardProps {
   selected: boolean;
   onClick: () => void;
   icon?: LucideIcon;
+  /** multi = checkbox semantics; single = radio semantics */
+  selectionMode?: "single" | "multi";
 }
 
-export function OptionCard({ label, description, selected, onClick, icon: Icon }: OptionCardProps) {
+export function OptionCard({
+  label,
+  description,
+  selected,
+  onClick,
+  icon: Icon,
+  selectionMode = "single",
+}: OptionCardProps) {
   return (
     <button
+      type="button"
       onClick={onClick}
+      aria-pressed={selected}
+      aria-checked={selected}
+      role={selectionMode === "multi" ? "checkbox" : "radio"}
       className={cn(
         "w-full flex items-center gap-3 sm:gap-4 p-4 sm:p-5 rounded-xl border-2 transition-all text-left cursor-pointer",
         selected

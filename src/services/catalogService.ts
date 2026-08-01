@@ -151,6 +151,11 @@ export const supabaseCatalogService: CatalogService = {
     if (patch.fabricType !== undefined) partial.fabric_type = patch.fabricType;
     if (patch.cut !== undefined) partial.cut = patch.cut;
     if (patch.sizes !== undefined) partial.sizes = patch.sizes;
+    if (patch.sizeRange !== undefined) partial.size_range = patch.sizeRange;
+    if (patch.shortDescription !== undefined) partial.short_description = patch.shortDescription;
+    if (patch.fit !== undefined) partial.fit = patch.fit;
+    if (patch.collectionIds !== undefined) partial.collection_ids = patch.collectionIds;
+    if (patch.gallery !== undefined) partial.gallery = patch.gallery;
     if (patch.colors !== undefined) partial.colors = patch.colors as unknown as ProductUpdate["colors"];
     if (patch.sold !== undefined) partial.sold = patch.sold;
     if (patch.stock !== undefined) partial.stock = patch.stock;

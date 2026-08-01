@@ -186,8 +186,8 @@ export function validateCustomOrderDraft(draft: CustomOrderDraft): string[] {
   }
 
   if (draft.category === "apparel") {
-    if (!draft.cut) errors.push("Select a cut and style.");
-    if (!draft.material) errors.push("Select a fabric.");
+    if (!draft.cuts.length) errors.push("Select at least one cut and style.");
+    if (!draft.materials.length) errors.push("Select at least one fabric.");
     if (draft.quantity < 10) errors.push("Apparel orders require a minimum of 10 pieces.");
   }
 

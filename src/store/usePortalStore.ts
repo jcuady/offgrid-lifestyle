@@ -41,8 +41,8 @@ export interface ManagedCustomOrder {
   quantity: number;
   category: CustomOrderDraft["category"];
   headwearType: CustomOrderDraft["headwearType"];
-  cut: CustomOrderDraft["cut"];
-  material: CustomOrderDraft["material"];
+  cuts: CustomOrderDraft["cuts"];
+  materials: CustomOrderDraft["materials"];
   printMethod: CustomOrderDraft["printMethod"];
   designFileName: string | null;
   designFileKey: string | null;
@@ -117,11 +117,29 @@ function defaultQuoteFields(): Pick<
 }
 
 function migrateManagedCustomOrderRecord(raw: unknown): ManagedCustomOrder {
-  const c = raw as Partial<ManagedCustomOrder> & { id: string };
+  const c = raw as Partial<ManagedCustomOrder> & {
+    id: string;
+    cut?: string | null;
+    material?: string | null;
+  };
+  const cuts =
+    Array.isArray(c.cuts) && c.cuts.length
+      ? c.cuts
+      : c.cut
+        ? [c.cut as CustomOrderDraft["cuts"][number]]
+        : [];
+  const materials =
+    Array.isArray(c.materials) && c.materials.length
+      ? c.materials
+      : c.material
+        ? [c.material as CustomOrderDraft["materials"][number]]
+        : [];
   return {
     ...c,
     category: c.category ?? "apparel",
     headwearType: c.headwearType ?? null,
+    cuts,
+    materials,
     orderSheetFileName: c.orderSheetFileName ?? null,
     orderSheetFileKey: c.orderSheetFileKey ?? null,
     designFileKey: c.designFileKey ?? null,
@@ -515,8 +533,8 @@ export const usePortalStore = create<PortalState>()(
             quantity: draft.quantity,
             category: draft.category,
             headwearType: draft.headwearType,
-            cut: draft.cut,
-            material: draft.material,
+            cuts: draft.cuts,
+            materials: draft.materials,
             printMethod: draft.printMethod,
             designFileName: draft.designFileName,
             designFileKey: draft.designFileKey ?? null,

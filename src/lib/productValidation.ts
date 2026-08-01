@@ -1,4 +1,5 @@
 import type { Product, SizeCode } from "@/src/data/products";
+import { normalizeSizes, SIZE_PRESETS } from "@/src/lib/productSizes";
 
 export const PRODUCT_TAG_PRESETS = ["Promo", "Sale", "Best Seller", "New", "Limited Edition"] as const;
 
@@ -25,7 +26,6 @@ export type ProductFieldErrors = Partial<
 >;
 
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const ALL_SIZES: SizeCode[] = ["2XS", "XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"];
 
 export function slugifyProductName(name: string, fallback: string): string {
   const s = name
@@ -36,18 +36,17 @@ export function slugifyProductName(name: string, fallback: string): string {
   return s || fallback;
 }
 
+/** @deprecated Prefer `normalizeSizes` / size chips. Kept for older comma-input call sites. */
 export function parseSizesInput(raw: string): SizeCode[] {
   if (!raw.trim()) return [];
-  const tokens = raw
-    .split(/[,/|]+/)
-    .map((s) => s.trim().toUpperCase())
-    .filter(Boolean);
-  return tokens.filter((t): t is SizeCode => ALL_SIZES.includes(t as SizeCode));
+  return normalizeSizes(raw.split(/[,/|]+/));
 }
 
 export function formatSizesInput(sizes: SizeCode[]): string {
   return sizes.join(", ");
 }
+
+export { SIZE_PRESETS };
 
 export function parseLabelsInput(raw: string): string[] {
   return [...new Set(raw.split(",").map((value) => value.trim()).filter(Boolean))];
@@ -144,8 +143,8 @@ export function validateProductDraft({
     }
   }
 
-  if (!draft.sizes?.length) {
-    errors.sizes = "Enter at least one valid size (e.g. XS, S, M, L, XL).";
+  if (!normalizeSizes(draft.sizes ?? []).length) {
+    errors.sizes = "Select at least one size (presets or custom).";
   }
 
   const keys = Object.keys(errors);
@@ -179,8 +178,8 @@ export function normalizeProductDraft(draft: Product, editingId: string | null):
     shortDescription: draft.shortDescription?.trim() || undefined,
     material: draft.material.trim() || "Dri-fit blend",
     fit: draft.fit?.trim() || "Regular fit",
-    sizes: draft.sizes.length ? draft.sizes : ["M"],
-    sizeRange: draft.sizeRange || draft.sizes.join(" – "),
+    sizes: normalizeSizes(draft.sizes.length ? draft.sizes : ["M"]),
+    sizeRange: draft.sizeRange || normalizeSizes(draft.sizes.length ? draft.sizes : ["M"]).join(" – "),
     colors: draft.colors.length ? draft.colors : [{ name: "Green", value: "bg-offgrid-green" }],
     cut: draft.cut || "short_sleeve",
     fabricType: draft.fabricType || "dri_fit",

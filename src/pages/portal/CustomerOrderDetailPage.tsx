@@ -503,7 +503,8 @@ export function CustomerOrderDetailPage() {
   const activeOrder = retail ?? custom!;
   const orderKind = retail ? "Retail order" : "Custom order";
   const hasLegacyCustomSpecs = Boolean(
-    custom && (custom.cut || custom.material || custom.printMethod || custom.category),
+    custom &&
+      (custom.cuts?.length || custom.materials?.length || custom.printMethod || custom.category),
   );
   const teamOrderType = custom
     ? custom.category === "apparel"
@@ -958,13 +959,17 @@ export function CustomerOrderDetailPage() {
                   ) : (
                     <>
                       <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3">
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/50">Cut</p>
-                        <p className="mt-1 text-sm font-semibold text-offgrid-green">{formatEnumLabel(custom.cut ?? "")}</p>
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/50">Cuts</p>
+                        <p className="mt-1 text-sm font-semibold text-offgrid-green">
+                          {custom.cuts.length ? custom.cuts.map((c) => formatEnumLabel(c)).join(", ") : "—"}
+                        </p>
                       </div>
                       <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3">
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/50">Material</p>
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/50">Fabrics</p>
                         <p className="mt-1 text-sm font-semibold text-offgrid-green">
-                          {formatEnumLabel(custom.material ?? "")}
+                          {custom.materials.length
+                            ? custom.materials.map((m) => formatEnumLabel(m)).join(", ")
+                            : "—"}
                         </p>
                       </div>
                     </>

@@ -8,7 +8,12 @@ import { useStore } from "@/src/store/store";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { localOrderService } from "@/src/services";
 import { persistCheckoutShipping } from "@/src/services/customerShippingService";
-import { CUT_OPTIONS, MATERIAL_OPTIONS, PRINT_OPTIONS, estimateUnitPrice } from "@/src/data/customOptions";
+import {
+  CUT_OPTIONS,
+  MATERIAL_OPTIONS,
+  PRINT_OPTIONS,
+  estimateUnitPriceFromSelections,
+} from "@/src/data/customOptions";
 import { estimateHeadwearUnitPrice, isTowelHeadwearType, resolveHeadwearOptions, headwearOptionLabel } from "@/src/data/customHeadwearOptions";
 import { formatMoney, php } from "@/src/types/commerce";
 import {
@@ -20,6 +25,7 @@ import {
   isValidPhone,
   type DeliveryAddressFieldErrors,
 } from "@/src/lib/formValidation";
+import { labelsForSpecIds } from "@/src/lib/customOrderSpecs";
 import { formatCityProvinceZipLine } from "@/src/lib/portal";
 import { CUSTOMER_SIGN_IN_PATH } from "@/src/lib/authRoutes";
 import { cn } from "@/src/lib/utils";
@@ -80,10 +86,10 @@ export function StepSummary() {
 
   const unitPrice = useMemo(() => {
     if (draft.category === "apparel") {
-      return estimateUnitPrice(draft.cut, draft.material, draft.printMethod);
+      return estimateUnitPriceFromSelections(draft.cuts, draft.materials, draft.printMethod);
     }
     return estimateHeadwearUnitPrice(draft.headwearType, draft.printMethod, headwearOptions);
-  }, [draft.category, draft.cut, draft.material, draft.printMethod, draft.headwearType, headwearOptions]);
+  }, [draft.category, draft.cuts, draft.materials, draft.printMethod, draft.headwearType, headwearOptions]);
 
   const estimatedTotal = useMemo(() => php(unitPrice * draft.quantity), [unitPrice, draft.quantity]);
   const estimatedDeposit = useMemo(
@@ -265,8 +271,8 @@ export function StepSummary() {
         ) : null}
         {draft.category === "apparel" ? (
           <>
-            <SummaryRow label="Cut" value={labelFor(CUT_OPTIONS, draft.cut)} />
-            <SummaryRow label="Fabric" value={labelFor(MATERIAL_OPTIONS, draft.material)} />
+            <SummaryRow label="Cuts" value={labelsForSpecIds(CUT_OPTIONS, draft.cuts)} />
+            <SummaryRow label="Fabrics" value={labelsForSpecIds(MATERIAL_OPTIONS, draft.materials)} />
           </>
         ) : null}
         <SummaryRow label="Print" value={labelFor(PRINT_OPTIONS, draft.printMethod)} />

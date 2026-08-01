@@ -48,6 +48,36 @@ export type Database = {
         }
         Relationships: []
       }
+      og_catalog_terms: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          label: string
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: string
+          label: string
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          label?: string
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       og_custom_guide_sections: {
         Row: {
           body: string
@@ -764,7 +794,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      og_delete_catalog_term: {
+        Args: { p_kind: string; p_label: string }
+        Returns: undefined
+      }
       og_portal_role: { Args: Record<string, never>; Returns: string }
+      og_rename_catalog_term: {
+        Args: { p_kind: string; p_from_label: string; p_to_label: string }
+        Returns: undefined
+      }
       og_staff_admin_user_ids: { Args: Record<string, never>; Returns: string[] }
       og_submit_payment_proof: { Args: { p_order_id: string; p_proof_url: string }; Returns: undefined }
       og_upsert_my_push_subscription: {

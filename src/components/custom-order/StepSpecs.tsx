@@ -1,14 +1,15 @@
-import type { ChangeEvent } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 import { ArrowRight, ArrowLeft, Download, Upload, ClipboardList, Loader2 } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { OptionCard } from "@/src/components/custom-order/OptionCard";
 import { useCustomOrderStore } from "@/src/store/useCustomOrderStore";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
-import { CUT_OPTIONS, MATERIAL_OPTIONS, PRINT_OPTIONS } from "@/src/data/customOptions";
+import { CUT_OPTIONS, MATERIAL_OPTIONS } from "@/src/data/customOptions";
 import {
   headwearOptionLabel,
+  isTowelCustomOrder,
   orderSheetProductTypeForHeadwear,
+  printOptionsForCustomOrder,
   resolveHeadwearOptions,
 } from "@/src/data/customHeadwearOptions";
 import { downloadTeamOrderKitSheet } from "@/src/lib/teamOrderKitSheet";
@@ -25,6 +26,11 @@ export function StepSpecs() {
   const [uploadBusy, setUploadBusy] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const isApparel = draft.category === "apparel";
+  const towelOrder = isTowelCustomOrder(draft.category, draft.headwearType, headwearOptions);
+  const printOptions = useMemo(
+    () => printOptionsForCustomOrder(draft.category, draft.headwearType, headwearOptions),
+    [draft.category, draft.headwearType, headwearOptions],
+  );
 
   const selectedType =
     draft.category === "apparel"
@@ -35,7 +41,30 @@ export function StepSpecs() {
     ? draft.cuts.length > 0 && draft.materials.length > 0 && Boolean(draft.printMethod)
     : Boolean(draft.printMethod);
 
-  const specsComplete = productSpecsComplete && Boolean(draft.orderSheetFileName);
+  const quantityOk = draft.quantity >= 1;
+  const specsComplete = towelOrder
+    ? productSpecsComplete && quantityOk
+    : productSpecsComplete && Boolean(draft.orderSheetFileName);
+
+  // Towels: lock print method to sublimation and drop leftover roster sheets.
+  useEffect(() => {
+    if (!towelOrder) return;
+    const patch: Partial<typeof draft> = {};
+    if (draft.printMethod !== "sublimation") patch.printMethod = "sublimation";
+    if (draft.orderSheetFileName || draft.orderSheetFileKey) {
+      patch.orderSheetFileName = null;
+      patch.orderSheetFileKey = null;
+      patch.orderSheetFileUrl = null;
+    }
+    if (Object.keys(patch).length > 0) updateDraft(patch);
+  }, [
+    towelOrder,
+    draft.printMethod,
+    draft.orderSheetFileName,
+    draft.orderSheetFileKey,
+    draft.orderSheetFileUrl,
+    updateDraft,
+  ]);
 
   const onOrderSheetSelect = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -67,7 +96,6 @@ export function StepSpecs() {
         <p className="text-sm text-offgrid-green/60">{copy.description}</p>
       </div>
 
-      {/* Product specifications — DH Ultimate parity: cut, fabric, print */}
       <div className="space-y-8">
         {isApparel ? (
           <>
@@ -117,13 +145,15 @@ export function StepSpecs() {
           <h3 className="mb-1 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-offgrid-green/50">
             {copy.printHeading}
           </h3>
-          <p className="mb-3 text-[11px] text-offgrid-green/50">Choose one</p>
+          <p className="mb-3 text-[11px] text-offgrid-green/50">
+            {towelOrder ? "Towel orders use sublimation only" : "Choose one"}
+          </p>
           <div
             className="grid grid-cols-1 gap-3 sm:grid-cols-2"
             role="radiogroup"
             aria-label={copy.printHeading}
           >
-            {PRINT_OPTIONS.map((opt) => (
+            {printOptions.map((opt) => (
               <div key={opt.id}>
                 <OptionCard
                   label={opt.label}
@@ -138,95 +168,126 @@ export function StepSpecs() {
         </div>
       </div>
 
-      {/* Team order kit — roster sheet */}
-      <div className="space-y-8 border-t border-offgrid-green/10 pt-8">
-        <div>
-          <h3 className="mb-3 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-offgrid-green/50">
-            {copy.orderKitDownloadHeading}
-          </h3>
-          <div className="rounded-2xl border border-offgrid-green/10 bg-offgrid-cream/40 p-5">
-            <p className="text-sm text-offgrid-green/70">{copy.orderKitDownloadDescription}</p>
-            <Button
-              variant="outline"
-              size="sm"
-              className="mt-4 gap-2"
-              type="button"
-              onClick={() => void downloadTeamOrderKitSheet(selectedType)}
-            >
-              <Download className="h-4 w-4" />
-              {copy.orderKitDownloadButton}
-            </Button>
-            <p className="mt-2 text-[10px] text-offgrid-green/55">
-              Current selection:{" "}
-              <span className="font-semibold text-offgrid-green">
-                {draft.category === "apparel"
-                  ? "Jerseys & shorts"
-                  : headwearOptionLabel(draft.headwearType, headwearOptions)}
-              </span>
+      {towelOrder ? (
+        <div className="space-y-4 border-t border-offgrid-green/10 pt-8">
+          <div>
+            <h3 className="mb-1 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-offgrid-green/50">
+              How many pieces?
+            </h3>
+            <p className="mb-3 text-sm text-offgrid-green/60">
+              Towel orders skip the roster sheet — note the quantity here (
+              {headwearOptionLabel(draft.headwearType, headwearOptions)}).
             </p>
+            <label className="block max-w-xs">
+              <span className="sr-only">Number of towel pieces</span>
+              <input
+                type="number"
+                min={1}
+                inputMode="numeric"
+                value={draft.quantity}
+                onChange={(e) => {
+                  const n = Number(e.target.value);
+                  updateDraft({ quantity: Number.isFinite(n) && n >= 1 ? Math.floor(n) : 1 });
+                }}
+                className="min-h-11 w-full rounded-xl border border-offgrid-green/20 bg-white px-4 py-3 text-base text-offgrid-green outline-none transition-all focus:border-offgrid-lime focus:ring-2 focus:ring-offgrid-lime/25 sm:text-sm"
+                placeholder="e.g. 50"
+              />
+            </label>
+            <p className="mt-2 text-[10px] text-offgrid-green/50">Minimum 1 piece. Final count confirmed with your quote.</p>
           </div>
         </div>
+      ) : (
+        <div className="space-y-8 border-t border-offgrid-green/10 pt-8">
+          <div>
+            <h3 className="mb-3 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-offgrid-green/50">
+              {copy.orderKitDownloadHeading}
+            </h3>
+            <div className="rounded-2xl border border-offgrid-green/10 bg-offgrid-cream/40 p-5">
+              <p className="text-sm text-offgrid-green/70">{copy.orderKitDownloadDescription}</p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-4 gap-2"
+                type="button"
+                onClick={() => void downloadTeamOrderKitSheet(selectedType)}
+              >
+                <Download className="h-4 w-4" />
+                {copy.orderKitDownloadButton}
+              </Button>
+              <p className="mt-2 text-[10px] text-offgrid-green/55">
+                Current selection:{" "}
+                <span className="font-semibold text-offgrid-green">
+                  {draft.category === "apparel"
+                    ? "Jerseys & shorts"
+                    : headwearOptionLabel(draft.headwearType, headwearOptions)}
+                </span>
+              </p>
+            </div>
+          </div>
 
-        <div>
-          <h3 className="mb-3 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-offgrid-green/50">
-            {copy.orderKitUploadHeading}
-          </h3>
-          <label
-            className={cn(
-              "flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed p-8 transition-all sm:p-12",
-              uploadError
-                ? "border-red-400/60 bg-red-50/40"
-                : "border-offgrid-green/20 hover:border-offgrid-green/40 hover:bg-offgrid-green/[0.02]",
-              uploadBusy && "pointer-events-none opacity-60",
-            )}
-          >
-            {uploadBusy ? (
-              <Loader2 className="h-8 w-8 animate-spin text-offgrid-green/50" />
-            ) : (
-              <Upload className="h-8 w-8 text-offgrid-green/40" />
-            )}
-            {draft.orderSheetFileName ? (
-              <p className="text-sm font-semibold text-offgrid-green">{draft.orderSheetFileName}</p>
-            ) : (
-              <p className="text-sm text-offgrid-green/50">{copy.orderKitUploadPlaceholder}</p>
-            )}
-            <input
-              type="file"
-              accept={fileAcceptAttribute("customOrderSheet")}
-              onChange={(e) => void onOrderSheetSelect(e)}
-              className="hidden"
-            />
-          </label>
-          {uploadError ? (
-            <p className="mt-2 text-xs font-medium text-red-600" role="alert">
-              {uploadError}
-            </p>
-          ) : null}
-          <p className="mt-2 text-[10px] text-offgrid-green/50">Accepted: {fileRuleHint("customOrderSheet")}</p>
-        </div>
+          <div>
+            <h3 className="mb-3 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-offgrid-green/50">
+              {copy.orderKitUploadHeading}
+            </h3>
+            <label
+              className={cn(
+                "flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed p-8 transition-all sm:p-12",
+                uploadError
+                  ? "border-red-400/60 bg-red-50/40"
+                  : "border-offgrid-green/20 hover:border-offgrid-green/40 hover:bg-offgrid-green/[0.02]",
+                uploadBusy && "pointer-events-none opacity-60",
+              )}
+            >
+              {uploadBusy ? (
+                <Loader2 className="h-8 w-8 animate-spin text-offgrid-green/50" />
+              ) : (
+                <Upload className="h-8 w-8 text-offgrid-green/40" />
+              )}
+              {draft.orderSheetFileName ? (
+                <p className="text-sm font-semibold text-offgrid-green">{draft.orderSheetFileName}</p>
+              ) : (
+                <p className="text-sm text-offgrid-green/50">{copy.orderKitUploadPlaceholder}</p>
+              )}
+              <input
+                type="file"
+                accept={fileAcceptAttribute("customOrderSheet")}
+                onChange={(e) => void onOrderSheetSelect(e)}
+                className="hidden"
+              />
+            </label>
+            {uploadError ? (
+              <p className="mt-2 text-xs font-medium text-red-600" role="alert">
+                {uploadError}
+              </p>
+            ) : null}
+            <p className="mt-2 text-[10px] text-offgrid-green/50">Accepted: {fileRuleHint("customOrderSheet")}</p>
+          </div>
 
-        <div>
-          <h3 className="mb-3 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-offgrid-green/50">
-            {copy.orderKitChecklistHeading}
-          </h3>
-          <div className="rounded-2xl border border-offgrid-green/10 bg-offgrid-cream/40 p-5">
-            <div className="flex items-start gap-3">
-              <ClipboardList className="mt-0.5 h-4 w-4 text-offgrid-green/60" />
-              <ul className="space-y-1.5 text-sm text-offgrid-green/70">
-                <li>- Include player names and jersey numbers (if needed)</li>
-                <li>- Confirm sizes and quantities per product type</li>
-                <li>- Add notes for captain sets, alternates, and special placements</li>
-              </ul>
+          <div>
+            <h3 className="mb-3 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-offgrid-green/50">
+              {copy.orderKitChecklistHeading}
+            </h3>
+            <div className="rounded-2xl border border-offgrid-green/10 bg-offgrid-cream/40 p-5">
+              <div className="flex items-start gap-3">
+                <ClipboardList className="mt-0.5 h-4 w-4 text-offgrid-green/60" />
+                <ul className="space-y-1.5 text-sm text-offgrid-green/70">
+                  <li>- Include player names and jersey numbers (if needed)</li>
+                  <li>- Confirm sizes and quantities per product type</li>
+                  <li>- Add notes for captain sets, alternates, and special placements</li>
+                </ul>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {!specsComplete ? (
         <p className="text-center text-xs text-offgrid-green/55">
           {!productSpecsComplete
             ? "Select all product options above to continue."
-            : "Upload your completed team order sheet to continue."}
+            : towelOrder
+              ? "Enter how many towel pieces you need to continue."
+              : "Upload your completed team order sheet to continue."}
         </p>
       ) : null}
 

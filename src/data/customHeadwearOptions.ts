@@ -114,6 +114,15 @@ export function createDefaultHeadwearOptions(updatedAt: string): CustomHeadwearO
       orderSheetProductType: "hand_towel",
       sortOrder: 80,
     }),
+    row({
+      id: "towel-bath",
+      label: "Bath Towel",
+      description: "Full-size towel for team kits and events.",
+      group: "towel",
+      priceModifier: 1.05,
+      orderSheetProductType: "bath_towel",
+      sortOrder: 90,
+    }),
   ];
 }
 
@@ -157,6 +166,37 @@ export function isTowelHeadwearType(
   options: CustomHeadwearOption[],
 ): boolean {
   return findHeadwearOption(id, options)?.group === "towel";
+}
+
+/** Towel team orders: sublimation-only print + quantity note (no roster sheet). */
+export function isTowelCustomOrder(
+  category: string | null | undefined,
+  headwearType: string | null | undefined,
+  options: CustomHeadwearOption[] = [],
+): boolean {
+  if (category !== "headwear_towels") return false;
+  if (isTowelHeadwearType(headwearType, options)) return true;
+  // Submit path may not have CMS options — seed ids and towel-* slugs still count.
+  return Boolean(headwearType && /towel/i.test(headwearType));
+}
+
+export function requiresTeamOrderSheet(
+  category: string | null | undefined,
+  headwearType: string | null | undefined,
+  options: CustomHeadwearOption[] = [],
+): boolean {
+  return !isTowelCustomOrder(category, headwearType, options);
+}
+
+export function printOptionsForCustomOrder(
+  category: string | null | undefined,
+  headwearType: string | null | undefined,
+  options: CustomHeadwearOption[] = [],
+): typeof PRINT_OPTIONS {
+  if (isTowelCustomOrder(category, headwearType, options)) {
+    return PRINT_OPTIONS.filter((o) => o.id === "sublimation");
+  }
+  return PRINT_OPTIONS;
 }
 
 export function headwearOptionLabel(

@@ -59,6 +59,14 @@ export function StepDesign() {
     updateDraft({
       category: "headwear_towels",
       headwearType: current?.id ?? pool[0]?.id ?? null,
+      ...(group === "towel"
+        ? {
+            printMethod: "sublimation" as const,
+            orderSheetFileName: null,
+            orderSheetFileKey: null,
+            orderSheetFileUrl: null,
+          }
+        : {}),
     });
   };
 
@@ -148,7 +156,7 @@ export function StepDesign() {
             )}
           >
             <p className="font-display text-base font-bold text-offgrid-green">Towels</p>
-            <p className="mt-1 text-xs text-offgrid-green/60">Face and hand towel custom orders.</p>
+            <p className="mt-1 text-xs text-offgrid-green/60">Face, hand, and bath towel custom orders.</p>
           </button>
         </div>
         {draft.category === "headwear_towels" && visibleTypeOptions.length > 0 ? (
@@ -161,7 +169,19 @@ export function StepDesign() {
                 <button
                   key={opt.id}
                   type="button"
-                  onClick={() => updateDraft({ headwearType: opt.id })}
+                  onClick={() =>
+                    updateDraft({
+                      headwearType: opt.id,
+                      ...(activeGroup === "towel"
+                        ? {
+                            printMethod: "sublimation" as const,
+                            orderSheetFileName: null,
+                            orderSheetFileKey: null,
+                            orderSheetFileUrl: null,
+                          }
+                        : {}),
+                    })
+                  }
                   className={cn(
                     "rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors",
                     draft.headwearType === opt.id

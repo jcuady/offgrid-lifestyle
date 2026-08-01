@@ -551,7 +551,11 @@ export function CustomerOrderDetailPage() {
       headerExtra={
         <div className="mt-4 flex flex-wrap gap-2">
           <span className={orderStatusClassCustomer(activeOrder.status)}>
-            {formatOrderStatus(activeOrder.status, retail ? "retail" : "custom")}
+            {formatOrderStatus(
+              activeOrder.status,
+              retail ? "retail" : "custom",
+              custom ? { hasOfficialQuote: hasOfficialCustomQuote(custom.officialTotal) } : undefined,
+            )}
           </span>
           <span className={paymentStatusClassCustomer(activeOrder.paymentStatus)}>
             {formatPaymentStatus(activeOrder.paymentStatus)}

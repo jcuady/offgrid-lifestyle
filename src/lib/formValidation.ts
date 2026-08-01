@@ -1,6 +1,11 @@
 import type { CustomOrderDraft, ShippingInfo } from "@/src/types/commerce";
 import { EMPTY_SHIPPING_INFO } from "@/src/types/commerce";
 import { ensureNcrShippingFields, isNcrRegion } from "@/src/lib/philippinesAddress";
+import {
+  isTowelCustomOrder,
+  requiresTeamOrderSheet,
+  type CustomHeadwearOption,
+} from "@/src/data/customHeadwearOptions";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -163,8 +168,13 @@ export function mergeCustomOrderShipping(draft: CustomOrderDraft): ShippingInfo 
   );
 }
 
-export function validateCustomOrderDraft(draft: CustomOrderDraft): string[] {
+export function validateCustomOrderDraft(
+  draft: CustomOrderDraft,
+  opts?: { headwearOptions?: CustomHeadwearOption[] },
+): string[] {
   const errors: string[] = [];
+  const headwearOptions = opts?.headwearOptions ?? [];
+  const towelOrder = isTowelCustomOrder(draft.category, draft.headwearType, headwearOptions);
 
   if (!draft.contactName.trim()) errors.push("Full name is required.");
   if (!isValidEmail(draft.contactEmail)) errors.push("Enter a valid email address.");
@@ -192,9 +202,14 @@ export function validateCustomOrderDraft(draft: CustomOrderDraft): string[] {
   }
 
   if (!draft.printMethod) errors.push("Select a print method.");
+  if (towelOrder && draft.printMethod && draft.printMethod !== "sublimation") {
+    errors.push("Towel orders use sublimation only.");
+  }
 
-  if (!draft.orderSheetFileName || !draft.orderSheetFileKey) {
-    errors.push("Upload your completed team order sheet.");
+  if (requiresTeamOrderSheet(draft.category, draft.headwearType, headwearOptions)) {
+    if (!draft.orderSheetFileName || !draft.orderSheetFileKey) {
+      errors.push("Upload your completed team order sheet.");
+    }
   }
 
   if (draft.quantity < 1) errors.push("Quantity must be at least 1.");

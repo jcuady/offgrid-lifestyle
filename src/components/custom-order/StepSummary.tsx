@@ -14,7 +14,7 @@ import {
   PRINT_OPTIONS,
   estimateUnitPriceFromSelections,
 } from "@/src/data/customOptions";
-import { estimateHeadwearUnitPrice, isTowelHeadwearType, resolveHeadwearOptions, headwearOptionLabel } from "@/src/data/customHeadwearOptions";
+import { estimateHeadwearUnitPrice, isTowelCustomOrder, isTowelHeadwearType, resolveHeadwearOptions, headwearOptionLabel } from "@/src/data/customHeadwearOptions";
 import { formatMoney, php } from "@/src/types/commerce";
 import {
   validateCustomOrderDraft,
@@ -101,6 +101,7 @@ export function StepSummary() {
     options.find((o) => o.id === id)?.label ?? "—";
 
   const minQuantity = draft.category === "apparel" ? 10 : 1;
+  const towelOrder = isTowelCustomOrder(draft.category, draft.headwearType, headwearOptions);
 
   const deliveryComplete = useMemo(() => {
     const errors = validateDeliveryAddressFields(mergeCustomOrderShipping(draft));
@@ -136,7 +137,7 @@ export function StepSummary() {
     draft.contactName.trim() !== "" &&
     isValidEmail(draft.contactEmail) &&
     isValidPhone(draft.contactPhone) &&
-    Boolean(draft.orderSheetFileName) &&
+    (towelOrder || Boolean(draft.orderSheetFileName)) &&
     draft.quantity >= minQuantity &&
     deliveryComplete;
 
@@ -147,7 +148,7 @@ export function StepSummary() {
     const deliveryErrors = validateDeliveryAddressFields(mergeCustomOrderShipping(draft));
     setDeliveryFieldErrors(deliveryErrors);
 
-    const errors = validateCustomOrderDraft(draft);
+    const errors = validateCustomOrderDraft(draft, { headwearOptions });
     if (errors.length > 0) {
       setSubmitErrors(errors);
       scrollToFirstFieldError(formRef.current);
@@ -235,7 +236,7 @@ export function StepSummary() {
               to={`${CUSTOMER_SIGN_IN_PATH}?email=${encodeURIComponent(submittedEmail)}`}
               state={{ from: `/account/orders/${submittedOrderId}` }}
             >
-              Sign in to track &amp; pay
+              Sign in to track your order
             </Link>
           </Button>
           <Button variant="outline" size="lg" asChild>
@@ -282,7 +283,14 @@ export function StepSummary() {
         ) : null}
         <SummaryRow label="Print" value={labelFor(PRINT_OPTIONS, draft.printMethod)} />
         <SummaryRow label="Design" value={draft.designFileName ?? "Brief only — design support requested"} />
-        <SummaryRow label="Order sheet" value={draft.orderSheetFileName ?? "No file uploaded"} />
+        <SummaryRow
+          label={towelOrder ? "Order kit" : "Order sheet"}
+          value={
+            towelOrder
+              ? `${draft.quantity} pcs (no roster sheet)`
+              : (draft.orderSheetFileName ?? "No file uploaded")
+          }
+        />
         {draft.shippingInfo.barangay && draft.shippingInfo.city ? (
           <SummaryRow
             label="Delivery"
@@ -305,6 +313,8 @@ export function StepSummary() {
         />
         {draft.category === "apparel" ? (
           <p className="mt-2 text-[10px] text-offgrid-green/50">Minimum 10 pieces per design (mix cuts within the run).</p>
+        ) : towelOrder ? (
+          <p className="mt-2 text-[10px] text-offgrid-green/50">Towel quantity noted above — adjust if needed before submit.</p>
         ) : null}
       </div>
 

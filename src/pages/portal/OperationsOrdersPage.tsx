@@ -147,6 +147,13 @@ export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
 
   const detailHref = (id: string) => `${ordersBase}/${encodeURIComponent(id)}`;
 
+  const statusLabel = (row: Row, status: OrderStatus = row.entry.status) => {
+    if (row.kind === "retail") return formatOrderStatus(status, "retail");
+    return formatOrderStatus(status, "custom", {
+      hasOfficialQuote: hasOfficialCustomQuote(row.entry.officialTotal),
+    });
+  };
+
   const renderRowActions = (row: Row) => {
     const id = row.entry.id;
     const status = row.entry.status;
@@ -162,7 +169,7 @@ export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
             void (async () => {
               const next = event.target.value as OrderStatus;
               if (!canTransitionStatus(status, next, isAdmin ? { unrestricted: true } : undefined)) {
-                setFeedback(`Invalid transition: ${formatOrderStatus(status)} → ${formatOrderStatus(next)}.`);
+                setFeedback(`Invalid transition: ${statusLabel(row, status)} → ${statusLabel(row, next)}.`);
                 return;
               }
               try {
@@ -176,7 +183,7 @@ export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
                     else updateCustomOrderStatus(id, value);
                   },
                 });
-                setFeedback(`Order ${id} → ${formatOrderStatus(next)}.`);
+                setFeedback(`Order ${id} → ${statusLabel(row, next)}.`);
               } catch (err) {
                 setFeedback(err instanceof Error ? err.message : "Could not update order status.");
               }
@@ -186,7 +193,7 @@ export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
         >
           {ORDER_TRANSITIONS.map((entry) => (
             <option key={entry} value={entry}>
-              {formatOrderStatus(entry)}
+              {statusLabel(row, entry)}
             </option>
           ))}
         </select>
@@ -242,7 +249,13 @@ export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
         orderStatusClass(row.entry.status),
       )}
     >
-      {formatOrderStatus(row.entry.status)}
+      {formatOrderStatus(
+        row.entry.status,
+        row.kind,
+        row.kind === "custom"
+          ? { hasOfficialQuote: hasOfficialCustomQuote(row.entry.officialTotal) }
+          : undefined,
+      )}
     </span>
   );
 

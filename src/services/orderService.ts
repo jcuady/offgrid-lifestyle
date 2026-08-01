@@ -24,6 +24,7 @@ import { resolveStorageReference } from "@/src/lib/storageAccess";
 import { sendOrderReceiptEmail } from "@/src/services/emailService";
 import { normalizeOrderId } from "@/src/lib/orderId";
 import { upsertById } from "@/src/lib/orderStoreMerge";
+import { applyQuoteToCustomPayload, customPayloadFromManaged } from "@/src/lib/customOrderPayload";
 
 export interface RetailCartLineInput {
   productId: string;
@@ -93,6 +94,9 @@ function mapRetailOrderRow(row: OrderRow): ManagedRetailOrder {
 
 function mapCustomOrderRow(row: OrderRow): ManagedCustomOrder {
   const p = (row.custom_payload ?? {}) as Record<string, unknown>;
+  // Staff/admin keep internal notes; customers never see them in the mapped order.
+  const role = usePortalStore.getState().currentUser?.role;
+  const includeInternalNotes = role === "admin" || role === "staff";
   return {
     id: row.id,
     type: "custom",
@@ -121,7 +125,7 @@ function mapCustomOrderRow(row: OrderRow): ManagedCustomOrder {
     officialTotal: (p.officialTotal as Money | null) ?? null,
     officialDeposit: (p.officialDeposit as Money | null) ?? null,
     quoteCustomerNotes: (p.quoteCustomerNotes as string) ?? "",
-    quoteInternalNotes: (p.quoteInternalNotes as string) ?? "",
+    quoteInternalNotes: includeInternalNotes ? ((p.quoteInternalNotes as string) ?? "") : "",
     quotedAt: (p.quotedAt as string) ?? null,
     quotedBy: (p.quotedBy as string) ?? null,
     shippingInfo: row.shipping_info
@@ -393,32 +397,18 @@ export const supabaseOrderService: OrderService = {
   },
 
   persistCustomOrderQuote: async (orderId, update, order) => {
+    const now = new Date().toISOString();
+    const actor = usePortalStore.getState().currentUser;
     const hasOfficial =
       update.officialTotal !== null &&
       update.officialTotal !== undefined &&
       update.officialTotal.amount > 0;
 
-    let officialDeposit = update.officialDeposit ?? null;
-    if (hasOfficial && update.officialTotal && (!officialDeposit || officialDeposit.amount <= 0)) {
-      officialDeposit = {
-        amount: Math.round(update.officialTotal.amount * 0.6),
-        currency: update.officialTotal.currency,
-      };
-    }
-
-    const now = new Date().toISOString();
-    const actor = usePortalStore.getState().currentUser;
-
-    const payload: Record<string, unknown> = {
-      ...order,
-      officialTotal: hasOfficial ? update.officialTotal : null,
-      officialDeposit: hasOfficial ? officialDeposit : null,
-      quoteCustomerNotes: hasOfficial ? update.quoteCustomerNotes : "",
-      quoteInternalNotes: hasOfficial ? update.quoteInternalNotes : "",
+    const payload = applyQuoteToCustomPayload(customPayloadFromManaged(order), update, {
       quotedAt: hasOfficial ? now : null,
       quotedBy: hasOfficial ? actor?.id ?? null : null,
       updatedAt: now,
-    };
+    });
 
     const patch: {
       custom_payload: Json;
@@ -429,8 +419,8 @@ export const supabaseOrderService: OrderService = {
       updated_at: now,
     };
 
-    if (hasOfficial && update.officialTotal) {
-      patch.total_centavos = Math.round(update.officialTotal.amount * 100);
+    if (hasOfficial && payload.officialTotal) {
+      patch.total_centavos = Math.round(payload.officialTotal.amount * 100);
     }
 
     const { error } = await supabase.from("og_orders").update(patch).eq("id", orderId);
@@ -445,10 +435,10 @@ export const supabaseOrderService: OrderService = {
     }
 
     usePortalStore.getState().updateCustomOrderQuote(orderId, {
-      officialTotal: hasOfficial ? update.officialTotal ?? null : null,
-      officialDeposit: hasOfficial ? officialDeposit : null,
-      quoteCustomerNotes: hasOfficial ? update.quoteCustomerNotes ?? "" : "",
-      quoteInternalNotes: hasOfficial ? update.quoteInternalNotes ?? "" : "",
+      officialTotal: payload.officialTotal,
+      officialDeposit: payload.officialDeposit,
+      quoteCustomerNotes: payload.quoteCustomerNotes,
+      quoteInternalNotes: payload.quoteInternalNotes,
     });
 
     if (hasOfficial) {

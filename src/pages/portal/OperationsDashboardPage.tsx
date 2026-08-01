@@ -447,7 +447,9 @@ export function OperationsDashboardPage({ role }: OperationsDashboardPageProps) 
                       <td className="max-w-[8rem] truncate px-2 py-2.5 text-offgrid-green/70">{row.teamOrOrg}</td>
                       <td className="px-2 py-2.5 text-offgrid-green/70">{row.quantity}</td>
                       <td className="px-2 py-2.5">
-                        <p className="text-[11px] font-medium text-offgrid-green">{formatOrderStatus(row.status)}</p>
+                        <p className="text-[11px] font-medium text-offgrid-green">
+                          {formatOrderStatus(row.status, "custom", { hasOfficialQuote: row.quoteReady })}
+                        </p>
                         <p className="text-[10px] text-offgrid-green/50">
                           {formatPaymentStatus(row.paymentStatus)}
                           {row.quoteReady ? " · Quoted" : " · Quote pending"}

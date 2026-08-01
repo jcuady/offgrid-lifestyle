@@ -203,7 +203,7 @@ function AdminQuoteEditor({
     <div className="rounded-2xl border border-offgrid-green/10 bg-white p-5 shadow-sm">
       <h2 className="text-xl font-display font-bold text-offgrid-green">Official quote (admin)</h2>
       <p className="mt-1 text-xs text-offgrid-green/55">
-        Customer keeps the wizard estimate for reference; official totals appear in My Orders once saved.
+        Binding totals for the customer pay wall. You can still set fulfillment/payment freely without a quote when correcting ops.
       </p>
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         <div>
@@ -257,7 +257,7 @@ function AdminQuoteEditor({
           onChange={(e) => setInternalNotes(e.target.value)}
           rows={2}
           className="mt-1.5 w-full rounded-xl border border-offgrid-green/20 px-3 py-2.5 text-sm text-offgrid-green"
-          placeholder="Not visible to customers or staff."
+          placeholder="Not visible to customers."
         />
       </div>
       <div className="mt-5 flex flex-wrap gap-2">
@@ -347,7 +347,7 @@ export function OperationsOrderDetailPage() {
             <h1 className="mt-2 break-all font-display text-3xl font-black text-offgrid-green sm:text-4xl">{retail.id}</h1>
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <span className={cn("inline-flex rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em]", orderStatusClass(retail.status))}>
-                Fulfillment: {formatOrderStatus(retail.status)}
+                Fulfillment: {formatOrderStatus(retail.status, "retail")}
               </span>
               <span className={cn("inline-flex rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em]", paymentStatusClass(retail.paymentStatus))}>
                 Payment: {formatPaymentStatus(retail.paymentStatus)}
@@ -368,7 +368,9 @@ export function OperationsOrderDetailPage() {
                   void (async () => {
                     const next = e.target.value as (typeof retail)["status"];
                     if (!canTransitionStatus(retail.status, next, transitionOpts)) {
-                      setFeedback(`Invalid transition: ${formatOrderStatus(retail.status)} → ${formatOrderStatus(next)}.`);
+                      setFeedback(
+                        `Invalid transition: ${formatOrderStatus(retail.status, "retail")} → ${formatOrderStatus(next, "retail")}.`,
+                      );
                       return;
                     }
                     try {
@@ -379,7 +381,9 @@ export function OperationsOrderDetailPage() {
                         customerId: retail.customerId,
                         applyStore: (value) => updateRetailOrderStatus(retail.id, value),
                       });
-                      setFeedback(`Order ${retail.id} → ${formatOrderStatus(next)}. Customer notified when applicable.`);
+                      setFeedback(
+                        `Order ${retail.id} → ${formatOrderStatus(next, "retail")}. Customer notified when applicable.`,
+                      );
                     } catch (err) {
                       setFeedback(err instanceof Error ? err.message : "Could not update order status.");
                     }
@@ -389,7 +393,7 @@ export function OperationsOrderDetailPage() {
               >
                 {ORDER_TRANSITIONS.map((s) => (
                   <option key={s} value={s}>
-                    {formatOrderStatus(s)}
+                    {formatOrderStatus(s, "retail")}
                   </option>
                 ))}
               </select>
@@ -590,7 +594,9 @@ export function OperationsOrderDetailPage() {
             <h1 className="mt-2 text-4xl font-display font-black text-offgrid-green">{custom.id}</h1>
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <span className={cn("inline-flex rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em]", orderStatusClass(custom.status))}>
-                {formatOrderStatus(custom.status)}
+                {formatOrderStatus(custom.status, "custom", {
+                  hasOfficialQuote: hasOfficialCustomQuote(custom.officialTotal),
+                })}
               </span>
               <span className={cn("inline-flex rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em]", paymentStatusClass(custom.paymentStatus))}>
                 {formatPaymentStatus(custom.paymentStatus)}
@@ -621,7 +627,9 @@ export function OperationsOrderDetailPage() {
                   void (async () => {
                     const next = e.target.value as (typeof custom)["status"];
                     if (!canTransitionStatus(custom.status, next, transitionOpts)) {
-                      setFeedback(`Invalid transition: ${formatOrderStatus(custom.status)} → ${formatOrderStatus(next)}.`);
+                      setFeedback(
+                        `Invalid transition: ${formatOrderStatus(custom.status, "custom", { hasOfficialQuote: hasOfficialCustomQuote(custom.officialTotal) })} → ${formatOrderStatus(next, "custom", { hasOfficialQuote: hasOfficialCustomQuote(custom.officialTotal) })}.`,
+                      );
                       return;
                     }
                     try {
@@ -632,7 +640,9 @@ export function OperationsOrderDetailPage() {
                         customerId: custom.customerId,
                         applyStore: (value) => updateCustomOrderStatus(custom.id, value),
                       });
-                      setFeedback(`Order ${custom.id} → ${formatOrderStatus(next)}. Customer notified when applicable.`);
+                      setFeedback(
+                        `Order ${custom.id} → ${formatOrderStatus(next, "custom", { hasOfficialQuote: hasOfficialCustomQuote(custom.officialTotal) })}. Customer notified when applicable.`,
+                      );
                     } catch (err) {
                       setFeedback(err instanceof Error ? err.message : "Could not update order status.");
                     }
@@ -642,14 +652,18 @@ export function OperationsOrderDetailPage() {
               >
                 {ORDER_TRANSITIONS.map((s) => (
                   <option key={s} value={s}>
-                    {formatOrderStatus(s)}
+                    {formatOrderStatus(s, "custom", {
+                      hasOfficialQuote: hasOfficialCustomQuote(custom.officialTotal),
+                    })}
                   </option>
                 ))}
               </select>
             </div>
             {isAdmin ? (
               <div>
-                <label className="text-[10px] font-semibold uppercase tracking-[0.18em] text-offgrid-green/45">Payment status</label>
+                <label className="text-[10px] font-semibold uppercase tracking-[0.18em] text-offgrid-green/45">
+                  Payment status (admin override)
+                </label>
                 <select
                   value={custom.paymentStatus}
                   onChange={(e) => {
@@ -685,7 +699,10 @@ export function OperationsOrderDetailPage() {
             )}
           </div>
           <p className="text-xs text-offgrid-green/55">
-            Fulfillment status and payment status are tracked separately.
+            Fulfillment and payment are tracked separately.
+            {isAdmin
+              ? " Admin override: set any fulfillment or payment status without following the customer quote → deposit pipeline. Official quote is optional for ops corrections."
+              : " Staff follow the fulfillment pipeline; payment and official quote are admin-managed."}
           </p>
 
           {isAdmin ? (

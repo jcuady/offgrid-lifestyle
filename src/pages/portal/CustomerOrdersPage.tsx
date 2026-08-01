@@ -232,6 +232,7 @@ function OrderCardShell({
   paymentStatus,
   extraBadge,
   type,
+  hasOfficialQuote,
   children,
   total,
   totalLabel,
@@ -244,6 +245,7 @@ function OrderCardShell({
   paymentStatus: ManagedRetailOrder["paymentStatus"];
   extraBadge?: ReactNode;
   type: "retail" | "custom";
+  hasOfficialQuote?: boolean;
   children?: ReactNode;
   total: string;
   totalLabel: string;
@@ -261,7 +263,9 @@ function OrderCardShell({
         </div>
 
         <div className="mt-3 flex flex-wrap gap-2">
-          <span className={orderStatusClassCustomer(status)}>{formatOrderStatus(status, type)}</span>
+          <span className={orderStatusClassCustomer(status)}>
+            {formatOrderStatus(status, type, type === "custom" ? { hasOfficialQuote } : undefined)}
+          </span>
           <span className={paymentStatusClassCustomer(paymentStatus)}>
             {formatPaymentStatus(paymentStatus)}
           </span>
@@ -359,6 +363,7 @@ function CustomOrderCard({ order }: { order: ManagedCustomOrder }) {
       status={order.status}
       paymentStatus={order.paymentStatus}
       type="custom"
+      hasOfficialQuote={quoted}
       extraBadge={
         <>
           <span

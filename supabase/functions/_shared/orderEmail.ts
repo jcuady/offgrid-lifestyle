@@ -71,7 +71,7 @@ export type OrderEmailContext = {
 
 const STATUS_LABELS: Record<string, string> = {
   draft: "Draft",
-  pending_deposit: "Pending deposit",
+  pending_deposit: "Awaiting quote / deposit",
   confirmed: "Confirmed",
   in_production: "In production",
   shipped: "Shipped",

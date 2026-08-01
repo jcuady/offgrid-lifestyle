@@ -16,9 +16,19 @@ export function formatPaymentMethodLabel(method: string | null | undefined): str
   return formatEnumLabel(method);
 }
 
-export function formatOrderStatus(status: OrderStatus, orderType?: OrderType): string {
+export function formatOrderStatus(
+  status: OrderStatus,
+  orderType?: OrderType,
+  opts?: { hasOfficialQuote?: boolean },
+): string {
   if (orderType === "retail" && status === "pending_deposit") return "Order placed";
-  if (orderType === "custom" && status === "pending_deposit") return "Pending deposit";
+  if (orderType === "custom" && status === "pending_deposit") {
+    // Quote gate: deposit language only after official total exists
+    if (opts && opts.hasOfficialQuote === false) return "Awaiting quote";
+    if (opts?.hasOfficialQuote === true) return "Pending deposit";
+    // Ops lists without quote context — pair with quote badge
+    return "Awaiting quote / deposit";
+  }
   return status.replace(/_/g, " ").replace(/\b\w/g, (ch) => ch.toUpperCase());
 }
 

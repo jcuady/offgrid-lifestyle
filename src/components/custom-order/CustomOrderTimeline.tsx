@@ -30,10 +30,17 @@ interface CustomOrderTimelineProps {
   status: OrderStatus;
   hasOfficialQuote: boolean;
   paymentStatus: string;
+  towelOrder?: boolean;
   compact?: boolean;
 }
 
-export function CustomOrderTimeline({ status, hasOfficialQuote, paymentStatus, compact }: CustomOrderTimelineProps) {
+export function CustomOrderTimeline({
+  status,
+  hasOfficialQuote,
+  paymentStatus,
+  towelOrder,
+  compact,
+}: CustomOrderTimelineProps) {
   if (status === "cancelled") {
     return (
       <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">This order was cancelled.</p>
@@ -59,7 +66,8 @@ export function CustomOrderTimeline({ status, hasOfficialQuote, paymentStatus, c
         if (step.key === "submitted") done = quoteDone && depositDone;
         if (step.key === "production") done = active > i;
         if (step.key === "shipping") done = status === "delivered";
-        if (step.key === "details" || step.key === "design" || step.key === "order-kit") done = true;
+        if (step.key === "details" || step.key === "design") done = true;
+        if (step.key === "order-kit") done = true;
 
         const isCurrent =
           (step.key === "submitted" && !quoteDone) ||
@@ -68,8 +76,9 @@ export function CustomOrderTimeline({ status, hasOfficialQuote, paymentStatus, c
           (step.key === "production" && active === 4) ||
           (step.key === "shipping" && active >= 5);
 
-        const label =
-          step.key === "submitted" ? submittedStepLabel(quoteDone, depositDone) : step.label;
+        let label = step.label;
+        if (step.key === "submitted") label = submittedStepLabel(quoteDone, depositDone);
+        if (step.key === "order-kit" && towelOrder) label = "Quantity noted";
 
         return (
           <li key={step.key} className="flex flex-1 items-start gap-3 sm:flex-col sm:items-center sm:text-center">

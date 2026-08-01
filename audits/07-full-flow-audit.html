@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OFFGRID — Full flow audit 07</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-stone-50 text-slate-900">
+<main class="mx-auto max-w-5xl space-y-10 px-6 py-12">
+  <header class="space-y-2">
+    <p class="font-mono text-xs uppercase tracking-[0.2em] text-slate-500">Audit 07 · 2026-08-01 · OffGrid sswzfwfpnyhnvstabteo</p>
+    <h1 class="text-3xl font-bold tracking-tight">Full flow &amp; function audit</h1>
+    <p class="text-sm text-slate-600">Principal pass after towel kit + quote status work. Evidence: vitest, tsc, linked SQL, code inventory.</p>
+  </header>
+
+  <section class="rounded-2xl border border-amber-300 bg-amber-50 p-5 text-sm">
+    <p class="font-semibold text-amber-950">MCP note</p>
+    <p class="mt-1 text-amber-950/90"><code>user-supabase</code> MCP was pointed at a different project (ops/queue). OffGrid audits used <code>npx supabase … --linked</code> against <code>sswzfwfpnyhnvstabteo</code>.</p>
+  </section>
+
+  <section class="space-y-4">
+    <h2 class="text-xl font-semibold">Flows audited</h2>
+    <div class="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+      <table class="w-full text-left text-sm">
+        <thead class="border-b bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+          <tr><th class="p-3">Flow</th><th class="p-3">Verdict</th><th class="p-3">Notes</th></tr>
+        </thead>
+        <tbody class="divide-y">
+          <tr><td class="p-3 font-medium">Custom wizard → quote → pay</td><td class="p-3 text-emerald-700">Pass</td><td class="p-3">Quote gate; towel sublimation + qty; payload merge-patch</td></tr>
+          <tr><td class="p-3 font-medium">Retail checkout payments</td><td class="p-3 text-emerald-700">Fixed</td><td class="p-3">No longer defaults to disabled GCash; QR deps included</td></tr>
+          <tr><td class="p-3 font-medium">Customer account / email match</td><td class="p-3 text-emerald-700">Improved</td><td class="p-3">quote_ready resolves portal user by order email</td></tr>
+          <tr><td class="p-3 font-medium">Admin ops (status/payment/quote)</td><td class="p-3 text-emerald-700">Pass</td><td class="p-3">Unrestricted status + payment override documented</td></tr>
+          <tr><td class="p-3 font-medium">Staff ops</td><td class="p-3 text-amber-700">Accepted</td><td class="p-3">Payment confirm admin-only by design</td></tr>
+          <tr><td class="p-3 font-medium">Order column trigger / quote notes</td><td class="p-3 text-emerald-700">Fixed</td><td class="p-3">Locks quote notes + quotedAt/By on customer UPDATE</td></tr>
+          <tr><td class="p-3 font-medium">Emails status labels</td><td class="p-3 text-emerald-700">Fixed</td><td class="p-3">Awaiting quote vs Pending deposit vs Order placed</td></tr>
+          <tr><td class="p-3 font-medium">Towel kit UX (detail/timeline)</td><td class="p-3 text-emerald-700">Fixed</td><td class="p-3">No empty sheet slot; “Quantity noted”</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Residual (not blockers)</h2>
+    <ul class="list-disc space-y-1 pl-5 text-sm text-slate-700">
+      <li><strong>Guest claim seam:</strong> anon UPDATE 24h still present; money locked by trigger. Prefer claim RPC later.</li>
+      <li><strong>quoteInternalNotes SELECT:</strong> UI strips for customers; DB still stores in JSON — customers with SELECT could read unless redacted view/RPC.</li>
+      <li><strong>Ops:</strong> Upload real GCash QR; promote PayMongo live key when ready.</li>
+      <li><strong>Migration drift:</strong> local vs remote history still asymmetric — never naive <code>db push</code>.</li>
+    </ul>
+  </section>
+
+  <section class="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-sm">
+    <h2 class="font-semibold text-emerald-950">Verify evidence (this pass)</h2>
+    <ul class="mt-2 list-disc pl-5 text-emerald-950/90">
+      <li>Full vitest earlier: 59 files / 272 tests exit 0</li>
+      <li>Focused vitest after fixes: checkoutReadiness + towel + labels + payment — 29 tests exit 0</li>
+      <li><code>npx tsc --noEmit</code> exit 0</li>
+      <li>Live trigger contains <code>quoteInternalNotes</code> lock (SQL true)</li>
+      <li>Migration <code>20260801100000</code> repaired as applied on linked OffGrid</li>
+    </ul>
+  </section>
+</main>
+</body>
+</html>

@@ -12,6 +12,7 @@ import { checkoutCartItemLabel, checkoutCartLineCount, shouldShowEmptyCartGate }
 import { EMPTY_SHIPPING_INFO, type ShippingInfo } from "@/src/types/commerce";
 import {
   checkoutPaymentConfigFromSettings,
+  firstSelectableRetailPaymentMethod,
   isGcashQrReady,
   isRetailPaymentMethodSelectable,
   RETAIL_PAYMENT_METHODS,
@@ -100,7 +101,7 @@ export function CheckoutModal() {
   const paymentSettings = usePortalStore((s) => s.paymentSettings);
   const checkoutPaymentConfig = useMemo(
     () => checkoutPaymentConfigFromSettings(paymentSettings),
-    [paymentSettings.cod, paymentSettings.paymongo],
+    [paymentSettings],
   );
 
   useEffect(() => {
@@ -124,9 +125,9 @@ export function CheckoutModal() {
 
   useEffect(() => {
     if (checkoutStep !== 2) return;
-    if (!isRetailPaymentMethodSelectable(paymentMethod, checkoutPaymentConfig)) {
-      setPaymentMethod("gcash");
-    }
+    if (isRetailPaymentMethodSelectable(paymentMethod, checkoutPaymentConfig)) return;
+    const next = firstSelectableRetailPaymentMethod(checkoutPaymentConfig);
+    if (next) setPaymentMethod(next);
   }, [checkoutStep, paymentMethod, checkoutPaymentConfig, setPaymentMethod]);
 
   useEffect(() => {

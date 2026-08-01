@@ -33,6 +33,7 @@
         <li><strong>Done:</strong> Order intake — session cache only; Supabase is SSoT (no localStorage order queue)</li>
         <li><strong>Done:</strong> Advisor hygiene — revoked anon DEFINER EXECUTE, dropped public storage listing, split CMS FOR ALL writes, repaired recent migration stamps</li>
         <li><strong>Done:</strong> Consolidated remaining multi-permissive RLS on orders/payments/reviews/notifications/push/portal_users</li>
+        <li><strong>Done:</strong> Full flow audit 07 — checkout payment fallback, guest quote notify by email, quote-notes DB lock, towel kit UX, email status labels</li>
         <li><strong>Ops only:</strong> Upload real GCash QR; live PayMongo key when leaving test; enable COD only if ops can fulfill; optional Auth leaked-password toggle</li>
       </ul>
     </section>
@@ -70,6 +71,10 @@
       <a class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:border-emerald-400 sm:col-span-2" href="./06-custom-order-payment.html">
         <h3 class="font-semibold">06 · Custom order payment seam</h3>
         <p class="mt-1 text-sm text-slate-600">Quote-gated PayMongo / GCash — not wizard checkout</p>
+      </a>
+      <a class="rounded-2xl border border-emerald-300 bg-emerald-50/40 p-5 shadow-sm hover:border-emerald-500 sm:col-span-2" href="./07-full-flow-audit.html">
+        <h3 class="font-semibold">07 · Full flow audit</h3>
+        <p class="mt-1 text-sm text-slate-600">Principal pass: checkout, guest notify, quote-notes lock, towel kit, email labels</p>
       </a>
     </section>
 

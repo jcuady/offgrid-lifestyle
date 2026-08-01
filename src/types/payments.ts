@@ -129,6 +129,14 @@ export function isRetailPaymentMethodSelectable(
   return false;
 }
 
+/** Prefer PayMongo → GCash → COD among methods that are currently selectable. */
+export function firstSelectableRetailPaymentMethod(
+  config: CheckoutPaymentConfig,
+): RetailPaymentMethod | null {
+  const order: RetailPaymentMethod[] = ["paymongo", "gcash", "cod"];
+  return order.find((m) => isRetailPaymentMethodSelectable(m, config)) ?? null;
+}
+
 export function validateRetailPaymentMethod(method: string, config: CheckoutPaymentConfig): string | null {
   if (!isRetailPaymentMethod(method)) {
     return "Invalid payment method.";

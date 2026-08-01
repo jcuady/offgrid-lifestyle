@@ -98,7 +98,10 @@ export function orderReceiptEmail(
       : `We received your custom order ${ctx.orderId}.`,
     bodyHtml: `<p style="color:${muted};line-height:1.65;margin:0 0 12px;">Hi ${escapeHtml(ctx.customerName)},</p>
      <p style="color:${muted};line-height:1.65;margin:0 0 8px;">${intro}</p>
-     ${statusBadgeHtml(ctx.status)}
+     ${statusBadgeHtml(ctx.status, {
+       orderType: ctx.orderType,
+       officialTotalCentavos: ctx.officialTotalCentavos,
+     })}
      ${buildOrderSummaryHtml(ctx)}
      ${emailCta(ordersUrl, "View order")}`,
   });
@@ -126,7 +129,10 @@ export function paymentReceiptEmail(
     preheader: `${message} Order ${ctx.orderId}.`,
     bodyHtml: `<p style="color:${muted};line-height:1.65;margin:0 0 12px;">Hi ${escapeHtml(ctx.customerName)},</p>
      <p style="color:${muted};line-height:1.65;margin:0 0 8px;">${escapeHtml(message)}</p>
-     ${statusBadgeHtml(ctx.status)}
+     ${statusBadgeHtml(ctx.status, {
+       orderType: ctx.orderType,
+       officialTotalCentavos: ctx.officialTotalCentavos,
+     })}
      ${emailCallout(
        isDeposit
          ? "Deposit confirmed. Thank you for trusting OFF GRID®."
@@ -156,7 +162,10 @@ export function orderUpdateEmail(params: {
     preheader: `${params.message} Order ${params.ctx.orderId}.`,
     bodyHtml: `<p style="color:${muted};line-height:1.65;margin:0 0 12px;">Hi ${escapeHtml(params.ctx.customerName)},</p>
      <p style="color:${muted};line-height:1.65;margin:0 0 8px;">${escapeHtml(params.message)}</p>
-     ${statusBadgeHtml(params.ctx.status)}
+     ${statusBadgeHtml(params.ctx.status, {
+       orderType: params.ctx.orderType,
+       officialTotalCentavos: params.ctx.officialTotalCentavos,
+     })}
      ${buildOrderSummaryHtml(params.ctx)}
      ${params.extraHtml ?? ""}
      ${emailCta(ordersUrl, "View order")}`,

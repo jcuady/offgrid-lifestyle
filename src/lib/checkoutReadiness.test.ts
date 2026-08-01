@@ -8,6 +8,8 @@ import {
   checkoutPaymentConfigFromSettings,
   DEFAULT_COD_SETTINGS,
   DEFAULT_PAYMONGO_SETTINGS,
+  firstSelectableRetailPaymentMethod,
+  isRetailPaymentMethodSelectable,
   validateRetailPaymentMethod,
 } from "@/src/types/payments";
 
@@ -161,6 +163,16 @@ describe("payment gateway readiness — payment methods", () => {
       gcashQrImageUrl: "",
     });
     expect(validateRetailPaymentMethod("paymongo", enabled)).toBeNull();
+  });
+
+  it("selects PayMongo first when GCash QR is missing", () => {
+    const config = checkoutPaymentConfigFromSettings({
+      cod: DEFAULT_COD_SETTINGS,
+      paymongo: { ...DEFAULT_PAYMONGO_SETTINGS, enabled: true, publicKey: "pk_test_x" },
+      gcashQrImageUrl: "",
+    });
+    expect(isRetailPaymentMethodSelectable("gcash", config)).toBe(false);
+    expect(firstSelectableRetailPaymentMethod(config)).toBe("paymongo");
   });
 });
 

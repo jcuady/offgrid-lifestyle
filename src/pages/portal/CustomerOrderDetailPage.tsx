@@ -10,6 +10,7 @@ import { supabase } from "@/src/lib/supabase";
 import type { RetailOrderLine } from "@/src/types/commerce";
 import {
   headwearOptionLabel,
+  isTowelCustomOrder,
   isTowelHeadwearType,
   resolveHeadwearOptions,
 } from "@/src/data/customHeadwearOptions";
@@ -773,6 +774,7 @@ export function CustomerOrderDetailPage() {
                 status={custom.status}
                 hasOfficialQuote={hasOfficialCustomQuote(custom.officialTotal)}
                 paymentStatus={custom.paymentStatus}
+                towelOrder={isTowelCustomOrder(custom.category, custom.headwearType, headwearOptions)}
               />
             </div>
           </div>
@@ -953,13 +955,23 @@ export function CustomerOrderDetailPage() {
                 </div>
               </div>
               <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/50">Order sheet</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/50">
+                  {isTowelCustomOrder(custom.category, custom.headwearType, headwearOptions)
+                    ? "Order kit"
+                    : "Order sheet"}
+                </p>
                 <div className="mt-2">
-                  <CustomOrderFileButton
-                    fileKey={custom.orderSheetFileKey}
-                    fileUrl={custom.orderSheetFileUrl}
-                    fileName={custom.orderSheetFileName}
-                  />
+                  {isTowelCustomOrder(custom.category, custom.headwearType, headwearOptions) ? (
+                    <p className="text-sm font-semibold text-offgrid-green">
+                      {custom.quantity} pcs (no roster sheet)
+                    </p>
+                  ) : (
+                    <CustomOrderFileButton
+                      fileKey={custom.orderSheetFileKey}
+                      fileUrl={custom.orderSheetFileUrl}
+                      fileName={custom.orderSheetFileName}
+                    />
+                  )}
                 </div>
               </div>
               <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3">

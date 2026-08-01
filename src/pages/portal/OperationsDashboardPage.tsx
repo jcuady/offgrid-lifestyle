@@ -500,7 +500,11 @@ export function OperationsDashboardPage({ role }: OperationsDashboardPageProps) 
                     </p>
                   </div>
                   <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/60">
-                    {formatOrderStatus(order.status)}
+                    {"officialTotal" in order
+                      ? formatOrderStatus(order.status, "custom", {
+                          hasOfficialQuote: hasOfficialCustomQuote(order.officialTotal),
+                        })
+                      : formatOrderStatus(order.status, "retail")}
                   </span>
                 </button>
               </li>

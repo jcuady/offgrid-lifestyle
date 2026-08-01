@@ -45,10 +45,22 @@ async function resolveCustomerId(
   if (hint) return hint;
   const { data } = await supabase
     .from("og_orders")
-    .select("customer_id")
+    .select("customer_id, customer_email")
     .eq("id", orderId)
     .maybeSingle();
-  return data?.customer_id ?? null;
+  if (data?.customer_id) return data.customer_id;
+
+  const email = data?.customer_email?.trim().toLowerCase();
+  if (!email) return null;
+
+  // Guest orders: customer_id stays null until claim; match portal row by email.
+  const { data: portal } = await supabase
+    .from("og_portal_users")
+    .select("id")
+    .eq("role", "customer")
+    .ilike("email", email)
+    .maybeSingle();
+  return portal?.id ?? null;
 }
 
 /** In-app + push + email. Actor-agnostic — works for admin, staff, or system callers. */

@@ -86,7 +86,19 @@ const PAYMENT_LABELS: Record<string, string> = {
   refunded: "Refunded",
 };
 
-export function formatStatusLabel(status: string): string {
+export function formatStatusLabel(
+  status: string,
+  opts?: { orderType?: "retail" | "custom"; officialTotalCentavos?: number | null },
+): string {
+  if (status === "pending_deposit") {
+    if (opts?.orderType === "retail") return "Order placed";
+    if (opts?.orderType === "custom") {
+      return opts.officialTotalCentavos != null && opts.officialTotalCentavos > 0
+        ? "Pending deposit"
+        : "Awaiting quote";
+    }
+    return STATUS_LABELS.pending_deposit;
+  }
   return STATUS_LABELS[status] ?? status.replaceAll("_", " ");
 }
 
@@ -129,7 +141,15 @@ export function buildOrderSummaryHtml(ctx: OrderEmailContext): string {
     <table role="presentation" width="100%" style="font-size:13px;">`;
 
   html += metaRow("Order ID", escapeHtml(ctx.orderId));
-  html += metaRow("Status", escapeHtml(formatStatusLabel(ctx.status)));
+  html += metaRow(
+    "Status",
+    escapeHtml(
+      formatStatusLabel(ctx.status, {
+        orderType: ctx.orderType,
+        officialTotalCentavos: ctx.officialTotalCentavos,
+      }),
+    ),
+  );
   html += metaRow("Payment", escapeHtml(formatPaymentLabel(ctx.paymentStatus)));
 
   if (ctx.paymentMethod) {
@@ -200,8 +220,11 @@ export function buildOrderSummaryHtml(ctx: OrderEmailContext): string {
   return html;
 }
 
-export function statusBadgeHtml(status: string): string {
-  return `<span style="display:inline-block;margin:8px 0 4px;padding:5px 12px;border-radius:999px;background:${ACCENT};color:${EMAIL_BRAND.white};font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">${escapeHtml(formatStatusLabel(status))}</span>`;
+export function statusBadgeHtml(
+  status: string,
+  opts?: { orderType?: "retail" | "custom"; officialTotalCentavos?: number | null },
+): string {
+  return `<span style="display:inline-block;margin:8px 0 4px;padding:5px 12px;border-radius:999px;background:${ACCENT};color:${EMAIL_BRAND.white};font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">${escapeHtml(formatStatusLabel(status, opts))}</span>`;
 }
 
 type OrderDbRow = {
@@ -260,7 +283,10 @@ export function buildOrderSummaryText(ctx: OrderEmailContext): string {
   const lines: string[] = [];
   lines.push(`Order: ${ctx.orderId}`);
   lines.push(`Type: ${ctx.orderType === "retail" ? "Shop order" : "Custom order"}`);
-  lines.push(`Status: ${formatStatusLabel(ctx.status)}`);
+  lines.push(`Status: ${formatStatusLabel(ctx.status, {
+    orderType: ctx.orderType,
+    officialTotalCentavos: ctx.officialTotalCentavos,
+  })}`);
   lines.push(`Payment: ${formatPaymentLabel(ctx.paymentStatus)}`);
 
   if (ctx.paymentMethod) {

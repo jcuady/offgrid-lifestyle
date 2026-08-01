@@ -5,6 +5,7 @@ import { usePortalStore, type ManagedCustomOrder } from "@/src/store/usePortalSt
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import {
   headwearOptionLabel,
+  isTowelCustomOrder,
   isTowelHeadwearType,
   resolveHeadwearOptions,
 } from "@/src/data/customHeadwearOptions";
@@ -850,13 +851,23 @@ export function OperationsOrderDetailPage() {
                 </div>
               </div>
               <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/50">Order sheet</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/50">
+                  {isTowelCustomOrder(custom.category, custom.headwearType, headwearOptions)
+                    ? "Order kit"
+                    : "Order sheet"}
+                </p>
                 <div className="mt-2">
-                  <CustomOrderFileButton
-                    fileKey={custom.orderSheetFileKey}
-                    fileUrl={custom.orderSheetFileUrl}
-                    fileName={custom.orderSheetFileName}
-                  />
+                  {isTowelCustomOrder(custom.category, custom.headwearType, headwearOptions) ? (
+                    <p className="text-sm font-semibold text-offgrid-green">
+                      {custom.quantity} pcs (no roster sheet)
+                    </p>
+                  ) : (
+                    <CustomOrderFileButton
+                      fileKey={custom.orderSheetFileKey}
+                      fileUrl={custom.orderSheetFileUrl}
+                      fileName={custom.orderSheetFileName}
+                    />
+                  )}
                 </div>
               </div>
               <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3">

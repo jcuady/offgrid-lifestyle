@@ -25,14 +25,14 @@ export interface SiteEvent {
 export const initialEvents: SiteEvent[] = [
   {
     id: "ev-1",
-    title: "OffGrid Pickleball Open",
+    title: "OFFGRID Pickleball Open",
     subtitle: "Dink Different Championship Series",
     date: "15 Jun",
     time: "9:00 AM - 7:00 PM",
     location: "BGC Arena",
     address: "Taguig, Metro Manila",
     description:
-      "A full-day competitive and community-focused pickleball event featuring beginner to advanced brackets, exhibition matches, and product activations from OffGrid Lifestyle.",
+      "A full-day competitive and community-focused pickleball event featuring beginner to advanced brackets, exhibition matches, and product activations from OFFGRID Lifestyle.",
     image: COMMUNITY_PHOTO_PATHS.ultimateCatch,
     category: "tournament",
     status: "upcoming",
@@ -42,7 +42,7 @@ export const initialEvents: SiteEvent[] = [
     registered: 126,
     highlights: [
       "Beginner, intermediate, and advanced brackets",
-      "Official OffGrid athlete exhibition matches",
+      "Official OFFGRID athlete exhibition matches",
       "Live customization booth and merch drop",
       "On-site coaching corners and skills clinic",
     ],
@@ -66,7 +66,7 @@ export const initialEvents: SiteEvent[] = [
     highlights: [
       "Open-play courts for all levels",
       "Community mixer and partner matching",
-      "OffGrid giveaway and photo wall",
+      "OFFGRID giveaway and photo wall",
     ],
   },
   {
@@ -85,7 +85,7 @@ export const initialEvents: SiteEvent[] = [
     price: "Invite",
     highlights: [
       "First access to limited capsule pieces",
-      "Design walkthrough from OffGrid creatives",
+      "Design walkthrough from OFFGRID creatives",
       "Athlete signing and fan sessions",
     ],
   },
@@ -95,7 +95,7 @@ export const initialEvents: SiteEvent[] = [
     subtitle: "Fit, Material, And Movement",
     date: "20 May",
     time: "1:00 PM - 4:00 PM",
-    location: "OffGrid Studio",
+    location: "OFFGRID Studio",
     address: "Quezon City, Metro Manila",
     description:
       "Hands-on workshop on selecting the right fabric, cut, and print combination for teams and clubs.",

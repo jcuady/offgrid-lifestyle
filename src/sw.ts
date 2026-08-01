@@ -82,7 +82,7 @@ self.addEventListener("push", (event) => {
       tag?: string;
     };
 
-    const title = payload.title ?? "OffGrid Lifestyle";
+    const title = payload.title ?? "OFFGRID® Lifestyle";
     const path = payload.url ?? "/";
     const tag =
       typeof payload.tag === "string" && payload.tag.trim()
@@ -111,7 +111,7 @@ self.addEventListener("push", (event) => {
   } catch {
     const text = event.data.text();
     event.waitUntil(
-      self.registration.showNotification("OffGrid Lifestyle", {
+      self.registration.showNotification("OFFGRID® Lifestyle", {
         body: text,
         icon: "/favicon_io/android-chrome-192x192.png",
         tag: "offgrid:plaintext",

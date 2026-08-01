@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowRight, X } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { LOGO_WORDMARK_WHITE } from "@/src/lib/brandAssets";
+import { BRAND_NAME } from "@/src/lib/brandName";
 import { getCookieConsent, onCookieConsent } from "@/src/lib/consent";
 import { dismissCustomTeamPrompt, isCustomTeamPromptDismissed } from "@/src/lib/customTeamPrompt";
 
@@ -109,7 +110,7 @@ export function CustomTeamOrderModal() {
                 Need custom team kits?
               </h2>
               <p className="mt-1.5 text-sm leading-relaxed text-offgrid-cream/75">
-                Tell us your sport, sizes, and design. OFFGRID builds production-ready kits — min. 10 pcs.
+                Tell us your sport, sizes, and design. {BRAND_NAME} builds production-ready kits — min. 10 pcs.
               </p>
             </div>
 

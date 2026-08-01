@@ -19,6 +19,7 @@ import {
   Quote,
 } from "lucide-react";
 import { LOGO_WORDMARK_WHITE } from "@/src/lib/brandAssets";
+import { BRAND_APP_NAME } from "@/src/lib/brandName";
 import { cn } from "@/src/lib/utils";
 import { usePortalStore, type UserRole } from "@/src/store/usePortalStore";
 import { localAuthService } from "@/src/services";
@@ -128,7 +129,7 @@ export function PortalLayout({ role }: PortalLayoutProps) {
   const sidebarBody = (onNavigate?: () => void) => (
     <>
       <button onClick={() => navigate("/")} className="inline-flex" aria-label="Go to storefront">
-        <img src={LOGO_WORDMARK_WHITE} alt="OffGrid" className="h-8 w-auto" />
+        <img src={LOGO_WORDMARK_WHITE} alt={BRAND_APP_NAME} className="h-8 w-auto" />
       </button>
 
       <div className="mt-8 rounded-2xl border border-offgrid-cream/10 bg-offgrid-cream/[0.04] p-4">
@@ -202,7 +203,7 @@ export function PortalLayout({ role }: PortalLayoutProps) {
         {/* Mobile top bar */}
         <header className="sticky top-0 z-40 flex items-center justify-between gap-3 border-b border-offgrid-cream/10 bg-offgrid-green px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] lg:hidden">
           <button onClick={() => navigate("/")} aria-label="Go to storefront">
-            <img src={LOGO_WORDMARK_WHITE} alt="OffGrid" className="h-7 w-auto" />
+            <img src={LOGO_WORDMARK_WHITE} alt={BRAND_APP_NAME} className="h-7 w-auto" />
           </button>
           <div className="flex items-center gap-3">
             <NotificationBell

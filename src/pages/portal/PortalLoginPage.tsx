@@ -85,7 +85,7 @@ export function PortalLoginPage() {
       submitLabel="Sign in to portal"
       quote={{
         text: "Run the storefront, production, and fulfillment from one command center.",
-        attribution: "OffGrid Operations",
+        attribution: "OFFGRID Operations",
       }}
       email={email}
       password={password}

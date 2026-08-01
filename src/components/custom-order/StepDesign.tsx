@@ -242,7 +242,7 @@ export function StepDesign() {
         ) : null}
         <p className="mt-2 text-[10px] text-offgrid-green/50">
           Accepted: {fileRuleHint("customDesign")}. Upload artwork (.AI preferred) or add design notes below if you need
-          free OffGrid design support.
+          free OFFGRID design support.
         </p>
       </div>
 

@@ -1,3 +1,5 @@
+import { BRAND_NAME } from "@/src/lib/brandName";
+
 const INSTALL_DISMISSED_KEY = "og-pwa-install-dismissed";
 const OPEN_GUIDE_EVENT = "og:open-install-guide";
 
@@ -65,10 +67,10 @@ export function getPushUnsupportedReason(): string | null {
     return "Notifications are not available in this browser.";
   }
   if (isIosDevice() && !iosSupportsWebPush()) {
-    return "Push on iPhone/iPad needs iOS 16.4 or later. Update iOS, then add OffGrid to your Home Screen.";
+    return `Push on iPhone/iPad needs iOS 16.4 or later. Update iOS, then add ${BRAND_NAME} to your Home Screen.`;
   }
   if (isIosDevice() && !isStandalonePwa()) {
-    return "On iPhone or iPad, add OffGrid to your Home Screen first, then enable notifications.";
+    return `On iPhone or iPad, add ${BRAND_NAME} to your Home Screen first, then enable notifications.`;
   }
   return null;
 }

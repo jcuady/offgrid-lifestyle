@@ -53,7 +53,7 @@ export function TermsPage() {
             oglifestyleph.com
           </a>
           , our customer account portal, and all related products and services (collectively, the &ldquo;Services&rdquo;)
-          operated by OffGrid Lifestyle (&ldquo;OffGrid,&rdquo; &ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;),
+          operated by OFFGRID® Lifestyle (&ldquo;OFFGRID,&rdquo; &ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;),
           based in Metro Manila, Philippines.
         </p>
         <p>
@@ -112,7 +112,7 @@ export function TermsPage() {
           logos, and marks submitted, and that they do not infringe any third-party intellectual property rights.
         </p>
         <p>
-          You grant OffGrid a limited, non-exclusive license to use submitted artwork solely to produce, fulfill, and
+          You grant OFFGRID a limited, non-exclusive license to use submitted artwork solely to produce, fulfill, and
           document your order. Mockups and quotes are provided for approval; production proceeds only after your
           confirmed acceptance of the official quote and applicable deposit.
         </p>
@@ -166,7 +166,7 @@ export function TermsPage() {
 
       <Section title="11. Intellectual property">
         <p>
-          OffGrid branding, website design, product photography, copy, and proprietary materials remain our property or
+          OFFGRID branding, website design, product photography, copy, and proprietary materials remain our property or
           that of our licensors. You may not copy, reproduce, or exploit them without prior written consent.
         </p>
       </Section>
@@ -181,7 +181,7 @@ export function TermsPage() {
 
       <Section title="13. Limitation of liability">
         <p>
-          To the maximum extent permitted under Philippine law, OffGrid Lifestyle and its officers, employees, and
+          To the maximum extent permitted under Philippine law, OFFGRID® Lifestyle and its officers, employees, and
           partners are not liable for indirect, incidental, special, consequential, or punitive damages. Our total
           liability for any claim relating to a specific order is limited to the amount you paid for that order.
         </p>
@@ -211,7 +211,7 @@ export function PrivacyPage() {
     <LegalPageLayout title="Privacy Policy" updated="July 9, 2026">
       <Section title="1. Who we are">
         <p>
-          OffGrid Lifestyle (&ldquo;OffGrid,&rdquo; &ldquo;we,&rdquo; &ldquo;us&rdquo;) operates{" "}
+          OFFGRID® Lifestyle (&ldquo;OFFGRID,&rdquo; &ldquo;we,&rdquo; &ldquo;us&rdquo;) operates{" "}
           <a href="https://www.oglifestyleph.com" className="font-semibold underline underline-offset-4">
             oglifestyleph.com
           </a>{" "}
@@ -278,7 +278,7 @@ export function PrivacyPage() {
         </p>
         <p>
           We may disclose information if required by law, court order, or to protect the rights, safety, and security of
-          OffGrid, our customers, or others.
+          OFFGRID, our customers, or others.
         </p>
       </Section>
 

@@ -275,7 +275,7 @@ export function ContactPage() {
                 href="https://www.instagram.com/offgridlifestyle.ph/"
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="OffGrid Lifestyle on Instagram"
+                aria-label="OFFGRID Lifestyle on Instagram"
                 className="flex h-11 w-11 items-center justify-center rounded-full border border-offgrid-green/15 text-offgrid-green transition-colors hover:border-offgrid-lime hover:bg-offgrid-lime hover:text-offgrid-cream"
               >
                 <Instagram className="h-4 w-4" />
@@ -284,7 +284,7 @@ export function ContactPage() {
                 href="https://www.facebook.com/offgridlifestyleph/"
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="OffGrid Lifestyle on Facebook"
+                aria-label="OFFGRID Lifestyle on Facebook"
                 className="flex h-11 w-11 items-center justify-center rounded-full border border-offgrid-green/15 text-offgrid-green transition-colors hover:border-offgrid-lime hover:bg-offgrid-lime hover:text-offgrid-cream"
               >
                 <Facebook className="h-4 w-4" />

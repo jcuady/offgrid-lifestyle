@@ -182,7 +182,7 @@ export function validateCustomOrderDraft(draft: CustomOrderDraft): string[] {
   const hasDesign = Boolean(draft.designFileName && draft.designFileKey);
   const hasBrief = draft.designNotes.trim().length > 0;
   if (!hasDesign && !hasBrief) {
-    errors.push("Upload a design file or add design notes for OffGrid design support.");
+    errors.push("Upload a design file or add design notes for OFFGRID design support.");
   }
 
   if (draft.category === "apparel") {

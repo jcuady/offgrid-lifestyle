@@ -103,7 +103,7 @@ export function PushPermissionPrompt() {
 
   const title = isCustomer ? "Stay updated on your orders" : "Stay updated on operations";
   const body = needsIosInstall
-    ? "Add OffGrid to your Home Screen, then turn on push to get order alerts."
+    ? "Add OFFGRID to your Home Screen, then turn on push to get order alerts."
     : isCustomer
       ? "Get notified when your payment is confirmed, quotes are ready, or your order ships."
       : "Get notified the moment new orders arrive or customers upload payment proof.";

@@ -1,16 +1,18 @@
+import { BRAND_LEGAL_NAME, BRAND_NAME } from "@/src/lib/brandName";
+
 /** Canonical production URL (www is primary on Vercel). */
 export const SITE_URL = "https://www.oglifestyleph.com";
 
-export const SITE_NAME = "OFFGRID® Lifestyle";
+export const SITE_NAME = BRAND_LEGAL_NAME;
 
 export const SITE_TITLE =
-  "OFFGRID® | Ultimate Frisbee, Pickleball & Custom Teamwear Philippines";
+  `${BRAND_NAME}® | Ultimate Frisbee, Pickleball & Custom Teamwear Philippines`;
 
 export const SITE_DESCRIPTION =
-  "OFFGRID Filipino sportswear — ultimate frisbee retail, pickleball, golf, running, and custom team kits. Designed in Manila.";
+  `${BRAND_NAME} Filipino sportswear — ultimate frisbee retail, pickleball, golf, running, and custom team kits. Designed in Manila.`;
 
 export const SITE_KEYWORDS =
-  "OFFGRID Lifestyle, oglifestyleph, Filipino sportswear, ultimate frisbee apparel, custom teamwear, pickleball apparel, golf wear, Philippines, team uniforms, Manila sportswear";
+  `${BRAND_NAME} Lifestyle, oglifestyleph, Filipino sportswear, ultimate frisbee apparel, custom teamwear, pickleball apparel, golf wear, Philippines, team uniforms, Manila sportswear`;
 
 /** Social preview — dark wordmark on light background. */
 export const SITE_OG_IMAGE_PATH = "/OG%20logo/OG%20logo/Complete/Black%20No%20BG.png";

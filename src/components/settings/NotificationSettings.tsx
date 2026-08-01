@@ -83,7 +83,7 @@ export function NotificationSettings() {
     setTestBusy(true);
     try {
       const result = await sendPushNotification({
-        title: "OffGrid test notification",
+        title: "OFFGRID test notification",
         body: "Push is working on this device. You can dismiss this.",
         url: currentUser.role === "customer" ? "/account/orders" : "/portal",
         tag: `test-${currentUser.role}-${currentUser.id.slice(0, 8)}`,
@@ -150,7 +150,7 @@ export function NotificationSettings() {
           {isIosDevice() && !isStandalonePwa() && !subscribed ? (
             <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
               <p className="text-xs leading-relaxed text-offgrid-green/55">
-                iPhone and iPad require the installed app for push. Add OffGrid to your Home Screen, then return here.
+                iPhone and iPad require the installed app for push. Add OFFGRID to your Home Screen, then return here.
               </p>
               <Button
                 type="button"

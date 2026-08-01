@@ -18,9 +18,9 @@ export const LEGACY_FAQS_SUMMARY =
 export const LEGACY_FAQS_BODY =
   "Common FAQ topics include: minimum quantity, deposit requirements, revision limits, sample policy, shipping SLA, and post-delivery support.";
 export const OFFGRID_FAQS_SUMMARY =
-  "File submission rules, order minimums, and free OffGrid design support.";
+  "File submission rules, order minimums, and free OFFGRID design support.";
 export const OFFGRID_FAQS_BODY =
-  "1) Tops and bottoms minimum: 10 pieces per design. You can mix shirt types within that 10-piece run (tank tops, short sleeves, long sleeves, and sun hoodies).\n2) Artwork submission: Place your design in OffGrid templates, then send the final file as Adobe Illustrator (.AI) in CMYK color mode for clean production output.\n3) Not using Illustrator? You can still send any file format and an OffGrid rep will guide you through preparation.\n4) Create with OffGrid: Design assistance is free. Share your concept, colors, logos, references, and team style so we can build a production-ready layout faster.\n5) Need inspiration first? Review sample team looks from our channels and include pegs in your brief so we can match your direction.";
+  "1) Tops and bottoms minimum: 10 pieces per design. You can mix shirt types within that 10-piece run (tank tops, short sleeves, long sleeves, and sun hoodies).\n2) Artwork submission: Place your design in OFFGRID templates, then send the final file as Adobe Illustrator (.AI) in CMYK color mode for clean production output.\n3) Not using Illustrator? You can still send any file format and an OFFGRID rep will guide you through preparation.\n4) Create with OFFGRID: Design assistance is free. Share your concept, colors, logos, references, and team style so we can build a production-ready layout faster.\n5) Need inspiration first? Review sample team looks from our channels and include pegs in your brief so we can match your direction.";
 
 /** @deprecated Use DEFAULT_GUIDE_CTA_HREF */
 export const FIXED_GUIDE_CTA_HREF = DEFAULT_GUIDE_CTA_HREF;
@@ -100,7 +100,7 @@ export function getCanonicalGuideSectionSeeds(): CustomContentSection[] {
       slug: "sizing-chart",
       title: "Sizing Chart",
       subtitle: "Fit Guide For Jerseys And Shorts",
-      summary: "Measure chest, length, and waist using our standard OffGrid fitting guide.",
+      summary: "Measure chest, length, and waist using our standard OFFGRID fitting guide.",
       body:
         "Tops: measure chest side seam to side seam and body length from neck base.\nShorts: measure waist relaxed and stretched, then outseam length.\nFor team runs, collect full roster sizes in one sheet before checkout.",
       heroImage: COMMUNITY_PHOTO_PATHS.pilipinasPortrait,

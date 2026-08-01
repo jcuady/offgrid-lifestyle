@@ -134,8 +134,8 @@ export function ResetPasswordPage() {
       title="Choose a new password"
       description={
         isPortal
-          ? "Set a new password for your OffGrid portal account."
-          : "Set a new password for your OffGrid account."
+          ? "Set a new password for your OFFGRID portal account."
+          : "Set a new password for your OFFGRID account."
       }
       email=""
       hideEmail

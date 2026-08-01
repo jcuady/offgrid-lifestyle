@@ -110,7 +110,7 @@ export function CustomerOrdersPage() {
         <CheckCircle2 className="mb-4 h-10 w-10 text-offgrid-lime" aria-hidden />
         <h1 className="font-heading text-2xl font-black text-offgrid-green">Email confirmed</h1>
         <p className="mt-2 max-w-md text-sm text-offgrid-green/65">
-          You&apos;re signed in on your other OffGrid tab. You can close this window.
+          You&apos;re signed in on your other OFFGRID tab. You can close this window.
         </p>
         <Button className="mt-6" onClick={() => setDeferToOtherTab(false)}>
           Stay on this tab

@@ -110,7 +110,7 @@ export function AdminSettingsPage() {
       <PortalPageHeader
         eyebrow="Configuration"
         title="Settings"
-        description="Your account, store configuration shortcuts, and production-readiness status for the OffGrid portal."
+        description="Your account, store configuration shortcuts, and production-readiness status for the OFFGRID portal."
       />
 
       {/* Account */}
@@ -217,7 +217,7 @@ export function AdminSettingsPage() {
             <p className="font-display text-sm font-bold text-offgrid-green">Data &amp; environment</p>
             <p className="mt-1 text-sm leading-relaxed text-offgrid-green/65">
               This portal runs on a localStorage-backed store with service adapters ready for Supabase. Apply{" "}
-              <code className="font-mono text-xs">supabase/migrations</code> to a dedicated OffGrid project, then set{" "}
+              <code className="font-mono text-xs">supabase/migrations</code> to a dedicated OFFGRID project, then set{" "}
               <code className="font-mono text-xs">VITE_SUPABASE_URL</code> to connect production auth, staff, and audit
               persistence.
             </p>

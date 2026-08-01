@@ -4,6 +4,7 @@ import { Download, X } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { cn } from "@/src/lib/utils";
 import { LOGO_WORDMARK_WHITE } from "@/src/lib/brandAssets";
+import { BRAND_APP_NAME, BRAND_NAME } from "@/src/lib/brandName";
 import { getCookieConsent, onCookieConsent } from "@/src/lib/consent";
 import {
   dismissPwaInstallPrompt,
@@ -19,14 +20,14 @@ const IOS_STEPS: string[] = [
   "Open this site in Safari (not Chrome or in-app browsers).",
   "Tap the Share button in the toolbar.",
   "Scroll down and tap “Add to Home Screen”.",
-  "Tap “Add” — OffGrid will appear on your Home Screen.",
+  `Tap “Add” — ${BRAND_NAME} will appear on your Home Screen.`,
 ];
 
 const ANDROID_STEPS: string[] = [
   "Open this site in Chrome.",
   "Tap the ⋮ menu in the top right.",
   "Tap “Install app” or “Add to Home screen”.",
-  "Confirm — OffGrid installs like a native app.",
+  `Confirm — ${BRAND_NAME} installs like a native app.`,
 ];
 
 /** Wait for cookie bar to clear before soft-prompting install (avoids dual chrome). */
@@ -156,12 +157,12 @@ export function PwaInstallModal() {
               >
                 <X className="h-4 w-4" />
               </button>
-              <img src={LOGO_WORDMARK_WHITE} alt="" className="h-7 w-auto" />
+              <img src={LOGO_WORDMARK_WHITE} alt={BRAND_APP_NAME} className="h-7 w-auto" />
               <h2 id="pwa-install-title" className="mt-4 font-display text-2xl font-black leading-tight">
-                Install the OffGrid app
+                Install the {BRAND_APP_NAME} app
               </h2>
               <p className="mt-1.5 text-sm leading-relaxed text-offgrid-cream/75">
-                Add OffGrid to your Home Screen for a faster, full-screen experience with order push
+                Add {BRAND_NAME} to your Home Screen for a faster, full-screen experience with order push
                 notifications.
               </p>
             </div>

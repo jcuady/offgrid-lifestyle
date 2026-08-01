@@ -175,7 +175,7 @@ export function normalizeProductDraft(draft: Product, editingId: string | null):
     basePrice,
     price,
     image: draft.image.trim() || "/images/product_polo.png",
-    description: draft.description.trim() || "Premium OffGrid product.",
+    description: draft.description.trim() || "Premium OFFGRID product.",
     shortDescription: draft.shortDescription?.trim() || undefined,
     material: draft.material.trim() || "Dri-fit blend",
     fit: draft.fit?.trim() || "Regular fit",

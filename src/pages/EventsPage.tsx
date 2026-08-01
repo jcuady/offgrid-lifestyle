@@ -377,10 +377,10 @@ export function EventsPage() {
             className="max-w-3xl mx-auto"
           >
             <h2 className="text-4xl md:text-6xl font-display font-black mb-6">
-              Want to Host an<br />OffGrid Event?
+              Want to Host an<br />OFFGRID Event?
             </h2>
             <p className="text-base md:text-lg text-white/80 mb-10 max-w-xl mx-auto">
-              Partner with us to bring OffGrid to your city. We provide the gear, you bring the community.
+              Partner with us to bring OFFGRID to your city. We provide the gear, you bring the community.
             </p>
             <Button
               variant="outline"

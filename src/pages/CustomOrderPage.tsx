@@ -23,7 +23,7 @@ export function CustomOrderPage() {
     {
       title: "Customize your gear",
       detail:
-        "Use your own design file or work with OffGrid to create your team design.",
+        "Use your own design file or work with OFFGRID to create your team design.",
     },
     {
       title: "Collect order details",
@@ -31,11 +31,11 @@ export function CustomOrderPage() {
     },
     {
       title: "Submit your order",
-      detail: "Send the completed order form so OffGrid can review and confirm the next steps.",
+      detail: "Send the completed order form so OFFGRID can review and confirm the next steps.",
     },
     {
       title: "Production starts",
-      detail: "OffGrid creates the first unit, confirms details, then proceeds to mass production.",
+      detail: "OFFGRID creates the first unit, confirms details, then proceeds to mass production.",
     },
     {
       title: "Shipping",
@@ -81,7 +81,7 @@ export function CustomOrderPage() {
               Team order system
             </h2>
             <p className="mt-3 text-sm text-offgrid-green/65 sm:text-base">
-              OffGrid custom orders follow a clear six-step workflow so both customers and operations know what happens from quote prep to shipping.
+              OFFGRID custom orders follow a clear six-step workflow so both customers and operations know what happens from quote prep to shipping.
             </p>
           </div>
 
@@ -103,7 +103,7 @@ export function CustomOrderPage() {
           <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-offgrid-green/10">
             <div className="flex flex-col gap-1 border-b border-offgrid-green/10 bg-offgrid-green/[0.04] px-5 py-4 sm:px-6">
               <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-green/50">
-                Create with OffGrid
+                Create with OFFGRID
               </p>
               <h3 className="font-display text-2xl font-black tracking-tight text-offgrid-green">
                 No Designer? No Problem.

@@ -194,7 +194,7 @@ export interface AddressSearchResult {
 
 const GEO_HEADERS = {
   Accept: "application/json",
-  "User-Agent": "OffGridLifestyle/1.0 (checkout; contact@offgridlifestyle.ph)",
+  "User-Agent": "OFFGRIDLifestyle/1.0 (checkout; contact@offgridlifestyle.ph)",
 };
 
 function normalizePlaceName(name: string): string {

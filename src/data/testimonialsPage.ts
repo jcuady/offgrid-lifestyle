@@ -58,7 +58,7 @@ export const initialTestimonialsPageContent: TestimonialsPageContent = {
     titleLine1: "Proof in the",
     titleLine2Italic: "play.",
     description:
-      "Teams, athletes, and everyday wearers put OffGrid through real matches, long runs, and game days. Here is what they say about the fit, the finish, and the experience.",
+      "Teams, athletes, and everyday wearers put OFFGRID through real matches, long runs, and game days. Here is what they say about the fit, the finish, and the experience.",
     backLabel: "Back to home",
   },
   showcase: {

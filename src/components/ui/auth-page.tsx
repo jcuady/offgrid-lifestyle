@@ -99,7 +99,7 @@ export function AuthPage({
                 "Premium Filipino sportswear built for movement — on and off the grid."}&rdquo;
             </p>
             <footer className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-offgrid-cream/55">
-              {quote?.attribution ?? "OffGrid Lifestyle"}
+              {quote?.attribution ?? "OFFGRID Lifestyle"}
             </footer>
           </blockquote>
         </div>

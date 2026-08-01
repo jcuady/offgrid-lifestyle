@@ -150,7 +150,7 @@ export function AboutPage() {
               <div className="relative aspect-[4/5] overflow-hidden rounded-[1.5rem] ring-1 ring-offgrid-cream/10 sm:aspect-square lg:aspect-[5/6]">
                 <img
                   src={story.image}
-                  alt="OffGrid Lifestyle"
+                  alt="OFFGRID Lifestyle"
                   className="h-full w-full object-cover"
                   loading="lazy"
                 />

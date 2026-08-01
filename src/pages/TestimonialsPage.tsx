@@ -184,7 +184,7 @@ export function TestimonialsPage() {
               <div className="relative min-h-[260px] overflow-hidden bg-offgrid-green/5">
                 <img
                   src={featured.image}
-                  alt={`${featured.author} wearing OffGrid`}
+                  alt={`${featured.author} wearing OFFGRID`}
                   loading="lazy"
                   decoding="async"
                   className="h-full w-full object-cover"

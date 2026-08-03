@@ -57,6 +57,8 @@ export interface ManagedCustomOrder {
   officialDeposit: Money | null;
   quoteCustomerNotes: string;
   quoteInternalNotes: string;
+  /** Latest customer revision request note from custom_payload.customerRevisionNote */
+  customerRevisionNote: string;
   quotedAt: string | null;
   quotedBy: string | null;
   shippingInfo: ShippingInfo | null;
@@ -100,6 +102,7 @@ function defaultQuoteFields(): Pick<
   | "officialDeposit"
   | "quoteCustomerNotes"
   | "quoteInternalNotes"
+  | "customerRevisionNote"
   | "quotedAt"
   | "quotedBy"
 > {
@@ -108,6 +111,7 @@ function defaultQuoteFields(): Pick<
     officialDeposit: null,
     quoteCustomerNotes: "",
     quoteInternalNotes: "",
+    customerRevisionNote: "",
     quotedAt: null,
     quotedBy: null,
   };

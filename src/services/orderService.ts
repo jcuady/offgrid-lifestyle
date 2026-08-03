@@ -139,6 +139,7 @@ function mapCustomOrderRow(row: OrderRow): ManagedCustomOrder {
     officialDeposit: (p.officialDeposit as Money | null) ?? null,
     quoteCustomerNotes: (p.quoteCustomerNotes as string) ?? "",
     quoteInternalNotes: includeInternalNotes ? notesFromTable : "",
+    customerRevisionNote: (p.customerRevisionNote as string) ?? "",
     quotedAt: (p.quotedAt as string) ?? null,
     quotedBy: (p.quotedBy as string) ?? null,
     shippingInfo: row.shipping_info

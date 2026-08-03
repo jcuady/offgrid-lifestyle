@@ -56,6 +56,7 @@ function sampleOrder(partial: Partial<ManagedCustomOrder> = {}): ManagedCustomOr
     officialDeposit: null,
     quoteCustomerNotes: "",
     quoteInternalNotes: "secret staff note",
+    customerRevisionNote: "",
     quotedAt: null,
     quotedBy: null,
     shippingInfo: null,
@@ -90,5 +91,22 @@ describe("customPayloadFromManaged", () => {
     expect(next.cuts).toEqual(["short_sleeve"]);
     expect(next.quoteCustomerNotes).toBe("Hi");
     expect(next).not.toHaveProperty("quoteInternalNotes");
+  });
+
+  it("preserves customerRevisionNote across quote payload merge", () => {
+    const base = customPayloadFromManaged(
+      sampleOrder({ customerRevisionNote: "Need XL sleeves" }),
+    );
+    const next = applyQuoteToCustomPayload(
+      base,
+      {
+        officialTotal: { amount: 5000, currency: "PHP" },
+        officialDeposit: null,
+        quoteCustomerNotes: "",
+        quoteInternalNotes: "",
+      },
+      { quotedAt: "t", quotedBy: "admin", updatedAt: "t2" },
+    );
+    expect(next.customerRevisionNote).toBe("Need XL sleeves");
   });
 });

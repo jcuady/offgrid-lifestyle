@@ -238,6 +238,7 @@ function OrderCardShell({
   totalLabel,
   totalHint,
   to,
+  ctaLabel = "View details",
 }: {
   badge: string;
   id: string;
@@ -251,6 +252,7 @@ function OrderCardShell({
   totalLabel: string;
   totalHint?: string;
   to: string;
+  ctaLabel?: string;
 }) {
   return (
     <article className={cardClass}>
@@ -289,7 +291,7 @@ function OrderCardShell({
           </div>
           <Button variant="default" size="lg" className="w-full gap-2 shadow-sm sm:w-auto" asChild>
             <Link to={to}>
-              View details
+              {ctaLabel}
               <ArrowRight className="h-4 w-4 shrink-0" />
             </Link>
           </Button>
@@ -350,12 +352,18 @@ function RetailOrderCard({ order }: { order: ManagedRetailOrder }) {
 
 function CustomOrderCard({ order }: { order: ManagedCustomOrder }) {
   const quoted = hasOfficialCustomQuote(order.officialTotal);
-  const payCta = customOrderPaymentCtaLabel(
-    resolveCustomOrderPaymentPhase({
-      paymentStatus: order.paymentStatus,
-      officialTotal: order.officialTotal,
-    }),
-  );
+  const phase = resolveCustomOrderPaymentPhase({
+    paymentStatus: order.paymentStatus,
+    officialTotal: order.officialTotal,
+  });
+  const payCta = customOrderPaymentCtaLabel(phase);
+  const ctaLabel =
+    payCta ??
+    (order.status === "revision_requested"
+      ? "View revision"
+      : order.status === "under_review" || !quoted
+        ? "View status"
+        : "View details");
   return (
     <OrderCardShell
       badge="Custom request"
@@ -364,6 +372,7 @@ function CustomOrderCard({ order }: { order: ManagedCustomOrder }) {
       paymentStatus={order.paymentStatus}
       type="custom"
       hasOfficialQuote={quoted}
+      ctaLabel={ctaLabel}
       extraBadge={
         <>
           <span
@@ -374,7 +383,7 @@ function CustomOrderCard({ order }: { order: ManagedCustomOrder }) {
                 : "border-offgrid-green/15 bg-offgrid-cream text-offgrid-green/70",
             )}
           >
-            {quoted ? "Official quote" : "Quote pending"}
+            {quoted ? "Invoice ready" : "Under review"}
           </span>
           {payCta ? (
             <span className="rounded-full border border-offgrid-lime/40 bg-offgrid-lime/30 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green">
@@ -388,9 +397,11 @@ function CustomOrderCard({ order }: { order: ManagedCustomOrder }) {
           ? formatMoney(order.officialTotal!)
           : formatMoney(order.estimatedTotal ?? { amount: 0, currency: "PHP" })
       }
-      totalLabel={quoted ? "Official total" : "Estimate"}
-      totalHint={quoted ? undefined : "Pending final quote"}
-      to={`/account/orders/${order.id}`}
+      totalLabel={quoted ? "Invoice total" : "Estimate"}
+      totalHint={quoted ? undefined : "Waiting for invoice"}
+      to={`/account/orders/${order.id}${
+        payCta ? "#pay-now" : order.status === "revision_requested" ? "#submit-revision" : ""
+      }`}
     >
       <dl className="mt-5 grid gap-4 sm:grid-cols-3">
         <div>

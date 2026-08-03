@@ -15,6 +15,8 @@
 | **Under review** | Custom order after submit; typically 1–3 business days before Invoice. Status `under_review`. |
 | **Revision requested** | Customer or admin flagged design/spec changes (`revision_requested`) until shipped. |
 | **Cancel window** | Customer may cancel only while unpaid and status is draft / under_review / pending_deposit / revision_requested. |
+| **Lifecycle guide** | Step-by-step “What to do next” copy for customer and admin from `orderLifecycleGuidance` (Pay now / Submit revision / Save invoice). |
+| **Customer revision note** | Durable note in `custom_payload.customerRevisionNote` written by `og_customer_request_revision`; mapped on ManagedCustomOrder for admin/customer display. |
 | **Awaiting quote** | Deprecated label — prefer Under review / Awaiting invoice. |
 | **Pending deposit** | Custom order has an Invoice and still needs deposit (or retail “Order placed” alias for `pending_deposit`). Customer label: Invoice ready. |
 | **Admin override** | Admin may set any fulfillment/payment status and skip the customer quote → pay pipeline for ops corrections. |

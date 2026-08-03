@@ -43,17 +43,18 @@ import {
 } from "@/src/lib/portal";
 import {
   customOrderPayMongoKind,
+  customOrderPaymentCtaLabel,
   isCustomOrderGCashActionAvailable,
   isCustomOrderPayMongoActionAvailable,
   resolveCustomOrderPaymentPhase,
 } from "@/src/lib/customOrderPayment";
 import {
-  REVIEW_SLA_COPY,
   canCustomerCancelOrder,
   canCustomerRequestRevision,
 } from "@/src/lib/orderLifecycle";
+import { LifecycleGuideBanner } from "@/src/components/portal/LifecycleGuideBanner";
+import { customerCustomLifecycleGuide } from "@/src/lib/orderLifecycleGuidance";
 import { Button } from "@/src/components/ui/Button";
-
 const FILE_WARN_KEY = (orderId: string) => `og-file-warn:${orderId}`;
 
 const inputCls =
@@ -63,11 +64,13 @@ function CustomOrderCustomerActions({
   orderId,
   status,
   paymentStatus,
+  existingRevisionNote,
   onChanged,
 }: {
   orderId: string;
   status: OrderStatus;
   paymentStatus: PaymentStatus;
+  existingRevisionNote?: string;
   onChanged: () => void;
 }) {
   const [note, setNote] = useState("");
@@ -75,6 +78,7 @@ function CustomOrderCustomerActions({
   const [feedback, setFeedback] = useState<string | null>(null);
   const canCancel = canCustomerCancelOrder({ status, paymentStatus });
   const canRevise = canCustomerRequestRevision({ status, orderType: "custom" });
+  const awaitingRevisionReview = status === "revision_requested";
 
   if (!canCancel && !canRevise) return null;
 
@@ -83,8 +87,14 @@ function CustomOrderCustomerActions({
       {canRevise ? (
         <div className="space-y-2">
           <label className="text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/45">
-            Request a revision
+            {awaitingRevisionReview ? "Update revision" : "Submit a revision"}
           </label>
+          {existingRevisionNote?.trim() ? (
+            <p className="whitespace-pre-wrap rounded-xl border border-offgrid-green/10 bg-offgrid-cream/50 px-3 py-2 text-xs text-offgrid-green/80">
+              <span className="font-semibold text-offgrid-green">Last note: </span>
+              {existingRevisionNote.trim()}
+            </p>
+          ) : null}
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
@@ -94,7 +104,7 @@ function CustomOrderCustomerActions({
           />
           <Button
             type="button"
-            variant="outline"
+            variant={awaitingRevisionReview ? "outline" : "accent"}
             size="sm"
             disabled={busy !== null || note.trim().length < 3}
             onClick={() => {
@@ -104,17 +114,17 @@ function CustomOrderCustomerActions({
                 try {
                   await localOrderService.requestOrderRevision(orderId, note.trim());
                   void notifyStaffOrderEvent(orderId, "order_revision");
-                  setFeedback("Revision requested. We will review and update you.");
+                  setFeedback("Revision submitted. We will review and update you.");
                   onChanged();
                 } catch (err) {
-                  setFeedback(err instanceof Error ? err.message : "Could not request revision.");
+                  setFeedback(err instanceof Error ? err.message : "Could not submit revision.");
                 } finally {
                   setBusy(null);
                 }
               })();
             }}
           >
-            {busy === "revision" ? "Sending…" : "Request revision"}
+            {busy === "revision" ? "Submitting…" : "Submit revision"}
           </Button>
         </div>
       ) : null}
@@ -582,6 +592,16 @@ export function CustomerOrderDetailPage() {
     ? fetchedCustom
     : undefined;
 
+  // List → detail deep links (#pay-now / #submit-revision)
+  useEffect(() => {
+    if (loading || !custom) return;
+    const hash = window.location.hash.replace(/^#/, "");
+    if (hash !== "pay-now" && hash !== "submit-revision") return;
+    const el = document.getElementById(hash);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [loading, custom]);
+
   const customPaymentPhase = custom
     ? resolveCustomOrderPaymentPhase({
         paymentStatus: custom.paymentStatus,
@@ -869,6 +889,36 @@ export function CustomerOrderDetailPage() {
             {custom.updatedAt !== custom.createdAt ? ` · Updated ${formatOrderTimestamp(custom.updatedAt)}` : ""}
           </p>
 
+          <div className="mt-5">
+            <LifecycleGuideBanner
+              guide={customerCustomLifecycleGuide({
+                status: custom.status,
+                paymentStatus: custom.paymentStatus,
+                hasOfficialQuote: hasOfficialCustomQuote(custom.officialTotal),
+              })}
+              actionSlot={
+                customPaymentPhase === "pay_deposit" || customPaymentPhase === "pay_balance" ? (
+                  <a
+                    href="#pay-now"
+                    className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-offgrid-lime px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-white transition-colors hover:bg-offgrid-gold sm:w-auto"
+                  >
+                    {customOrderPaymentCtaLabel(customPaymentPhase) ?? "Pay now"}
+                  </a>
+                ) : canCustomerRequestRevision({
+                    status: custom.status,
+                    orderType: "custom",
+                  }) && custom.status !== "revision_requested" ? (
+                  <a
+                    href="#submit-revision"
+                    className="inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-offgrid-green/25 bg-white px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-offgrid-green transition-colors hover:bg-offgrid-cream sm:w-auto"
+                  >
+                    Submit revision
+                  </a>
+                ) : null
+              }
+            />
+          </div>
+
           <div className="mt-6 min-w-0 rounded-2xl border border-offgrid-green/10 bg-white p-5 shadow-sm sm:mt-8 sm:p-6">
             <h2 className="text-lg font-display font-bold text-offgrid-green">Order progress</h2>
             <div className="mt-5">
@@ -879,23 +929,15 @@ export function CustomerOrderDetailPage() {
                 towelOrder={isTowelCustomOrder(custom.category, custom.headwearType, headwearOptions)}
               />
             </div>
-            {custom.status === "under_review" ||
-            (custom.status === "pending_deposit" && !hasOfficialCustomQuote(custom.officialTotal)) ? (
-              <p className="mt-4 rounded-xl border border-offgrid-gold/25 bg-offgrid-gold/10 px-3.5 py-2.5 text-sm text-offgrid-green">
-                {REVIEW_SLA_COPY} You will get a notification when your invoice is ready to pay.
-              </p>
-            ) : null}
-            {custom.status === "revision_requested" ? (
-              <p className="mt-4 rounded-xl border border-offgrid-gold/25 bg-offgrid-gold/10 px-3.5 py-2.5 text-sm text-offgrid-green">
-                Revision requested. OFFGRID will review your note and update the order.
-              </p>
-            ) : null}
-            <CustomOrderCustomerActions
-              orderId={custom.id}
-              status={custom.status}
-              paymentStatus={custom.paymentStatus}
-              onChanged={() => window.location.reload()}
-            />
+            <div id="submit-revision">
+              <CustomOrderCustomerActions
+                orderId={custom.id}
+                status={custom.status}
+                paymentStatus={custom.paymentStatus}
+                existingRevisionNote={custom.customerRevisionNote}
+                onChanged={() => window.location.reload()}
+              />
+            </div>
           </div>
 
           <div className="mt-6 grid gap-5 sm:mt-8 sm:gap-6 lg:grid-cols-2">
@@ -928,12 +970,18 @@ export function CustomerOrderDetailPage() {
               <OrderDeliveryDetails shippingInfo={custom.shippingInfo} />
             </div>
 
-            <div className="min-w-0 rounded-2xl border border-offgrid-green/10 bg-white p-5 shadow-sm sm:p-6 lg:col-span-2">
-              <h2 className="text-lg font-display font-bold text-offgrid-green">Payment & quote</h2>
+            <div id="pay-now" className="min-w-0 rounded-2xl border border-offgrid-green/10 bg-white p-5 shadow-sm sm:p-6 lg:col-span-2">
+              <h2 className="text-lg font-display font-bold text-offgrid-green">Payment & invoice</h2>
+              {(customPaymentPhase === "pay_deposit" || customPaymentPhase === "pay_balance") &&
+              (customShowPayMongo || customShowGcash) ? (
+                <p className="mt-2 text-sm font-semibold text-offgrid-lime">
+                  {customOrderPaymentCtaLabel(customPaymentPhase) ?? "Pay now"} — use PayMongo or GCash below.
+                </p>
+              ) : null}
               {!hasOfficialCustomQuote(custom.officialTotal) ? (
                 <p className="mt-3 rounded-xl border border-offgrid-green/10 bg-offgrid-cream/50 px-3 py-2 text-xs text-offgrid-green/70">
-                  Wizard estimates are non-binding. After our team posts your official quote, you can pay the deposit
-                  here via PayMongo QR Ph or GCash QR — we&apos;ll also email you when it&apos;s ready.
+                  Wizard estimates are non-binding. After our team posts your invoice, Pay now unlocks here via PayMongo QR Ph
+                  or GCash QR — we&apos;ll also notify you when it&apos;s ready.
                 </p>
               ) : null}
               <dl className="mt-4 space-y-3 text-sm text-offgrid-green/80">
@@ -996,8 +1044,8 @@ export function CustomerOrderDetailPage() {
                         paymentKind={customPayMongoKind}
                         label={
                           customPayMongoKind === "balance"
-                            ? "Pay remaining balance via QR Ph"
-                            : "Pay now via QR Ph"
+                            ? "Pay remaining balance"
+                            : "Pay now"
                         }
                         email={custom.customerEmail}
                       />
@@ -1030,7 +1078,7 @@ export function CustomerOrderDetailPage() {
                     return (
                       <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3">
                         <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/45">
-                          {due!.kind === "balance" ? "Or pay remaining balance via GCash" : "Or pay deposit via GCash"}
+                          {due!.kind === "balance" ? "Or pay remaining balance via GCash" : "Or Pay now via GCash"}
                         </p>
                         <p className="mt-1 text-xs text-offgrid-green/60">{paymentSettings.gcashInstructions}</p>
                         <img
@@ -1040,6 +1088,9 @@ export function CustomerOrderDetailPage() {
                         />
                         <p className="mt-2 text-sm font-semibold text-offgrid-green">
                           Amount due now: {formatMoney(php(due!.amount))}
+                        </p>
+                        <p className="mt-2 text-xs text-offgrid-green/60">
+                          After you pay, upload your screenshot below so we can confirm.
                         </p>
                       </div>
                     );

@@ -32,9 +32,12 @@ import {
 import { Button } from "@/src/components/ui/Button";
 import { CustomOrderFileButton } from "@/src/components/custom-order/CustomOrderFileButton";
 import { OrderDeliveryDetails } from "@/src/components/portal/OrderDeliveryDetails";
+import { LifecycleGuideBanner } from "@/src/components/portal/LifecycleGuideBanner";
+import { adminCustomLifecycleGuide } from "@/src/lib/orderLifecycleGuidance";
 import { localOrderService } from "@/src/services";
 import { persistOrderPaymentUpdate, persistOrderStatusUpdate } from "@/src/lib/opsOrderUpdate";
 import { useOrderDetail } from "@/src/hooks/useOrderDetail";
+import { useOrderPaymentProof } from "@/src/hooks/useOrderPaymentProof";
 
 function PaymentProofAdminSection({
   orderId,
@@ -44,6 +47,8 @@ function PaymentProofAdminSection({
   onConfirm,
   forceShow = false,
   confirmAsDeposit = false,
+  proofUrl: proofUrlProp,
+  proofLoading: proofLoadingProp,
 }: {
   orderId: string;
   paymentMethod: string | null | undefined;
@@ -52,20 +57,17 @@ function PaymentProofAdminSection({
   onConfirm: (nextStatus: "deposit_paid" | "fully_paid") => Promise<void> | void;
   forceShow?: boolean;
   confirmAsDeposit?: boolean;
+  /** When provided by parent (useOrderPaymentProof), skip a second fetch. */
+  proofUrl?: string | null;
+  proofLoading?: boolean;
 }) {
-  const [proofUrl, setProofUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const localProof = useOrderPaymentProof(proofUrlProp === undefined ? orderId : undefined);
+  const proofUrl = proofUrlProp !== undefined ? proofUrlProp : localProof.proofUrl;
+  const loading = proofLoadingProp !== undefined ? proofLoadingProp : localProof.loading;
   const [confirming, setConfirming] = useState(false);
 
   const isManualPayment = forceShow || paymentMethod === "gcash" || paymentMethod === "bank_transfer";
   const isSettled = paymentStatus === "fully_paid";
-
-  useEffect(() => {
-    localOrderService.fetchOrderProofUrl(orderId).then((url) => {
-      setProofUrl(url);
-      setLoading(false);
-    });
-  }, [orderId]);
 
   if (!isManualPayment || loading) return null;
 
@@ -294,6 +296,8 @@ export function OperationsOrderDetailPage() {
   const headwearOptions = resolveHeadwearOptions(useSiteContentStore((s) => s.customHeadwearOptions));
 
   const [feedback, setFeedback] = useState<string | null>(null);
+  const customProof = useOrderPaymentProof(custom?.id);
+  const hasPaymentProof = customProof.hasPaymentProof;
 
   const hasLegacyCustomSpecs = Boolean(
     custom &&
@@ -627,6 +631,24 @@ export function OperationsOrderDetailPage() {
               Submitted {formatOrderTimestamp(custom.createdAt)}
               {custom.updatedAt !== custom.createdAt ? ` · Updated ${formatOrderTimestamp(custom.updatedAt)}` : ""}
             </p>
+            <div className="mt-5">
+              <LifecycleGuideBanner
+                guide={adminCustomLifecycleGuide({
+                  status: custom.status,
+                  paymentStatus: custom.paymentStatus,
+                  hasOfficialQuote: hasOfficialCustomQuote(custom.officialTotal),
+                  hasPaymentProof,
+                })}
+              />
+            </div>
+            {custom.customerRevisionNote.trim() ? (
+              <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-900/70">
+                  Customer revision note
+                </p>
+                <p className="mt-1 whitespace-pre-wrap text-sm text-amber-950">{custom.customerRevisionNote}</p>
+              </div>
+            ) : null}
           </div>
 
           <div className="flex flex-wrap gap-3">
@@ -775,6 +797,8 @@ export function OperationsOrderDetailPage() {
             isAdmin={isAdmin}
             forceShow
             confirmAsDeposit
+            proofUrl={customProof.proofUrl}
+            proofLoading={customProof.loading}
             onConfirm={async (nextStatus) => {
               await persistOrderPaymentUpdate({
                 orderId: custom.id,

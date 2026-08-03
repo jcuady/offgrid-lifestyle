@@ -31,6 +31,8 @@ export type CustomPayloadWrite = {
   officialTotal: Money | null;
   officialDeposit: Money | null;
   quoteCustomerNotes: string;
+  /** Preserve on quote merge so invoice save does not wipe RPC-written revision notes. */
+  customerRevisionNote: string;
   quotedAt: string | null;
   quotedBy: string | null;
   createdAt: string;
@@ -64,6 +66,7 @@ export function customPayloadFromManaged(order: ManagedCustomOrder): CustomPaylo
     officialTotal: order.officialTotal,
     officialDeposit: order.officialDeposit,
     quoteCustomerNotes: order.quoteCustomerNotes ?? "",
+    customerRevisionNote: order.customerRevisionNote ?? "",
     quotedAt: order.quotedAt,
     quotedBy: order.quotedBy,
     createdAt: order.createdAt,

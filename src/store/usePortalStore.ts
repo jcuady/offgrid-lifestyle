@@ -481,7 +481,7 @@ export const usePortalStore = create<PortalState>()(
           const customOrder: ManagedCustomOrder = {
             id: customOrderId,
             type: "custom",
-            status: draft.status === "draft" ? "pending_deposit" : draft.status,
+            status: draft.status === "draft" ? "under_review" : draft.status,
             paymentStatus: "unpaid",
             customerId: currentUser?.role === "customer" ? currentUser.id : null,
             customerName: draft.contactName,

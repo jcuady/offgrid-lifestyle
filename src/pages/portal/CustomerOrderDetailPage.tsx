@@ -7,7 +7,7 @@ import { reviewService } from "@/src/services/reviewService";
 import { localOrderService } from "@/src/services";
 import { useOrderDetail } from "@/src/hooks/useOrderDetail";
 import { supabase } from "@/src/lib/supabase";
-import type { RetailOrderLine } from "@/src/types/commerce";
+import type { OrderStatus, PaymentStatus, RetailOrderLine } from "@/src/types/commerce";
 import {
   headwearOptionLabel,
   isTowelCustomOrder,
@@ -47,11 +47,113 @@ import {
   isCustomOrderPayMongoActionAvailable,
   resolveCustomOrderPaymentPhase,
 } from "@/src/lib/customOrderPayment";
+import {
+  REVIEW_SLA_COPY,
+  canCustomerCancelOrder,
+  canCustomerRequestRevision,
+} from "@/src/lib/orderLifecycle";
+import { Button } from "@/src/components/ui/Button";
 
 const FILE_WARN_KEY = (orderId: string) => `og-file-warn:${orderId}`;
 
 const inputCls =
   "min-h-11 w-full rounded-xl border border-offgrid-green/20 bg-white px-3.5 py-2.5 text-base text-offgrid-green outline-none transition-colors focus:border-offgrid-lime/60 focus:ring-2 focus:ring-offgrid-lime/20 sm:text-sm";
+
+function CustomOrderCustomerActions({
+  orderId,
+  status,
+  paymentStatus,
+  onChanged,
+}: {
+  orderId: string;
+  status: OrderStatus;
+  paymentStatus: PaymentStatus;
+  onChanged: () => void;
+}) {
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState<"cancel" | "revision" | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(null);
+  const canCancel = canCustomerCancelOrder({ status, paymentStatus });
+  const canRevise = canCustomerRequestRevision({ status, orderType: "custom" });
+
+  if (!canCancel && !canRevise) return null;
+
+  return (
+    <div className="mt-5 space-y-3 border-t border-offgrid-green/10 pt-4">
+      {canRevise ? (
+        <div className="space-y-2">
+          <label className="text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/45">
+            Request a revision
+          </label>
+          <textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            rows={2}
+            className={inputCls}
+            placeholder="What should we change? (sizes, artwork, colors…)"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={busy !== null || note.trim().length < 3}
+            onClick={() => {
+              void (async () => {
+                setBusy("revision");
+                setFeedback(null);
+                try {
+                  await localOrderService.requestOrderRevision(orderId, note.trim());
+                  void notifyStaffOrderEvent(orderId, "order_revision");
+                  setFeedback("Revision requested. We will review and update you.");
+                  onChanged();
+                } catch (err) {
+                  setFeedback(err instanceof Error ? err.message : "Could not request revision.");
+                } finally {
+                  setBusy(null);
+                }
+              })();
+            }}
+          >
+            {busy === "revision" ? "Sending…" : "Request revision"}
+          </Button>
+        </div>
+      ) : null}
+      {canCancel ? (
+        <div className="space-y-2">
+          <p className="text-xs text-offgrid-green/55">
+            You can cancel while the order is unpaid and before production starts.
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="border-red-200 text-red-800 hover:bg-red-50"
+            disabled={busy !== null}
+            onClick={() => {
+              if (!window.confirm("Cancel this order? This cannot be undone online.")) return;
+              void (async () => {
+                setBusy("cancel");
+                setFeedback(null);
+                try {
+                  await localOrderService.cancelMyOrder(orderId);
+                  setFeedback("Order cancelled.");
+                  onChanged();
+                } catch (err) {
+                  setFeedback(err instanceof Error ? err.message : "Could not cancel order.");
+                } finally {
+                  setBusy(null);
+                }
+              })();
+            }}
+          >
+            {busy === "cancel" ? "Cancelling…" : "Cancel order"}
+          </Button>
+        </div>
+      ) : null}
+      {feedback ? <p className="text-sm text-offgrid-green/80">{feedback}</p> : null}
+    </div>
+  );
+}
 
 function PayMongoPayButton({
   orderId,
@@ -777,6 +879,23 @@ export function CustomerOrderDetailPage() {
                 towelOrder={isTowelCustomOrder(custom.category, custom.headwearType, headwearOptions)}
               />
             </div>
+            {custom.status === "under_review" ||
+            (custom.status === "pending_deposit" && !hasOfficialCustomQuote(custom.officialTotal)) ? (
+              <p className="mt-4 rounded-xl border border-offgrid-gold/25 bg-offgrid-gold/10 px-3.5 py-2.5 text-sm text-offgrid-green">
+                {REVIEW_SLA_COPY} You will get a notification when your invoice is ready to pay.
+              </p>
+            ) : null}
+            {custom.status === "revision_requested" ? (
+              <p className="mt-4 rounded-xl border border-offgrid-gold/25 bg-offgrid-gold/10 px-3.5 py-2.5 text-sm text-offgrid-green">
+                Revision requested. OFFGRID will review your note and update the order.
+              </p>
+            ) : null}
+            <CustomOrderCustomerActions
+              orderId={custom.id}
+              status={custom.status}
+              paymentStatus={custom.paymentStatus}
+              onChanged={() => window.location.reload()}
+            />
           </div>
 
           <div className="mt-6 grid gap-5 sm:mt-8 sm:gap-6 lg:grid-cols-2">
@@ -842,7 +961,7 @@ export function CustomerOrderDetailPage() {
                 {hasOfficialCustomQuote(custom.officialTotal) ? (
                   <div className="border-t border-offgrid-green/10 pt-4">
                     <dt className="text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-lime">
-                      Official quote
+                      Invoice
                     </dt>
                     <dd className="mt-2 space-y-2">
                       <div className="flex flex-wrap items-baseline justify-between gap-2 font-display text-lg font-bold text-offgrid-green">
@@ -878,7 +997,7 @@ export function CustomerOrderDetailPage() {
                         label={
                           customPayMongoKind === "balance"
                             ? "Pay remaining balance via QR Ph"
-                            : "Pay deposit via QR Ph"
+                            : "Pay now via QR Ph"
                         }
                         email={custom.customerEmail}
                       />
@@ -895,7 +1014,7 @@ export function CustomerOrderDetailPage() {
                       if (!hasOfficialCustomQuote(custom.officialTotal)) {
                         return (
                           <p className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 px-3 py-2.5 text-xs text-offgrid-green/60">
-                            GCash payment opens after OG posts your official quote.
+                            GCash payment opens after OFFGRID posts your invoice.
                           </p>
                         );
                       }

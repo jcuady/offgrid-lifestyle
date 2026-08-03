@@ -7,7 +7,12 @@ import { isServiceRoleBearer } from "../_shared/serviceRoleAuth.ts";
 const ORDER_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const ALLOWED_ALERT_TYPES = new Set(["new_retail_order", "new_custom_order", "payment_proof"]);
+const ALLOWED_ALERT_TYPES = new Set([
+  "new_retail_order",
+  "new_custom_order",
+  "payment_proof",
+  "order_revision",
+]);
 
 function safeNavigationUrl(raw: unknown, fallback = "/"): string {
   if (typeof raw !== "string") return fallback;

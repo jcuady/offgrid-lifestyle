@@ -164,7 +164,7 @@ export function StepSummary() {
         shippingInfo: mergeCustomOrderShipping(draft),
         estimatedTotal,
         depositRequired: estimatedDeposit,
-        status: "pending_deposit" as const,
+        status: "under_review" as const,
         createdAt: draft.createdAt ?? new Date().toISOString(),
       };
       const result = await localOrderService.submitCustomOrder(submittedDraft);

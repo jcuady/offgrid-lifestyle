@@ -24,5 +24,6 @@ Local `supabase/migrations/` and remote `supabase_migrations.schema_migrations` 
 | `20260801100000` | lock custom quote notes in order UPDATE trigger |
 | `20260801170000` | event capacity trigger + review product_id check |
 | `20260801180000` | guest claim RPC + internal notes table + admin payment override |
+| `20260803120000` | order lifecycle: under_review, revision_requested, admin status bypass, cancel/revision RPCs |
 
 Mark those with `migration repair --status applied` after confirming objects exist on the linked project.

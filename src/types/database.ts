@@ -909,6 +909,11 @@ export type Database = {
         Returns: undefined
       }
       og_claim_my_guest_orders: { Args: Record<string, never>; Returns: number }
+      og_customer_cancel_order: { Args: { p_order_id: string }; Returns: undefined }
+      og_customer_request_revision: {
+        Args: { p_order_id: string; p_note?: string }
+        Returns: undefined
+      }
       og_delete_catalog_term: {
         Args: { p_kind: string; p_label: string }
         Returns: undefined

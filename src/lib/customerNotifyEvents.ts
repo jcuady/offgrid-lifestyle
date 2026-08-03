@@ -30,7 +30,8 @@ export function customerEventForPaymentStatus(status: string): CustomerOrderEven
 }
 
 /**
- * Mirrors `og_orders_advance_on_payment` — when payment settles, draft/pending_deposit → confirmed.
+ * Mirrors `og_orders_advance_on_payment` — when payment settles,
+ * draft / under_review / pending_deposit → confirmed.
  */
 export function fulfillmentAfterPaymentSettle(
   previousFulfillment: string,
@@ -39,6 +40,12 @@ export function fulfillmentAfterPaymentSettle(
 ): "confirmed" | null {
   if (previousPayment === nextPayment) return null;
   if (nextPayment !== "deposit_paid" && nextPayment !== "fully_paid") return null;
-  if (previousFulfillment === "draft" || previousFulfillment === "pending_deposit") return "confirmed";
+  if (
+    previousFulfillment === "draft" ||
+    previousFulfillment === "under_review" ||
+    previousFulfillment === "pending_deposit"
+  ) {
+    return "confirmed";
+  }
   return null;
 }

@@ -10,9 +10,13 @@
 | **Portal user** | Row in `og_portal_users` (not `auth.users`); roles: customer, staff, admin. |
 | **Must-ship** | Launch-blocking production readiness items in `PRODUCTION_READINESS.md` (money integrity, auth, legal, SW). |
 | **Order payment integrity** | DB triggers + PayMongo edge settle that keep customers from inventing paid state or rewriting staff quotes. |
-| **Official quote** | Admin-set binding `officialTotal` / `officialDeposit` on a custom order; unlocks customer pay. Wizard estimate is non-binding. |
-| **Awaiting quote** | Custom fulfillment still `pending_deposit` but no official quote yet — customer label, not “Pending deposit”. |
-| **Pending deposit** | Custom order has an official quote and still needs deposit (or retail “Order placed” alias for `pending_deposit`). |
+| **Official quote** | Admin-set binding `officialTotal` / `officialDeposit` on a custom order; unlocks customer pay. Customer-facing name: **Invoice**. Wizard estimate is non-binding. |
+| **Invoice** | Customer-facing name for the Official quote after admin review. |
+| **Under review** | Custom order after submit; typically 1–3 business days before Invoice. Status `under_review`. |
+| **Revision requested** | Customer or admin flagged design/spec changes (`revision_requested`) until shipped. |
+| **Cancel window** | Customer may cancel only while unpaid and status is draft / under_review / pending_deposit / revision_requested. |
+| **Awaiting quote** | Deprecated label — prefer Under review / Awaiting invoice. |
+| **Pending deposit** | Custom order has an Invoice and still needs deposit (or retail “Order placed” alias for `pending_deposit`). Customer label: Invoice ready. |
 | **Admin override** | Admin may set any fulfillment/payment status and skip the customer quote → pay pipeline for ops corrections. |
 | **Custom payload write** | Explicit merge-patch of durable custom-order keys into `custom_payload` (no ManagedCustomOrder dump). |
 | **Quote internal notes** | Staff/admin-only text on the quote; stored in `og_order_quote_internal_notes` (RLS), never in customer-readable `custom_payload`. |

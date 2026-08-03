@@ -7,7 +7,9 @@ export type OrderType = "retail" | "custom";
 
 export type OrderStatus =
   | "draft"
+  | "under_review"
   | "pending_deposit"
+  | "revision_requested"
   | "confirmed"
   | "in_production"
   | "shipped"

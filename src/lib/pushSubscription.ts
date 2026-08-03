@@ -191,7 +191,11 @@ export async function isPushSubscribed(): Promise<boolean> {
   }
 }
 
-export type OperationalAlertType = "new_retail_order" | "new_custom_order" | "payment_proof";
+export type OperationalAlertType =
+  | "new_retail_order"
+  | "new_custom_order"
+  | "payment_proof"
+  | "order_revision";
 
 /** Trigger push notification via Edge Function. */
 export async function sendPushNotification(params: {

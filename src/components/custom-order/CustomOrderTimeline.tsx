@@ -6,7 +6,7 @@ const FLOW_STEPS: { key: string; label: string }[] = [
   { key: "details", label: "Details checked" },
   { key: "design", label: "Design reviewed" },
   { key: "order-kit", label: "Roster confirmed" },
-  { key: "submitted", label: "Quote confirmed" },
+  { key: "submitted", label: "Invoice confirmed" },
   { key: "production", label: "First unit + production" },
   { key: "shipping", label: "Shipping + warranty" },
 ];
@@ -17,13 +17,20 @@ function stepIndex(status: OrderStatus): number {
   if (status === "shipped") return 5;
   if (status === "in_production") return 4;
   if (status === "confirmed") return 3;
-  return 2; // pending_deposit = details/design/roster submitted, awaiting quote
+  if (status === "revision_requested") return 2;
+  if (status === "under_review") return 2;
+  return 2; // pending_deposit = submitted, awaiting / ready for pay
 }
 
-function submittedStepLabel(hasOfficialQuote: boolean, depositDone: boolean): string {
-  if (!hasOfficialQuote) return "Awaiting quote";
-  if (!depositDone) return "Quote ready — pay deposit";
-  return "Quote confirmed";
+function submittedStepLabel(
+  status: OrderStatus,
+  hasOfficialQuote: boolean,
+  depositDone: boolean,
+): string {
+  if (status === "revision_requested") return "Revision requested";
+  if (status === "under_review" || !hasOfficialQuote) return "Under review";
+  if (!depositDone) return "Invoice ready — Pay now";
+  return "Invoice confirmed";
 }
 
 interface CustomOrderTimelineProps {
@@ -70,6 +77,7 @@ export function CustomOrderTimeline({
         if (step.key === "order-kit") done = true;
 
         const isCurrent =
+          status === "revision_requested" ||
           (step.key === "submitted" && !quoteDone) ||
           (step.key === "submitted" && quoteDone && !depositDone) ||
           (step.key === "production" && depositDone && active === 3) ||
@@ -77,7 +85,7 @@ export function CustomOrderTimeline({
           (step.key === "shipping" && active >= 5);
 
         let label = step.label;
-        if (step.key === "submitted") label = submittedStepLabel(quoteDone, depositDone);
+        if (step.key === "submitted") label = submittedStepLabel(status, quoteDone, depositDone);
         if (step.key === "order-kit" && towelOrder) label = "Quantity noted";
 
         return (

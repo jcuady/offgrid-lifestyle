@@ -189,7 +189,7 @@ function AdminQuoteEditor({
   const handleSave = () => {
     const total = Number(totalInput.replace(/,/g, ""));
     if (!Number.isFinite(total) || total <= 0) {
-      window.alert("Enter an official total greater than zero, or use Clear official quote.");
+      window.alert("Enter an invoice total greater than zero, or use Clear invoice.");
       return;
     }
     const depRaw = depositInput.trim() === "" ? NaN : Number(depositInput.replace(/,/g, ""));
@@ -204,9 +204,9 @@ function AdminQuoteEditor({
 
   return (
     <div className="rounded-2xl border border-offgrid-green/10 bg-white p-5 shadow-sm">
-      <h2 className="text-xl font-display font-bold text-offgrid-green">Official quote (admin)</h2>
+      <h2 className="text-xl font-display font-bold text-offgrid-green">Invoice (official quote)</h2>
       <p className="mt-1 text-xs text-offgrid-green/55">
-        Binding totals for the customer pay wall. You can still set fulfillment/payment freely without a quote when correcting ops.
+        After review, save the invoice to unlock the customer Pay now button. You can still override any fulfillment or payment status for ops corrections.
       </p>
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         <div>
@@ -265,10 +265,10 @@ function AdminQuoteEditor({
       </div>
       <div className="mt-5 flex flex-wrap gap-2">
         <Button type="button" size="lg" onClick={handleSave}>
-          Save official quote
+          Save invoice
         </Button>
         <Button type="button" variant="outline" size="lg" onClick={onClear}>
-          Clear official quote
+          Clear invoice
         </Button>
       </div>
     </div>
@@ -620,7 +620,7 @@ export function OperationsOrderDetailPage() {
                     : "border-offgrid-green/15 bg-offgrid-cream text-offgrid-green/70",
                 )}
               >
-                {hasOfficialCustomQuote(custom.officialTotal) ? "Official quote saved" : "Quote pending"}
+                {hasOfficialCustomQuote(custom.officialTotal) ? "Invoice saved" : "Invoice pending"}
               </span>
             </div>
             <p className="mt-3 text-xs text-offgrid-green/55">
@@ -726,7 +726,7 @@ export function OperationsOrderDetailPage() {
               order={custom}
               onSave={async (payload) => {
                 await localOrderService.persistCustomOrderQuote(custom.id, payload, custom);
-                setFeedback("Official quote saved.");
+                setFeedback("Invoice saved. Customer can Pay now.");
               }}
               onClear={async () => {
                 const cleared = {
@@ -736,12 +736,12 @@ export function OperationsOrderDetailPage() {
                   quoteInternalNotes: "",
                 };
                 await localOrderService.persistCustomOrderQuote(custom.id, cleared, custom);
-                setFeedback("Official quote cleared.");
+                setFeedback("Invoice cleared.");
               }}
             />
           ) : (
             <div className="rounded-2xl border border-offgrid-green/10 bg-white p-5 shadow-sm">
-              <h2 className="text-xl font-display font-bold text-offgrid-green">Official quote</h2>
+              <h2 className="text-xl font-display font-bold text-offgrid-green">Invoice</h2>
               {hasOfficialCustomQuote(custom.officialTotal) ? (
                 <dl className="mt-4 space-y-2 text-sm text-offgrid-green/80">
                   <div>

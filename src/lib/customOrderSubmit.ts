@@ -18,7 +18,7 @@ export function mergeCustomOrderDraftWithFiles(
     ...draft,
     id: orderId,
     shippingInfo,
-    status: draft.status === "draft" ? "pending_deposit" : draft.status,
+    status: draft.status === "draft" ? "under_review" : draft.status,
     designFileKey: fileKeys.designFileKey ?? draft.designFileKey,
     orderSheetFileKey: fileKeys.orderSheetFileKey ?? draft.orderSheetFileKey,
     designFileUrl: fileKeys.designFileUrl ?? draft.designFileUrl ?? null,

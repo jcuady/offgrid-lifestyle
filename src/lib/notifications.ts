@@ -45,7 +45,7 @@ export async function notifyUsers(userIds: string[], payload: NotifyPayload): Pr
   await Promise.all(unique.map((userId) => notifyUser(userId, payload)));
 }
 
-export type StaffOrderEvent = "new_retail_order" | "new_custom_order" | "payment_proof";
+export type StaffOrderEvent = "new_retail_order" | "new_custom_order" | "payment_proof" | "order_revision";
 
 const STAFF_MESSAGES: Record<StaffOrderEvent, (orderId: string) => NotifyPayload> = {
   new_retail_order: (id) => ({
@@ -56,7 +56,7 @@ const STAFF_MESSAGES: Record<StaffOrderEvent, (orderId: string) => NotifyPayload
   }),
   new_custom_order: (id) => ({
     title: "New custom request",
-    body: `Custom order ${id} was submitted and awaits quote review.`,
+    body: `Custom order ${id} is under review (typically 1–3 business days).`,
     url: operationalPushUrl(id),
     category: "operations",
   }),
@@ -65,6 +65,12 @@ const STAFF_MESSAGES: Record<StaffOrderEvent, (orderId: string) => NotifyPayload
     body: `Customer uploaded payment proof for order ${id}.`,
     url: operationalPushUrl(id),
     category: "payment",
+  }),
+  order_revision: (id) => ({
+    title: "Revision requested",
+    body: `Customer requested a revision on order ${id}.`,
+    url: operationalPushUrl(id),
+    category: "operations",
   }),
 };
 

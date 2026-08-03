@@ -21,13 +21,14 @@ export function formatOrderStatus(
   orderType?: OrderType,
   opts?: { hasOfficialQuote?: boolean },
 ): string {
+  if (status === "under_review") return "Under review";
+  if (status === "revision_requested") return "Revision requested";
   if (orderType === "retail" && status === "pending_deposit") return "Order placed";
   if (orderType === "custom" && status === "pending_deposit") {
-    // Quote gate: deposit language only after official total exists
-    if (opts && opts.hasOfficialQuote === false) return "Awaiting quote";
-    if (opts?.hasOfficialQuote === true) return "Pending deposit";
-    // Ops lists without quote context — pair with quote badge
-    return "Awaiting quote / deposit";
+    // Invoice / Official quote gate
+    if (opts && opts.hasOfficialQuote === false) return "Awaiting invoice";
+    if (opts?.hasOfficialQuote === true) return "Invoice ready";
+    return "Awaiting invoice / deposit";
   }
   return status.replace(/_/g, " ").replace(/\b\w/g, (ch) => ch.toUpperCase());
 }
@@ -49,6 +50,9 @@ export function orderStatusClass(status: OrderStatus): string {
   }
   if (status === "cancelled") {
     return "bg-red-50 text-red-700 border-red-200";
+  }
+  if (status === "under_review" || status === "revision_requested") {
+    return "bg-offgrid-gold/10 text-offgrid-gold border-offgrid-gold/30";
   }
   if (status === "pending_deposit") {
     return "bg-offgrid-green/[0.07] text-offgrid-green border-offgrid-green/25";
@@ -78,6 +82,9 @@ export function orderStatusClassCustomer(status: OrderStatus): string {
   }
   if (status === "cancelled") {
     return `${base} border-red-200/80 bg-red-50 text-red-800`;
+  }
+  if (status === "under_review" || status === "revision_requested") {
+    return `${base} border-offgrid-gold/35 bg-offgrid-gold/10 text-offgrid-green`;
   }
   if (status === "pending_deposit") {
     return `${base} border-offgrid-green/20 bg-offgrid-cream text-offgrid-green`;

@@ -17,7 +17,9 @@ export function resolvePaidOrderUpdate(input: {
       : "fully_paid";
 
   const status =
-    input.currentStatus === "pending_deposit" || input.currentStatus === "draft"
+    input.currentStatus === "pending_deposit" ||
+    input.currentStatus === "under_review" ||
+    input.currentStatus === "draft"
       ? "confirmed"
       : input.currentStatus;
 

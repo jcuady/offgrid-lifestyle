@@ -2,7 +2,11 @@
 
 export const RECENT_GUEST_ORDER_MS = 10 * 60 * 1000;
 
-export type OperationalAlertType = "new_retail_order" | "new_custom_order" | "payment_proof";
+export type OperationalAlertType =
+  | "new_retail_order"
+  | "new_custom_order"
+  | "payment_proof"
+  | "order_revision";
 
 export interface OperationalPushContext {
   orderCustomerId: string | null;

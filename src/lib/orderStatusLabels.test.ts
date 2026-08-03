@@ -4,16 +4,21 @@ import { applyQuoteToCustomPayload, customPayloadFromManaged } from "./customOrd
 import type { ManagedCustomOrder } from "@/src/store/usePortalStore";
 
 describe("formatOrderStatus custom quote gate", () => {
-  it("shows Awaiting quote before official total", () => {
+  it("shows Awaiting invoice before official total", () => {
     expect(formatOrderStatus("pending_deposit", "custom", { hasOfficialQuote: false })).toBe(
-      "Awaiting quote",
+      "Awaiting invoice",
     );
   });
 
-  it("shows Pending deposit only after official quote", () => {
+  it("shows Invoice ready only after official quote", () => {
     expect(formatOrderStatus("pending_deposit", "custom", { hasOfficialQuote: true })).toBe(
-      "Pending deposit",
+      "Invoice ready",
     );
+  });
+
+  it("labels under_review and revision_requested", () => {
+    expect(formatOrderStatus("under_review", "custom")).toBe("Under review");
+    expect(formatOrderStatus("revision_requested", "custom")).toBe("Revision requested");
   });
 
   it("keeps retail pending_deposit as Order placed", () => {

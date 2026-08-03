@@ -180,6 +180,8 @@ export interface OrderService {
     fulfillmentStatus?: OrderStatus;
   }) => Promise<void>;
   claimMyGuestOrders: () => Promise<number>;
+  cancelMyOrder: (orderId: string) => Promise<void>;
+  requestOrderRevision: (orderId: string, note: string) => Promise<void>;
   fetchOrderProofUrl: (orderId: string) => Promise<string | null>;
   persistCustomOrderQuote: (orderId: string, update: CustomOrderQuoteUpdate, order: ManagedCustomOrder) => Promise<void>;
 }
@@ -272,7 +274,7 @@ export const supabaseOrderService: OrderService = {
 
     const orderId =
       sanitizedDraft.id ?? `CO-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
-    const orderStatus = draft.status === "draft" ? "pending_deposit" : draft.status;
+    const orderStatus = draft.status === "draft" ? "under_review" : draft.status;
     const currentUser = usePortalStore.getState().currentUser;
     const customerId = currentUser?.role === "customer" ? currentUser.id : null;
     const customerEmail =
@@ -412,6 +414,23 @@ export const supabaseOrderService: OrderService = {
     return typeof data === "number" ? data : 0;
   },
 
+  cancelMyOrder: async (orderId) => {
+    const id = normalizeOrderId(orderId);
+    if (!id) throw new Error("Missing order id");
+    const { error } = await supabase.rpc("og_customer_cancel_order", { p_order_id: id });
+    if (error) throw new Error(error.message);
+  },
+
+  requestOrderRevision: async (orderId, note) => {
+    const id = normalizeOrderId(orderId);
+    if (!id) throw new Error("Missing order id");
+    const { error } = await supabase.rpc("og_customer_request_revision", {
+      p_order_id: id,
+      p_note: note,
+    });
+    if (error) throw new Error(error.message);
+  },
+
   updateOrderField: async (id, patch) => {
     const orderId = normalizeOrderId(id);
     if (!orderId) throw new Error("Missing order id");
@@ -468,6 +487,7 @@ export const supabaseOrderService: OrderService = {
     const patch: {
       custom_payload: Json;
       total_centavos?: number;
+      status?: string;
       updated_at: string;
     } = {
       custom_payload: payload as unknown as Json,
@@ -476,6 +496,10 @@ export const supabaseOrderService: OrderService = {
 
     if (hasOfficial && payload.officialTotal) {
       patch.total_centavos = Math.round(payload.officialTotal.amount * 100);
+      // Invoice issued → customer Pay now wall
+      if (order.status === "under_review" || order.status === "revision_requested" || order.status === "draft") {
+        patch.status = "pending_deposit";
+      }
     }
 
     const { error } = await supabase.from("og_orders").update(patch).eq("id", orderId);
@@ -519,6 +543,10 @@ export const supabaseOrderService: OrderService = {
       quoteCustomerNotes: payload.quoteCustomerNotes,
       quoteInternalNotes: notes,
     });
+
+    if (patch.status) {
+      usePortalStore.getState().updateCustomOrderStatus(orderId, patch.status as OrderStatus);
+    }
 
     if (hasOfficial) {
       void notifyCustomerOrderEvent(order.customerId, orderId, "quote_ready");

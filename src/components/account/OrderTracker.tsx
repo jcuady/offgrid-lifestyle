@@ -3,13 +3,33 @@ import type { OrderStatus, OrderType } from "@/src/types/commerce";
 import { cn } from "@/src/lib/utils";
 
 const RETAIL_STEPS = ["Placed", "Confirmed", "Shipped", "Delivered"] as const;
-const CUSTOM_STEPS = ["Submitted", "In production", "Shipped", "Delivered"] as const;
+const CUSTOM_STEPS = ["Review", "Paid", "Production", "Delivered"] as const;
 
 /** Map an order status onto the 4-stage delivery tracker (cancelled handled separately). */
-function activeStepIndex(status: OrderStatus): number {
+function activeStepIndex(status: OrderStatus, type: OrderType): number {
+  if (type === "custom") {
+    switch (status) {
+      case "draft":
+      case "under_review":
+      case "revision_requested":
+      case "pending_deposit":
+        return 0;
+      case "confirmed":
+        return 1;
+      case "in_production":
+      case "shipped":
+        return 2;
+      case "delivered":
+        return 3;
+      default:
+        return 0;
+    }
+  }
   switch (status) {
     case "draft":
     case "pending_deposit":
+    case "under_review":
+    case "revision_requested":
       return 0;
     case "confirmed":
     case "in_production":
@@ -51,7 +71,7 @@ export function OrderTracker({ status, type, className }: OrderTrackerProps) {
     );
   }
 
-  const current = activeStepIndex(status);
+  const current = activeStepIndex(status, type);
 
   return (
     <ol className={cn("flex items-start", className)} aria-label="Order progress">

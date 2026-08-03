@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>OFFGRID — Audit 10 order lifecycle</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-stone-50 text-slate-900">
+<main class="mx-auto max-w-5xl space-y-6 px-6 py-12 text-sm">
+  <header>
+    <p class="font-mono text-xs uppercase tracking-[0.2em] text-slate-500">Audit 10 · 2026-08-03</p>
+    <h1 class="mt-2 text-3xl font-bold">Order lifecycle workflow</h1>
+  </header>
+  <section class="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
+    <p class="font-semibold">Shipped in app code</p>
+    <ul class="mt-2 list-disc pl-5 space-y-1">
+      <li>Statuses: <code>under_review</code>, <code>revision_requested</code></li>
+      <li>Invoice = Official quote; customer Pay now CTA</li>
+      <li>Customer cancel window + revision request UI</li>
+      <li>Admin invoice copy + unrestricted status select</li>
+      <li>Deep module <code>src/lib/orderLifecycle.ts</code></li>
+      <li>vitest 62/288 · tsc 0</li>
+    </ul>
+  </section>
+  <section class="rounded-2xl border border-amber-200 bg-amber-50 p-5">
+    <p class="font-semibold">Blocked — apply SQL on OffGrid</p>
+    <p class="mt-2">CLI returned 403 on linked project. Apply:</p>
+    <pre class="mt-2 overflow-x-auto rounded bg-white p-3 text-xs">supabase/migrations/20260803120000_order_lifecycle_review_revision.sql</pre>
+    <p class="mt-2">Then: <code>npx supabase migration repair --status applied 20260803120000 --linked</code> and redeploy <code>send-push</code> for <code>order_revision</code> alert.</p>
+  </section>
+</main>
+</body>
+</html>

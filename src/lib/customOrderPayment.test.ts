@@ -66,6 +66,6 @@ describe("custom order payment actions", () => {
         officialDeposit: deposit,
       }),
     ).toBe(false);
-    expect(customOrderPaymentCtaLabel("pay_deposit")).toBe("Pay deposit");
+    expect(customOrderPaymentCtaLabel("pay_deposit")).toBe("Pay now");
   });
 });

@@ -60,7 +60,7 @@ export function isCustomOrderGCashActionAvailable(
 
 /** Account list / detail CTA label for the active payment phase. */
 export function customOrderPaymentCtaLabel(phase: CustomOrderPaymentPhase): string | null {
-  if (phase === "pay_deposit") return "Pay deposit";
-  if (phase === "pay_balance") return "Pay balance";
+  if (phase === "pay_deposit") return "Pay now";
+  if (phase === "pay_balance") return "Pay remaining balance";
   return null;
 }

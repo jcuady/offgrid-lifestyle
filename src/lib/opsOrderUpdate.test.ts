@@ -102,7 +102,7 @@ describe("opsOrderUpdate", () => {
     );
 
     expect(merged.id).toBe("CO-2026-1001");
-    expect(merged.status).toBe("pending_deposit");
+    expect(merged.status).toBe("under_review");
     expect(merged.designFileUrl).toContain("CO-2026-1001");
     expect(merged.orderSheetFileUrl).toContain("CO-2026-1001");
   });

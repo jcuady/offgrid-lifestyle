@@ -57,4 +57,15 @@ describe("adminCustomLifecycleGuide", () => {
     });
     expect(g.nextStep.toLowerCase()).toContain("confirm");
   });
+
+  it("points admin at revision note when present", () => {
+    const g = adminCustomLifecycleGuide({
+      status: "revision_requested",
+      paymentStatus: "unpaid",
+      hasOfficialQuote: true,
+      hasCustomerRevisionNote: true,
+    });
+    expect(g.tone).toBe("action");
+    expect(g.body.toLowerCase()).toContain("revision note");
+  });
 });

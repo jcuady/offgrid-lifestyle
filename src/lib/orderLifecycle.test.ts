@@ -40,4 +40,15 @@ describe("orderLifecycle", () => {
     expect(canOverridePaymentStatus("fully_paid", { unrestricted: true })).toBe(true);
     expect(canOverridePaymentStatus("fully_paid")).toBe(false);
   });
+
+  it("admin unrestricted can set any durable status including draft", () => {
+    expect(canTransitionStatus("delivered", "draft", { unrestricted: true })).toBe(true);
+    expect(canTransitionStatus("delivered", "shipped", { unrestricted: true })).toBe(true);
+    expect(canTransitionStatus("cancelled", "confirmed", { unrestricted: true })).toBe(true);
+  });
+
+  it("admin may refund; staff cannot", () => {
+    expect(canOverridePaymentStatus("refunded", { unrestricted: true })).toBe(true);
+    expect(canOverridePaymentStatus("refunded")).toBe(false);
+  });
 });

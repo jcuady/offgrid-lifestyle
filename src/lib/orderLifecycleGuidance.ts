@@ -99,6 +99,7 @@ export function adminCustomLifecycleGuide(input: {
   paymentStatus: PaymentStatus | string;
   hasOfficialQuote: boolean;
   hasPaymentProof?: boolean;
+  hasCustomerRevisionNote?: boolean;
 }): LifecycleGuide {
   if (input.status === "cancelled") {
     return {
@@ -111,7 +112,9 @@ export function adminCustomLifecycleGuide(input: {
   if (input.status === "revision_requested") {
     return {
       title: "Customer revision",
-      body: "Read the customer revision note, update specs or invoice, then move status back to Under review or Invoice ready.",
+      body: input.hasCustomerRevisionNote
+        ? "Read the customer revision note below, update specs or invoice, then move status back to Under review or save the invoice (Pay now unlocks)."
+        : "Update specs or invoice for the requested change, then move status back to Under review or save the invoice.",
       nextStep: "Resolve revision → update invoice if needed → notify",
       tone: "action",
     };

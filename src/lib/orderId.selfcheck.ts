@@ -1,5 +1,5 @@
 import { normalizeOrderId } from "@/src/lib/orderId";
-import { canOverridePaymentStatus, canTransitionStatus } from "@/src/lib/operationsOrderFlow";
+import { canOverridePaymentStatus, canTransitionStatus } from "@/src/lib/orderLifecycle";
 
 function assert(cond: boolean, msg: string) {
   if (!cond) throw new Error(msg);

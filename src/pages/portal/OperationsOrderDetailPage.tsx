@@ -28,7 +28,7 @@ import {
   PAYMENT_TRANSITIONS,
   canOverridePaymentStatus,
   canTransitionStatus,
-} from "@/src/lib/operationsOrderFlow";
+} from "@/src/lib/orderLifecycle";
 import { Button } from "@/src/components/ui/Button";
 import { CustomOrderFileButton } from "@/src/components/custom-order/CustomOrderFileButton";
 import { OrderDeliveryDetails } from "@/src/components/portal/OrderDeliveryDetails";
@@ -208,8 +208,18 @@ function AdminQuoteEditor({
     <div className="rounded-2xl border border-offgrid-green/10 bg-white p-5 shadow-sm">
       <h2 className="text-xl font-display font-bold text-offgrid-green">Invoice (official quote)</h2>
       <p className="mt-1 text-xs text-offgrid-green/55">
-        After review, save the invoice to unlock the customer Pay now button. You can still override any fulfillment or payment status for ops corrections.
+        {order.status === "revision_requested"
+          ? "Customer requested a revision — update specs or totals below, then Save invoice to unlock Pay now again (status moves to Invoice ready)."
+          : "After review, save the invoice to unlock the customer Pay now button. You can still override any fulfillment or payment status for ops corrections."}
       </p>
+      {order.customerRevisionNote.trim() ? (
+        <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-amber-900/70">
+            Customer revision note
+          </p>
+          <p className="mt-1 whitespace-pre-wrap">{order.customerRevisionNote}</p>
+        </div>
+      ) : null}
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         <div>
           <label className="text-[10px] font-semibold uppercase tracking-[0.18em] text-offgrid-green/45">
@@ -267,7 +277,9 @@ function AdminQuoteEditor({
       </div>
       <div className="mt-5 flex flex-wrap gap-2">
         <Button type="button" size="lg" onClick={handleSave}>
-          Save invoice
+          {order.status === "revision_requested" || order.status === "under_review"
+            ? "Save invoice → Pay now unlocks"
+            : "Save invoice"}
         </Button>
         <Button type="button" variant="outline" size="lg" onClick={onClear}>
           Clear invoice
@@ -638,6 +650,7 @@ export function OperationsOrderDetailPage() {
                   paymentStatus: custom.paymentStatus,
                   hasOfficialQuote: hasOfficialCustomQuote(custom.officialTotal),
                   hasPaymentProof,
+                  hasCustomerRevisionNote: Boolean(custom.customerRevisionNote.trim()),
                 })}
               />
             </div>

@@ -24,7 +24,7 @@ import {
   ORDER_TRANSITIONS,
   PAYMENT_TRANSITIONS,
   canTransitionStatus,
-} from "@/src/lib/operationsOrderFlow";
+} from "@/src/lib/orderLifecycle";
 import { usePortalStore, type ManagedCustomOrder, type ManagedRetailOrder, type UserRole } from "@/src/store/usePortalStore";
 import { localOrderService } from "@/src/services";
 import { persistOrderPaymentUpdate, persistOrderStatusUpdate } from "@/src/lib/opsOrderUpdate";
@@ -273,6 +273,13 @@ export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
   const quoteBadge = (row: Row) => {
     if (row.kind !== "custom") {
       return <span className="text-xs font-medium text-offgrid-green/35">—</span>;
+    }
+    if (row.entry.status === "revision_requested") {
+      return (
+        <span className="inline-flex rounded-full border border-amber-300 bg-amber-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-amber-950">
+          Needs revision review
+        </span>
+      );
     }
     const ready = hasOfficialCustomQuote(row.entry.officialTotal);
     return (

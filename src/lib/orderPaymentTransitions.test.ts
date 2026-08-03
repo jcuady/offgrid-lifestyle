@@ -52,6 +52,28 @@ describe("resolvePaidOrderUpdate", () => {
       }),
     ).toEqual({ paymentStatus: "fully_paid", status: "confirmed" });
   });
+
+  it("confirms from under_review on deposit pay", () => {
+    expect(
+      resolvePaidOrderUpdate({
+        orderType: "custom",
+        paymentKind: "deposit",
+        currentStatus: "under_review",
+        currentPaymentStatus: "unpaid",
+      }),
+    ).toEqual({ paymentStatus: "deposit_paid", status: "confirmed" });
+  });
+
+  it("keeps revision_requested when customer pays (ops still resolves revision)", () => {
+    expect(
+      resolvePaidOrderUpdate({
+        orderType: "custom",
+        paymentKind: "deposit",
+        currentStatus: "revision_requested",
+        currentPaymentStatus: "unpaid",
+      }),
+    ).toEqual({ paymentStatus: "deposit_paid", status: "revision_requested" });
+  });
 });
 
 describe("resolvePaymentKindFromSession", () => {

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  customOrderGCashUnavailableHint,
   customOrderPayMongoKind,
   customOrderPaymentCtaLabel,
   isCustomOrderGCashActionAvailable,
@@ -67,5 +68,51 @@ describe("custom order payment actions", () => {
       }),
     ).toBe(false);
     expect(customOrderPaymentCtaLabel("pay_deposit")).toBe("Pay now");
+  });
+
+  it("labels balance CTA and settles refunded", () => {
+    expect(customOrderPaymentCtaLabel("pay_balance")).toBe("Pay remaining balance");
+    expect(customOrderPaymentCtaLabel("settled")).toBeNull();
+    expect(
+      resolveCustomOrderPaymentPhase({
+        paymentStatus: "refunded",
+        officialTotal: total,
+      }),
+    ).toBe("settled");
+  });
+
+  it("does not point at PayMongo when GCash is down and PayMongo is off", () => {
+    expect(
+      customOrderGCashUnavailableHint({
+        paymongoAvailable: false,
+        phase: "pay_deposit",
+      }),
+    ).toMatch(/contact OFFGRID|temporarily unavailable/i);
+    expect(
+      customOrderGCashUnavailableHint({
+        paymongoAvailable: false,
+        phase: "pay_deposit",
+      }),
+    ).not.toMatch(/PayMongo QR Ph above/i);
+    expect(
+      customOrderGCashUnavailableHint({
+        paymongoAvailable: true,
+        phase: "pay_deposit",
+      }),
+    ).toMatch(/Use PayMongo QR Ph above/i);
+  });
+
+  it("blocks actions for settled and awaiting_quote phases", () => {
+    const on = { ...DEFAULT_PAYMONGO_SETTINGS, enabled: true, publicKey: "pk_test_x" };
+    expect(isCustomOrderPayMongoActionAvailable("settled", on)).toBe(false);
+    expect(isCustomOrderPayMongoActionAvailable("pay_balance", on)).toBe(true);
+    expect(customOrderPayMongoKind("pay_balance")).toBe("balance");
+    expect(
+      isCustomOrderGCashActionAvailable("settled", "https://cdn.example/qr.png", {
+        paymentStatus: "fully_paid",
+        officialTotal: total,
+        officialDeposit: deposit,
+      }),
+    ).toBe(false);
   });
 });

@@ -23,7 +23,7 @@ import {
   createPayMongoCheckoutSession,
   redirectToPayMongoCheckout,
 } from "@/src/lib/paymongo";
-import { isGcashQrReady, isPayMongoCheckoutAvailable } from "@/src/types/payments";
+import { isPayMongoCheckoutAvailable } from "@/src/types/payments";
 import { AccountLayout } from "@/src/components/account/AccountLayout";
 import { OrderTracker } from "@/src/components/account/OrderTracker";
 import { CustomOrderFileButton } from "@/src/components/custom-order/CustomOrderFileButton";
@@ -42,6 +42,7 @@ import {
   customOrderGCashAmountDue,
 } from "@/src/lib/portal";
 import {
+  customOrderGCashUnavailableHint,
   customOrderPayMongoKind,
   customOrderPaymentCtaLabel,
   isCustomOrderGCashActionAvailable,
@@ -1057,7 +1058,6 @@ export function CustomerOrderDetailPage() {
                       officialTotal: custom.officialTotal,
                       officialDeposit: custom.officialDeposit,
                     });
-                    const qrReady = isGcashQrReady(paymentSettings.gcashQrImageUrl);
                     if (!customShowGcash) {
                       if (!hasOfficialCustomQuote(custom.officialTotal)) {
                         return (
@@ -1066,14 +1066,16 @@ export function CustomerOrderDetailPage() {
                           </p>
                         );
                       }
-                      if (!qrReady) {
-                        return (
-                          <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-900">
-                            GCash QR is not set up yet. Use PayMongo QR Ph above.
-                          </p>
-                        );
-                      }
-                      return null;
+                      const hint = customOrderGCashUnavailableHint({
+                        paymongoAvailable: customShowPayMongo,
+                        phase: customPaymentPhase ?? "unavailable",
+                      });
+                      if (!hint) return null;
+                      return (
+                        <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-900">
+                          {hint}
+                        </p>
+                      );
                     }
                     return (
                       <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3">

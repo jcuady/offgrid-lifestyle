@@ -10,6 +10,8 @@ import {
   DEFAULT_PAYMONGO_SETTINGS,
   firstSelectableRetailPaymentMethod,
   isRetailPaymentMethodSelectable,
+  retailCheckoutCanPlaceOrder,
+  retailCheckoutEmptyWallHint,
   validateRetailPaymentMethod,
 } from "@/src/types/payments";
 
@@ -173,6 +175,17 @@ describe("payment gateway readiness — payment methods", () => {
     });
     expect(isRetailPaymentMethodSelectable("gcash", config)).toBe(false);
     expect(firstSelectableRetailPaymentMethod(config)).toBe("paymongo");
+  });
+
+  it("blocks Place Order when GCash, PayMongo, and COD are all offline", () => {
+    expect(firstSelectableRetailPaymentMethod(disabledConfig)).toBeNull();
+    expect(retailCheckoutCanPlaceOrder(disabledConfig)).toBe(false);
+    expect(retailCheckoutEmptyWallHint(disabledConfig)).toMatch(/contact OFFGRID|no payment method/i);
+  });
+
+  it("rejects leftover card method", () => {
+    expect(validateRetailPaymentMethod("card", disabledConfig)).toMatch(/not available/i);
+    expect(isRetailPaymentMethodSelectable("card", disabledConfig)).toBe(false);
   });
 });
 

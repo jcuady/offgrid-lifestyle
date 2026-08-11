@@ -84,3 +84,25 @@ describe("og_restrict_customer_order_column_updates owner bypass", () => {
     expect(migration).toMatch(/rolbypassrls/);
   });
 });
+
+describe("trigger-only lifecycle DEFINER revoke", () => {
+  const migration = readFileSync(
+    resolve(
+      process.cwd(),
+      "supabase/migrations/20260811170000_trigger_revoke_and_fk_indexes.sql",
+    ),
+    "utf8",
+  );
+
+  it("revokes anon/authenticated EXECUTE on payment and status triggers", () => {
+    expect(migration).toMatch(
+      /REVOKE ALL ON FUNCTION public\.og_orders_advance_on_payment\(\) FROM PUBLIC, anon, authenticated/,
+    );
+    expect(migration).toMatch(
+      /REVOKE ALL ON FUNCTION public\.og_validate_order_status_transition\(\) FROM PUBLIC, anon, authenticated/,
+    );
+    expect(migration).toMatch(
+      /REVOKE ALL ON FUNCTION public\.og_enforce_event_capacity\(\) FROM PUBLIC, anon, authenticated/,
+    );
+  });
+});

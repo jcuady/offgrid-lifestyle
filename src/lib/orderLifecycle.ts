@@ -88,3 +88,19 @@ export function canCustomerRequestRevision(input: {
 }
 
 export const REVIEW_SLA_COPY = "We typically review custom orders within 1–3 business days.";
+
+/** Invoice save unlocks Pay now only while unpaid — never regress a paid revision. */
+export function fulfillmentAfterInvoiceSave(input: {
+  status: OrderStatus;
+  paymentStatus: PaymentStatus | string;
+}): OrderStatus | null {
+  if (input.paymentStatus !== "unpaid") return null;
+  if (
+    input.status === "under_review" ||
+    input.status === "revision_requested" ||
+    input.status === "draft"
+  ) {
+    return "pending_deposit";
+  }
+  return null;
+}

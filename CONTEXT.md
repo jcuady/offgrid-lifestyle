@@ -15,6 +15,7 @@
 | **Under review** | Custom order after submit; typically 1–3 business days before Invoice. Status `under_review`. |
 | **Revision requested** | Customer or admin flagged design/spec changes (`revision_requested`) until shipped. |
 | **Cancel window** | Customer may cancel only while unpaid and status is draft / under_review / pending_deposit / revision_requested. |
+| **STATUS_FLOW** | Single lifecycle interface for staff/customer fulfillment edges. TS `orderLifecycle` and SQL `og_validate_order_status_transition` must stay in parity (`orderLifecycleSqlParity.test.ts`). |
 | **Lifecycle guide** | Step-by-step “What to do next” copy for customer and admin from `orderLifecycleGuidance` (Pay now / Submit revision / Save invoice). |
 | **Customer revision note** | Durable note in `custom_payload.customerRevisionNote` written by `og_customer_request_revision`; mapped on ManagedCustomOrder for admin/customer display. |
 | **Awaiting quote** | Deprecated label — prefer Under review / Awaiting invoice. |

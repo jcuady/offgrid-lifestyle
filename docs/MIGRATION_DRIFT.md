@@ -26,5 +26,6 @@ Local `supabase/migrations/` and remote `supabase_migrations.schema_migrations` 
 | `20260801180000` | guest claim RPC + internal notes table + admin payment override |
 | `20260803120000` | order lifecycle: under_review, revision_requested, admin status bypass, cancel/revision RPCs |
 | `20260803140000` | revision note min length on RPC + partial index for revision queue |
+| `20260811170000` | revoke trigger EXECUTE from anon/authenticated + FK covering indexes |
 
 Mark those with `migration repair --status applied` after confirming objects exist on the linked project.

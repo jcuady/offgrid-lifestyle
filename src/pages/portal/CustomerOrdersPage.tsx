@@ -355,6 +355,7 @@ function CustomOrderCard({ order }: { order: ManagedCustomOrder }) {
   const phase = resolveCustomOrderPaymentPhase({
     paymentStatus: order.paymentStatus,
     officialTotal: order.officialTotal,
+    fulfillmentStatus: order.status,
   });
   const payCta = customOrderPaymentCtaLabel(phase);
   const ctaLabel =

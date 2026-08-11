@@ -70,6 +70,30 @@ describe("custom order payment actions", () => {
     expect(customOrderPaymentCtaLabel("pay_deposit")).toBe("Pay now");
   });
 
+  it("holds Pay now while revision is open", () => {
+    expect(
+      resolveCustomOrderPaymentPhase({
+        paymentStatus: "unpaid",
+        officialTotal: total,
+        fulfillmentStatus: "revision_requested",
+      }),
+    ).toBe("unavailable");
+    expect(
+      resolveCustomOrderPaymentPhase({
+        paymentStatus: "deposit_paid",
+        officialTotal: total,
+        fulfillmentStatus: "revision_requested",
+      }),
+    ).toBe("unavailable");
+    expect(
+      resolveCustomOrderPaymentPhase({
+        paymentStatus: "fully_paid",
+        officialTotal: total,
+        fulfillmentStatus: "revision_requested",
+      }),
+    ).toBe("settled");
+  });
+
   it("labels balance CTA and settles refunded", () => {
     expect(customOrderPaymentCtaLabel("pay_balance")).toBe("Pay remaining balance");
     expect(customOrderPaymentCtaLabel("settled")).toBeNull();

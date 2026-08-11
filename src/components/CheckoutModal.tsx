@@ -15,6 +15,8 @@ import {
   firstSelectableRetailPaymentMethod,
   isGcashQrReady,
   isRetailPaymentMethodSelectable,
+  retailCheckoutCanPlaceOrder,
+  retailCheckoutEmptyWallHint,
   RETAIL_PAYMENT_METHODS,
   validateRetailPaymentMethod,
 } from "@/src/types/payments";
@@ -103,6 +105,8 @@ export function CheckoutModal() {
     () => checkoutPaymentConfigFromSettings(paymentSettings),
     [paymentSettings],
   );
+  const canPlaceRetail = retailCheckoutCanPlaceOrder(checkoutPaymentConfig);
+  const emptyWallHint = retailCheckoutEmptyWallHint(checkoutPaymentConfig);
 
   useEffect(() => {
     if (!isCheckoutOpen) return;
@@ -654,7 +658,9 @@ export function CheckoutModal() {
                             </div>
                           ) : (
                             <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-900" role="status">
-                              GCash QR is not uploaded yet. Use PayMongo QR Ph instead, or contact the shop.
+                              {isRetailPaymentMethodSelectable("paymongo", checkoutPaymentConfig)
+                                ? "GCash QR is not uploaded yet. Use PayMongo QR Ph instead, or contact the shop."
+                                : (emptyWallHint ?? "GCash QR is not uploaded yet. Contact OFFGRID to pay.")}
                             </p>
                           )}
                         </motion.div>
@@ -678,6 +684,14 @@ export function CheckoutModal() {
                           {checkoutError}
                         </p>
                       ) : null}
+                      {emptyWallHint ? (
+                        <p
+                          className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-900"
+                          role="status"
+                        >
+                          {emptyWallHint}
+                        </p>
+                      ) : null}
                       </div>
 
                       <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-offgrid-green/10 bg-offgrid-cream px-4 py-3 sm:flex-row sm:gap-3 sm:px-6 sm:py-4">
@@ -691,7 +705,7 @@ export function CheckoutModal() {
                         </Button>
                         <Button
                           size="lg"
-                          disabled={placingOrder}
+                          disabled={placingOrder || !canPlaceRetail}
                           onClick={() => void handlePlaceOrder()}
                           className="h-11 w-full bg-offgrid-lime font-bold text-white hover:bg-offgrid-lime/90 disabled:opacity-70 sm:h-12 sm:flex-[1.2]"
                         >

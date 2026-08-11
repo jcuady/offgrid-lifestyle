@@ -137,6 +137,15 @@ export function firstSelectableRetailPaymentMethod(
   return order.find((m) => isRetailPaymentMethodSelectable(m, config)) ?? null;
 }
 
+export function retailCheckoutCanPlaceOrder(config: CheckoutPaymentConfig): boolean {
+  return firstSelectableRetailPaymentMethod(config) !== null;
+}
+
+export function retailCheckoutEmptyWallHint(config: CheckoutPaymentConfig): string | null {
+  if (retailCheckoutCanPlaceOrder(config)) return null;
+  return "No payment method is available yet. Contact OFFGRID or check back once GCash QR or PayMongo QR Ph is set up.";
+}
+
 export function validateRetailPaymentMethod(method: string, config: CheckoutPaymentConfig): string | null {
   if (!isRetailPaymentMethod(method)) {
     return "Invalid payment method.";

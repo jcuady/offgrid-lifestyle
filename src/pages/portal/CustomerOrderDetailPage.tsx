@@ -607,6 +607,7 @@ export function CustomerOrderDetailPage() {
     ? resolveCustomOrderPaymentPhase({
         paymentStatus: custom.paymentStatus,
         officialTotal: custom.officialTotal,
+        fulfillmentStatus: custom.status,
       })
     : null;
   const customPayMongoKind = customPaymentPhase

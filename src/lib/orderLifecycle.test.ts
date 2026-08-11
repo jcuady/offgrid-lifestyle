@@ -7,6 +7,7 @@ import {
   canCustomerRequestRevision,
   canOverridePaymentStatus,
   canTransitionStatus,
+  fulfillmentAfterInvoiceSave,
 } from "./orderLifecycle";
 
 describe("orderLifecycle", () => {
@@ -53,6 +54,21 @@ describe("orderLifecycle", () => {
   it("admin may refund; staff cannot", () => {
     expect(canOverridePaymentStatus("refunded", { unrestricted: true })).toBe(true);
     expect(canOverridePaymentStatus("refunded")).toBe(false);
+  });
+
+  it("invoice save unlocks Pay now only while unpaid", () => {
+    expect(
+      fulfillmentAfterInvoiceSave({ status: "revision_requested", paymentStatus: "unpaid" }),
+    ).toBe("pending_deposit");
+    expect(
+      fulfillmentAfterInvoiceSave({ status: "revision_requested", paymentStatus: "deposit_paid" }),
+    ).toBeNull();
+    expect(
+      fulfillmentAfterInvoiceSave({ status: "under_review", paymentStatus: "unpaid" }),
+    ).toBe("pending_deposit");
+    expect(
+      fulfillmentAfterInvoiceSave({ status: "confirmed", paymentStatus: "unpaid" }),
+    ).toBeNull();
   });
 });
 

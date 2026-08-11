@@ -63,6 +63,7 @@ export function customerCustomLifecycleGuide(input: {
   const phase = resolveCustomOrderPaymentPhase({
     paymentStatus: input.paymentStatus,
     officialTotal: input.hasOfficialQuote ? { amount: 1, currency: "PHP" } : null,
+    fulfillmentStatus: input.status,
   });
 
   if (phase === "pay_deposit" || phase === "pay_balance") {

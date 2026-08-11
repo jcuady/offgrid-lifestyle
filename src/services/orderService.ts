@@ -23,6 +23,7 @@ import { notifyCustomerOrderEvent } from "@/src/lib/customerNotifications";
 import { resolveStorageReference } from "@/src/lib/storageAccess";
 import { sendOrderReceiptEmail } from "@/src/services/emailService";
 import { normalizeOrderId } from "@/src/lib/orderId";
+import { fulfillmentAfterInvoiceSave } from "@/src/lib/orderLifecycle";
 import { upsertById } from "@/src/lib/orderStoreMerge";
 import { applyQuoteToCustomPayload, customPayloadFromManaged } from "@/src/lib/customOrderPayload";
 
@@ -498,9 +499,11 @@ export const supabaseOrderService: OrderService = {
     if (hasOfficial && payload.officialTotal) {
       patch.total_centavos = Math.round(payload.officialTotal.amount * 100);
       // Invoice issued → customer Pay now wall
-      if (order.status === "under_review" || order.status === "revision_requested" || order.status === "draft") {
-        patch.status = "pending_deposit";
-      }
+      const nextStatus = fulfillmentAfterInvoiceSave({
+        status: order.status,
+        paymentStatus: order.paymentStatus,
+      });
+      if (nextStatus) patch.status = nextStatus;
     }
 
     const { error } = await supabase.from("og_orders").update(patch).eq("id", orderId);

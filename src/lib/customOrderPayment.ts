@@ -16,10 +16,12 @@ export type CustomOrderPaymentPhase =
 export function resolveCustomOrderPaymentPhase(input: {
   paymentStatus: PaymentStatus | string;
   officialTotal?: { amount: number; currency: string } | null;
+  fulfillmentStatus?: string;
 }): CustomOrderPaymentPhase {
   if (input.paymentStatus === "fully_paid" || input.paymentStatus === "refunded") {
     return "settled";
   }
+  if (input.fulfillmentStatus === "revision_requested") return "unavailable";
   if (!hasOfficialCustomQuote(input.officialTotal)) return "awaiting_quote";
   if (input.paymentStatus === "deposit_paid") return "pay_balance";
   if (input.paymentStatus === "unpaid") {

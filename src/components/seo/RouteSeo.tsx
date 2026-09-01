@@ -3,7 +3,7 @@ import { useLocation } from "react-router-dom";
 import { initAnalytics, isAnalyticsConfigured, trackPageView } from "@/src/lib/analytics";
 import { getCookieConsent } from "@/src/lib/consent";
 import { resolveRouteSeo } from "@/src/lib/routeSeo";
-import { applyPageSeo, organizationJsonLd, upsertJsonLd, upsertMeta } from "@/src/lib/siteSeo";
+import { applyPageSeo, organizationJsonLd, upsertJsonLd, upsertMeta, websiteJsonLd } from "@/src/lib/siteSeo";
 
 const GSC_VERIFICATION = import.meta.env.VITE_GSC_VERIFICATION as string | undefined;
 
@@ -16,6 +16,7 @@ export function RouteSeo() {
       upsertMeta("name", "google-site-verification", GSC_VERIFICATION);
     }
     upsertJsonLd("jsonld-organization", organizationJsonLd());
+    upsertJsonLd("jsonld-website", websiteJsonLd());
   }, []);
 
   useEffect(() => {

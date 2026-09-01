@@ -228,9 +228,10 @@ export function Navbar() {
     }
     if (currentUser.role === "customer") {
       return withInstall([
+        { label: "Shop", onSelect: () => handleNavigate(CUSTOMER_ACCOUNT_MENU_PATHS.shop) },
+        { label: "Custom", onSelect: () => handleNavigate(CUSTOMER_ACCOUNT_MENU_PATHS.custom) },
         { label: "My Orders", onSelect: () => handleNavigate(CUSTOMER_ACCOUNT_MENU_PATHS.orders) },
         { label: "Profile", onSelect: () => handleNavigate(CUSTOMER_ACCOUNT_MENU_PATHS.profile) },
-        { label: "Custom Order", onSelect: () => handleNavigate(CUSTOMER_ACCOUNT_MENU_PATHS.customOrder) },
         { label: "Sign out", onSelect: handleSignOut, tone: "danger" },
       ]);
     }

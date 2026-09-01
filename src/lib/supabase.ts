@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { AUTH_SESSION_PERSIST } from "@/src/lib/authPersist";
 import type { Database } from "@/src/types/database";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -12,8 +13,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
-    persistSession: true,
-    autoRefreshToken: true,
+    ...AUTH_SESSION_PERSIST,
     // Standard SPA: GoTrue consumes hash/?code=. Auth session bootstrap owns
     // stash → classify → hydrate → singleton onAuthStateChange. Never signOut
     // while URL tokens are being consumed.

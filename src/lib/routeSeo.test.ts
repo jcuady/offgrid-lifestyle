@@ -21,6 +21,8 @@ describe("resolveRouteSeo", () => {
   it("noindexes portal and account areas", () => {
     expect(resolveRouteSeo("/portal/admin")?.noindex).toBe(true);
     expect(resolveRouteSeo("/account/orders")?.noindex).toBe(true);
+    expect(resolveRouteSeo("/account/shop")?.noindex).toBe(true);
+    expect(resolveRouteSeo("/account/custom")?.noindex).toBe(true);
     expect(resolveRouteSeo("/account/sign-in")?.noindex).toBe(true);
   });
 

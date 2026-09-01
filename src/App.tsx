@@ -11,7 +11,15 @@ import { Footer } from "./components/Footer";
 import { ScrollToTop } from "./components/ScrollToTop";
 import { RouteSeo } from "./components/seo/RouteSeo";
 import { GoogleAnalytics } from "./components/seo/GoogleAnalytics";
-import { isAuthScreen, PORTAL_LOGIN_PATH } from "@/src/lib/authRoutes";
+import { PORTAL_LOGIN_PATH } from "@/src/lib/authRoutes";
+import { accountMobileDockPad } from "@/src/lib/brandLayout";
+import {
+  hidesStorefrontChrome,
+  resolveCustomerAppDockSection,
+  showsCustomerStorefrontDock,
+} from "@/src/lib/customerAppNav";
+import { CustomerAppDock } from "@/src/components/account/CustomerAppDock";
+import { cn } from "@/src/lib/utils";
 import { lazyRetry as lazy } from "@/src/lib/lazyRetry";
 import { usePortalStore, getPortalLandingByRole } from "./store/usePortalStore";
 import { RequirePortalRole } from "./components/portal/RequirePortalRole";
@@ -86,6 +94,12 @@ const CustomerOrdersPage = lazy(() =>
 );
 const CustomerProfilePage = lazy(() =>
   import("./pages/portal/CustomerProfilePage").then((m) => ({ default: m.CustomerProfilePage })),
+);
+const CustomerShopPage = lazy(() =>
+  import("./pages/portal/CustomerShopPage").then((m) => ({ default: m.CustomerShopPage })),
+);
+const CustomerCustomPage = lazy(() =>
+  import("./pages/portal/CustomerCustomPage").then((m) => ({ default: m.CustomerCustomPage })),
 );
 const CustomerOrderDetailPage = lazy(() =>
   import("./pages/portal/CustomerOrderDetailPage").then((m) => ({
@@ -197,11 +211,18 @@ export default function App() {
 
 function AppFrame() {
   const location = useLocation();
-  const hideStorefrontChrome =
-    location.pathname.startsWith("/portal") || isAuthScreen(location.pathname);
+  const currentUser = usePortalStore((state) => state.currentUser);
+  const hideStorefrontChrome = hidesStorefrontChrome(location.pathname);
+  const storefrontDock = showsCustomerStorefrontDock(location.pathname, currentUser?.role);
+  const dockSection = storefrontDock ? resolveCustomerAppDockSection(location.pathname) : null;
 
   return (
-    <div className="min-h-screen bg-offgrid-cream font-sans text-offgrid-green overflow-x-hidden">
+    <div
+      className={cn(
+        "min-h-screen bg-offgrid-cream font-sans text-offgrid-green overflow-x-hidden",
+        storefrontDock && accountMobileDockPad,
+      )}
+    >
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-full focus:bg-offgrid-lime focus:px-4 focus:py-3 focus:text-sm focus:font-bold focus:text-offgrid-cream focus:shadow-lg"
@@ -266,6 +287,22 @@ function AppFrame() {
           }
         />
         <Route
+          path="/account/shop"
+          element={
+            <RequirePortalRole roles={["customer"]}>
+              <CustomerShopPage />
+            </RequirePortalRole>
+          }
+        />
+        <Route
+          path="/account/custom"
+          element={
+            <RequirePortalRole roles={["customer"]}>
+              <CustomerCustomPage />
+            </RequirePortalRole>
+          }
+        />
+        <Route
           path="/account/orders/:orderId"
           element={
             <RequirePortalRole roles={["customer"]}>
@@ -326,6 +363,7 @@ function AppFrame() {
       </Suspense>
 
       {!hideStorefrontChrome && <Footer />}
+      {dockSection ? <CustomerAppDock active={dockSection} /> : null}
 
       <Suspense fallback={null}>
         <CartDrawer />

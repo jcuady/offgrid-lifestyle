@@ -14,8 +14,11 @@ describe("navbarLayers", () => {
     expect(canClickAccountMenuThroughScrim(55, 50)).toBe(false);
   });
 
-  it("routes header Profile / Orders to account pages", () => {
+  it("routes header Profile / Orders / Shop / Custom to account app pages", () => {
     expect(CUSTOMER_ACCOUNT_MENU_PATHS.profile).toBe("/account/profile");
     expect(CUSTOMER_ACCOUNT_MENU_PATHS.orders).toBe("/account/orders");
+    expect(CUSTOMER_ACCOUNT_MENU_PATHS.shop).toBe("/account/shop");
+    expect(CUSTOMER_ACCOUNT_MENU_PATHS.custom).toBe("/account/custom");
+    expect(CUSTOMER_ACCOUNT_MENU_PATHS.customOrder).toBe("/account/custom");
   });
 });

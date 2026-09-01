@@ -443,13 +443,13 @@ function EmptyState({ filter }: { filter: OrderFilter }) {
       <p className="mx-auto mt-2 max-w-sm text-sm text-offgrid-green/60">{copy}</p>
       <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
         <Button variant="default" size="lg" className="w-full gap-2 sm:w-auto" asChild>
-          <Link to="/shop">
+          <Link to="/account/shop">
             <ShoppingBag className="h-4 w-4" />
             Browse shop
           </Link>
         </Button>
         <Button variant="outline" size="lg" className="w-full gap-2 sm:w-auto" asChild>
-          <Link to="/custom/order">
+          <Link to="/account/custom">
             <Sparkles className="h-4 w-4" />
             Custom order
           </Link>

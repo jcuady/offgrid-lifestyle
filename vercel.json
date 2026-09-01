@@ -37,6 +37,14 @@
       ]
     }
   ],
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "oglifestyleph.com" }],
+      "destination": "https://www.oglifestyleph.com/:path*",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/((?!assets/|images/|favicon/|favicon_io/|templates/|OG%20logo/|logo\\.png|favicon\\.ico|robots\\.txt|sitemap\\.xml|manifest\\.webmanifest|sw\\.js|workbox-.*\\.js).*)",

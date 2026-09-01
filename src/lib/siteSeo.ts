@@ -1,18 +1,39 @@
-import { BRAND_LEGAL_NAME, BRAND_NAME } from "@/src/lib/brandName";
+import { BRAND_LEGAL_NAME, BRAND_NAME, BRAND_WORDMARK } from "@/src/lib/brandName";
 
-/** Canonical production URL (www is primary on Vercel). */
+/** Canonical production URL (www + HTTPS — all other host/protocol variants 308 here). */
 export const SITE_URL = "https://www.oglifestyleph.com";
 
 export const SITE_NAME = BRAND_LEGAL_NAME;
 
 export const SITE_TITLE =
-  `${BRAND_NAME}® | Ultimate Frisbee, Pickleball & Custom Teamwear Philippines`;
+  `${BRAND_LEGAL_NAME} | Filipino Sportswear & Custom Teamwear Philippines`;
 
 export const SITE_DESCRIPTION =
-  `${BRAND_NAME} Filipino sportswear — ultimate frisbee retail, pickleball, golf, running, and custom team kits. Designed in Manila.`;
+  `Official ${BRAND_LEGAL_NAME} — Filipino sportswear for ultimate frisbee, pickleball, golf, running, and custom team kits. Also known as OFF GRID and OG Lifestyle. Designed in Marikina. Ships nationwide.`;
 
-export const SITE_KEYWORDS =
-  `${BRAND_NAME} Lifestyle, oglifestyleph, Filipino sportswear, ultimate frisbee apparel, custom teamwear, pickleball apparel, golf wear, Philippines, team uniforms, Manila sportswear`;
+/** Meta keywords + schema alternateName — common brand search variants. */
+export const BRAND_SEARCH_ALIASES = [
+  "OFF GRID Lifestyle",
+  "OFF GRID",
+  "OG Lifestyle",
+  "oglifestyleph",
+  "oglifestyle ph",
+] as const;
+
+export const SITE_KEYWORDS = [
+  BRAND_LEGAL_NAME,
+  BRAND_WORDMARK,
+  ...BRAND_SEARCH_ALIASES,
+  "OFFGRID",
+  "Filipino sportswear",
+  "ultimate frisbee apparel",
+  "custom teamwear",
+  "pickleball apparel",
+  "golf wear",
+  "Philippines",
+  "team uniforms",
+  "Manila sportswear",
+].join(", ");
 
 /** Social preview — dark wordmark on light background. */
 export const SITE_OG_IMAGE_PATH = "/OG%20logo/OG%20logo/Complete/Black%20No%20BG.png";
@@ -85,6 +106,9 @@ export function applyPageSeo(input: PageSeoInput) {
   upsertMeta("property", "og:url", canonical);
   upsertMeta("property", "og:image", image);
   upsertMeta("property", "og:type", input.type ?? "website");
+  upsertMeta("property", "og:site_name", SITE_NAME);
+  upsertMeta("property", "og:locale", "en_PH");
+  upsertMeta("name", "keywords", SITE_KEYWORDS);
   upsertMeta("name", "twitter:title", input.title);
   upsertMeta("name", "twitter:description", input.description);
   upsertMeta("name", "twitter:image", image);
@@ -94,11 +118,12 @@ export function organizationJsonLd() {
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "OFFGRID Lifestyle",
+    "@id": `${SITE_URL}/#organization`,
+    name: BRAND_LEGAL_NAME,
+    alternateName: [...BRAND_SEARCH_ALIASES, BRAND_NAME, BRAND_WORDMARK],
     url: SITE_URL,
     logo: absoluteUrl(SITE_LOGO_ICON_PATH),
-    description:
-      "OFFGRID Filipino sportswear — ultimate frisbee retail, pickleball, golf, running, and custom team kits.",
+    description: SITE_DESCRIPTION,
     areaServed: "PH",
     sameAs: [
       "https://www.instagram.com/offgridlifestyle.ph/",
@@ -111,8 +136,11 @@ export function websiteJsonLd() {
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
+    "@id": `${SITE_URL}/#website`,
     name: SITE_NAME,
+    alternateName: [...BRAND_SEARCH_ALIASES, BRAND_WORDMARK],
     url: SITE_URL,
+    publisher: { "@id": `${SITE_URL}/#organization` },
     potentialAction: {
       "@type": "SearchAction",
       target: `${SITE_URL}/shop?q={search_term_string}`,

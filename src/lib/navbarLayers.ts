@@ -16,7 +16,9 @@ export function canClickAccountMenuThroughScrim(
 
 /** Customer header-account destinations (signed-in). */
 export const CUSTOMER_ACCOUNT_MENU_PATHS = {
+  shop: "/account/shop",
+  custom: "/account/custom",
   orders: "/account/orders",
   profile: "/account/profile",
-  customOrder: "/custom",
+  customOrder: "/account/custom",
 } as const;

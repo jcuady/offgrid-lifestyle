@@ -58,9 +58,9 @@ const STATIC_ROUTE_SEO: Record<string, PageSeoInput> = {
     path: "/testimonials",
   },
   "/about": {
-    title: `About Us — Filipino Sportswear Brand Marikina | ${BRAND}`,
+    title: `About OFFGRID Lifestyle — Filipino Sportswear Brand Marikina | ${BRAND}`,
     description:
-      "Where comfort meets movement. Learn how OFFGRID Lifestyle builds premium Filipino sportswear for courts, courses, and life off the grid.",
+      "Learn OFFGRID® Lifestyle (OFF GRID / OG Lifestyle) — premium Filipino sportswear for courts, courses, and custom team kits. Based in Marikina, Metro Manila.",
     path: "/about",
   },
   "/contact": {

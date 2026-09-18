@@ -78,10 +78,17 @@ export const EMPTY_SHIPPING_INFO: ShippingInfo = {
   barangayCode: "",
 };
 
+export type CustomOrderDesignFile = {
+  name: string;
+  key: string;
+  url: string | null;
+};
+
 export interface CustomOrderDraft {
   id: string | null;
   category: CustomCategory;
   headwearType: HeadwearType | null;
+  designFiles?: Array<CustomOrderDesignFile>;
   designFileName: string | null;
   designFileKey: string | null;
   designFileUrl: string | null;

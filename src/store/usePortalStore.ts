@@ -4,7 +4,15 @@
  */
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { CustomOrderDraft, Money, Order, OrderStatus, PaymentStatus, ShippingInfo } from "@/src/types/commerce";
+import type {
+  CustomOrderDesignFile,
+  CustomOrderDraft,
+  Money,
+  Order,
+  OrderStatus,
+  PaymentStatus,
+  ShippingInfo,
+} from "@/src/types/commerce";
 import type { AuditLogEntry, CreateStaffInput, ManagedStaffAccount, RegisterCustomerInput, RegisteredCustomer } from "@/src/types/portal";
 import { DEFAULT_COD_SETTINGS, DEFAULT_PAYMONGO_SETTINGS, type CodSettings, type PayMongoSettings } from "@/src/types/payments";
 import { appendAudit, type AuditInput } from "@/src/lib/portalAudit";
@@ -43,6 +51,7 @@ export interface ManagedCustomOrder {
   cuts: CustomOrderDraft["cuts"];
   materials: CustomOrderDraft["materials"];
   printMethod: CustomOrderDraft["printMethod"];
+  designFiles: CustomOrderDesignFile[];
   designFileName: string | null;
   designFileKey: string | null;
   designFileUrl: string | null;
@@ -498,6 +507,7 @@ export const usePortalStore = create<PortalState>()(
             cuts: draft.cuts,
             materials: draft.materials,
             printMethod: draft.printMethod,
+            designFiles: draft.designFiles ?? [],
             designFileName: draft.designFileName,
             designFileKey: draft.designFileKey ?? null,
             designFileUrl: draft.designFileUrl ?? null,

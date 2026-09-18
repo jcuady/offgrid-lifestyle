@@ -54,12 +54,24 @@ export async function sendOrderEmail(input: {
   }
 }
 
+export type OrderReceiptEmailResult =
+  | { ok: true }
+  | { ok: false; error: string }
+  | { ok: true; skipped: true };
+
 export async function sendOrderReceiptEmail(input: {
   orderId: string;
   email: string;
   orderType: "retail" | "custom";
-}): Promise<void> {
-  if (!input.email || input.email.endsWith("@offgrid.local")) return;
+}): Promise<OrderReceiptEmailResult> {
+  if (!input.email || input.email.endsWith("@offgrid.local")) {
+    logger.info("Order receipt email skipped", {
+      operation: "sendOrderReceiptEmail",
+      orderId: input.orderId,
+      orderType: input.orderType,
+    });
+    return { ok: true, skipped: true };
+  }
 
   try {
     await sendOrderEmail({
@@ -72,12 +84,15 @@ export async function sendOrderReceiptEmail(input: {
       orderId: input.orderId,
       orderType: input.orderType,
     });
+    return { ok: true };
   } catch (err) {
+    const error = err instanceof Error ? err.message : String(err);
     logger.warn("Order receipt email failed", {
       operation: "sendOrderReceiptEmail",
       orderId: input.orderId,
-      error: err instanceof Error ? err.message : String(err),
+      error,
     });
+    return { ok: false, error };
   }
 }
 

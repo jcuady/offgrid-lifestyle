@@ -272,7 +272,7 @@ export function EventsPage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
-                  className="group cursor-pointer"
+                  className="group cursor-pointer rounded-2xl ring-1 ring-offgrid-green/10 transition-[box-shadow,ring-color] hover:ring-offgrid-green/35 hover:shadow-md"
                   onClick={() => setSelectedEvent(event)}
                 >
                   <div className="relative rounded-2xl overflow-hidden bg-offgrid-cream mb-4 aspect-[4/3]">
@@ -310,7 +310,7 @@ export function EventsPage() {
                         {event.category}
                       </span>
                     </div>
-                    <h3 className="text-xl font-display font-bold text-offgrid-green mb-1 group-hover:text-offgrid-lime transition-colors">
+                    <h3 className="text-xl font-display font-bold text-offgrid-green mb-1 group-hover:text-offgrid-dark transition-colors">
                       {event.title}
                     </h3>
                     <p className="text-sm text-offgrid-green/60 italic mb-3">
@@ -352,7 +352,7 @@ export function EventsPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="group rounded-2xl overflow-hidden bg-offgrid-cream/5 border border-offgrid-cream/10 hover:border-offgrid-lime/30 transition-colors"
+                className="group rounded-2xl overflow-hidden bg-offgrid-cream/5 ring-1 ring-offgrid-cream/10 transition-[ring-color,box-shadow] hover:ring-offgrid-lime/35 hover:shadow-lg"
               >
                 <div className="grid grid-cols-1 sm:grid-cols-2">
                   <div className="relative aspect-square sm:aspect-auto">
@@ -361,7 +361,7 @@ export function EventsPage() {
                       alt={event.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                     />
-                    <div className="absolute inset-0 bg-offgrid-dark/20 group-hover:bg-transparent transition-colors" />
+                    <div className="absolute inset-0 bg-offgrid-dark/45" aria-hidden />
                   </div>
                   <div className="p-6 sm:p-8 flex flex-col justify-center">
                     <div className="flex items-center gap-2 mb-3">

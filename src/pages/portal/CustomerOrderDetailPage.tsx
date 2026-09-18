@@ -26,6 +26,7 @@ import {
 import { isPayMongoCheckoutAvailable } from "@/src/types/payments";
 import { AccountLayout } from "@/src/components/account/AccountLayout";
 import { OrderTracker } from "@/src/components/account/OrderTracker";
+import { CustomOrderDesignFilesList } from "@/src/components/custom-order/CustomOrderDesignFilesList";
 import { CustomOrderFileButton } from "@/src/components/custom-order/CustomOrderFileButton";
 import { CustomOrderTimeline } from "@/src/components/custom-order/CustomOrderTimeline";
 import { OrderDeliveryDetails } from "@/src/components/portal/OrderDeliveryDetails";
@@ -1118,12 +1119,15 @@ export function CustomerOrderDetailPage() {
             <h2 className="text-xl font-display font-bold text-offgrid-green">Production specs</h2>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/50">Design file</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/50">
+                  Design {custom.designFiles && custom.designFiles.length > 1 ? "files" : "file"}
+                </p>
                 <div className="mt-2">
-                  <CustomOrderFileButton
-                    fileKey={custom.designFileKey}
-                    fileUrl={custom.designFileUrl}
-                    fileName={custom.designFileName}
+                  <CustomOrderDesignFilesList
+                    designFiles={custom.designFiles}
+                    designFileName={custom.designFileName}
+                    designFileKey={custom.designFileKey}
+                    designFileUrl={custom.designFileUrl}
                   />
                 </div>
               </div>

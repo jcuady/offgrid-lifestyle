@@ -8,6 +8,7 @@ import {
   BarChart3,
   CalendarDays,
   KanbanSquare,
+  Layers3,
   Palette,
   Home,
   MessageSquare,
@@ -63,6 +64,7 @@ const navByRole: Record<Exclude<UserRole, "customer">, NavSection[]> = {
       items: [
         { name: "Orders", to: "/portal/admin/orders", icon: ClipboardList },
         { name: "Products", to: "/portal/admin/products", icon: Package },
+        { name: "Catalog", to: "/portal/admin/catalog", icon: Layers3 },
         { name: "Reviews", to: "/portal/admin/reviews", icon: MessageSquare },
         { name: "Payments", to: "/portal/admin/payments", icon: QrCode },
         { name: "Events and Sports", to: "/portal/admin/events", icon: CalendarDays },

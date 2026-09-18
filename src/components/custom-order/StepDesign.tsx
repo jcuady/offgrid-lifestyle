@@ -1,6 +1,6 @@
 import { useMemo, useState, type ChangeEvent } from "react";
 import { Link } from "react-router-dom";
-import { Upload, Download, ArrowRight, Loader2 } from "lucide-react";
+import { Upload, Download, ArrowRight, Loader2, X } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { useCustomOrderStore } from "@/src/store/useCustomOrderStore";
 import { resolveCanonicalTemplates } from "@/src/lib/canonicalTemplates";
@@ -11,7 +11,14 @@ import {
   resolveHeadwearOptions,
   type HeadwearOptionGroup,
 } from "@/src/data/customHeadwearOptions";
-import { PENDING_DESIGN_KEY, saveCustomOrderFile } from "@/src/lib/customOrderFiles";
+import {
+  MAX_CUSTOM_DESIGN_FILES,
+  pendingDesignKey,
+  resolveDesignFilesFromDraft,
+  saveCustomOrderFile,
+  syncLegacyDesignFields,
+  deleteCustomOrderFile,
+} from "@/src/lib/customOrderFiles";
 import { fileAcceptAttribute, fileRuleHint, validateUploadedFile } from "@/src/lib/fileValidation";
 import { cn } from "@/src/lib/utils";
 
@@ -50,7 +57,8 @@ export function StepDesign() {
     : [];
 
   const headwearReady = draft.category === "apparel" || Boolean(draft.headwearType);
-  const designReady = Boolean(draft.designFileName) || draft.designNotes.trim().length > 0;
+  const designFiles = resolveDesignFilesFromDraft(draft);
+  const designReady = designFiles.length > 0 || draft.designNotes.trim().length > 0;
   const canContinue = headwearReady && designReady;
 
   const selectHeadwearGroup = (group: HeadwearOptionGroup) => {
@@ -83,26 +91,48 @@ export function StepDesign() {
   };
 
   const handleFileSelect = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const selected = Array.from(e.target.files ?? []);
     e.target.value = "";
-    if (!file) return;
+    if (selected.length === 0) return;
 
-    const check = validateUploadedFile(file, "customDesign");
-    if (check.ok === false) {
-      setUploadError(check.error);
+    const remaining = MAX_CUSTOM_DESIGN_FILES - designFiles.length;
+    if (remaining <= 0) {
+      setUploadError(`You can upload up to ${MAX_CUSTOM_DESIGN_FILES} design files.`);
       return;
     }
 
-    try {
+    const toAdd = selected.slice(0, remaining);
+    if (selected.length > remaining) {
+      setUploadError(`Only ${remaining} more file(s) allowed (max ${MAX_CUSTOM_DESIGN_FILES}).`);
+    } else {
       setUploadError(null);
+    }
+
+    try {
       setUploadBusy(true);
-      await saveCustomOrderFile(PENDING_DESIGN_KEY, file);
-      updateDraft({ designFileName: file.name, designFileKey: PENDING_DESIGN_KEY });
+      const nextFiles = [...designFiles];
+      for (const file of toAdd) {
+        const check = validateUploadedFile(file, "customDesign");
+        if (check.ok === false) {
+          setUploadError(check.error);
+          continue;
+        }
+        const key = pendingDesignKey();
+        await saveCustomOrderFile(key, file);
+        nextFiles.push({ name: file.name, key, url: null });
+      }
+      updateDraft({ designFiles: nextFiles, ...syncLegacyDesignFields(nextFiles) });
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : "Upload failed.");
     } finally {
       setUploadBusy(false);
     }
+  };
+
+  const handleRemoveDesignFile = async (key: string) => {
+    const nextFiles = designFiles.filter((f) => f.key !== key);
+    await deleteCustomOrderFile(key).catch(() => undefined);
+    updateDraft({ designFiles: nextFiles, ...syncLegacyDesignFields(nextFiles) });
   };
 
   return (
@@ -243,18 +273,42 @@ export function StepDesign() {
           ) : (
             <Upload className="h-8 w-8 text-offgrid-green/40" />
           )}
-          {draft.designFileName ? (
-            <p className="text-sm font-semibold text-offgrid-green">{draft.designFileName}</p>
+          {designFiles.length > 0 ? (
+            <p className="text-sm font-semibold text-offgrid-green">
+              {designFiles.length} file{designFiles.length === 1 ? "" : "s"} selected
+            </p>
           ) : (
             <p className="text-sm text-offgrid-green/50">{copy.uploadPlaceholder}</p>
           )}
           <input
             type="file"
+            multiple
             accept={fileAcceptAttribute("customDesign")}
             onChange={(e) => void handleFileSelect(e)}
             className="hidden"
+            disabled={designFiles.length >= MAX_CUSTOM_DESIGN_FILES}
           />
         </label>
+        {designFiles.length > 0 ? (
+          <ul className="mt-3 space-y-2">
+            {designFiles.map((file) => (
+              <li
+                key={file.key}
+                className="flex items-center justify-between gap-2 rounded-lg border border-offgrid-green/15 bg-white px-3 py-2 text-sm text-offgrid-green"
+              >
+                <span className="min-w-0 truncate font-medium">{file.name}</span>
+                <button
+                  type="button"
+                  onClick={() => void handleRemoveDesignFile(file.key)}
+                  className="shrink-0 rounded-md p-1 text-offgrid-green/50 transition-colors hover:bg-offgrid-green/5 hover:text-offgrid-green"
+                  aria-label={`Remove ${file.name}`}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : null}
         {uploadError ? (
           <p className="mt-2 text-xs font-medium text-red-600" role="alert">
             {uploadError}

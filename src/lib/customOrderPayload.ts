@@ -17,6 +17,7 @@ export type CustomPayloadWrite = {
   materials: CustomOrderDraft["materials"];
   printMethod: PrintMethod | null;
   quantity: number;
+  designFiles: CustomOrderDraft["designFiles"];
   designFileName: string | null;
   designFileKey: string | null;
   designFileUrl: string | null;
@@ -52,6 +53,7 @@ export function customPayloadFromManaged(order: ManagedCustomOrder): CustomPaylo
     materials: order.materials ?? [],
     printMethod: order.printMethod,
     quantity: order.quantity,
+    designFiles: order.designFiles ?? [],
     designFileName: order.designFileName,
     designFileKey: order.designFileKey,
     designFileUrl: order.designFileUrl,

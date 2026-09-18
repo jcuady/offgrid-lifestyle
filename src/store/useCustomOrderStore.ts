@@ -15,6 +15,7 @@ const EMPTY_DRAFT: CustomOrderDraft = {
   id: null,
   category: "apparel",
   headwearType: null,
+  designFiles: [],
   designFileName: null,
   designFileKey: null,
   designFileUrl: null,
@@ -130,12 +131,27 @@ export const useCustomOrderStore = create<CustomOrderState>()(
     }),
     {
       name: "og-custom-order",
-      version: 5,
+      version: 6,
       migrate: (persisted, fromVersion) => {
         const next = { ...(persisted as Record<string, unknown>) };
         const draft = (next.draft as Partial<CustomOrderDraft> & Record<string, unknown> | undefined) ?? {};
         next.draft = migrateDraftSpecs(draft);
 
+        if (fromVersion < 6) {
+          const d = next.draft as CustomOrderDraft;
+          const designFiles =
+            d.designFiles ??
+            (d.designFileName && d.designFileKey
+              ? [
+                  {
+                    name: d.designFileName,
+                    key: d.designFileKey,
+                    url: d.designFileUrl ?? null,
+                  },
+                ]
+              : []);
+          next.draft = { ...d, designFiles };
+        }
         if (fromVersion < 4) {
           const d = next.draft as CustomOrderDraft;
           next.draft = {

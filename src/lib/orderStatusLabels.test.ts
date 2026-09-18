@@ -43,6 +43,7 @@ function sampleOrder(partial: Partial<ManagedCustomOrder> = {}): ManagedCustomOr
     cuts: ["short_sleeve"],
     materials: ["dri_fit"],
     printMethod: "sublimation",
+    designFiles: [],
     designFileName: null,
     designFileKey: null,
     designFileUrl: null,

@@ -41,11 +41,22 @@ async function getSettingsRowId(): Promise<string | null> {
   return data?.id ?? null;
 }
 
-export async function hydratePaymentSettingsFromSupabase(): Promise<void> {
+export type PaymentSettingsHydrateResult =
+  | { ok: true }
+  | { ok: false; error: string };
+
+/** Loads checkout payment flags. Returns an error when the row is missing or the query fails. */
+export async function hydratePaymentSettingsFromSupabase(): Promise<PaymentSettingsHydrateResult> {
   const { data, error } = await supabase.from("og_payment_settings").select("*").limit(1).maybeSingle();
-  if (error || !data) return;
-  // Silent: never audit on hydrate (App boot + admin page mount).
+  if (error) {
+    return { ok: false, error: `Could not load payment settings: ${error.message}` };
+  }
+  if (!data) {
+    return { ok: false, error: "Payment settings are not configured yet." };
+  }
+  // Never audit on hydrate (App boot + admin page mount).
   usePortalStore.setState({ paymentSettings: rowToSettings(data) });
+  return { ok: true };
 }
 
 export async function persistPaymentSettings(patch: Partial<PaymentSettings>): Promise<void> {

@@ -1,6 +1,6 @@
 /** Pure helpers for storefront tag / sport label catalogs and cascading renames. */
 
-export type CatalogLabelKind = "tag" | "sport";
+export type CatalogLabelKind = "tag" | "sport" | "collection";
 
 export function slugifyCatalogLabel(label: string): string {
   return (

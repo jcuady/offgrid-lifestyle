@@ -10,10 +10,12 @@ interface PortalDrawerProps {
   children: ReactNode;
   /** Sticky footer action row (e.g. Save / Cancel). */
   footer?: ReactNode;
+  /** Wider drawer for dense forms (products). */
+  wide?: boolean;
 }
 
 /** Right-side slide-over used by portal CRUD editors. Stays mounted so it can animate in/out. */
-export function PortalDrawer({ open, onClose, title, description, children, footer }: PortalDrawerProps) {
+export function PortalDrawer({ open, onClose, title, description, children, footer, wide }: PortalDrawerProps) {
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -44,7 +46,8 @@ export function PortalDrawer({ open, onClose, title, description, children, foot
         aria-modal="true"
         aria-label={title}
         className={cn(
-          "absolute inset-y-0 right-0 flex w-full max-w-full flex-col bg-offgrid-cream shadow-2xl transition-transform duration-300 ease-out sm:max-w-md lg:max-w-lg",
+          "absolute inset-y-0 right-0 flex w-full max-w-full flex-col bg-offgrid-cream shadow-2xl transition-transform duration-300 ease-out",
+          wide ? "sm:max-w-lg lg:max-w-xl" : "sm:max-w-md lg:max-w-lg",
           "pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)]",
           open ? "translate-x-0" : "translate-x-full",
         )}

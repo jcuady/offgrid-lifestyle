@@ -9,6 +9,7 @@ import { maskPaymongoPublicKey, paymongoKeyConfigured } from "@/src/lib/paymongo
 import type { PayMongoMode } from "@/src/types/payments";
 import { isGcashQrReady } from "@/src/types/payments";
 import { hydratePaymentSettingsFromSupabase, persistPaymentSettings } from "@/src/services";
+import { buildGcashQrStoragePath, withCacheBust } from "@/src/lib/gcashQrUpload";
 import { supabase } from "@/src/lib/supabase";
 import { cn } from "@/src/lib/utils";
 
@@ -92,21 +93,39 @@ export function AdminPaymentsPage() {
     }
 
     setUploadError(null);
+    setSaveError(null);
     setUploading(true);
     try {
-      const ext = file.name.split(".").pop() ?? "png";
-      const path = `gcash-qr.${ext}`;
-
+      const path = buildGcashQrStoragePath(file.name);
       const { data: storageData, error: storageErr } = await supabase.storage
         .from("payment-assets")
-        .upload(path, file, { upsert: true });
-      if (storageErr) throw storageErr;
+        .upload(path, file, { upsert: false, contentType: file.type || undefined });
+      if (storageErr) {
+        const msg = storageErr.message || "Storage upload failed.";
+        if (/row-level security|not authorized|403/i.test(msg)) {
+          throw new Error(
+            "Storage blocked — sign out and sign back in as admin so your session includes portal_role=admin.",
+          );
+        }
+        throw new Error(`Storage: ${msg}`);
+      }
 
       const {
         data: { publicUrl },
       } = supabase.storage.from("payment-assets").getPublicUrl(storageData.path);
+      const busted = withCacheBust(publicUrl);
 
-      await persistPaymentSettings({ gcashQrImageUrl: publicUrl });
+      try {
+        await persistPaymentSettings({ gcashQrImageUrl: busted });
+      } catch (dbErr) {
+        throw new Error(
+          dbErr instanceof Error
+            ? `Uploaded, but could not save URL: ${dbErr.message}`
+            : "Uploaded, but could not save payment settings.",
+        );
+      }
+
+      await hydratePaymentSettingsFromSupabase();
       setSaveOk("GCash QR image updated.");
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : "Upload failed. Please try again.");

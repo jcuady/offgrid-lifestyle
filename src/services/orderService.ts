@@ -13,7 +13,11 @@ import type { PaymentProvider } from "@/src/types/payments";
 import { usePortalStore, type CustomOrderQuoteUpdate, type ManagedCustomOrder, type ManagedRetailOrder } from "@/src/store/usePortalStore";
 import { logger } from "@/src/lib/logger";
 import { supabase } from "@/src/lib/supabase";
-import { finalizeCustomOrderFiles } from "@/src/lib/customOrderFiles";
+import {
+  collectPendingDesignKeys,
+  finalizeCustomOrderFiles,
+  resolveDesignFilesFromDraft,
+} from "@/src/lib/customOrderFiles";
 import { mergeCustomOrderDraftWithFiles } from "@/src/lib/customOrderSubmit";
 import { parseCutsFromPayload, parseMaterialsFromPayload } from "@/src/lib/customOrderSpecs";
 import { validateCustomOrderDraft, validateRetailCart, validateShippingInfo, sanitizeShippingInfo, normalizeShippingInfo, mergeCustomOrderShipping } from "@/src/lib/formValidation";
@@ -21,7 +25,7 @@ import { checkoutPaymentConfigFromSettings, validateRetailPaymentMethod } from "
 import { notifyStaffOrderEvent } from "@/src/lib/notifications";
 import { notifyCustomerOrderEvent } from "@/src/lib/customerNotifications";
 import { resolveStorageReference } from "@/src/lib/storageAccess";
-import { sendOrderReceiptEmail } from "@/src/services/emailService";
+import { sendOrderReceiptEmail, type OrderReceiptEmailResult } from "@/src/services/emailService";
 import { normalizeOrderId } from "@/src/lib/orderId";
 import { fulfillmentAfterInvoiceSave } from "@/src/lib/orderLifecycle";
 import { upsertById } from "@/src/lib/orderStoreMerge";
@@ -127,6 +131,12 @@ function mapCustomOrderRow(row: OrderRow): ManagedCustomOrder {
     cuts: parseCutsFromPayload(p),
     materials: parseMaterialsFromPayload(p),
     printMethod: (p.printMethod as PrintMethod | null) ?? null,
+    designFiles: resolveDesignFilesFromDraft({
+      designFiles: p.designFiles as ManagedCustomOrder["designFiles"],
+      designFileName: (p.designFileName as string) ?? null,
+      designFileKey: (p.designFileKey as string) ?? null,
+      designFileUrl: (p.designFileUrl as string) ?? null,
+    }),
     designFileName: (p.designFileName as string) ?? null,
     designFileKey: (p.designFileKey as string) ?? null,
     designFileUrl: (p.designFileUrl as string) ?? null,
@@ -168,6 +178,7 @@ function mergeOrderIntoStore(retail?: ManagedRetailOrder, custom?: ManagedCustom
 export interface SubmitCustomOrderResult {
   orderId: string;
   fileUploadWarnings: string[];
+  receiptEmail: OrderReceiptEmailResult;
 }
 
 export interface OrderService {
@@ -314,14 +325,21 @@ export const supabaseOrderService: OrderService = {
 
     const fileKeys = await finalizeCustomOrderFiles(
       orderId,
-      sanitizedDraft.designFileKey,
+      collectPendingDesignKeys(sanitizedDraft),
       sanitizedDraft.orderSheetFileKey,
     );
     const finalDraft = mergeCustomOrderDraftWithFiles(
       sanitizedDraft,
       orderId,
       shippingInfo,
-      fileKeys,
+      {
+        designFiles: fileKeys.designFiles,
+        designFileKey: fileKeys.designFileKey,
+        designFileName: fileKeys.designFileName,
+        designFileUrl: fileKeys.designFileUrl,
+        orderSheetFileKey: fileKeys.orderSheetFileKey,
+        orderSheetFileUrl: fileKeys.orderSheetFileUrl,
+      },
     );
 
     const { error: patchError } = await supabase
@@ -338,12 +356,12 @@ export const supabaseOrderService: OrderService = {
 
     const customOrderId = usePortalStore.getState().recordCustomOrder(finalDraft);
     void notifyStaffOrderEvent(customOrderId, "new_custom_order");
-    void sendOrderReceiptEmail({
+    const receiptEmail = await sendOrderReceiptEmail({
       orderId: customOrderId,
       email: customerEmail ?? draft.contactEmail,
       orderType: "custom",
     });
-    return { orderId: customOrderId, fileUploadWarnings: fileKeys.warnings };
+    return { orderId: customOrderId, fileUploadWarnings: fileKeys.warnings, receiptEmail };
   },
 
   listOrders: async () => {

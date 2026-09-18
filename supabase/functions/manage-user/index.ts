@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { requireActivePortalAdmin } from "../_shared/portalAdminAuth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -36,21 +37,21 @@ async function requireAdmin(req: Request) {
     return { error: new Response(JSON.stringify({ error: "Invalid token" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }) };
   }
 
-  if (caller.app_metadata?.portal_role !== "admin") {
-    return { error: new Response(JSON.stringify({ error: "Admin access required" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }) };
-  }
-
   const adminClient = createClient(supabaseUrl, serviceRoleKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  const { data: adminPortal } = await adminClient
-    .from("og_portal_users")
-    .select("id, email")
-    .eq("auth_user_id", caller.id)
-    .maybeSingle();
+  const adminGate = await requireActivePortalAdmin({ admin: adminClient, caller });
+  if ("error" in adminGate) {
+    return {
+      error: new Response(JSON.stringify({ error: adminGate.error }), {
+        status: adminGate.status,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }),
+    };
+  }
 
-  return { adminClient, caller, adminPortal };
+  return { adminClient, caller, adminPortal: adminGate.portalAdmin };
 }
 
 function validatePassword(password: string | undefined): string | null {

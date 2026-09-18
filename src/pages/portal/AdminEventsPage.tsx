@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
-import { CalendarDays, MapPin, Plus, Pencil, Trash2, Search, Star, Users } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from "react";
+import { CalendarDays, MapPin, Plus, Pencil, Trash2, Search, Star, Users, X } from "lucide-react";
+import { uploadCmsImage } from "@/src/lib/cmsImageUpload";
 import type { SiteEvent } from "@/src/data/events";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { hydrateSiteContentFromSupabase, localContentService } from "@/src/services";
@@ -28,7 +29,28 @@ const defaultDraft: SiteEvent = {
   highlights: ["Event highlights here"],
 };
 
-const inputClass = "w-full px-3 py-2 text-sm";
+const inputClass =
+  "w-full rounded-xl border border-offgrid-green/15 bg-white px-3 py-2.5 text-sm text-offgrid-green outline-none transition-colors focus:border-offgrid-lime/50 focus:ring-2 focus:ring-offgrid-lime/20";
+
+function Field({
+  label,
+  hint,
+  children,
+}: {
+  label: string;
+  hint?: string;
+  children: ReactNode;
+}) {
+  return (
+    <label className="block space-y-1.5">
+      <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/50">
+        {label}
+      </span>
+      {children}
+      {hint ? <span className="block text-[11px] text-offgrid-green/45">{hint}</span> : null}
+    </label>
+  );
+}
 
 export function AdminEventsPage() {
   const events = useSiteContentStore((state) => state.events);
@@ -47,6 +69,10 @@ export function AdminEventsPage() {
   const [regs, setRegs] = useState<EventRegistration[]>([]);
   const [regsBusy, setRegsBusy] = useState(false);
   const [regsError, setRegsError] = useState<string | null>(null);
+  const [highlightInput, setHighlightInput] = useState("");
+  const [imageUploadBusy, setImageUploadBusy] = useState(false);
+  const [imageUploadError, setImageUploadError] = useState<string | null>(null);
+  const imageFileRef = useRef<HTMLInputElement>(null);
 
   const openRegistrations = async (event: SiteEvent) => {
     setRegsFor(event);
@@ -164,7 +190,7 @@ export function AdminEventsPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search events…"
-            className="w-full !pl-9 pr-3 py-2.5 text-sm"
+            className={cn(inputClass, "!pl-9")}
           />
         </div>
         <p className="hidden shrink-0 font-mono text-xs uppercase tracking-[0.12em] text-offgrid-green/45 sm:block">
@@ -308,121 +334,219 @@ export function AdminEventsPage() {
           </div>
         }
       >
-        <div className="space-y-3">
+        <div className="space-y-4">
           {formError && (
             <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">{formError}</p>
           )}
-          <input
-            value={draft.title}
-            onChange={(e) => setDraft((prev) => ({ ...prev, title: e.target.value }))}
-            placeholder="Event title"
-            className={inputClass}
-          />
-          <input
-            value={draft.subtitle}
-            onChange={(e) => setDraft((prev) => ({ ...prev, subtitle: e.target.value }))}
-            placeholder="Subtitle"
-            className={inputClass}
-          />
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <Field label="Event title">
             <input
-              value={draft.date}
-              onChange={(e) => setDraft((prev) => ({ ...prev, date: e.target.value }))}
-              placeholder="Date (15 Jun)"
+              value={draft.title}
+              onChange={(e) => setDraft((prev) => ({ ...prev, title: e.target.value }))}
               className={inputClass}
             />
+          </Field>
+          <Field label="Subtitle">
             <input
-              value={draft.time}
-              onChange={(e) => setDraft((prev) => ({ ...prev, time: e.target.value }))}
-              placeholder="Time"
+              value={draft.subtitle}
+              onChange={(e) => setDraft((prev) => ({ ...prev, subtitle: e.target.value }))}
               className={inputClass}
             />
+          </Field>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Field label="Date">
+              <input
+                value={draft.date}
+                onChange={(e) => setDraft((prev) => ({ ...prev, date: e.target.value }))}
+                placeholder="15 Jun"
+                className={inputClass}
+              />
+            </Field>
+            <Field label="Time">
+              <input
+                value={draft.time}
+                onChange={(e) => setDraft((prev) => ({ ...prev, time: e.target.value }))}
+                className={inputClass}
+              />
+            </Field>
           </div>
-          <input
-            value={draft.location}
-            onChange={(e) => setDraft((prev) => ({ ...prev, location: e.target.value }))}
-            placeholder="Location"
-            className={inputClass}
-          />
-          <input
-            value={draft.address}
-            onChange={(e) => setDraft((prev) => ({ ...prev, address: e.target.value }))}
-            placeholder="Address"
-            className={inputClass}
-          />
-          <input
-            value={draft.image}
-            onChange={(e) => setDraft((prev) => ({ ...prev, image: e.target.value }))}
-            placeholder="Hero image URL"
-            className={inputClass}
-          />
-          <textarea
-            rows={3}
-            value={draft.description}
-            onChange={(e) => setDraft((prev) => ({ ...prev, description: e.target.value }))}
-            placeholder="Event description"
-            className={inputClass}
-          />
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+          <Field label="Location">
             <input
-              value={draft.price}
-              onChange={(e) => setDraft((prev) => ({ ...prev, price: e.target.value }))}
-              placeholder="Price"
+              value={draft.location}
+              onChange={(e) => setDraft((prev) => ({ ...prev, location: e.target.value }))}
+              className={inputClass}
+            />
+          </Field>
+          <Field label="Address">
+            <input
+              value={draft.address}
+              onChange={(e) => setDraft((prev) => ({ ...prev, address: e.target.value }))}
+              className={inputClass}
+            />
+          </Field>
+          <Field label="Hero image">
+            {draft.image ? (
+              <img
+                src={draft.image}
+                alt=""
+                className="mb-2 max-h-44 w-full rounded-xl object-cover ring-1 ring-offgrid-green/10"
+              />
+            ) : null}
+            <input
+              value={draft.image}
+              onChange={(e) => setDraft((prev) => ({ ...prev, image: e.target.value }))}
+              placeholder="Image URL"
               className={inputClass}
             />
             <input
-              type="number"
-              value={draft.capacity ?? ""}
-              onChange={(e) =>
-                setDraft((prev) => ({ ...prev, capacity: e.target.value ? Number(e.target.value) : undefined }))
-              }
-              placeholder="Capacity"
-              className={inputClass}
+              ref={imageFileRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              className="sr-only"
+              onChange={async (e: ChangeEvent<HTMLInputElement>) => {
+                const file = e.target.files?.[0];
+                e.target.value = "";
+                if (!file) return;
+                setImageUploadError(null);
+                setImageUploadBusy(true);
+                try {
+                  const result = await uploadCmsImage(file, "events");
+                  if (result.ok === false) {
+                    setImageUploadError(result.error);
+                    return;
+                  }
+                  setDraft((prev) => ({ ...prev, image: result.publicUrl }));
+                } finally {
+                  setImageUploadBusy(false);
+                }
+              }}
             />
-            <input
-              type="number"
-              value={draft.registered ?? ""}
-              onChange={(e) =>
-                setDraft((prev) => ({ ...prev, registered: e.target.value ? Number(e.target.value) : undefined }))
-              }
-              placeholder="Registered"
-              className={inputClass}
+            <button
+              type="button"
+              disabled={imageUploadBusy}
+              onClick={() => imageFileRef.current?.click()}
+              className="mt-2 inline-flex rounded-lg border border-offgrid-green/20 px-3 py-1.5 text-xs font-semibold text-offgrid-green hover:bg-offgrid-green/5 disabled:opacity-50"
+            >
+              {imageUploadBusy ? "Uploading…" : "Upload image"}
+            </button>
+            {imageUploadError ? <span className="block text-xs text-red-600">{imageUploadError}</span> : null}
+          </Field>
+          <Field label="Description">
+            <textarea
+              rows={3}
+              value={draft.description}
+              onChange={(e) => setDraft((prev) => ({ ...prev, description: e.target.value }))}
+              className={cn(inputClass, "resize-y")}
             />
+          </Field>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <Field label="Price">
+              <input
+                value={draft.price}
+                onChange={(e) => setDraft((prev) => ({ ...prev, price: e.target.value }))}
+                className={inputClass}
+              />
+            </Field>
+            <Field label="Capacity">
+              <input
+                type="number"
+                value={draft.capacity ?? ""}
+                onChange={(e) =>
+                  setDraft((prev) => ({ ...prev, capacity: e.target.value ? Number(e.target.value) : undefined }))
+                }
+                className={inputClass}
+              />
+            </Field>
+            <Field label="Registered">
+              <input
+                type="number"
+                value={draft.registered ?? ""}
+                onChange={(e) =>
+                  setDraft((prev) => ({ ...prev, registered: e.target.value ? Number(e.target.value) : undefined }))
+                }
+                className={inputClass}
+              />
+            </Field>
           </div>
-          <textarea
-            rows={2}
-            value={draft.highlights.join(", ")}
-            onChange={(e) =>
-              setDraft((prev) => ({
-                ...prev,
-                highlights: e.target.value
-                  .split(",")
-                  .map((entry) => entry.trim())
-                  .filter(Boolean),
-              }))
-            }
-            placeholder="Highlights (comma separated)"
-            className={inputClass}
-          />
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <select
-              value={draft.category}
-              onChange={(e) => setDraft((prev) => ({ ...prev, category: e.target.value as SiteEvent["category"] }))}
-              className={inputClass}
-            >
-              <option value="tournament">Tournament</option>
-              <option value="community">Community</option>
-              <option value="launch">Launch</option>
-              <option value="workshop">Workshop</option>
-            </select>
-            <select
-              value={draft.status}
-              onChange={(e) => setDraft((prev) => ({ ...prev, status: e.target.value as SiteEvent["status"] }))}
-              className={inputClass}
-            >
-              <option value="upcoming">Upcoming</option>
-              <option value="past">Past</option>
-            </select>
+          <Field label="Highlights" hint="Add bullet points shown on the event detail.">
+            <div className="flex flex-wrap gap-2">
+              {draft.highlights.map((item) => (
+                <span
+                  key={item}
+                  className="inline-flex items-center gap-1 rounded-full bg-offgrid-green/10 px-2.5 py-1 text-xs font-medium text-offgrid-green"
+                >
+                  {item}
+                  <button
+                    type="button"
+                    aria-label={`Remove ${item}`}
+                    onClick={() =>
+                      setDraft((prev) => ({
+                        ...prev,
+                        highlights: prev.highlights.filter((h) => h !== item),
+                      }))
+                    }
+                    className="rounded-full p-0.5 hover:bg-offgrid-green/15"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <input
+                value={highlightInput}
+                onChange={(e) => setHighlightInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key !== "Enter") return;
+                  e.preventDefault();
+                  const next = highlightInput.trim();
+                  if (!next) return;
+                  setDraft((prev) =>
+                    prev.highlights.includes(next) ? prev : { ...prev, highlights: [...prev.highlights, next] },
+                  );
+                  setHighlightInput("");
+                }}
+                placeholder="Add highlight"
+                className={inputClass}
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const next = highlightInput.trim();
+                  if (!next) return;
+                  setDraft((prev) =>
+                    prev.highlights.includes(next) ? prev : { ...prev, highlights: [...prev.highlights, next] },
+                  );
+                  setHighlightInput("");
+                }}
+                className="shrink-0 rounded-xl border border-offgrid-green/20 px-3 text-xs font-semibold uppercase tracking-[0.1em] text-offgrid-green hover:bg-offgrid-green/5"
+              >
+                Add
+              </button>
+            </div>
+          </Field>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Field label="Category">
+              <select
+                value={draft.category}
+                onChange={(e) => setDraft((prev) => ({ ...prev, category: e.target.value as SiteEvent["category"] }))}
+                className={inputClass}
+              >
+                <option value="tournament">Tournament</option>
+                <option value="community">Community</option>
+                <option value="launch">Launch</option>
+                <option value="workshop">Workshop</option>
+              </select>
+            </Field>
+            <Field label="Status">
+              <select
+                value={draft.status}
+                onChange={(e) => setDraft((prev) => ({ ...prev, status: e.target.value as SiteEvent["status"] }))}
+                className={inputClass}
+              >
+                <option value="upcoming">Upcoming</option>
+                <option value="past">Past</option>
+              </select>
+            </Field>
           </div>
           <label className="flex items-center gap-2 rounded-xl border border-offgrid-green/20 bg-white px-3 py-2.5 text-sm text-offgrid-green">
             <input

@@ -7,6 +7,8 @@ import { ProductQuickViewModal } from "@/src/components/ProductQuickViewModal";
 import { Button } from "@/src/components/ui/Button";
 import { cn } from "@/src/lib/utils";
 import { hydrateProductsFromSupabase } from "@/src/services";
+import { listCatalogTerms } from "@/src/services/catalogTermsService";
+import { catalogSportsToShopLinks } from "@/src/lib/shopTaxonomyFromCms";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 
 export function CustomerShopPage() {
@@ -15,12 +17,19 @@ export function CustomerShopPage() {
   const [sport, setSport] = useState("all");
   const [hydrated, setHydrated] = useState(false);
   const [quickView, setQuickView] = useState<Product | null>(null);
+  const [sportLabels, setSportLabels] = useState<string[]>([]);
 
   useEffect(() => {
     let cancelled = false;
-    void hydrateProductsFromSupabase().finally(() => {
-      if (!cancelled) setHydrated(true);
-    });
+    void Promise.all([hydrateProductsFromSupabase(), listCatalogTerms("sport")])
+      .then(([, terms]) => {
+        if (cancelled) return;
+        const fromCms = catalogSportsToShopLinks(terms).map((s) => s.label);
+        if (fromCms.length > 0) setSportLabels(fromCms);
+      })
+      .finally(() => {
+        if (!cancelled) setHydrated(true);
+      });
     return () => {
       cancelled = true;
     };
@@ -31,10 +40,10 @@ export function CustomerShopPage() {
     [allProducts],
   );
 
-  const sports = useMemo(
-    () => Array.from(new Set(products.flatMap(getProductSports))).sort(compareSports),
-    [products],
-  );
+  const sports = useMemo(() => {
+    if (sportLabels.length > 0) return sportLabels;
+    return Array.from(new Set(products.flatMap(getProductSports))).sort(compareSports);
+  }, [products, sportLabels]);
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();

@@ -70,6 +70,8 @@ function defaultDraft(): Product {
     basePrice: 1100,
     price: 1100,
     image: "",
+    gallery: [],
+    collectionIds: [],
     colors: [
       { name: "Cream", value: "bg-offgrid-cream" },
       { name: "Forest Green", value: "bg-offgrid-green" },
@@ -140,11 +142,16 @@ export function AdminProductsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [sportCatalog, setSportCatalog] = useState<string[]>([]);
   const [tagCatalog, setTagCatalog] = useState<string[]>([]);
+  const [collectionCatalog, setCollectionCatalog] = useState<{ label: string; slug: string }[]>([]);
   const slugTouched = useRef(false);
 
   const refreshTerms = useCallback(async () => {
     try {
-      const [sports, tags] = await Promise.all([listCatalogTerms("sport"), listCatalogTerms("tag")]);
+      const [sports, tags, collections] = await Promise.all([
+        listCatalogTerms("sport"),
+        listCatalogTerms("tag"),
+        listCatalogTerms("collection"),
+      ]);
       const fromProductsSports = products.flatMap((p) => getProductSports(p));
       const fromProductsTags = products.flatMap((p) => getProductTags(p));
       setSportCatalog(
@@ -161,6 +168,12 @@ export function AdminProductsPage() {
           PRODUCT_TAG_PRESETS,
         ),
       );
+      setCollectionCatalog(
+        collections
+          .filter((c) => c.published)
+          .map((c) => ({ label: c.label, slug: c.slug }))
+          .sort((a, b) => a.label.localeCompare(b.label)),
+      );
     } catch {
       setSportCatalog(
         mergeCatalogLabels(
@@ -169,6 +182,7 @@ export function AdminProductsPage() {
         ).sort(compareSports),
       );
       setTagCatalog(mergeCatalogLabels(products.flatMap((p) => getProductTags(p)), PRODUCT_TAG_PRESETS));
+      setCollectionCatalog([]);
     }
   }, [products]);
 
@@ -483,6 +497,7 @@ export function AdminProductsPage() {
       <PortalDrawer
         open={drawerOpen}
         onClose={closeDrawer}
+        wide
         title={editingId ? "Edit product" : "Add product"}
         description="Publishes immediately to the live storefront."
         footer={
@@ -505,13 +520,17 @@ export function AdminProductsPage() {
           </div>
         }
       >
-        <div className="space-y-5">
+        <div className="space-y-6">
           {fieldErrors.form ? (
             <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700" role="alert">
               {fieldErrors.form}
             </p>
           ) : null}
 
+          <section className="space-y-4">
+            <h3 className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-offgrid-green/45">
+              1 · Basics
+            </h3>
           <Field label="Product name" error={fieldErrors.name}>
             <input
               value={draft.name}
@@ -598,6 +617,43 @@ export function AdminProductsPage() {
             </datalist>
           </Field>
 
+          <Field label="Collections" hint="Assign CMS collections (Admin → Catalog).">
+            <div className="mt-1 flex flex-wrap gap-2">
+              {collectionCatalog.length === 0 ? (
+                <p className="text-xs text-offgrid-green/50">No published collections yet.</p>
+              ) : (
+                collectionCatalog.map((c) => {
+                  const selected = (draft.collectionIds ?? []).includes(c.slug);
+                  return (
+                    <button
+                      key={c.slug}
+                      type="button"
+                      onClick={() =>
+                        setDraft((prev) => {
+                          const ids = prev.collectionIds ?? [];
+                          return {
+                            ...prev,
+                            collectionIds: selected
+                              ? ids.filter((id) => id !== c.slug)
+                              : [...ids, c.slug],
+                          };
+                        })
+                      }
+                      className={cn(
+                        "rounded-full border px-3 py-1 text-xs font-semibold transition-colors",
+                        selected
+                          ? "border-offgrid-green bg-offgrid-green text-offgrid-cream"
+                          : "border-offgrid-green/20 text-offgrid-green/70 hover:border-offgrid-green/40",
+                      )}
+                    >
+                      {c.label}
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </Field>
+
           <Field
             label="URL slug"
             hint="Used in /shop/product/your-slug. Auto-generated from name until you edit it."
@@ -644,23 +700,6 @@ export function AdminProductsPage() {
               </select>
             </Field>
           </div>
-
-          <Field label="Status">
-            <select
-              value={draft.status}
-              onChange={(e) =>
-                setDraft((prev) => ({
-                  ...prev,
-                  status: e.target.value as Product["status"],
-                }))
-              }
-              className={inputClass}
-            >
-              <option value="draft">Draft — hidden from shop</option>
-              <option value="active">Active — live on storefront</option>
-              <option value="archived">Archived — hidden, kept for records</option>
-            </select>
-          </Field>
 
           <CatalogChipEditor
             label="Storefront tags"
@@ -737,17 +776,85 @@ export function AdminProductsPage() {
               className={cn(inputClass, fieldErrors.homeBestSellerRank && inputErrorClass)}
             />
           </Field>
+          </section>
 
-          <div>
-            <span className="mb-1.5 block font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/50">
-              Product image
-            </span>
-            <ProductImageField
-              value={draft.image}
-              onChange={(image) => setDraft((prev) => ({ ...prev, image }))}
-              error={fieldErrors.image}
-            />
-          </div>
+          <section className="space-y-4">
+            <h3 className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-offgrid-green/45">
+              2 · Media
+            </h3>
+            <div>
+              <span className="mb-1.5 block font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/50">
+                Product images
+              </span>
+              <ProductImageField
+                image={draft.image}
+                gallery={draft.gallery}
+                onChange={({ image, gallery }) => setDraft((prev) => ({ ...prev, image, gallery }))}
+                error={fieldErrors.image}
+              />
+            </div>
+            <Field label="Colors" hint="Name + Tailwind swatch class (e.g. bg-offgrid-green).">
+              <div className="space-y-2">
+                {(draft.colors ?? []).map((color, index) => (
+                  <div key={`${color.name}-${index}`} className="flex gap-2">
+                    <input
+                      value={color.name}
+                      onChange={(e) =>
+                        setDraft((prev) => {
+                          const colors = [...(prev.colors ?? [])];
+                          colors[index] = { ...colors[index], name: e.target.value };
+                          return { ...prev, colors };
+                        })
+                      }
+                      placeholder="Color name"
+                      className={inputClass}
+                    />
+                    <input
+                      value={color.value}
+                      onChange={(e) =>
+                        setDraft((prev) => {
+                          const colors = [...(prev.colors ?? [])];
+                          colors[index] = { ...colors[index], value: e.target.value };
+                          return { ...prev, colors };
+                        })
+                      }
+                      placeholder="bg-offgrid-cream"
+                      className={inputClass}
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setDraft((prev) => ({
+                          ...prev,
+                          colors: (prev.colors ?? []).filter((_, i) => i !== index),
+                        }))
+                      }
+                      className="rounded-xl border border-offgrid-green/15 px-2 text-xs text-offgrid-green/60"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() =>
+                    setDraft((prev) => ({
+                      ...prev,
+                      colors: [...(prev.colors ?? []), { name: "", value: "bg-offgrid-green" }],
+                    }))
+                  }
+                  className="text-xs font-semibold text-offgrid-green underline-offset-2 hover:underline"
+                >
+                  Add color
+                </button>
+              </div>
+            </Field>
+          </section>
+
+          <section className="space-y-4">
+            <h3 className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-offgrid-green/45">
+              3 · Pricing &amp; stock
+            </h3>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <Field label="Regular price (PHP)" error={fieldErrors.basePrice}>
@@ -802,6 +909,12 @@ export function AdminProductsPage() {
               className={cn(inputClass, fieldErrors.sold && inputErrorClass)}
             />
           </Field>
+          </section>
+
+          <section className="space-y-4">
+            <h3 className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-offgrid-green/45">
+              4 · Specs
+            </h3>
 
           <div>
             <span className="mb-1.5 block font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/50">
@@ -852,6 +965,29 @@ export function AdminProductsPage() {
               />
             </Field>
           </div>
+          </section>
+
+          <section className="space-y-4">
+            <h3 className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-offgrid-green/45">
+              5 · Publish
+            </h3>
+            <Field label="Status">
+              <select
+                value={draft.status}
+                onChange={(e) =>
+                  setDraft((prev) => ({
+                    ...prev,
+                    status: e.target.value as Product["status"],
+                  }))
+                }
+                className={inputClass}
+              >
+                <option value="draft">Draft — hidden from shop</option>
+                <option value="active">Active — live on storefront</option>
+                <option value="archived">Archived — hidden, kept for records</option>
+              </select>
+            </Field>
+          </section>
         </div>
       </PortalDrawer>
     </div>

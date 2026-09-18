@@ -51,27 +51,36 @@ export type Database = {
       og_catalog_terms: {
         Row: {
           created_at: string
+          description: string | null
           id: string
+          image_url: string | null
           kind: string
           label: string
+          published: boolean
           slug: string
           sort_order: number
           updated_at: string
         }
         Insert: {
           created_at?: string
+          description?: string | null
           id?: string
+          image_url?: string | null
           kind: string
           label: string
+          published?: boolean
           slug: string
           sort_order?: number
           updated_at?: string
         }
         Update: {
           created_at?: string
+          description?: string | null
           id?: string
+          image_url?: string | null
           kind?: string
           label?: string
+          published?: boolean
           slug?: string
           sort_order?: number
           updated_at?: string
@@ -917,6 +926,10 @@ export type Database = {
       og_delete_catalog_term: {
         Args: { p_kind: string; p_label: string }
         Returns: undefined
+      }
+      og_guest_lookup_order: {
+        Args: { p_order_id: string; p_email: string }
+        Returns: Json
       }
       og_portal_role: { Args: Record<string, never>; Returns: string }
       og_rename_catalog_term: {

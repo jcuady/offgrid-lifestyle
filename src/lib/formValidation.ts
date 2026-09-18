@@ -189,7 +189,10 @@ export function validateCustomOrderDraft(
     errors.push("Select a headwear or towel type.");
   }
 
-  const hasDesign = Boolean(draft.designFileName && draft.designFileKey);
+  const designFileCount =
+    draft.designFiles?.length ??
+    (draft.designFileName && draft.designFileKey ? 1 : 0);
+  const hasDesign = designFileCount > 0 || Boolean(draft.designFileName && draft.designFileKey);
   const hasBrief = draft.designNotes.trim().length > 0;
   if (!hasDesign && !hasBrief) {
     errors.push("Upload a design file or add design notes for OFFGRID design support.");

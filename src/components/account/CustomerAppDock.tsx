@@ -26,19 +26,19 @@ export function CustomerAppDock({ active }: { active: CustomerAppSection }) {
               to={item.to}
               aria-current={isActive ? "page" : undefined}
               className={cn(
-                "flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-2xl px-1 py-1 transition-[color,transform] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.96]",
+                "flex min-h-[3.25rem] min-w-[3.25rem] flex-col items-center justify-center gap-1 rounded-2xl px-1.5 py-1.5 transition-[color,transform] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.96]",
                 isActive ? "text-offgrid-green" : "text-offgrid-green/40 hover:text-offgrid-green/70",
               )}
             >
               <span
                 className={cn(
-                  "grid h-8 w-8 place-items-center rounded-full transition-colors duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]",
+                  "grid h-9 w-9 place-items-center rounded-full transition-colors duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]",
                   isActive && "bg-offgrid-green text-offgrid-cream",
                 )}
               >
-                <Icon className="h-4 w-4" strokeWidth={isActive ? 2 : 1.75} />
+                <Icon className="h-[18px] w-[18px]" strokeWidth={isActive ? 2 : 1.75} />
               </span>
-              <span className="text-[9px] font-bold uppercase tracking-[0.1em]">{item.shortLabel}</span>
+              <span className="text-[11px] font-bold uppercase tracking-[0.08em]">{item.shortLabel}</span>
             </Link>
           );
         })}

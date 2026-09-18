@@ -1,12 +1,14 @@
 import React, { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Send, Check, AlertCircle, RotateCcw, Loader2 } from "lucide-react";
+import { ArrowLeft, Send, Check, AlertCircle, RotateCcw, Loader2, Mail, RefreshCw } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { useCustomOrderStore } from "@/src/store/useCustomOrderStore";
 import { usePortalStore } from "@/src/store/usePortalStore";
 import { useStore } from "@/src/store/store";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { localOrderService } from "@/src/services";
+import { sendOrderReceiptEmail, type OrderReceiptEmailResult } from "@/src/services/emailService";
+import { resolveDesignFilesFromDraft } from "@/src/lib/customOrderFiles";
 import { persistCheckoutShipping } from "@/src/services/customerShippingService";
 import {
   CUT_OPTIONS,
@@ -72,6 +74,8 @@ export function StepSummary() {
   const [submittedOrderId, setSubmittedOrderId] = useState<string | null>(null);
   const [fileUploadWarnings, setFileUploadWarnings] = useState<string[]>([]);
   const [submittedEmail, setSubmittedEmail] = useState("");
+  const [receiptEmail, setReceiptEmail] = useState<OrderReceiptEmailResult | null>(null);
+  const [receiptRetryBusy, setReceiptRetryBusy] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitErrors, setSubmitErrors] = useState<string[]>([]);
   const [deliveryFieldErrors, setDeliveryFieldErrors] = useState<DeliveryAddressFieldErrors>({});
@@ -169,6 +173,7 @@ export function StepSummary() {
       };
       const result = await localOrderService.submitCustomOrder(submittedDraft);
       setSubmittedEmail(submittedDraft.contactEmail);
+      setReceiptEmail(result.receiptEmail);
       setFileUploadWarnings(result.fileUploadWarnings);
       void persistCheckoutShipping(submittedDraft.shippingInfo);
       resetDraft();
@@ -196,6 +201,34 @@ export function StepSummary() {
     }
   };
 
+  const designSummaryFiles = resolveDesignFilesFromDraft(draft);
+  const designSummaryLabel =
+    designSummaryFiles.length > 1
+      ? `${designSummaryFiles.length} files (${designSummaryFiles.map((f) => f.name).join(", ")})`
+      : (draft.designFileName ?? "Brief only — design support requested");
+
+  const trackOrderHref =
+    currentUser?.role === "customer"
+      ? `/account/orders/${submittedOrderId}`
+      : `/order-status?id=${encodeURIComponent(submittedOrderId ?? "")}&email=${encodeURIComponent(submittedEmail)}`;
+
+  const printReceiptHref = `/order-status?id=${encodeURIComponent(submittedOrderId ?? "")}&email=${encodeURIComponent(submittedEmail)}&receipt=1`;
+
+  const handleRetryReceipt = async () => {
+    if (!submittedOrderId || !submittedEmail) return;
+    setReceiptRetryBusy(true);
+    try {
+      const result = await sendOrderReceiptEmail({
+        orderId: submittedOrderId,
+        email: submittedEmail,
+        orderType: "custom",
+      });
+      setReceiptEmail(result);
+    } finally {
+      setReceiptRetryBusy(false);
+    }
+  };
+
   if (submittedOrderId) {
     return (
       <div className="text-center py-8 sm:py-12 space-y-6">
@@ -205,6 +238,34 @@ export function StepSummary() {
         <h2 className="text-2xl sm:text-3xl font-display font-black text-offgrid-green">{copy.successTitle}</h2>
         <p className="font-mono text-sm font-bold text-offgrid-green">{submittedOrderId}</p>
         <p className="text-sm text-offgrid-green/60 max-w-md mx-auto">{copy.successBody}</p>
+        {receiptEmail && "skipped" in receiptEmail && receiptEmail.skipped ? (
+          <p className="mx-auto max-w-md text-xs text-offgrid-green/55">Confirmation email skipped (no valid address on file).</p>
+        ) : receiptEmail?.ok === true ? (
+          <p className="mx-auto flex max-w-md items-center justify-center gap-2 text-sm text-offgrid-green">
+            <Mail className="h-4 w-4 text-offgrid-lime" />
+            Confirmation email sent to {submittedEmail}
+          </p>
+        ) : receiptEmail?.ok === false ? (
+          <div className="mx-auto max-w-md rounded-xl border border-red-200 bg-red-50/80 px-4 py-3 text-left text-sm text-red-900">
+            <p className="font-semibold">Confirmation email could not be sent</p>
+            <p className="mt-1 text-xs text-red-800/90">{receiptEmail.error}</p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="mt-3"
+              disabled={receiptRetryBusy}
+              onClick={() => void handleRetryReceipt()}
+            >
+              {receiptRetryBusy ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="mr-2 h-4 w-4" />
+              )}
+              Retry email
+            </Button>
+          </div>
+        ) : null}
         {fileUploadWarnings.length > 0 ? (
           <div className="mx-auto max-w-md rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-left text-sm text-amber-950">
             <p className="font-semibold">Order received — file upload issue</p>
@@ -232,11 +293,19 @@ export function StepSummary() {
         <p className="text-xs text-offgrid-green/55 max-w-md mx-auto leading-relaxed">{copy.accountHint}</p>
         <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
           <Button variant="default" size="lg" asChild>
+            <Link to={trackOrderHref}>Track order</Link>
+          </Button>
+          <Button variant="outline" size="lg" asChild>
+            <Link to={printReceiptHref}>Print receipt</Link>
+          </Button>
+        </div>
+        <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+          <Button variant="outline" size="lg" asChild>
             <Link
               to={`${CUSTOMER_SIGN_IN_PATH}?email=${encodeURIComponent(submittedEmail)}`}
               state={{ from: `/account/orders/${submittedOrderId}` }}
             >
-              Sign in to track your order
+              Sign in to save order
             </Link>
           </Button>
           <Button variant="outline" size="lg" asChild>
@@ -250,6 +319,7 @@ export function StepSummary() {
           onClick={() => {
             setSubmittedOrderId(null);
             setFileUploadWarnings([]);
+            setReceiptEmail(null);
           }}
         >
           <RotateCcw className="mr-2 w-4 h-4" />
@@ -282,7 +352,7 @@ export function StepSummary() {
           </>
         ) : null}
         <SummaryRow label="Print" value={labelFor(PRINT_OPTIONS, draft.printMethod)} />
-        <SummaryRow label="Design" value={draft.designFileName ?? "Brief only — design support requested"} />
+        <SummaryRow label="Design" value={designSummaryLabel} />
         <SummaryRow
           label={towelOrder ? "Order kit" : "Order sheet"}
           value={

@@ -1,10 +1,14 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "motion/react";
-import { ArrowRight, Layers3, Sparkles } from "lucide-react";
-import { formatPrice, type Product } from "@/src/data/products";
+import { ArrowRight } from "lucide-react";
+import { formatPrice } from "@/src/data/products";
 import { COMMUNITY_PHOTO_PATHS } from "@/src/lib/communityPhotos";
-import { SHOP_BY_COLLECTION } from "@/src/lib/shopTaxonomy";
+import {
+  catalogCollectionsToShopLinks,
+  collectionTermImage,
+  productMatchesCollectionSlug,
+} from "@/src/lib/shopTaxonomyFromCms";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import {
   electricBluePill,
@@ -16,25 +20,16 @@ import {
 } from "@/src/lib/brandLayout";
 import { cn } from "@/src/lib/utils";
 import { hydrateProductsFromSupabase } from "@/src/services";
-
-const COLLECTION_IMAGES: Record<string, string> = {
-  Discfest: COMMUNITY_PHOTO_PATHS.ultimateSkyball,
-  Solar: "/images/product-solar-shortsleeve.jpg",
-  Primal: "/images/product-primal-shortsleeve.jpg",
-  "OG Vibe": "/images/product-og-vibe.jpg",
-};
-
-function belongsToCollection(product: Product, label: string, category: string): boolean {
-  if (label === "Discfest") return product.collectionIds?.includes("discfest") ?? false;
-  return product.category === category;
-}
+import { listCatalogTerms, type CatalogTerm } from "@/src/services/catalogTermsService";
 
 export function CollectionsPage() {
   const reduceMotion = useReducedMotion();
   const products = useSiteContentStore((s) => s.products);
+  const [terms, setTerms] = useState<CatalogTerm[]>([]);
 
   useEffect(() => {
     void hydrateProductsFromSupabase();
+    void listCatalogTerms("collection").then(setTerms);
   }, []);
 
   const fadeUp = reduceMotion
@@ -46,32 +41,36 @@ export function CollectionsPage() {
         transition: { duration: 0.5, ease: "easeOut" as const },
       };
 
-  const collections = useMemo(
-    () =>
-      SHOP_BY_COLLECTION.map((collection) => {
-        const collectionProducts = products.filter(
-          (product) =>
-            product.status === "active" &&
-            belongsToCollection(product, collection.label, collection.category),
-        );
-        return {
-          ...collection,
-          image: COLLECTION_IMAGES[collection.label] ?? collectionProducts[0]?.image ?? "",
-          products: collectionProducts,
-          fromPrice:
-            collectionProducts.length > 0
-              ? Math.min(...collectionProducts.map((product) => product.price))
-              : null,
-        };
-      }),
-    [products],
-  );
+  const collections = useMemo(() => {
+    const links = catalogCollectionsToShopLinks(terms);
+    return links.map((collection) => {
+      const term = terms.find((t) => t.slug === collection.category);
+      const collectionProducts = products.filter(
+        (product) =>
+          product.status === "active" && productMatchesCollectionSlug(product, collection.category),
+      );
+      return {
+        ...collection,
+        slug: collection.category,
+        image: term
+          ? collectionTermImage(term, collectionProducts[0]?.image ?? COMMUNITY_PHOTO_PATHS.ultimateField)
+          : collectionProducts[0]?.image ?? COMMUNITY_PHOTO_PATHS.ultimateField,
+        products: collectionProducts,
+        fromPrice:
+          collectionProducts.length > 0
+            ? Math.min(...collectionProducts.map((product) => product.price))
+            : null,
+      };
+    });
+  }, [products, terms]);
+
+  const heroImage = collections[0]?.image ?? COMMUNITY_PHOTO_PATHS.ultimateSkyball;
 
   return (
     <>
       <section className="relative overflow-hidden bg-offgrid-dark pb-16 pt-28 text-offgrid-cream sm:pb-20 sm:pt-36">
         <img
-          src={COLLECTION_IMAGES.Discfest}
+          src={heroImage}
           alt=""
           className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-20"
           aria-hidden
@@ -89,12 +88,15 @@ export function CollectionsPage() {
           </p>
 
           {collections.length > 0 ? (
-            <nav aria-label="Jump to a collection" className="mt-10 flex flex-wrap gap-2.5">
+            <nav
+              aria-label="Jump to a collection"
+              className="mt-10 -mx-4 flex snap-x snap-mandatory gap-2.5 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden"
+            >
               {collections.map((collection) => (
                 <a
                   key={collection.label}
-                  href={`#${collection.label.toLowerCase().replace(/\s+/g, "-")}`}
-                  className="rounded-full border border-offgrid-cream/25 px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-offgrid-cream/80 transition-colors hover:border-offgrid-lime hover:bg-offgrid-lime hover:text-white"
+                  href={`#${collection.slug}`}
+                  className="shrink-0 snap-start rounded-full border border-offgrid-cream/25 px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-offgrid-cream/80 transition-colors hover:border-offgrid-lime hover:bg-offgrid-lime hover:text-white"
                 >
                   {collection.label}
                 </a>
@@ -112,7 +114,7 @@ export function CollectionsPage() {
             return (
               <motion.article
                 key={collection.label}
-                id={collection.label.toLowerCase().replace(/\s+/g, "-")}
+                id={collection.slug}
                 {...fadeUp}
                 className="scroll-mt-28 grid items-center gap-8 lg:grid-cols-12 lg:gap-14"
               >

@@ -24,6 +24,7 @@ import { persistCheckoutShipping } from "@/src/services/customerShippingService"
 import { cn } from "@/src/lib/utils";
 import { electricBluePill } from "@/src/lib/brandLayout";
 import { lazyRetry as lazy } from "@/src/lib/lazyRetry";
+import { handleDialogTabTrap } from "@/src/lib/modalA11y";
 
 const PhilippinesAddressFields = lazy(() =>
   import("@/src/components/checkout/PhilippinesAddressFields").then((m) => ({
@@ -100,6 +101,9 @@ export function CheckoutModal() {
   const [placingOrder, setPlacingOrder] = useState(false);
   const [summaryOpen, setSummaryOpen] = useState(false);
   const shippingFormRef = useRef<HTMLFormElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const restoreFocusRef = useRef<HTMLElement | null>(null);
   const paymentSettings = usePortalStore((s) => s.paymentSettings);
   const checkoutPaymentConfig = useMemo(
     () => checkoutPaymentConfigFromSettings(paymentSettings),
@@ -155,6 +159,36 @@ export function CheckoutModal() {
       resetCheckout();
     }
   };
+
+  useEffect(() => {
+    if (!isCheckoutOpen) return;
+
+    restoreFocusRef.current = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
+
+    const focusFrame = requestAnimationFrame(() => {
+      closeButtonRef.current?.focus();
+    });
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        handleClose();
+        return;
+      }
+      if (dialogRef.current) {
+        handleDialogTabTrap(event, dialogRef.current);
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      cancelAnimationFrame(focusFrame);
+      window.removeEventListener("keydown", onKeyDown);
+      restoreFocusRef.current?.focus?.();
+    };
+  }, [isCheckoutOpen, checkoutStep, closeCheckout, resetCheckout]);
 
   const handleBackFromShipping = () => {
     closeCheckout();
@@ -263,11 +297,19 @@ export function CheckoutModal() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 flex items-center justify-center bg-offgrid-dark/80 backdrop-blur-sm px-4"
+          onClick={closeCheckout}
         >
-          <div className="max-w-md rounded-2xl bg-offgrid-cream p-8 text-center">
-            <h2 className="text-xl font-display font-bold text-offgrid-green">Cart is empty</h2>
+          <div
+            ref={dialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="checkout-empty-title"
+            className="max-w-md rounded-2xl bg-offgrid-cream p-8 text-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 id="checkout-empty-title" className="text-xl font-display font-bold text-offgrid-green">Cart is empty</h2>
             <p className="mt-2 text-sm text-offgrid-green/60">Add products from the shop before checking out.</p>
-            <Button variant="default" size="lg" className="mt-6" onClick={closeCheckout}>
+            <Button variant="default" size="lg" className="mt-6" ref={closeButtonRef} onClick={closeCheckout}>
               Continue shopping
             </Button>
           </div>
@@ -288,14 +330,19 @@ export function CheckoutModal() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 16 }}
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="checkout-dialog-title"
           className="flex h-[100dvh] w-full max-w-6xl flex-col overflow-hidden bg-transparent sm:h-auto sm:max-h-[min(92dvh,880px)]"
         >
           <div className="flex min-h-0 flex-1 flex-col px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-0 sm:py-0">
             <div className="mb-2 flex shrink-0 items-center justify-between sm:mb-4">
-              <h1 className="font-display text-xl font-black text-offgrid-cream sm:text-3xl md:text-4xl">
+              <h1 id="checkout-dialog-title" className="font-display text-xl font-black text-offgrid-cream sm:text-3xl md:text-4xl">
                 {checkoutStep === 3 ? "Order Confirmed" : "Checkout"}
               </h1>
               <button
+                ref={closeButtonRef}
                 type="button"
                 onClick={handleClose}
                 aria-label="Close checkout"

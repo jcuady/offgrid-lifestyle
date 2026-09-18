@@ -3,17 +3,75 @@
 import { logger } from "@/src/lib/logger";
 import { supabase } from "@/src/lib/supabase";
 import { resolveStorageReference, toStorageReference } from "@/src/lib/storageAccess";
+import type { CustomOrderDesignFile, CustomOrderDraft } from "@/src/types/commerce";
 
 const DB_NAME = "og-custom-order-files";
 const STORE = "files";
 const DB_VERSION = 1;
 const STORAGE_BUCKET = "custom-order-files";
 
+export const MAX_CUSTOM_DESIGN_FILES = 8;
 export const PENDING_DESIGN_KEY = "pending:design";
 export const PENDING_SHEET_KEY = "pending:sheet";
 
+/** Unique pending IndexedDB key — never derive from list length (remove+re-add collision). */
+export function pendingDesignKey(uniqueId?: string): string {
+  const id =
+    uniqueId?.trim() ||
+    `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+  return `pending:design:${id}`;
+}
+
 export function orderFileKey(orderId: string, kind: "design" | "sheet"): string {
   return `order:${orderId}:${kind}`;
+}
+
+export function orderDesignFileKey(orderId: string, index: number): string {
+  return index === 0 ? orderFileKey(orderId, "design") : `order:${orderId}:design:${index}`;
+}
+
+export function syncLegacyDesignFields(
+  designFiles: CustomOrderDesignFile[],
+): Pick<CustomOrderDraft, "designFileName" | "designFileKey" | "designFileUrl"> {
+  const first = designFiles[0];
+  return {
+    designFileName: first?.name ?? null,
+    designFileKey: first?.key ?? null,
+    designFileUrl: first?.url ?? null,
+  };
+}
+
+export function resolveDesignFilesFromDraft(
+  draft: Pick<
+    CustomOrderDraft,
+    "designFiles" | "designFileName" | "designFileKey" | "designFileUrl"
+  >,
+): CustomOrderDesignFile[] {
+  if (draft.designFiles?.length) {
+    return draft.designFiles;
+  }
+  if (draft.designFileName && draft.designFileKey) {
+    return [
+      {
+        name: draft.designFileName,
+        key: draft.designFileKey,
+        url: draft.designFileUrl ?? null,
+      },
+    ];
+  }
+  return [];
+}
+
+export function collectPendingDesignKeys(draft: CustomOrderDraft): string[] {
+  return resolveDesignFilesFromDraft(draft)
+    .map((f) => f.key)
+    .filter(Boolean);
+}
+
+function normalizeDesignKeys(designKeys: string[] | string | null | undefined): string[] {
+  if (designKeys == null) return [];
+  if (typeof designKeys === "string") return designKeys ? [designKeys] : [];
+  return designKeys.filter(Boolean);
 }
 
 interface StoredFile {
@@ -85,40 +143,53 @@ async function uploadToStorage(orderId: string, kind: "design" | "sheet", file: 
 /** Copy pending draft uploads to permanent keys and mirror to Supabase Storage. */
 export async function finalizeCustomOrderFiles(
   orderId: string,
-  designKey: string | null,
+  designKeys: string[] | string | null,
   sheetKey: string | null,
 ): Promise<{
+  designFiles: CustomOrderDesignFile[];
   designFileKey: string | null;
   orderSheetFileKey: string | null;
   designFileUrl: string | null;
   orderSheetFileUrl: string | null;
+  designFileName: string | null;
   warnings: string[];
 }> {
-  const designFileKey = designKey ? orderFileKey(orderId, "design") : null;
+  const pendingDesignKeys = normalizeDesignKeys(designKeys);
   const orderSheetFileKey = sheetKey ? orderFileKey(orderId, "sheet") : null;
-  let designFileUrl: string | null = null;
   let orderSheetFileUrl: string | null = null;
   const warnings: string[] = [];
+  const designFiles: CustomOrderDesignFile[] = [];
 
-  if (designKey && designFileKey) {
-    const file = await getCustomOrderFile(designKey);
-    if (file) {
-      await saveCustomOrderFile(designFileKey, file);
-      try {
-        designFileUrl = await uploadToStorage(orderId, "design", file);
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        warnings.push(`Design file upload failed: ${message}`);
-        logger.warn("Design file storage upload failed", {
-          service: "customOrderFiles",
-          operation: "uploadDesignFile",
-          orderId,
-          error: message,
-        });
-      }
+  for (let i = 0; i < pendingDesignKeys.length; i++) {
+    const pendingKey = pendingDesignKeys[i];
+    const permanentKey = orderDesignFileKey(orderId, i);
+    const file = await getCustomOrderFile(pendingKey);
+    if (!file) {
+      warnings.push(`Design file ${i + 1} was not found in this browser.`);
+      continue;
     }
-    if (designKey.startsWith("pending:")) await deleteCustomOrderFile(designKey);
+
+    await saveCustomOrderFile(permanentKey, file);
+    let url: string | null = null;
+    try {
+      url = await uploadToStorage(orderId, "design", file);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      warnings.push(`Design file "${file.name}" upload failed: ${message}`);
+      logger.warn("Design file storage upload failed", {
+        service: "customOrderFiles",
+        operation: "uploadDesignFile",
+        orderId,
+        index: i,
+        error: message,
+      });
+    }
+
+    designFiles.push({ name: file.name, key: permanentKey, url });
+    if (pendingKey.startsWith("pending:")) await deleteCustomOrderFile(pendingKey);
   }
+
+  const legacy = syncLegacyDesignFields(designFiles);
 
   if (sheetKey && orderSheetFileKey) {
     const file = await getCustomOrderFile(sheetKey);
@@ -140,7 +211,15 @@ export async function finalizeCustomOrderFiles(
     if (sheetKey.startsWith("pending:")) await deleteCustomOrderFile(sheetKey);
   }
 
-  return { designFileKey, orderSheetFileKey, designFileUrl, orderSheetFileUrl, warnings };
+  return {
+    designFiles,
+    designFileKey: legacy.designFileKey,
+    designFileName: legacy.designFileName,
+    designFileUrl: legacy.designFileUrl,
+    orderSheetFileKey,
+    orderSheetFileUrl,
+    warnings,
+  };
 }
 
 export async function downloadCustomOrderFile(

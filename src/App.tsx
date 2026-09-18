@@ -106,6 +106,14 @@ const CustomerOrderDetailPage = lazy(() =>
     default: m.CustomerOrderDetailPage,
   })),
 );
+const CustomerOrderReceiptPage = lazy(() =>
+  import("./pages/portal/CustomerOrderReceiptPage").then((m) => ({
+    default: m.CustomerOrderReceiptPage,
+  })),
+);
+const OrderStatusPage = lazy(() =>
+  import("./pages/OrderStatusPage").then((m) => ({ default: m.OrderStatusPage })),
+);
 const OperationsDashboardPage = lazy(() =>
   import("./pages/portal/OperationsDashboardPage").then((m) => ({
     default: m.OperationsDashboardPage,
@@ -127,6 +135,9 @@ const AdminProductsPage = lazy(() =>
 );
 const AdminEventsPage = lazy(() =>
   import("./pages/portal/AdminEventsPage").then((m) => ({ default: m.AdminEventsPage })),
+);
+const AdminCatalogPage = lazy(() =>
+  import("./pages/portal/AdminCatalogPage").then((m) => ({ default: m.AdminCatalogPage })),
 );
 const AdminPaymentsPage = lazy(() =>
   import("./pages/portal/AdminPaymentsPage").then((m) => ({ default: m.AdminPaymentsPage })),
@@ -257,6 +268,7 @@ function AppFrame() {
         <Route path="/legal/privacy" element={<PrivacyPage />} />
         <Route path="/checkout/paymongo/complete" element={<PayMongoCompletePage />} />
         <Route path="/checkout/paymongo/retry" element={<PayMongoRetryPage />} />
+        <Route path="/order-status" element={<OrderStatusPage />} />
         <Route path="/custom/order" element={<CustomOrderPage />} />
         <Route path="/custom/templates" element={<CustomTemplatesPage />} />
         <Route path="/custom" element={<CustomHubPage />} />
@@ -310,6 +322,14 @@ function AppFrame() {
             </RequirePortalRole>
           }
         />
+        <Route
+          path="/account/orders/:orderId/receipt"
+          element={
+            <RequirePortalRole roles={["customer"]}>
+              <CustomerOrderReceiptPage />
+            </RequirePortalRole>
+          }
+        />
         <Route path="/account" element={<Navigate to="/account/orders" replace />} />
         <Route path="/portal/customer" element={<Navigate to="/account/orders" replace />} />
         <Route path="/portal/customer/orders" element={<Navigate to="/account/orders" replace />} />
@@ -332,6 +352,7 @@ function AppFrame() {
           <Route path="analytics" element={<OperationsAnalyticsPage role="admin" />} />
           <Route path="plan-board" element={<AdminPlanBoardPage role="admin" />} />
           <Route path="products" element={<AdminProductsPage />} />
+          <Route path="catalog" element={<AdminCatalogPage />} />
           <Route path="payments" element={<AdminPaymentsPage />} />
           <Route path="events" element={<AdminEventsPage />} />
           <Route path="staff" element={<AdminStaffPage />} />

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useShallow } from "zustand/react/shallow";
 import { ShoppingBag, Menu, X, UserRound } from "lucide-react";
@@ -8,7 +8,6 @@ import { LOGO_WORDMARK_WHITE } from "@/src/lib/brandAssets";
 import { motion, AnimatePresence } from "motion/react";
 import { useStore } from "@/src/store/store";
 import { usePortalStore } from "@/src/store/usePortalStore";
-import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { localAuthService } from "@/src/services";
 import { formatPrice } from "@/src/data/products";
 import {
@@ -27,8 +26,6 @@ import {
 import { NotificationBell } from "@/src/components/notifications/NotificationBell";
 import { usePwaStandalone } from "@/src/hooks/usePwaStandalone";
 import { openInstallGuide } from "@/src/lib/pwa";
-import { SHOP_BY_COLLECTION } from "@/src/lib/shopTaxonomy";
-import { compareSports, getProductSports } from "@/src/data/products";
 
 const ACCOUNT_MENU_ID = "navbar-account-menu";
 const dropdownPanel =
@@ -37,8 +34,6 @@ const dropdownPanel =
 /** Mobile drawer — two-tier type scale aligned with brandLayout tokens. */
 const mobileNavPrimary =
   "min-h-11 w-full font-display text-2xl font-bold tracking-tight text-offgrid-cream transition-colors hover:text-white";
-const mobileNavSecondary =
-  "min-h-11 w-full font-sans text-lg font-medium text-offgrid-cream/80 transition-colors hover:text-white";
 const headerIconBtn =
   "grid h-11 w-11 shrink-0 place-items-center rounded-full text-offgrid-cream transition-colors hover:bg-offgrid-cream/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offgrid-cream/50";
 
@@ -52,8 +47,6 @@ export function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCartDropdownOpen, setIsCartDropdownOpen] = useState(false);
   const [isCustomMenuOpen, setIsCustomMenuOpen] = useState(false);
-  const [isSportMenuOpen, setIsSportMenuOpen] = useState(false);
-  const [isCollectionMenuOpen, setIsCollectionMenuOpen] = useState(false);
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
   const { toggleCart, cart, openCheckout } = useStore(
     useShallow((state) => ({
@@ -63,7 +56,6 @@ export function Navbar() {
     })),
   );
   const currentUser = usePortalStore((state) => state.currentUser);
-  const products = useSiteContentStore((state) => state.products);
   const navigate = useNavigate();
   const location = useLocation();
   const cartDropdownRef = useRef<HTMLDivElement | null>(null);
@@ -73,18 +65,6 @@ export function Navbar() {
 
   const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const cartSubtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const sportLinks = useMemo(
-    () =>
-      [...new Set(products.filter((product) => product.status === "active").flatMap(getProductSports))]
-        .sort(compareSports)
-        .map((sport) => ({
-          label: sport,
-          href: `/shop?category=${encodeURIComponent(sport)}`,
-          description: `Shop OFFGRID ${sport} products.`,
-        })),
-    [products],
-  );
-
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
@@ -100,8 +80,6 @@ export function Navbar() {
     isMobileMenuOpen ||
     isCartDropdownOpen ||
     isCustomMenuOpen ||
-    isSportMenuOpen ||
-    isCollectionMenuOpen ||
     isAccountMenuOpen;
   const navSolid = isScrolled || forceSolidOnTop;
 
@@ -123,8 +101,6 @@ export function Navbar() {
     setIsMobileMenuOpen(false);
     setIsCartDropdownOpen(false);
     setIsCustomMenuOpen(false);
-    setIsSportMenuOpen(false);
-    setIsCollectionMenuOpen(false);
     setIsAccountMenuOpen(false);
     setIsScrolled(window.scrollY > 50);
   }, [location]);
@@ -173,8 +149,6 @@ export function Navbar() {
     setIsAccountMenuOpen(false);
     setIsMobileMenuOpen(false);
     setIsCustomMenuOpen(false);
-    setIsSportMenuOpen(false);
-    setIsCollectionMenuOpen(false);
   };
 
   const handleSignOut = async () => {
@@ -376,85 +350,28 @@ export function Navbar() {
               </AnimatePresence>
             </div>
 
-            <div
-              className="relative"
-              onMouseEnter={() => setIsSportMenuOpen(true)}
-              onMouseLeave={() => setIsSportMenuOpen(false)}
+            <button
+              type="button"
+              onClick={() => handleNavigate("/shop")}
+              className={cn(
+                headerNavLinkClass,
+                "cursor-pointer",
+                navSolid ? "text-offgrid-cream/80" : "text-offgrid-cream/90",
+              )}
             >
-              <button
-                type="button"
-                onClick={() => handleNavigate("/#collections")}
-                className={cn(
-                  headerNavLinkClass,
-                  "cursor-pointer",
-                  navSolid ? "text-offgrid-cream/80" : "text-offgrid-cream/90",
-                )}
-              >
-                By Sport
-              </button>
-              <AnimatePresence>
-                {isSportMenuOpen ? (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 8 }}
-                    className={dropdownPanel}
-                  >
-                    {sportLinks.map((item) => (
-                      <button
-                        key={item.label}
-                        type="button"
-                        onClick={() => handleNavigate(item.href)}
-                        className="block w-full rounded-xl px-3 py-2 text-left text-xs font-medium text-offgrid-green/80 hover:bg-offgrid-green/5 hover:text-offgrid-green"
-                      >
-                        <span className="font-semibold text-offgrid-green">{item.label}</span>
-                        <span className="mt-0.5 block text-[11px] text-offgrid-green/55">{item.description}</span>
-                      </button>
-                    ))}
-                  </motion.div>
-                ) : null}
-              </AnimatePresence>
-            </div>
-
-            <div
-              className="relative"
-              onMouseEnter={() => setIsCollectionMenuOpen(true)}
-              onMouseLeave={() => setIsCollectionMenuOpen(false)}
+              Shop
+            </button>
+            <button
+              type="button"
+              onClick={() => handleNavigate("/collections")}
+              className={cn(
+                headerNavLinkClass,
+                "cursor-pointer",
+                navSolid ? "text-offgrid-cream/80" : "text-offgrid-cream/90",
+              )}
             >
-              <button
-                type="button"
-                onClick={() => handleNavigate("/collections")}
-                className={cn(
-                  headerNavLinkClass,
-                  "cursor-pointer",
-                  navSolid ? "text-offgrid-cream/80" : "text-offgrid-cream/90",
-                )}
-              >
-                Collections
-              </button>
-              <AnimatePresence>
-                {isCollectionMenuOpen ? (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 8 }}
-                    className={dropdownPanel}
-                  >
-                    {SHOP_BY_COLLECTION.map((item) => (
-                      <button
-                        key={item.label}
-                        type="button"
-                        onClick={() => handleNavigate(item.href)}
-                        className="block w-full rounded-xl px-3 py-2 text-left text-xs font-medium text-offgrid-green/80 hover:bg-offgrid-green/5 hover:text-offgrid-green"
-                      >
-                        <span className="font-semibold text-offgrid-green">{item.label}</span>
-                        <span className="mt-0.5 block text-[11px] text-offgrid-green/55">{item.description}</span>
-                      </button>
-                    ))}
-                  </motion.div>
-                ) : null}
-              </AnimatePresence>
-            </div>
+              Collections
+            </button>
 
             {navLinks.map((link) => (
               <button
@@ -669,43 +586,12 @@ export function Navbar() {
                 Custom Order
               </button>
 
-              <div className="flex flex-col gap-3">
-                <p className={cn(sectionEyebrowOnDark, "mb-0 text-center")}>Shop By Sport</p>
-                <div className="flex flex-col gap-1">
-                  {sportLinks.map((item) => (
-                    <button
-                      key={item.label}
-                      type="button"
-                      onClick={() => handleNavigate(item.href)}
-                      className={mobileNavSecondary}
-                    >
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-3">
-                <button
-                  type="button"
-                  onClick={() => handleNavigate("/collections")}
-                  className={cn(sectionEyebrowOnDark, "mb-0 text-center transition-colors hover:text-white")}
-                >
-                  Shop By Collection
-                </button>
-                <div className="flex flex-col gap-1">
-                  {SHOP_BY_COLLECTION.map((item) => (
-                    <button
-                      key={item.label}
-                      type="button"
-                      onClick={() => handleNavigate(item.href)}
-                      className={mobileNavSecondary}
-                    >
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <button type="button" onClick={() => handleNavigate("/shop")} className={mobileNavPrimary}>
+                Shop
+              </button>
+              <button type="button" onClick={() => handleNavigate("/collections")} className={mobileNavPrimary}>
+                Collections
+              </button>
 
               <div className="flex flex-col gap-4">
                 {navLinks.map((link) => (

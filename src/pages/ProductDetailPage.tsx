@@ -15,18 +15,29 @@ import { usePageSeo } from "@/src/hooks/usePageSeo";
 import { productJsonLd, upsertJsonLd } from "@/src/lib/siteSeo";
 
 import { hydrateProductsFromSupabase } from "@/src/services";
+import { imagesFromProduct } from "@/src/lib/productGallery";
 
 export function ProductDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const products = useSiteContentStore((state) => state.products);
   const [catalogReady, setCatalogReady] = useState(false);
+  const [activeImage, setActiveImage] = useState<string | null>(null);
 
   useEffect(() => {
     void hydrateProductsFromSupabase().finally(() => setCatalogReady(true));
   }, []);
 
   const product = products.find((p) => p.slug === slug);
+  const galleryUrls = useMemo(
+    () => (product ? imagesFromProduct(product.image, product.gallery) : []),
+    [product],
+  );
+  const displayImage = activeImage && galleryUrls.includes(activeImage) ? activeImage : galleryUrls[0] ?? product?.image ?? "";
+
+  useEffect(() => {
+    setActiveImage(null);
+  }, [product?.id]);
 
   const pageSeo = useMemo(() => {
     if (!product) {
@@ -167,13 +178,32 @@ export function ProductDetailPage() {
                   </span>
                 )}
                 <img
-                  src={product.image}
+                  src={displayImage}
                   alt={product.name}
                   fetchPriority="high"
                   decoding="async"
                   className="w-full h-full object-cover object-center"
                 />
               </motion.div>
+              {galleryUrls.length > 1 ? (
+                <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+                  {galleryUrls.map((url) => (
+                    <button
+                      key={url}
+                      type="button"
+                      onClick={() => setActiveImage(url)}
+                      className={cn(
+                        "h-16 w-16 shrink-0 overflow-hidden rounded-xl border-2 transition-colors",
+                        (activeImage ?? galleryUrls[0]) === url
+                          ? "border-offgrid-green"
+                          : "border-transparent ring-1 ring-offgrid-green/15",
+                      )}
+                    >
+                      <img src={url} alt="" className="h-full w-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              ) : null}
             </div>
 
             {/* Right: Details */}

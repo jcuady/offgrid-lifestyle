@@ -97,6 +97,13 @@ const STATIC_ROUTE_SEO: Record<string, PageSeoInput> = {
     path: "/checkout/paymongo/retry",
     noindex: true,
   },
+  "/order-status": {
+    title: `Track your order | ${BRAND}`,
+    description:
+      "Look up your OFFGRID retail or custom order with your order ID and email. View status and print a receipt.",
+    path: "/order-status",
+    noindex: true,
+  },
 };
 
 const PRIVATE_ROUTE_SEO: PageSeoInput = {

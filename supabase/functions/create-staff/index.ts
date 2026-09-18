@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { requireActivePortalAdmin } from "../_shared/portalAdminAuth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -25,7 +26,7 @@ Deno.serve(async (req: Request) => {
 
     const callerClient = createClient(supabaseUrl, serviceRoleKey);
     const { data: { user: caller }, error: callerErr } = await callerClient.auth.getUser(
-      authHeader.replace("Bearer ", "")
+      authHeader.replace("Bearer ", ""),
     );
     if (callerErr || !caller) {
       return new Response(JSON.stringify({ error: "Invalid token" }), {
@@ -33,14 +34,20 @@ Deno.serve(async (req: Request) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const callerRole = caller.app_metadata?.portal_role;
-    if (callerRole !== "admin") {
-      return new Response(JSON.stringify({ error: "Admin access required" }), {
-        status: 403,
+
+    const adminClient = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+
+    const adminGate = await requireActivePortalAdmin({ admin: adminClient, caller });
+    if ("error" in adminGate) {
+      return new Response(JSON.stringify({ error: adminGate.error }), {
+        status: adminGate.status,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
+    const { portalAdmin } = adminGate;
     const { name, email, password } = await req.json();
     if (!name || !email || !password) {
       return new Response(JSON.stringify({ error: "name, email, and password are required" }), {
@@ -48,10 +55,6 @@ Deno.serve(async (req: Request) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
-    const adminClient = createClient(supabaseUrl, serviceRoleKey, {
-      auth: { autoRefreshToken: false, persistSession: false },
-    });
 
     const { data: newUser, error: createErr } = await adminClient.auth.admin.createUser({
       email,
@@ -75,7 +78,7 @@ Deno.serve(async (req: Request) => {
         name,
         email,
         role: "staff",
-        created_by: caller.id,
+        created_by: portalAdmin.id,
       })
       .select("id")
       .single();
@@ -92,7 +95,7 @@ Deno.serve(async (req: Request) => {
       {
         status: 201,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      },
     );
   } catch (err) {
     return new Response(JSON.stringify({ error: (err as Error).message }), {

@@ -1,4 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "jsr:@supabase/supabase-js@2";
+import { assertContactRateLimit } from "../_shared/contactRateLimit.ts";
 import { corsHeadersFor } from "../_shared/cors.ts";
 import { contactAutoReplyEmail, contactStaffEmail } from "../_shared/emailTemplates.ts";
 import { sendViaResend } from "../_shared/resend.ts";
@@ -46,8 +48,23 @@ Deno.serve(async (req: Request) => {
       });
     }
 
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (supabaseUrl && serviceRoleKey) {
+      const admin = createClient(supabaseUrl, serviceRoleKey, {
+        auth: { autoRefreshToken: false, persistSession: false },
+      });
+      const rate = await assertContactRateLimit({ admin, req, email });
+      if (!rate.ok) {
+        return new Response(JSON.stringify({ error: rate.error }), {
+          status: rate.status,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     const topicLabel = TOPIC_LABELS[topic] ?? "General";
-    const inbox = Deno.env.get("CONTACT_INBOX_EMAIL") ?? "offxgrid2024@gmail.com";
+    const inbox = Deno.env.get("CONTACT_INBOX_EMAIL") ?? "hello@offgridlifestyle.ph";
     const siteUrl = (Deno.env.get("SITE_URL") ?? "https://www.oglifestyleph.com").replace(/\/$/, "");
     const replyTo = email;
 

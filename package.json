@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite --port=5173 --host=0.0.0.0",
+    "generate:sitemap": "tsx scripts/generate-sitemap.ts",
+    "prebuild": "npm run generate:sitemap",
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist",

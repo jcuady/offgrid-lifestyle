@@ -19,6 +19,8 @@ import { cn } from "@/src/lib/utils";
 import { marketingPageHero, siteContainer, stickyBelowNav } from "@/src/lib/brandLayout";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { hydrateProductsFromSupabase } from "@/src/services";
+import { listCatalogTerms, type CatalogTerm } from "@/src/services/catalogTermsService";
+import { catalogSportsToShopLinks, productMatchesCollectionSlug } from "@/src/lib/shopTaxonomyFromCms";
 
 type SortOption = "newest" | "price-asc" | "price-desc" | "bestselling" | "name-asc";
 
@@ -37,8 +39,11 @@ export function ShopPage() {
   const [searchParams] = useSearchParams();
   const allProducts = useSiteContentStore((state) => state.products);
   const initialCategoryParam = searchParams.get("category") ?? "all";
+  const initialCollectionParam = searchParams.get("collection");
 
   const [selectedCategory, setSelectedCategory] = useState<string>(initialCategoryParam);
+  const [selectedCollection, setSelectedCollection] = useState<string | null>(initialCollectionParam);
+  const [catalogTerms, setCatalogTerms] = useState<CatalogTerm[]>([]);
   const [selectedTag, setSelectedTag] = useState<string>("all");
   const [priceBucket, setPriceBucket] = useState<string>("all");
   const [sortBy, setSortBy] = useState<SortOption>("newest");
@@ -50,10 +55,12 @@ export function ShopPage() {
 
   useEffect(() => {
     void hydrateProductsFromSupabase();
+    void listCatalogTerms().then(setCatalogTerms);
   }, []);
 
   useEffect(() => {
     setSelectedCategory(searchParams.get("category") ?? "all");
+    setSelectedCollection(searchParams.get("collection"));
   }, [searchParams]);
 
   // Storefront only lists purchasable active items (DB rejects draft/archived at checkout).
@@ -64,7 +71,7 @@ export function ShopPage() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedCategory, selectedTag, priceBucket, sortBy, searchQuery]);
+  }, [selectedCategory, selectedCollection, selectedTag, priceBucket, sortBy, searchQuery]);
 
   const goToPage = (page: number) => {
     setCurrentPage(page);
@@ -72,16 +79,20 @@ export function ShopPage() {
   };
 
   const categories = useMemo(() => {
-    const unique = Array.from(new Set<string>(products.flatMap(getProductSports))).sort(compareSports);
+    const cmsSports = catalogSportsToShopLinks(catalogTerms);
+    const sportLabels =
+      cmsSports.length > 0
+        ? cmsSports.map((s) => s.label)
+        : Array.from(new Set<string>(products.flatMap(getProductSports))).sort(compareSports);
     return [
       { value: "all", label: "All Products", count: products.length },
-      ...unique.map((cat) => ({
+      ...sportLabels.map((cat) => ({
         value: cat,
         label: cat,
         count: products.filter((p) => getProductSports(p).includes(cat)).length,
       })),
     ];
-  }, [products]);
+  }, [products, catalogTerms]);
 
   const tags = useMemo(() => {
     const unique = [...new Set(products.flatMap(getProductTags))];
@@ -115,6 +126,10 @@ export function ShopPage() {
 
   const filteredAndSortedProducts = useMemo(() => {
     let filtered = products;
+
+    if (selectedCollection) {
+      filtered = filtered.filter((p) => productMatchesCollectionSlug(p, selectedCollection));
+    }
 
     if (selectedCategory !== "all") {
       filtered = filtered.filter((p) => getProductSports(p).includes(selectedCategory));
@@ -155,7 +170,7 @@ export function ShopPage() {
           return 0;
       }
     });
-  }, [products, selectedCategory, selectedTag, priceBucket, priceBuckets, sortBy, searchQuery]);
+  }, [products, selectedCategory, selectedCollection, selectedTag, priceBucket, priceBuckets, sortBy, searchQuery]);
 
   const totalPages = Math.max(1, Math.ceil(filteredAndSortedProducts.length / ITEMS_PER_PAGE));
   const pageStart = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -179,13 +194,19 @@ export function ShopPage() {
 
   const advancedFilterCount = (selectedTag !== "all" ? 1 : 0) + (priceBucket !== "all" ? 1 : 0);
   const hasActiveFilters =
-    selectedCategory !== "all" || selectedTag !== "all" || priceBucket !== "all" || searchQuery.trim().length > 0;
+    selectedCategory !== "all" ||
+    Boolean(selectedCollection) ||
+    selectedTag !== "all" ||
+    priceBucket !== "all" ||
+    searchQuery.trim().length > 0;
 
   const clearAll = () => {
     setSelectedCategory("all");
+    setSelectedCollection(null);
     setSelectedTag("all");
     setPriceBucket("all");
     setSearchQuery("");
+    navigate("/shop", { replace: true });
   };
 
   const handleProductClick = (product: Product) => {
@@ -195,8 +216,14 @@ export function ShopPage() {
   const priceBucketLabel = priceBuckets.find((b) => b.value === priceBucket)?.label;
 
   const isCategoryView = selectedCategory !== "all";
+  const isCollectionView = Boolean(selectedCollection);
   const activeCategoryLabel = isCategoryView
     ? categories.find((c) => c.value === selectedCategory)?.label ?? selectedCategory
+    : "";
+  const activeCollectionLabel = isCollectionView
+    ? catalogTerms.find((t) => t.kind === "collection" && t.slug === selectedCollection)?.label ??
+      selectedCollection ??
+      ""
     : "";
 
   return (
@@ -208,10 +235,16 @@ export function ShopPage() {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
             <span className="mb-3 inline-flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-offgrid-cream/80 sm:mb-4">
               <span className="h-1.5 w-1.5 rounded-full bg-offgrid-lime" />
-              {isCategoryView ? "Shop By Sport" : "Shop All"} · {filteredAndSortedProducts.length} Pieces
+              {isCollectionView ? "Shop By Collection" : isCategoryView ? "Shop By Sport" : "Shop All"} ·{" "}
+              {filteredAndSortedProducts.length} Pieces
             </span>
             <h1 className="mb-3 font-display text-3xl font-black leading-[0.9] sm:mb-4 sm:text-5xl md:text-6xl lg:text-7xl">
-              {isCategoryView ? (
+              {isCollectionView ? (
+                <>
+                  {activeCollectionLabel}
+                  <span className="block italic font-normal text-white sm:inline sm:ml-3">Drop</span>
+                </>
+              ) : isCategoryView ? (
                 <>
                   {activeCategoryLabel}
                   <span className="block italic font-normal text-white sm:inline sm:ml-3">Collection</span>
@@ -304,15 +337,23 @@ export function ShopPage() {
             </div>
           </div>
 
-          {/* Sport chips are derived from live admin product assignments. */}
-          <div className="mt-3 flex flex-wrap gap-2 sm:mt-4">
+          {/* Sport chips — published CMS sports, with product-assignment fallback. */}
+          <div className="-mx-4 mt-3 flex snap-x snap-mandatory gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:mt-4 sm:snap-none sm:flex-wrap sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden">
             {categories.map((cat) => (
               <button
                 key={cat.value}
                 type="button"
-                onClick={() => setSelectedCategory(cat.value)}
+                onClick={() => {
+                  setSelectedCategory(cat.value);
+                  if (selectedCollection) {
+                    setSelectedCollection(null);
+                    navigate(cat.value === "all" ? "/shop" : `/shop?category=${encodeURIComponent(cat.value)}`, {
+                      replace: true,
+                    });
+                  }
+                }}
                 className={cn(
-                  "min-h-11 rounded-full px-3.5 py-2 text-xs font-semibold transition-all sm:px-4",
+                  "min-h-11 shrink-0 snap-start rounded-full px-3.5 py-2 text-xs font-semibold transition-all sm:shrink sm:snap-align-none sm:px-4",
                   selectedCategory === cat.value
                     ? "bg-offgrid-green text-offgrid-cream"
                     : "border border-offgrid-green/10 bg-white text-offgrid-green/60 hover:bg-offgrid-green/5",

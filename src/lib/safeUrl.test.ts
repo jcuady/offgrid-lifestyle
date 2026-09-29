@@ -10,6 +10,7 @@ describe("safeUrl", () => {
   it("allows in-app relative paths", () => {
     expect(safeNavigationUrl("/portal/orders/OG-1")).toBe("/portal/orders/OG-1");
     expect(safeNavigationUrl("/account/orders/CO-2026-1?q=1")).toBe("/account/orders/CO-2026-1?q=1");
+    expect(safeNavigationUrl("/account/orders/OG-1#invoice")).toBe("/account/orders/OG-1#invoice");
   });
 
   it("blocks open redirects and javascript URLs", () => {

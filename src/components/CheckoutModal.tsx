@@ -20,7 +20,7 @@ import {
   RETAIL_PAYMENT_METHODS,
   validateRetailPaymentMethod,
 } from "@/src/types/payments";
-import { persistCheckoutShipping } from "@/src/services/customerShippingService";
+import { fetchCustomerShipping, persistCheckoutShipping } from "@/src/services/customerShippingService";
 import { cn } from "@/src/lib/utils";
 import { electricBluePill } from "@/src/lib/brandLayout";
 import { lazyRetry as lazy } from "@/src/lib/lazyRetry";
@@ -95,6 +95,8 @@ export function CheckoutModal() {
   );
 
   const [formData, setFormData] = useState<ShippingInfo>(() => normalizeShippingInfo(shippingInfo));
+  const [savedAddress, setSavedAddress] = useState<ShippingInfo | null>(null);
+  const [saveForNextOrder, setSaveForNextOrder] = useState(true);
   const [shippingError, setShippingError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<ShippingFieldErrors>({});
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
@@ -118,7 +120,38 @@ export function CheckoutModal() {
     setFieldErrors({});
     setShippingError(null);
     setCheckoutError(null);
+    setSaveForNextOrder(true);
+    // Only when the modal opens. A later effect fills a still-empty form once the saved address arrives.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- shippingInfo is read at open, then merged below
+  }, [isCheckoutOpen]);
+
+  useEffect(() => {
+    if (!isCheckoutOpen) return;
+    if (!shippingInfo.regionCode && !shippingInfo.address.trim()) return;
+    setFormData((prev) => {
+      if (prev.regionCode || prev.address.trim()) return prev;
+      return normalizeShippingInfo({
+        ...shippingInfo,
+        fullName: prev.fullName || shippingInfo.fullName,
+        email: prev.email || shippingInfo.email,
+        phone: prev.phone || shippingInfo.phone,
+      });
+    });
   }, [isCheckoutOpen, shippingInfo]);
+
+  useEffect(() => {
+    if (!isCheckoutOpen || currentUser?.role !== "customer") {
+      setSavedAddress(null);
+      return;
+    }
+    let cancelled = false;
+    void fetchCustomerShipping(currentUser.id).then((saved) => {
+      if (!cancelled) setSavedAddress(saved);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [isCheckoutOpen, currentUser?.id]);
 
   useEffect(() => {
     if (!isCheckoutOpen) return;
@@ -220,7 +253,9 @@ export function CheckoutModal() {
     setCheckoutError(null);
     setFormData(sanitized);
     setShippingInfo(sanitized);
-    void persistCheckoutShipping(sanitized);
+    if (saveForNextOrder && currentUser?.role === "customer") {
+      void persistCheckoutShipping(sanitized);
+    }
     setCheckoutStep(2);
   };
 
@@ -571,8 +606,25 @@ export function CheckoutModal() {
                               onChange={setFormData}
                               errors={fieldErrors}
                               onClearError={clearFieldError}
+                              savedAddress={savedAddress}
                             />
                           </Suspense>
+
+                          {currentUser?.role === "customer" ? (
+                            <label className="flex cursor-pointer items-start gap-2 text-sm text-offgrid-green">
+                              <input
+                                type="checkbox"
+                                checked={saveForNextOrder}
+                                onChange={(e) => setSaveForNextOrder(e.target.checked)}
+                                className="mt-0.5 h-4 w-4 rounded border-offgrid-green/30 accent-offgrid-green"
+                              />
+                              Save this address for my next order
+                            </label>
+                          ) : (
+                            <p className="text-xs text-offgrid-green/55">
+                              Sign in to save this address for your next order.
+                            </p>
+                          )}
 
                           {shippingError ? (
                             <p

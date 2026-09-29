@@ -37,7 +37,8 @@ export async function getCityZipCode(cityCode: string): Promise<string | null> {
   const cities = (await import("ph-addresses-locations/data/cities.json")).default as CityRow[];
   const row = cities.find((city) => city.code === cityCode);
   const zip = row?.zipCode?.trim();
-  return zip || null;
+  if (zip) return zip;
+  return NCR_PRIMARY_ZIP[cityCode] ?? null;
 }
 
 /** Philippines approximate bounding box (WGS84). */
@@ -95,7 +96,10 @@ export async function getCitiesForProvince(provinceCode: string, regionCode: str
       .sort((a, b) => a.name.localeCompare(b.name));
   }
   if (!provinceCode) return [];
-  return mod.getCities(provinceCode).map((city) => ({ code: city.code, name: fixMojibakeName(city.name.trim()) }));
+  return mod
+    .getCities(provinceCode)
+    .filter((city) => !isNcrCityCode(city.code))
+    .map((city) => ({ code: city.code, name: fixMojibakeName(city.name.trim()) }));
 }
 
 /** Fill virtual NCR province when region is Metro Manila. */
@@ -113,6 +117,24 @@ export function ensureNcrShippingFields<T extends { regionCode: string; province
 export function isNcrCityCode(cityCode: string): boolean {
   return cityCode.startsWith("138");
 }
+
+/**
+ * The PSGC package files every Metro Manila city under Sarangani (1208000000).
+ * City codes 138* are NCR. Never trust provinceCode for those rows.
+ */
+const NCR_PRIMARY_ZIP: Record<string, string> = {
+  "1380600000": "1000", // Manila
+  "1381300000": "1100", // Quezon City
+  "1380300000": "1200", // Makati
+  "1381100000": "1300", // Pasay (also in the dataset)
+  "1380100000": "1400", // Caloocan
+  "1381600000": "1440", // Valenzuela
+  "1380400000": "1470", // Malabon
+  "1380900000": "1485", // Navotas
+  "1381400000": "1500", // San Juan
+  "1381701000": "1620", // Pateros
+  "1380200000": "1740", // Las Piñas
+};
 
 function resolvePsgcProvince(
   regionCode: string,
@@ -197,35 +219,99 @@ const GEO_HEADERS = {
   "User-Agent": "OFFGRIDLifestyle/1.0 (checkout; contact@offgridlifestyle.ph)",
 };
 
-function normalizePlaceName(name: string): string {
-  return name
+/** Accent- and mojibake-insensitive key so "Las Pinas" matches "Las Piñas". */
+export function foldPlaceName(name: string): string {
+  return fixMojibakeName(name)
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
     .toLowerCase()
-    .replace(/^city of\s+/i, "")
-    .replace(/\s+city$/i, "")
+    .replace(/^city of\s+/, "")
+    .replace(/\s+city$/, "")
+    .replace(/[^a-z0-9\s]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
 
-function tokenize(query: string): string[] {
-  return normalizePlaceName(query)
-    .split(/[,\s]+/)
-    .map((t) => t.trim())
-    .filter((t) => t.length > 1);
+interface IndexedPlace {
+  barangayCode: string;
+  barangayName: string;
+  cityCode: string;
+  cityName: string;
+  provinceCode: string;
+  provinceName: string;
+  regionCode: string;
+  regionName: string;
+  /** Folded "barangay city province" for scoring. */
+  key: string;
 }
 
-function scoreNameMatch(name: string, query: string): number {
-  const n = normalizePlaceName(name);
-  const q = normalizePlaceName(query);
-  if (!n || !q) return 0;
-  if (n === q) return 100;
-  if (n.startsWith(q)) return 85;
-  if (q.startsWith(n)) return 80;
-  if (n.includes(q)) return 70;
-  const tokens = tokenize(q);
-  if (tokens.length > 1 && tokens.every((t) => n.includes(t))) return 65;
-  const overlap = tokens.filter((t) => n.includes(t)).length;
-  if (overlap > 0) return 40 + overlap * 10;
-  return 0;
+let indexPromise: Promise<IndexedPlace[]> | null = null;
+
+function loadAddressIndex(): Promise<IndexedPlace[]> {
+  if (!indexPromise) {
+    indexPromise = buildAddressIndex().catch((err) => {
+      indexPromise = null;
+      throw err;
+    });
+  }
+  return indexPromise;
+}
+
+async function buildAddressIndex(): Promise<IndexedPlace[]> {
+  const mod = await loadPhilippinesLocations();
+  const ncrRegion = mod.getRegion(NCR_REGION_CODE);
+  const cityByCode = new Map(
+    (mod.getCities("") as Array<{ code: string; name: string; provinceCode: string }>).map((city) => [city.code, city]),
+  );
+  const provinceByCode = new Map(
+    (mod.getProvinces("") as Array<{ code: string; name: string; regionCode: string }>).map((province) => [
+      province.code,
+      province,
+    ]),
+  );
+  const regionByCode = new Map(mod.getRegions().map((region) => [region.code, region]));
+
+  const places: IndexedPlace[] = [];
+  for (const barangay of mod.getBarangays("")) {
+    // getBarangays("") omits cityCode. PSGC city code is the first 7 digits plus "000".
+    const city = cityByCode.get(`${barangay.code.slice(0, 7)}000`);
+    if (!city) continue;
+
+    let provinceCode: string;
+    let provinceName: string;
+    let regionCode: string;
+    let regionName: string;
+
+    if (isNcrCityCode(city.code)) {
+      provinceCode = NCR_PROVINCE_CODE;
+      provinceName = NCR_PROVINCE_NAME;
+      regionCode = NCR_REGION_CODE;
+      regionName = ncrRegion?.name ?? "NCR (National Capital Region)";
+    } else {
+      const province = provinceByCode.get(city.provinceCode);
+      const region = province ? regionByCode.get(province.regionCode) : undefined;
+      if (!province || !region) continue;
+      provinceCode = province.code;
+      provinceName = fixMojibakeName(province.name);
+      regionCode = region.code;
+      regionName = fixMojibakeName(region.name);
+    }
+
+    const barangayName = fixMojibakeName(barangay.name.trim());
+    const cityName = fixMojibakeName(city.name.trim());
+    places.push({
+      barangayCode: barangay.code,
+      barangayName,
+      cityCode: city.code,
+      cityName,
+      provinceCode,
+      provinceName,
+      regionCode,
+      regionName,
+      key: foldPlaceName(`${barangayName} ${cityName} ${provinceName}`),
+    });
+  }
+  return places;
 }
 
 function parseGeocodeAddress(address?: Record<string, string>): Pick<NominatimResult, "barangay" | "city" | "province" | "region" | "street" | "postcode"> {
@@ -266,141 +352,71 @@ function toNominatimResult(row: {
   };
 }
 
-/** Official PSGC search with relevance scoring (barangay + city + province context). */
+function scoreIndexedPlace(place: IndexedPlace, foldedQuery: string, tokens: string[]): number {
+  const barangay = foldPlaceName(place.barangayName);
+  const city = foldPlaceName(place.cityName);
+  const province = foldPlaceName(place.provinceName);
+  let score = 0;
+  if (barangay === foldedQuery) score += 120;
+  else if (barangay.startsWith(foldedQuery)) score += 90;
+  else if (barangay.includes(foldedQuery)) score += 70;
+
+  const tokenHits = tokens.filter((token) => place.key.includes(token));
+  if (tokens.length > 1 && tokenHits.length === tokens.length) score += 40;
+  score += tokenHits.length * 12;
+  if (tokens.some((token) => city === token || city.startsWith(token))) score += 35;
+  if (tokens.some((token) => province === token || province.startsWith(token))) score += 15;
+  return score;
+}
+
+/** Official PSGC search. Metro Manila is corrected off Sarangani; accents are ignored. */
 export async function searchPsgcLocations(query: string, limit = 8): Promise<AddressSearchResult[]> {
   const q = query.trim();
   if (q.length < 2) return [];
 
-  const mod = await loadPhilippinesLocations();
-  const tokens = tokenize(q);
-  const raw = mod.searchLocations(q, "all");
+  const foldedQuery = foldPlaceName(q);
+  const tokens = foldedQuery.split(" ").filter((token) => token.length > 1);
+  if (!tokens.length) return [];
 
-  type ScoredCandidate = {
-    score: number;
-    kind: "barangay" | "city";
-    barangayCode: string;
-    cityCode: string;
-    barangayName: string;
-    cityName: string;
-    provinceName: string;
-    regionName: string;
-    regionCode: string;
-    provinceCode: string;
-  };
-
-  const candidates: ScoredCandidate[] = [];
-
-  const barangayPool = raw.barangays.length > 200 ? raw.barangays.slice(0, 200) : raw.barangays;
-  for (const barangay of barangayPool) {
-    const full = mod.getFullAddress(barangay.code);
-    if (!full?.region || !full.province || !full.city) continue;
-
-    const barangayScore = scoreNameMatch(barangay.name, q);
-    const cityScore = Math.max(scoreNameMatch(full.city.name, q), ...tokens.map((t) => scoreNameMatch(full.city.name, t)));
-    const provinceScore = Math.max(
-      scoreNameMatch(full.province.name, q),
-      ...tokens.map((t) => scoreNameMatch(full.province.name, t)),
-    );
-    const tokenHits = tokens.filter(
-      (t) =>
-        normalizePlaceName(barangay.name).includes(t) ||
-        normalizePlaceName(full.city.name).includes(t) ||
-        normalizePlaceName(full.province.name).includes(t),
-    ).length;
-
-    const score = barangayScore + cityScore * 0.4 + provinceScore * 0.2 + tokenHits * 8;
-    if (score < 45) continue;
-
-    candidates.push({
-      score,
-      kind: "barangay",
-      barangayCode: barangay.code,
-      cityCode: full.city.code,
-      barangayName: barangay.name.trim(),
-      cityName: full.city.name.trim(),
-      provinceName: full.province.name,
-      regionName: full.region.name,
-      regionCode: full.region.code,
-      provinceCode: full.province.code,
-    });
-  }
-
-  for (const city of raw.cities.slice(0, 30)) {
-    if (isNcrCityCode(city.code)) {
-      const region = mod.getRegion(NCR_REGION_CODE);
-      if (!region) continue;
-      const score = scoreNameMatch(city.name, q) + tokens.filter((t) => normalizePlaceName(city.name).includes(t)).length * 5;
-      if (score < 55) continue;
-      candidates.push({
-        score: score - 5,
-        kind: "city",
-        barangayCode: "",
-        cityCode: city.code,
-        barangayName: "",
-        cityName: city.name.trim(),
-        provinceName: NCR_PROVINCE_NAME,
-        regionName: region.name,
-        regionCode: region.code,
-        provinceCode: NCR_PROVINCE_CODE,
-      });
-      continue;
-    }
-
-    const hierarchy = mod.getLocationHierarchy(city.code);
-    if (!hierarchy?.region || !hierarchy.province || !hierarchy.city) continue;
-    const score = scoreNameMatch(city.name, q) + tokens.filter((t) => normalizePlaceName(city.name).includes(t)).length * 5;
-    if (score < 55) continue;
-
-    candidates.push({
-      score: score - 5,
-      kind: "city",
-      barangayCode: "",
-      cityCode: city.code,
-      barangayName: "",
-      cityName: city.name.trim(),
-      provinceName: hierarchy.province.name,
-      regionName: hierarchy.region.name,
-      regionCode: hierarchy.region.code,
-      provinceCode: hierarchy.province.code,
-    });
-  }
-
-  candidates.sort((a, b) => b.score - a.score);
+  const index = await loadAddressIndex();
+  const anchor = tokens.reduce((longest, token) => (token.length > longest.length ? token : longest), "");
+  const pool = index.filter((place) => place.key.includes(anchor));
+  const minScore = foldedQuery.length < 3 ? 90 : 70;
+  const ranked = pool
+    .map((place) => ({ place, score: scoreIndexedPlace(place, foldedQuery, tokens) }))
+    .filter((row) => row.score >= minScore)
+    .sort((a, b) => b.score - a.score);
 
   const seen = new Set<string>();
   const results: AddressSearchResult[] = [];
+  const zipCache = new Map<string, string>();
 
-  for (const candidate of candidates) {
-    const id =
-      candidate.kind === "barangay"
-        ? `psgc-${candidate.barangayCode}`
-        : `psgc-city-${candidate.cityCode}`;
-    if (seen.has(id)) continue;
-    seen.add(id);
+  for (const { place } of ranked) {
+    if (seen.has(place.barangayCode)) continue;
+    seen.add(place.barangayCode);
 
-    const zip = (await getCityZipCode(candidate.cityCode)) ?? "";
-    const psgc = buildPsgcMatch({
-      region: { code: candidate.regionCode, name: candidate.regionName },
-      province: { code: candidate.provinceCode, name: candidate.provinceName },
-      city: { code: candidate.cityCode, name: candidate.cityName },
-      barangayCode: candidate.barangayCode,
-      barangay: candidate.barangayName,
-      zip,
-    });
+    let zip = zipCache.get(place.cityCode);
+    if (zip === undefined) {
+      zip = (await getCityZipCode(place.cityCode)) ?? "";
+      zipCache.set(place.cityCode, zip);
+    }
 
     results.push({
-      id,
-      displayName:
-        candidate.kind === "barangay"
-          ? `${candidate.barangayName}, ${candidate.cityName}`
-          : candidate.cityName,
-      subtitle: `${candidate.provinceName}, ${candidate.regionName}`,
+      id: `psgc-${place.barangayCode}`,
+      displayName: `${place.barangayName}, ${place.cityName}`,
+      subtitle: `${place.provinceName}, ${place.regionName}`,
       latitude: null,
       longitude: null,
       source: "psgc",
-      psgc,
+      psgc: buildPsgcMatch({
+        region: { code: place.regionCode, name: place.regionName },
+        province: { code: place.provinceCode, name: place.provinceName },
+        city: { code: place.cityCode, name: place.cityName },
+        barangayCode: place.barangayCode,
+        barangay: place.barangayName,
+        zip,
+      }),
     });
-
     if (results.length >= limit) break;
   }
 
@@ -578,84 +594,23 @@ export async function geocodePsgcMatch(match: PsgcMatch): Promise<{ latitude: nu
   return null;
 }
 
-/** Match free-text / geocoded place names to PSGC hierarchy. */
+/** Match a geocoder result to the official PSGC hierarchy, including Metro Manila. */
 export async function matchPlaceToPsgc(place: NominatimResult): Promise<PsgcMatch | null> {
-  const mod = await loadPhilippinesLocations();
-
-  const candidates: Array<{ score: number; barangayCode: string }> = [];
-
-  const searchQueries = [
-    [place.barangay, place.city, place.province].filter(Boolean).join(" "),
-    [place.barangay, place.city].filter(Boolean).join(" "),
-    place.barangay ?? "",
-    place.city ?? "",
-    [place.street, place.city, place.province].filter(Boolean).join(" "),
-  ].filter((q) => q.trim().length >= 2);
-
-  for (const query of searchQueries) {
-    const results = mod.searchLocations(query, "barangay");
-    for (const barangay of results.barangays) {
-      const full = mod.getFullAddress(barangay.code);
-      if (!full?.region || !full.province || !full.city) continue;
-
-      let score = scoreNameMatch(barangay.name, place.barangay ?? query);
-      if (place.city) score += scoreNameMatch(full.city.name, place.city) * 0.5;
-      if (place.province) score += scoreNameMatch(full.province.name, place.province) * 0.3;
-
-      candidates.push({ score, barangayCode: barangay.code });
-    }
+  const query = [place.barangay, place.city, place.province].filter(Boolean).join(" ");
+  const matches = query.trim().length >= 2 ? await searchPsgcLocations(query, 1) : [];
+  const best = matches[0]?.psgc;
+  if (best?.barangayCode) {
+    return { ...best, zip: best.zip || place.postcode || "" };
   }
 
-  if (!candidates.length && place.city) {
-    const cityResults = mod.searchLocations(place.city, "city");
-    for (const city of cityResults.cities.slice(0, 5)) {
-      if (isNcrCityCode(city.code)) {
-        const region = mod.getRegion(NCR_REGION_CODE);
-        if (!region) continue;
-        const score = scoreNameMatch(city.name, place.city);
-        if (score < 50) continue;
-        const zip = (await getCityZipCode(city.code)) ?? place.postcode ?? "";
-        return buildPsgcMatch({
-          region,
-          province: null,
-          city: { code: city.code, name: city.name },
-          barangayCode: "",
-          barangay: place.barangay?.trim() ?? "",
-          zip,
-        });
-      }
-
-      const hierarchy = mod.getLocationHierarchy(city.code);
-      if (!hierarchy?.region || !hierarchy.province || !hierarchy.city) continue;
-      const score = scoreNameMatch(city.name, place.city);
-      if (score < 50) continue;
-      const zip = (await getCityZipCode(city.code)) ?? place.postcode ?? "";
-      return buildPsgcMatch({
-        region: hierarchy.region,
-        province: hierarchy.province,
-        city: hierarchy.city,
-        barangayCode: "",
-        barangay: place.barangay?.trim() ?? "",
-        zip,
-      });
-    }
-  }
-
-  candidates.sort((a, b) => b.score - a.score);
-  const best = candidates[0];
-  if (!best || best.score < 45) return null;
-
-  const full = mod.getFullAddress(best.barangayCode);
-  if (!full?.region || !full.province || !full.city) return null;
-
-  const zip = (await getCityZipCode(full.city.code)) ?? place.postcode ?? "";
-
-  return buildPsgcMatch({
-    region: full.region,
-    province: full.province,
-    city: full.city,
-    barangayCode: best.barangayCode,
-    barangay: full.barangay?.name ?? "",
-    zip,
-  });
+  if (!place.city) return null;
+  const cityMatches = await searchPsgcLocations(place.city, 1);
+  const city = cityMatches[0]?.psgc;
+  if (!city) return null;
+  return {
+    ...city,
+    barangayCode: "",
+    barangay: place.barangay?.trim() ?? "",
+    zip: city.zip || place.postcode || "",
+  };
 }

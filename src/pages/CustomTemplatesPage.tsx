@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Download, ImageIcon } from "lucide-react";
+import { ArrowLeft, ArrowRight, Download } from "lucide-react";
+import { TemplateThumbnail } from "@/src/components/custom/TemplateThumbnail";
 import { Button } from "@/src/components/ui/Button";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import type { CustomTemplateAsset } from "@/src/store/useSiteContentStore";
@@ -131,12 +132,16 @@ export function CustomTemplatesPage() {
                           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                         />
                       ) : (
-                        <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-offgrid-green/35">
-                          <ImageIcon className="h-6 w-6" />
-                          <span className="font-mono text-xs font-semibold uppercase tracking-[0.12em]">{template.format}</span>
-                        </div>
+                        <TemplateThumbnail template={template} />
                       )}
-                      <span className="absolute right-3 top-3 rounded-full bg-offgrid-green/90 px-2.5 py-1 font-mono text-[9px] font-bold uppercase tracking-[0.12em] text-offgrid-cream backdrop-blur">
+                      <span
+                        className={cn(
+                          "absolute right-3 top-3 rounded-full px-2.5 py-1 font-mono text-[9px] font-bold uppercase tracking-[0.12em]",
+                          template.previewImageUrl
+                            ? "bg-offgrid-green/90 text-offgrid-cream backdrop-blur"
+                            : "bg-white text-offgrid-green",
+                        )}
+                      >
                         {template.format}
                       </span>
                       <div

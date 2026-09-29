@@ -9,6 +9,9 @@ import {
   isTowelHeadwearType,
   resolveHeadwearOptions,
 } from "@/src/data/customHeadwearOptions";
+import { printMethodLabel } from "@/src/data/customOptions";
+import { OrderInvoiceSection } from "@/src/components/orders/OrderInvoiceSection";
+import { receiptPropsFromCustom, receiptPropsFromRetail } from "@/src/lib/orderReceiptModel";
 import { formatMoney, php } from "@/src/types/commerce";
 import { cn } from "@/src/lib/utils";
 import {
@@ -23,8 +26,7 @@ import {
   paymentStatusClass,
 } from "@/src/lib/portal";
 import {
-  ADMIN_ORDER_TRANSITIONS,
-  ORDER_TRANSITIONS,
+  fulfillmentMenu,
   PAYMENT_TRANSITIONS,
   canOverridePaymentStatus,
   canTransitionStatus,
@@ -297,7 +299,8 @@ export function OperationsOrderDetailPage() {
   const isAdmin = role === "admin";
   const basePath = location.pathname.startsWith("/portal/admin") ? "/portal/admin" : "/portal/staff";
   const transitionOpts = isAdmin ? { unrestricted: true } : undefined;
-  const statusOptions = isAdmin ? ADMIN_ORDER_TRANSITIONS : ORDER_TRANSITIONS;
+  const retailStatusOptions = fulfillmentMenu("retail", { includeDraft: isAdmin });
+  const customStatusOptions = fulfillmentMenu("custom", { includeDraft: isAdmin });
 
   const { retail, custom, loading, found, orderId } = useOrderDetail(rawOrderId);
 
@@ -413,7 +416,7 @@ export function OperationsOrderDetailPage() {
                 }}
                 className="mt-1 block min-h-11 w-full min-w-0 rounded-xl border border-offgrid-green/20 px-3 py-2 text-sm sm:w-auto"
               >
-                {statusOptions.map((s) => (
+                {retailStatusOptions.map((s) => (
                   <option key={s} value={s}>
                     {formatOrderStatus(s, "retail")}
                   </option>
@@ -612,6 +615,8 @@ export function OperationsOrderDetailPage() {
               </div>
             </div>
           </div>
+
+          <OrderInvoiceSection audience="staff" officialQuote {...receiptPropsFromRetail(retail)} />
         </div>
       ) : null}
 
@@ -665,6 +670,12 @@ export function OperationsOrderDetailPage() {
             ) : null}
           </div>
 
+          <OrderInvoiceSection
+            audience="staff"
+            officialQuote={hasOfficialCustomQuote(custom.officialTotal)}
+            {...receiptPropsFromCustom(custom)}
+          />
+
           <div className="flex flex-wrap gap-3">
             <div>
               <label className="text-[10px] font-semibold uppercase tracking-[0.18em] text-offgrid-green/45">Fulfillment status</label>
@@ -697,7 +708,7 @@ export function OperationsOrderDetailPage() {
                 }}
                 className="mt-1 block rounded-xl border border-offgrid-green/20 px-3 py-2 text-sm"
               >
-                {statusOptions.map((s) => (
+                {customStatusOptions.map((s) => (
                   <option key={s} value={s}>
                     {formatOrderStatus(s, "custom", {
                       hasOfficialQuote: hasOfficialCustomQuote(custom.officialTotal),
@@ -970,7 +981,7 @@ export function OperationsOrderDetailPage() {
                   )}
                   <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 p-3 sm:col-span-2">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/50">Print method</p>
-                    <p className="mt-1 text-sm font-semibold text-offgrid-green">{formatEnumLabel(custom.printMethod ?? "")}</p>
+                    <p className="mt-1 text-sm font-semibold text-offgrid-green">{printMethodLabel(custom.printMethod)}</p>
                   </div>
                 </>
               ) : (

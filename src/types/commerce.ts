@@ -25,12 +25,8 @@ export type PaymentStatus =
 export type GarmentCut = ProductGarmentCut;
 export type FabricType = ProductFabricType;
 
-export type PrintMethod =
-  | "sublimation"
-  | "silk_screen"
-  | "embroidery"
-  | "heat_transfer"
-  | "digital_print";
+/** Slug/id of a CMS-managed print method (`og_custom_print_methods.id`). */
+export type PrintMethod = string;
 
 export type CustomCategory = "apparel" | "headwear_towels";
 /** Slug/id of a CMS-managed headwear or towel option. */

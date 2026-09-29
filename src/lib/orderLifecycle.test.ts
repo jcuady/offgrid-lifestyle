@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import type { OrderStatus } from "@/src/types/commerce";
 import {
   ADMIN_ORDER_TRANSITIONS,
+  ORDER_TRANSITIONS,
+  fulfillmentMenu,
   STATUS_FLOW,
   canCustomerCancelOrder,
   canCustomerRequestRevision,
@@ -11,6 +13,21 @@ import {
 } from "./orderLifecycle";
 
 describe("orderLifecycle", () => {
+  it("lists under review before awaiting invoice", () => {
+    const review = ORDER_TRANSITIONS.indexOf("under_review");
+    const invoice = ORDER_TRANSITIONS.indexOf("pending_deposit");
+    expect(review).toBeGreaterThanOrEqual(0);
+    expect(review).toBeLessThan(invoice);
+    expect(ADMIN_ORDER_TRANSITIONS.indexOf("under_review")).toBeLessThan(
+      ADMIN_ORDER_TRANSITIONS.indexOf("pending_deposit"),
+    );
+    expect(fulfillmentMenu("custom").map((s) => s).slice(0, 2)).toEqual([
+      "under_review",
+      "pending_deposit",
+    ]);
+    expect(fulfillmentMenu("retail").slice(0, 2)).toEqual(["pending_deposit", "under_review"]);
+  });
+
   it("admin unrestricted can skip to shipped", () => {
     expect(canTransitionStatus("confirmed", "shipped", { unrestricted: true })).toBe(true);
     expect(canTransitionStatus("confirmed", "shipped")).toBe(false);

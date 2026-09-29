@@ -1,6 +1,6 @@
 import { notificationService } from "@/src/services/notificationService";
 import { sendPushNotification, type OperationalAlertType } from "@/src/lib/pushSubscription";
-import { operationalPushUrl } from "@/src/lib/pushAuth";
+import { staffOrderNotificationUrl } from "@/src/lib/orderInvoiceLink";
 import { buildWebPushTag } from "@/src/lib/pushPayload";
 import { logger } from "@/src/lib/logger";
 
@@ -50,26 +50,26 @@ export type StaffOrderEvent = "new_retail_order" | "new_custom_order" | "payment
 const STAFF_MESSAGES: Record<StaffOrderEvent, (orderId: string) => NotifyPayload> = {
   new_retail_order: (id) => ({
     title: "New shop order",
-    body: `Retail order ${id} needs review in Operations.`,
-    url: operationalPushUrl(id),
+    body: `Retail order ${id} needs review in Operations. The invoice is on the order.`,
+    url: staffOrderNotificationUrl(id),
     category: "operations",
   }),
   new_custom_order: (id) => ({
     title: "New custom request",
-    body: `Custom order ${id} is under review (typically 1–3 business days).`,
-    url: operationalPushUrl(id),
+    body: `Custom order ${id} is under review. The confirmation is on the order.`,
+    url: staffOrderNotificationUrl(id),
     category: "operations",
   }),
   payment_proof: (id) => ({
     title: "Payment proof uploaded",
     body: `Customer uploaded payment proof for order ${id}.`,
-    url: operationalPushUrl(id),
+    url: staffOrderNotificationUrl(id),
     category: "payment",
   }),
   order_revision: (id) => ({
     title: "Revision requested",
     body: `Customer requested a revision on order ${id}.`,
-    url: operationalPushUrl(id),
+    url: staffOrderNotificationUrl(id),
     category: "operations",
   }),
 };

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { customerOrderPageUrl, staffOrderNotificationUrl } from "@/src/lib/orderInvoiceLink";
 import { buildWebPushTag } from "@/src/lib/pushPayload";
 import {
   customerEventForFulfillmentStatus,
@@ -10,6 +11,16 @@ import {
 function customerOrderPushTag(event: string, orderId: string, url: string): string {
   return buildWebPushTag(url, `${event}-${orderId}`);
 }
+
+describe("order invoice notification urls", () => {
+  it("opens the customer order on the invoice", () => {
+    expect(customerOrderPageUrl("OG-2026-1")).toBe("/account/orders/OG-2026-1#invoice");
+  });
+
+  it("opens the staff order on the same invoice", () => {
+    expect(staffOrderNotificationUrl("OG-2026-1")).toBe("/portal/orders/OG-2026-1#invoice");
+  });
+});
 
 describe("customerOrderPushTag", () => {
   it("is stable for the same event and order", () => {

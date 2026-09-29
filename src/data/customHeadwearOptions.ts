@@ -1,5 +1,5 @@
 import type { PrintMethod } from "@/src/types/commerce";
-import { PRINT_OPTIONS } from "@/src/data/customOptions";
+import { PRINT_OPTIONS, type PrintMethodOption } from "@/src/data/customOptions";
 
 export type HeadwearOptionGroup = "headwear" | "towel";
 
@@ -192,11 +192,14 @@ export function printOptionsForCustomOrder(
   category: string | null | undefined,
   headwearType: string | null | undefined,
   options: CustomHeadwearOption[] = [],
-): typeof PRINT_OPTIONS {
+  printMethods: readonly PrintMethodOption[] = PRINT_OPTIONS,
+): PrintMethodOption[] {
   if (isTowelCustomOrder(category, headwearType, options)) {
-    return PRINT_OPTIONS.filter((o) => o.id === "sublimation");
+    const sublimation =
+      printMethods.find((o) => o.id === "sublimation") ?? PRINT_OPTIONS.find((o) => o.id === "sublimation");
+    return sublimation ? [sublimation] : [];
   }
-  return PRINT_OPTIONS;
+  return printMethods.filter((o) => o.isPublished);
 }
 
 export function headwearOptionLabel(
@@ -223,9 +226,10 @@ export function estimateHeadwearUnitPrice(
   typeId: string | null,
   printMethod: PrintMethod | null,
   options: CustomHeadwearOption[],
+  printMethods: readonly PrintMethodOption[] = PRINT_OPTIONS,
 ): number {
   const typeMod = findHeadwearOption(typeId, options)?.priceModifier ?? 1;
-  const printMod = PRINT_OPTIONS.find((o) => o.id === printMethod)?.priceModifier ?? 1;
+  const printMod = printMethods.find((o) => o.id === printMethod)?.priceModifier ?? 1;
   return Math.round(BASE_HEADWEAR_UNIT_PRICE * typeMod * printMod);
 }
 

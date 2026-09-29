@@ -1,4 +1,5 @@
 import { notifyUser } from "@/src/lib/notifications";
+import { customerOrderPageUrl } from "@/src/lib/orderInvoiceLink";
 import { logger } from "@/src/lib/logger";
 import { sendOrderUpdateEmail } from "@/src/services/emailService";
 import { supabase } from "@/src/lib/supabase";
@@ -25,8 +26,8 @@ const MESSAGES: Record<CustomerOrderEvent, (orderId: string) => { title: string;
     body: `We received your payment for order ${id}. Production will begin soon.`,
   }),
   quote_ready: (id) => ({
-    title: "Your custom quote is ready",
-    body: `Official quote for ${id} is ready. Open the order to pay your deposit via PayMongo QR Ph or GCash.`,
+    title: "Your invoice is ready",
+    body: `Official invoice for ${id} is on your order. Open it to review the total and pay your deposit.`,
   }),
   shipped: (id) => ({
     title: "Order shipped",
@@ -77,7 +78,7 @@ export async function notifyCustomerOrderEvent(
       await notifyUser(resolvedCustomerId, {
         title,
         body,
-        url: `/account/orders/${orderId}`,
+        url: customerOrderPageUrl(orderId),
         category: "order",
         tagKey: `${event}-${orderId}`,
       });

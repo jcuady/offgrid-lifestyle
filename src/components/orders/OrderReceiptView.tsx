@@ -181,6 +181,9 @@ export function OrderReceiptView({
                 </div>
               </>
             ) : null}
+            {typeof payload.quoteCustomerNotes === "string" && payload.quoteCustomerNotes.trim() ? (
+              <p className="whitespace-pre-wrap pt-2 text-sm text-offgrid-green/80">{payload.quoteCustomerNotes}</p>
+            ) : null}
           </dl>
         </section>
       )}

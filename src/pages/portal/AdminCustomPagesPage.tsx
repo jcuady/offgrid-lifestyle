@@ -15,6 +15,7 @@ import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { hydrateSiteContentFromSupabase, localContentService } from "@/src/services";
 import { useDebouncedCustomPagesPersist } from "@/src/hooks/useDebouncedSitePersist";
 import { HeadwearOptionsEditor } from "@/src/components/admin/custom/HeadwearOptionsEditor";
+import { PrintMethodsEditor } from "@/src/components/admin/custom/PrintMethodsEditor";
 import { Button } from "@/src/components/ui/Button";
 import { PortalPageHeader } from "@/src/components/portal/PortalPageHeader";
 import { cn } from "@/src/lib/utils";
@@ -622,6 +623,7 @@ export function AdminCustomPagesPage() {
 
         <div id="templates-cms">
           <HeadwearOptionsEditor />
+          <PrintMethodsEditor />
 
           <CmsSectionPanel
             title="Templates page — hero"

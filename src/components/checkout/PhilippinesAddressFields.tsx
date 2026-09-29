@@ -39,6 +39,8 @@ interface PhilippinesAddressFieldsProps {
   onChange: (value: ShippingInfo) => void;
   errors?: ShippingFieldErrors;
   onClearError?: (field: AddressFieldKey) => void;
+  /** Signed-in customer's last saved delivery address, offered as a one-tap fill. */
+  savedAddress?: ShippingInfo | null;
 }
 
 /** 16px text avoids iOS Safari zoom-on-focus; min 44px for touch. */
@@ -101,6 +103,7 @@ export function PhilippinesAddressFields({
   onChange,
   errors = {},
   onClearError,
+  savedAddress = null,
 }: PhilippinesAddressFieldsProps) {
   const [ready, setReady] = useState(false);
   const [regions, setRegions] = useState<PhLocation[]>([]);
@@ -116,7 +119,6 @@ export function PhilippinesAddressFields({
   const [resolvingPin, setResolvingPin] = useState(false);
   const [locationNote, setLocationNote] = useState<string | null>(null);
   const [showMap, setShowMap] = useState(false);
-  const [quickFillOpen, setQuickFillOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
 
   const progress = manualProgress(value);
@@ -245,7 +247,10 @@ export function PhilippinesAddressFields({
       await applyPsgcMatch(
         matched,
         { latitude: result.latitude, longitude: result.longitude },
-        { address: result.street || value.address || "" },
+        {
+          address: result.street || value.address || "",
+          ...(result.postcode && /^\d{4}$/.test(result.postcode) ? { zip: result.postcode } : {}),
+        },
       );
       return;
     }
@@ -327,7 +332,6 @@ export function PhilippinesAddressFields({
     setLocating(true);
     setLocationNote(null);
     setShowMap(true);
-    setQuickFillOpen(true);
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         try {
@@ -399,11 +403,151 @@ export function PhilippinesAddressFields({
     <div className="space-y-3 sm:space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-offgrid-green/12 bg-white/70 px-3 py-2.5 sm:px-4 sm:py-3">
         <p className="text-xs text-offgrid-green/70 sm:text-sm">
-          Pick region → city → barangay, then street.
+          Search your barangay or street. The fields below fill in.
         </p>
         <span className="rounded-full bg-offgrid-green/8 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/70 sm:text-xs">
           {progress.done}/{progress.total}
         </span>
+      </div>
+
+      {savedAddress?.regionCode &&
+      (savedAddress.barangayCode !== value.barangayCode || savedAddress.address.trim() !== value.address.trim()) ? (
+        <div className="flex flex-col gap-2 rounded-xl border border-offgrid-green/15 bg-white px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-4">
+          <p className="text-sm text-offgrid-green">
+            <span className="font-semibold">Saved address. </span>
+            <span className="text-offgrid-green/70">
+              {[savedAddress.address, savedAddress.barangay, savedAddress.city].filter(Boolean).join(", ")}
+            </span>
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              onChange(savedAddress);
+              setLocationNote("Saved address applied. Check the street and ZIP, then continue.");
+              (["region", "province", "city", "barangay", "address", "zip"] as AddressFieldKey[]).forEach((field) =>
+                onClearError?.(field),
+              );
+            }}
+            className="inline-flex shrink-0 items-center justify-center rounded-full bg-offgrid-green px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-offgrid-cream"
+          >
+            Use saved address
+          </button>
+        </div>
+      ) : null}
+
+      <div className="space-y-3 rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40 px-3 py-3 sm:px-4">
+        <div ref={searchRef} className="relative">
+          <label className={labelClass} htmlFor="ph-address-search">
+            Search address
+          </label>
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-offgrid-green/40" />
+            <input
+              id="ph-address-search"
+              type="search"
+              value={searchQuery}
+              onChange={(e) => {
+                const q = e.target.value;
+                setSearchQuery(q);
+                setSearchOpen(true);
+                void runSearch(q);
+              }}
+              onFocus={() => setSearchOpen(true)}
+              placeholder="Barangay, city, landmark, or street"
+              autoComplete="off"
+              enterKeyHint="search"
+              role="combobox"
+              aria-expanded={searchOpen && searchResults.length > 0}
+              aria-controls="ph-address-search-list"
+              className={cn(selectClass, "pl-10")}
+            />
+            {searching ? (
+              <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-offgrid-green/40" />
+            ) : null}
+          </div>
+          {searchOpen && searchQuery.trim().length >= 2 && !searching && searchResults.length === 0 ? (
+            <p className="mt-1 text-xs text-offgrid-green/55">No matches. Pick the region and city in the fields below.</p>
+          ) : null}
+          {searchOpen && searchResults.length > 0 ? (
+            <ul
+              id="ph-address-search-list"
+              role="listbox"
+              className="absolute z-20 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-offgrid-green/15 bg-white shadow-lg"
+            >
+              {searchResults.map((result) => (
+                <li key={result.id} role="option" aria-selected={false}>
+                  <button
+                    type="button"
+                    className="w-full border-b border-offgrid-green/5 px-3 py-2.5 text-left last:border-0 hover:bg-offgrid-cream/80"
+                    onClick={() => void applySearchResult(result)}
+                  >
+                    <span className="flex items-center gap-2">
+                      <span
+                        className={cn(
+                          "shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide",
+                          result.source === "psgc"
+                            ? "bg-offgrid-lime/30 text-offgrid-green"
+                            : "bg-offgrid-green/10 text-offgrid-green/70",
+                        )}
+                      >
+                        {result.source === "psgc" ? "Official" : "Map"}
+                      </span>
+                      <span className="text-sm font-medium text-offgrid-green">{result.displayName}</span>
+                    </span>
+                    {result.subtitle ? (
+                      <span className="mt-0.5 block text-xs text-offgrid-green/55">{result.subtitle}</span>
+                    ) : null}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+          <button
+            type="button"
+            onClick={handleUseMyLocation}
+            disabled={locating}
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-offgrid-green/20 bg-white px-4 py-2.5 text-sm font-semibold text-offgrid-green transition-colors hover:border-offgrid-green/40 disabled:opacity-60"
+          >
+            {locating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Navigation className="h-4 w-4" />}
+            Use my location
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowMap((v) => !v)}
+            aria-expanded={showMap}
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-offgrid-green/20 bg-white px-4 py-2.5 text-sm font-semibold text-offgrid-green transition-colors hover:border-offgrid-green/40"
+          >
+            <MapPin className="h-4 w-4" />
+            {showMap ? "Hide map" : "Pin on map"}
+          </button>
+        </div>
+
+        {locationNote ? <p className="text-xs text-offgrid-green/70">{locationNote}</p> : null}
+        {resolvingPin ? (
+          <p className="flex items-center gap-2 text-xs text-offgrid-green/65">
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            Matching pin to the official address...
+          </p>
+        ) : null}
+
+        {showMap ? (
+          <Suspense
+            fallback={
+              <div className="flex h-48 items-center justify-center rounded-xl border border-offgrid-green/15 bg-white sm:h-56">
+                <Loader2 className="h-6 w-6 animate-spin text-offgrid-green/40" />
+              </div>
+            }
+          >
+            <PhilippinesLocationMap
+              latitude={value.latitude}
+              longitude={value.longitude}
+              onPinChange={(lat, lon) => void resolveMapPin(lat, lon)}
+            />
+          </Suspense>
+        ) : null}
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
@@ -422,7 +566,7 @@ export function PhilippinesAddressFields({
               aria-invalid={Boolean(errors.region)}
               aria-describedby={errors.region ? "ph-region-error" : undefined}
             >
-              <option value="">{ready ? "Select region" : "Loading regions…"}</option>
+              <option value="">{ready ? "Select region" : "Loading regions..."}</option>
               {regions.map((region) => (
                 <option key={region.code} value={region.code}>
                   {region.name}
@@ -469,7 +613,7 @@ export function PhilippinesAddressFields({
             </select>
           </SelectShell>
           {isNcr ? (
-            <p className="mt-1 text-xs text-offgrid-green/55">NCR uses Metro Manila — proceed to city.</p>
+            <p className="mt-1 text-xs text-offgrid-green/55">NCR uses Metro Manila. Continue to city.</p>
           ) : !value.regionCode ? (
             <p className="mt-1 text-xs text-offgrid-green/45">Select a region first.</p>
           ) : null}
@@ -526,7 +670,7 @@ export function PhilippinesAddressFields({
               type="search"
               value={barangayFilter}
               onChange={(e) => setBarangayFilter(e.target.value)}
-              placeholder="Type to filter barangays…"
+              placeholder="Type to filter barangays..."
               disabled={!value.cityCode}
               className={cn(fieldClass(false), "mb-2")}
               enterKeyHint="search"
@@ -605,124 +749,6 @@ export function PhilippinesAddressFields({
           />
           <FieldError message={errors.zip} field="zip" />
         </div>
-      </div>
-
-      <div className="rounded-xl border border-offgrid-green/10 bg-offgrid-cream/40">
-        <button
-          type="button"
-          onClick={() => setQuickFillOpen((v) => !v)}
-          className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
-        >
-          <span>
-            <span className="block text-sm font-semibold text-offgrid-green">Quick fill (optional)</span>
-            <span className="text-xs text-offgrid-green/60">Search, map pin, or GPS — fills the fields above</span>
-          </span>
-          <ChevronDown className={cn("h-5 w-5 shrink-0 text-offgrid-green/50 transition-transform", quickFillOpen && "rotate-180")} />
-        </button>
-
-        {quickFillOpen ? (
-          <div className="space-y-4 border-t border-offgrid-green/10 px-4 pb-4 pt-3">
-            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-              <button
-                type="button"
-                onClick={handleUseMyLocation}
-                disabled={locating}
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-offgrid-green/20 bg-white px-4 py-2.5 text-sm font-semibold text-offgrid-green transition-colors hover:border-offgrid-green/40 disabled:opacity-60"
-              >
-                {locating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Navigation className="h-4 w-4" />}
-                Use my location
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowMap((v) => !v)}
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-offgrid-green/20 bg-white px-4 py-2.5 text-sm font-semibold text-offgrid-green transition-colors hover:border-offgrid-green/40"
-              >
-                <MapPin className="h-4 w-4" />
-                {showMap ? "Hide map" : "Pin on map"}
-              </button>
-            </div>
-
-            {locationNote ? <p className="text-xs text-offgrid-green/65">{locationNote}</p> : null}
-            {resolvingPin ? (
-              <p className="flex items-center gap-2 text-xs text-offgrid-green/65">
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                Matching pin to official address…
-              </p>
-            ) : null}
-
-            {showMap ? (
-              <Suspense
-                fallback={
-                  <div className="flex h-48 items-center justify-center rounded-xl border border-offgrid-green/15 bg-white sm:h-56">
-                    <Loader2 className="h-6 w-6 animate-spin text-offgrid-green/40" />
-                  </div>
-                }
-              >
-                <PhilippinesLocationMap
-                  latitude={value.latitude}
-                  longitude={value.longitude}
-                  onPinChange={(lat, lon) => void resolveMapPin(lat, lon)}
-                />
-              </Suspense>
-            ) : null}
-
-            <div ref={searchRef} className="relative">
-              <label className={labelClass}>Search address</label>
-              <div className="relative">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-offgrid-green/40" />
-                <input
-                  type="search"
-                  value={searchQuery}
-                  onChange={(e) => {
-                    const q = e.target.value;
-                    setSearchQuery(q);
-                    setSearchOpen(true);
-                    void runSearch(q);
-                  }}
-                  onFocus={() => setSearchOpen(true)}
-                  placeholder="Barangay, city, landmark, or street"
-                  className={cn(selectClass, "pl-10")}
-                />
-                {searching ? (
-                  <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-offgrid-green/40" />
-                ) : null}
-              </div>
-              {searchOpen && searchQuery.length >= 2 && !searching && searchResults.length === 0 ? (
-                <p className="mt-1 text-xs text-offgrid-green/55">No matches — use the dropdowns above instead.</p>
-              ) : null}
-              {searchOpen && searchResults.length > 0 ? (
-                <ul className="relative z-20 mt-1 max-h-48 w-full overflow-y-auto rounded-xl border border-offgrid-green/15 bg-white shadow-lg">
-                  {searchResults.map((result) => (
-                    <li key={result.id}>
-                      <button
-                        type="button"
-                        className="w-full border-b border-offgrid-green/5 px-3 py-2.5 text-left last:border-0 hover:bg-offgrid-cream/80"
-                        onClick={() => void applySearchResult(result)}
-                      >
-                        <span className="flex items-center gap-2">
-                          <span
-                            className={cn(
-                              "shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide",
-                              result.source === "psgc"
-                                ? "bg-offgrid-lime/30 text-offgrid-green"
-                                : "bg-offgrid-green/10 text-offgrid-green/70",
-                            )}
-                          >
-                            {result.source === "psgc" ? "Official" : "Map"}
-                          </span>
-                          <span className="text-sm font-medium text-offgrid-green">{result.displayName}</span>
-                        </span>
-                        {result.subtitle ? (
-                          <span className="mt-0.5 block text-xs text-offgrid-green/55 sm:pl-14">{result.subtitle}</span>
-                        ) : null}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-            </div>
-          </div>
-        ) : null}
       </div>
     </div>
   );

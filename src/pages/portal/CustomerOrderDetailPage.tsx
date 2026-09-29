@@ -14,6 +14,9 @@ import {
   isTowelHeadwearType,
   resolveHeadwearOptions,
 } from "@/src/data/customHeadwearOptions";
+import { printMethodLabel } from "@/src/data/customOptions";
+import { OrderInvoiceSection } from "@/src/components/orders/OrderInvoiceSection";
+import { receiptPropsFromCustom, receiptPropsFromRetail } from "@/src/lib/orderReceiptModel";
 import { formatMoney, php } from "@/src/types/commerce";
 import { cn } from "@/src/lib/utils";
 import { notifyStaffOrderEvent } from "@/src/lib/notifications";
@@ -869,6 +872,8 @@ export function CustomerOrderDetailPage() {
             </div>
           </div>
 
+          <OrderInvoiceSection audience="customer" officialQuote {...receiptPropsFromRetail(retail)} />
+
           {retail.status === "delivered" && retail.lines.length > 0 ? (
             <div className="mt-6 sm:mt-8">
               <h2 className="text-lg font-display font-bold text-offgrid-green">Rate your items</h2>
@@ -921,6 +926,12 @@ export function CustomerOrderDetailPage() {
               }
             />
           </div>
+
+          <OrderInvoiceSection
+            audience="customer"
+            officialQuote={hasOfficialCustomQuote(custom.officialTotal)}
+            {...receiptPropsFromCustom(custom)}
+          />
 
           <div className="mt-6 min-w-0 rounded-2xl border border-offgrid-green/10 bg-white p-5 shadow-sm sm:mt-8 sm:p-6">
             <h2 className="text-lg font-display font-bold text-offgrid-green">Order progress</h2>
@@ -1197,7 +1208,7 @@ export function CustomerOrderDetailPage() {
                       Print method
                     </p>
                     <p className="mt-1 text-sm font-semibold text-offgrid-green">
-                      {formatEnumLabel(custom.printMethod ?? "")}
+                      {printMethodLabel(custom.printMethod)}
                     </p>
                   </div>
                 </>

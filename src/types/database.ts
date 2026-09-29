@@ -174,6 +174,42 @@ export type Database = {
         }
         Relationships: []
       }
+      og_custom_print_methods: {
+        Row: {
+          description: string
+          fabric_ids: string[]
+          id: string
+          is_published: boolean
+          label: string
+          price_modifier: number
+          sort_order: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          description?: string
+          fabric_ids?: string[]
+          id: string
+          is_published?: boolean
+          label: string
+          price_modifier?: number
+          sort_order?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          description?: string
+          fabric_ids?: string[]
+          id?: string
+          is_published?: boolean
+          label?: string
+          price_modifier?: number
+          sort_order?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       og_custom_template_slots: {
         Row: {
           category: string

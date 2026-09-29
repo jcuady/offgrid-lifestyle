@@ -5,8 +5,8 @@ import { AccountLayout } from "@/src/components/account/AccountLayout";
 import { OrderReceiptView } from "@/src/components/orders/OrderReceiptView";
 import { Button } from "@/src/components/ui/Button";
 import { useOrderDetail } from "@/src/hooks/useOrderDetail";
+import { receiptPropsFromCustom, receiptPropsFromRetail } from "@/src/lib/orderReceiptModel";
 import { usePortalStore } from "@/src/store/usePortalStore";
-import { customPayloadFromManaged } from "@/src/lib/customOrderPayload";
 
 export function CustomerOrderReceiptPage() {
   const { orderId = "" } = useParams();
@@ -14,42 +14,8 @@ export function CustomerOrderReceiptPage() {
   const currentUser = usePortalStore((s) => s.currentUser);
 
   const receiptProps = useMemo(() => {
-    if (retail) {
-      return {
-        orderId: retail.id,
-        orderType: "retail" as const,
-        customerName: retail.customerName,
-        customerEmail: retail.customerEmail,
-        status: retail.status,
-        paymentStatus: retail.paymentStatus,
-        createdAt: retail.createdAt,
-        paymentMethod: retail.paymentMethod,
-        lineItems: retail.lines,
-        subtotal: retail.subtotal,
-        shipping: retail.shipping,
-        tax: retail.tax,
-        total: retail.total,
-        customPayload: null,
-      };
-    }
-    if (custom) {
-      return {
-        orderId: custom.id,
-        orderType: "custom" as const,
-        customerName: custom.customerName,
-        customerEmail: custom.customerEmail,
-        status: custom.status,
-        paymentStatus: custom.paymentStatus,
-        createdAt: custom.createdAt,
-        paymentMethod: null,
-        lineItems: [],
-        subtotal: null,
-        shipping: null,
-        tax: null,
-        total: custom.officialTotal ?? custom.estimatedTotal,
-        customPayload: customPayloadFromManaged(custom) as unknown as Record<string, unknown>,
-      };
-    }
+    if (retail) return receiptPropsFromRetail(retail);
+    if (custom) return receiptPropsFromCustom(custom);
     return null;
   }, [retail, custom]);
 

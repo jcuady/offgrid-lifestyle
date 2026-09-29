@@ -4,7 +4,8 @@ import { Button } from "@/src/components/ui/Button";
 import { OptionCard } from "@/src/components/custom-order/OptionCard";
 import { useCustomOrderStore } from "@/src/store/useCustomOrderStore";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
-import { CUT_OPTIONS, MATERIAL_OPTIONS } from "@/src/data/customOptions";
+import { usePrintMethodStore } from "@/src/store/usePrintMethodStore";
+import { CUT_OPTIONS, fabricOptionsForPrint, printMethodLabel } from "@/src/data/customOptions";
 import {
   headwearOptionLabel,
   isTowelCustomOrder,
@@ -27,10 +28,36 @@ export function StepSpecs() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const isApparel = draft.category === "apparel";
   const towelOrder = isTowelCustomOrder(draft.category, draft.headwearType, headwearOptions);
-  const printOptions = useMemo(
-    () => printOptionsForCustomOrder(draft.category, draft.headwearType, headwearOptions),
-    [draft.category, draft.headwearType, headwearOptions],
+  const printMethods = usePrintMethodStore((s) => s.methods);
+  const printMethodsStatus = usePrintMethodStore((s) => s.status);
+  const loadPrintMethods = usePrintMethodStore((s) => s.load);
+  useEffect(() => {
+    void loadPrintMethods();
+  }, [loadPrintMethods]);
+
+  const printOptions = useMemo(() => {
+    const options = printOptionsForCustomOrder(draft.category, draft.headwearType, headwearOptions, printMethods);
+    // Apparel needs a fabric, so hide methods with none assigned.
+    return isApparel ? options.filter((o) => o.fabricIds.length > 0) : options;
+  }, [draft.category, draft.headwearType, headwearOptions, printMethods, isApparel]);
+  const fabricOptions = useMemo(
+    () => fabricOptionsForPrint(draft.printMethod, printOptions),
+    [draft.printMethod, printOptions],
   );
+
+  // Drop saved picks the CMS no longer offers (e.g. retired print methods or unmapped fabrics).
+  useEffect(() => {
+    if (printMethodsStatus !== "ready" && printMethodsStatus !== "error") return;
+    if (towelOrder || !draft.printMethod) return;
+    if (!printOptions.some((o) => o.id === draft.printMethod)) {
+      updateDraft({ printMethod: null, materials: [] });
+      return;
+    }
+    const allowed = fabricOptions.map((o) => o.id);
+    if (draft.materials.some((m) => !allowed.includes(m))) {
+      updateDraft({ materials: draft.materials.filter((m) => allowed.includes(m)) });
+    }
+  }, [printMethodsStatus, towelOrder, draft.printMethod, draft.materials, printOptions, fabricOptions, updateDraft]);
 
   const selectedType =
     draft.category === "apparel"
@@ -98,47 +125,25 @@ export function StepSpecs() {
 
       <div className="space-y-8">
         {isApparel ? (
-          <>
-            <div>
-              <h3 className="mb-1 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-offgrid-green/50">
-                {copy.cutHeading}
-              </h3>
-              <p className="mb-3 text-[11px] text-offgrid-green/50">Select all that apply</p>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2" role="group" aria-label={copy.cutHeading}>
-                {CUT_OPTIONS.map((opt) => (
-                  <div key={opt.id}>
-                    <OptionCard
-                      label={opt.label}
-                      description={opt.description}
-                      selected={draft.cuts.includes(opt.id)}
-                      selectionMode="multi"
-                      onClick={() => toggleCut(opt.id)}
-                    />
-                  </div>
-                ))}
-              </div>
+          <div>
+            <h3 className="mb-1 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-offgrid-green/50">
+              {copy.cutHeading}
+            </h3>
+            <p className="mb-3 text-[11px] text-offgrid-green/50">Select all that apply</p>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2" role="group" aria-label={copy.cutHeading}>
+              {CUT_OPTIONS.map((opt) => (
+                <div key={opt.id}>
+                  <OptionCard
+                    label={opt.label}
+                    description={opt.description}
+                    selected={draft.cuts.includes(opt.id)}
+                    selectionMode="multi"
+                    onClick={() => toggleCut(opt.id)}
+                  />
+                </div>
+              ))}
             </div>
-
-            <div>
-              <h3 className="mb-1 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-offgrid-green/50">
-                {copy.fabricHeading}
-              </h3>
-              <p className="mb-3 text-[11px] text-offgrid-green/50">Select all that apply</p>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2" role="group" aria-label={copy.fabricHeading}>
-                {MATERIAL_OPTIONS.map((opt) => (
-                  <div key={opt.id}>
-                    <OptionCard
-                      label={opt.label}
-                      description={opt.description}
-                      selected={draft.materials.includes(opt.id)}
-                      selectionMode="multi"
-                      onClick={() => toggleMaterial(opt.id)}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </>
+          </div>
         ) : null}
 
         <div>
@@ -146,7 +151,11 @@ export function StepSpecs() {
             {copy.printHeading}
           </h3>
           <p className="mb-3 text-[11px] text-offgrid-green/50">
-            {towelOrder ? "Towel orders use sublimation only" : "Choose one"}
+            {towelOrder
+              ? "Towel orders use sublimation only"
+              : isApparel
+                ? "Choose one — it decides which fabrics are available"
+                : "Choose one"}
           </p>
           <div
             className="grid grid-cols-1 gap-3 sm:grid-cols-2"
@@ -160,12 +169,44 @@ export function StepSpecs() {
                   description={opt.description}
                   selected={draft.printMethod === opt.id}
                   selectionMode="single"
-                  onClick={() => setPrintMethod(opt.id)}
+                  onClick={() => setPrintMethod(opt.id, opt.fabricIds)}
                 />
               </div>
             ))}
           </div>
         </div>
+
+        {isApparel ? (
+          <div>
+            <h3 className="mb-1 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-offgrid-green/50">
+              {copy.fabricHeading}
+            </h3>
+            {draft.printMethod ? (
+              <>
+                <p className="mb-3 text-[11px] text-offgrid-green/50">
+                  Select all that apply · available with {printMethodLabel(draft.printMethod, printMethods)}
+                </p>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2" role="group" aria-label={copy.fabricHeading}>
+                  {fabricOptions.map((opt) => (
+                    <div key={opt.id}>
+                      <OptionCard
+                        label={opt.label}
+                        description={opt.description}
+                        selected={draft.materials.includes(opt.id)}
+                        selectionMode="multi"
+                        onClick={() => toggleMaterial(opt.id)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p className="rounded-xl border border-dashed border-offgrid-green/20 px-4 py-5 text-sm text-offgrid-green/55">
+                Pick a print method first to see the fabrics that work with it.
+              </p>
+            )}
+          </div>
+        ) : null}
       </div>
 
       {towelOrder ? (

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
-import { PH_BOUNDS, isWithinPhilippines } from "@/src/lib/philippinesAddress";
+import { isWithinPhilippines } from "@/src/lib/philippinesAddress";
 
 interface PhilippinesLocationMapProps {
   latitude: number | null;
@@ -20,8 +20,10 @@ export function PhilippinesLocationMap({
   const markerRef = useRef<import("leaflet").Marker | null>(null);
   const [ready, setReady] = useState(false);
 
-  const initialLat = latitude ?? PH_BOUNDS.centerLat;
-  const initialLon = longitude ?? PH_BOUNDS.centerLon;
+  const [outsideNote, setOutsideNote] = useState<string | null>(null);
+  // Country centroid is open water. Open on Metro Manila until a pin exists.
+  const initialLat = latitude ?? 14.5995;
+  const initialLon = longitude ?? 120.9842;
 
   useEffect(() => {
     let cancelled = false;
@@ -53,24 +55,30 @@ export function PhilippinesLocationMap({
 
       const marker = L.marker([initialLat, initialLon], { draggable: true, icon: pinIcon }).addTo(map);
 
+      const applyPin = (lat: number, lon: number) => {
+        if (!isWithinPhilippines(lat, lon)) {
+          marker.setLatLng([initialLat, initialLon]);
+          setOutsideNote("That spot is outside the Philippines. Drop the pin on a local address.");
+          return;
+        }
+        setOutsideNote(null);
+        marker.setLatLng([lat, lon]);
+        onPinChange(lat, lon);
+      };
+
       marker.on("dragend", () => {
         const pos = marker.getLatLng();
-        if (isWithinPhilippines(pos.lat, pos.lng)) {
-          onPinChange(pos.lat, pos.lng);
-        } else {
-          marker.setLatLng([initialLat, initialLon]);
-        }
+        applyPin(pos.lat, pos.lng);
       });
 
       map.on("click", (e) => {
-        if (!isWithinPhilippines(e.latlng.lat, e.latlng.lng)) return;
-        marker.setLatLng(e.latlng);
-        onPinChange(e.latlng.lat, e.latlng.lng);
+        applyPin(e.latlng.lat, e.latlng.lng);
       });
 
       mapRef.current = map;
       markerRef.current = marker;
       setReady(true);
+      requestAnimationFrame(() => map.invalidateSize());
     })();
 
     return () => {
@@ -101,7 +109,12 @@ export function PhilippinesLocationMap({
         ) : null}
         <div ref={containerRef} className="h-48 w-full sm:h-56" style={{ visibility: ready ? "visible" : "hidden" }} />
       </div>
-      <p className="mt-2 text-xs text-offgrid-green/60">Tap the map or drag the pin to set your delivery location.</p>
+      <p className="mt-2 text-xs text-offgrid-green/60">Tap the map or drag the pin. The address fields fill from that spot.</p>
+      {outsideNote ? (
+        <p className="mt-1 text-xs font-medium text-red-700" role="alert">
+          {outsideNote}
+        </p>
+      ) : null}
     </div>
   );
 }

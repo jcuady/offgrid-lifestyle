@@ -51,7 +51,7 @@ export function customerCustomLifecycleGuide(input: {
       tone: "wait",
     };
   }
-  if (input.status === "under_review" || !input.hasOfficialQuote) {
+  if (input.status === "under_review" || input.status === "draft" || (input.status === "pending_deposit" && !input.hasOfficialQuote)) {
     return {
       title: "Under review",
       body: `${REVIEW_SLA_COPY} You’ll get a notification when the invoice is ready — then Pay now unlocks.`,
@@ -120,6 +120,30 @@ export function adminCustomLifecycleGuide(input: {
       tone: "action",
     };
   }
+  if (input.status === "in_production") {
+    return {
+      title: "Produce → ship",
+      body: "Finish production, then mark Shipped when handed to courier.",
+      nextStep: "Set status → Shipped",
+      tone: "action",
+    };
+  }
+  if (input.status === "shipped") {
+    return {
+      title: "Mark delivered",
+      body: "Confirm delivery with the customer, then set Delivered.",
+      nextStep: "Set status → Delivered",
+      tone: "action",
+    };
+  }
+  if (input.status === "delivered") {
+    return {
+      title: "Ops complete",
+      body: "Order is at the end of the happy path. Use admin override only for corrections.",
+      nextStep: "Monitor only",
+      tone: "done",
+    };
+  }
   if (!input.hasOfficialQuote || input.status === "under_review") {
     return {
       title: "Review → invoice",
@@ -143,22 +167,6 @@ export function adminCustomLifecycleGuide(input: {
       title: "Move to production",
       body: "Deposit/payment settled. Advance fulfillment when production starts.",
       nextStep: "Set status → In production",
-      tone: "action",
-    };
-  }
-  if (input.status === "in_production") {
-    return {
-      title: "Produce → ship",
-      body: "Finish production, then mark Shipped when handed to courier.",
-      nextStep: "Set status → Shipped",
-      tone: "action",
-    };
-  }
-  if (input.status === "shipped") {
-    return {
-      title: "Mark delivered",
-      body: "Confirm delivery with the customer, then set Delivered.",
-      nextStep: "Set status → Delivered",
       tone: "action",
     };
   }

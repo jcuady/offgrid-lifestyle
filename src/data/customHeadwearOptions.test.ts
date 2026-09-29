@@ -7,6 +7,7 @@ import {
   resolveHeadwearOptions,
 } from "./customHeadwearOptions";
 import { validateCustomOrderDraft } from "@/src/lib/formValidation";
+import { PRINT_OPTIONS } from "@/src/data/customOptions";
 import type { CustomOrderDraft } from "@/src/types/commerce";
 import { EMPTY_SHIPPING_INFO } from "@/src/types/commerce";
 
@@ -100,5 +101,25 @@ describe("bath towel + towel order kit rules", () => {
       { headwearOptions: options },
     );
     expect(errors.some((e) => /order sheet/i.test(e))).toBe(true);
+  });
+
+  it("rejects apparel fabrics the print method does not allow, and retired methods", () => {
+    const apparel = {
+      category: "apparel" as const,
+      headwearType: null,
+      cuts: ["short_sleeve" as const],
+      quantity: 10,
+    };
+    const mismatch = validateCustomOrderDraft(
+      baseDraft({ ...apparel, printMethod: "embroidery", materials: ["running_mesh"] }),
+      { headwearOptions: options, printMethods: PRINT_OPTIONS },
+    );
+    expect(mismatch.some((e) => /not available with Embroidery/i.test(e))).toBe(true);
+
+    const retired = validateCustomOrderDraft(
+      baseDraft({ ...apparel, printMethod: "heat_transfer", materials: ["dri_fit"] }),
+      { headwearOptions: options, printMethods: PRINT_OPTIONS },
+    );
+    expect(retired.some((e) => /no longer offered/i.test(e))).toBe(true);
   });
 });

@@ -22,6 +22,7 @@ import {
 } from "@/src/lib/portal";
 import {
   ORDER_TRANSITIONS,
+  fulfillmentMenu,
   PAYMENT_TRANSITIONS,
   canTransitionStatus,
 } from "@/src/lib/orderLifecycle";
@@ -191,7 +192,7 @@ export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
           }}
           className="max-w-[10.5rem] rounded-xl border border-offgrid-green/18 bg-offgrid-cream/30 px-2.5 py-2 text-xs text-offgrid-green shadow-sm focus:border-offgrid-lime focus:outline-none focus:ring-2 focus:ring-offgrid-lime/35"
         >
-          {ORDER_TRANSITIONS.map((entry) => (
+          {fulfillmentMenu(row.kind).map((entry) => (
             <option key={entry} value={entry}>
               {statusLabel(row, entry)}
             </option>

@@ -50,7 +50,8 @@ interface CustomOrderState {
   setCategory: (category: CustomCategory) => void;
   setHeadwearType: (headwearType: HeadwearType) => void;
   toggleMaterial: (material: FabricType) => void;
-  setPrintMethod: (method: PrintMethod) => void;
+  /** Also drops selected fabrics that the new print method does not allow. */
+  setPrintMethod: (method: PrintMethod, allowedFabrics?: readonly FabricType[]) => void;
   updateDraft: (partial: Partial<CustomOrderDraft>) => void;
   resetDraft: () => void;
 }
@@ -119,8 +120,17 @@ export const useCustomOrderStore = create<CustomOrderState>()(
             updatedAt: new Date().toISOString(),
           },
         })),
-      setPrintMethod: (method) =>
-        set((s) => ({ draft: { ...s.draft, printMethod: method, updatedAt: new Date().toISOString() } })),
+      setPrintMethod: (method, allowedFabrics) =>
+        set((s) => ({
+          draft: {
+            ...s.draft,
+            printMethod: method,
+            materials: allowedFabrics
+              ? s.draft.materials.filter((m) => allowedFabrics.includes(m))
+              : s.draft.materials,
+            updatedAt: new Date().toISOString(),
+          },
+        })),
 
       updateDraft: (partial) =>
         set((s) => ({

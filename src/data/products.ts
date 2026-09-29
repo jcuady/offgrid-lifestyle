@@ -3,7 +3,13 @@ export type SizeCode = string;
 
 export type GarmentCut = "long_sleeve" | "short_sleeve" | "sleeveless" | "polo" | "tank" | "shorts" | "cap";
 
-export type FabricType = "dri_fit" | "cotton" | "running_mesh" | "poly_blend" | "nylon_spandex";
+export type FabricType =
+  | "dri_fit"
+  | "cotton"
+  | "running_mesh"
+  | "drifit_polyester"
+  | "poly_blend"
+  | "nylon_spandex";
 
 export interface ProductVariant {
   sku: string;

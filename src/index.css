@@ -106,6 +106,13 @@
 
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
+  --animate-seam-march: seam-march 1.2s linear infinite;
+}
+
+@keyframes seam-march {
+  to {
+    stroke-dashoffset: -24;
+  }
 }
 
 @keyframes accordion-down {
@@ -195,4 +202,22 @@
   outline: none;
   border-color: #000AFF;
   box-shadow: 0 0 0 3px color-mix(in srgb, #000AFF 22%, transparent);
+}
+
+@media print {
+  body:has(#invoice) * {
+    visibility: hidden;
+  }
+
+  body:has(#invoice) #invoice,
+  body:has(#invoice) #invoice * {
+    visibility: visible;
+  }
+
+  body:has(#invoice) #invoice {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
 }

@@ -5,8 +5,8 @@
 import type { OrderStatus, OrderType, PaymentStatus } from "@/src/types/commerce";
 
 export const ORDER_TRANSITIONS: OrderStatus[] = [
-  "pending_deposit",
   "under_review",
+  "pending_deposit",
   "revision_requested",
   "confirmed",
   "in_production",
@@ -17,6 +17,22 @@ export const ORDER_TRANSITIONS: OrderStatus[] = [
 
 /** Admin override select — every durable fulfillment status, including draft. */
 export const ADMIN_ORDER_TRANSITIONS: OrderStatus[] = ["draft", ...ORDER_TRANSITIONS];
+
+/**
+ * Menu order. Custom orders are reviewed, then wait on the invoice.
+ * Shop orders start at Order placed.
+ */
+export function fulfillmentMenu(orderType: OrderType, opts?: { includeDraft?: boolean }): OrderStatus[] {
+  const menu = [...ORDER_TRANSITIONS];
+  if (orderType === "retail") {
+    const review = menu.indexOf("under_review");
+    const placed = menu.indexOf("pending_deposit");
+    if (review >= 0 && placed > review) {
+      [menu[review], menu[placed]] = [menu[placed], menu[review]];
+    }
+  }
+  return opts?.includeDraft ? ["draft", ...menu] : menu;
+}
 
 export const PAYMENT_TRANSITIONS: PaymentStatus[] = ["unpaid", "deposit_paid", "fully_paid", "refunded"];
 

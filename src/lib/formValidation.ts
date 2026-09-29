@@ -6,6 +6,7 @@ import {
   requiresTeamOrderSheet,
   type CustomHeadwearOption,
 } from "@/src/data/customHeadwearOptions";
+import type { PrintMethodOption } from "@/src/data/customOptions";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -65,19 +66,19 @@ export function normalizeShippingInfo(info: Partial<ShippingInfo> | null | undef
 export function sanitizeShippingInfo(info: ShippingInfo): ShippingInfo {
   return ensureNcrShippingFields({
     ...info,
-    fullName: info.fullName.trim(),
-    email: info.email.trim().toLowerCase(),
-    phone: normalizePhilippinePhone(info.phone),
-    address: info.address.trim(),
-    barangay: info.barangay.trim(),
-    city: info.city.trim(),
-    province: info.province.trim(),
-    region: info.region.trim(),
-    zip: info.zip.trim(),
-    regionCode: info.regionCode.trim(),
-    provinceCode: info.provinceCode.trim(),
-    cityCode: info.cityCode.trim(),
-    barangayCode: info.barangayCode.trim(),
+    fullName: (info.fullName ?? "").trim(),
+    email: (info.email ?? "").trim().toLowerCase(),
+    phone: normalizePhilippinePhone(info.phone ?? ""),
+    address: (info.address ?? "").trim(),
+    barangay: (info.barangay ?? "").trim(),
+    city: (info.city ?? "").trim(),
+    province: (info.province ?? "").trim(),
+    region: (info.region ?? "").trim(),
+    zip: (info.zip ?? "").trim(),
+    regionCode: (info.regionCode ?? "").trim(),
+    provinceCode: (info.provinceCode ?? "").trim(),
+    cityCode: (info.cityCode ?? "").trim(),
+    barangayCode: (info.barangayCode ?? "").trim(),
   });
 }
 
@@ -170,7 +171,7 @@ export function mergeCustomOrderShipping(draft: CustomOrderDraft): ShippingInfo 
 
 export function validateCustomOrderDraft(
   draft: CustomOrderDraft,
-  opts?: { headwearOptions?: CustomHeadwearOption[] },
+  opts?: { headwearOptions?: CustomHeadwearOption[]; printMethods?: readonly PrintMethodOption[] },
 ): string[] {
   const errors: string[] = [];
   const headwearOptions = opts?.headwearOptions ?? [];
@@ -207,6 +208,14 @@ export function validateCustomOrderDraft(
   if (!draft.printMethod) errors.push("Select a print method.");
   if (towelOrder && draft.printMethod && draft.printMethod !== "sublimation") {
     errors.push("Towel orders use sublimation only.");
+  }
+  if (draft.category === "apparel" && draft.printMethod && opts?.printMethods) {
+    const method = opts.printMethods.find((m) => m.id === draft.printMethod);
+    if (!method) {
+      errors.push("That print method is no longer offered. Pick another one.");
+    } else if (draft.materials.some((m) => !method.fabricIds.includes(m))) {
+      errors.push(`Some selected fabrics are not available with ${method.label}.`);
+    }
   }
 
   if (requiresTeamOrderSheet(draft.category, draft.headwearType, headwearOptions)) {

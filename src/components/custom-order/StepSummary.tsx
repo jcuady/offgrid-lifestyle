@@ -13,9 +13,10 @@ import { persistCheckoutShipping } from "@/src/services/customerShippingService"
 import {
   CUT_OPTIONS,
   MATERIAL_OPTIONS,
-  PRINT_OPTIONS,
   estimateUnitPriceFromSelections,
+  printMethodLabel,
 } from "@/src/data/customOptions";
+import { usePrintMethodStore } from "@/src/store/usePrintMethodStore";
 import { estimateHeadwearUnitPrice, isTowelCustomOrder, isTowelHeadwearType, resolveHeadwearOptions, headwearOptionLabel } from "@/src/data/customHeadwearOptions";
 import { formatMoney, php } from "@/src/types/commerce";
 import {
@@ -77,6 +78,7 @@ export function StepSummary() {
   const [receiptEmail, setReceiptEmail] = useState<OrderReceiptEmailResult | null>(null);
   const [receiptRetryBusy, setReceiptRetryBusy] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [saveForNextOrder, setSaveForNextOrder] = useState(true);
   const [submitErrors, setSubmitErrors] = useState<string[]>([]);
   const [deliveryFieldErrors, setDeliveryFieldErrors] = useState<DeliveryAddressFieldErrors>({});
   const headwearRaw = useSiteContentStore((s) => s.customHeadwearOptions);
@@ -88,21 +90,19 @@ export function StepSummary() {
         ? "Towels"
         : "Headwear";
 
+  const printMethods = usePrintMethodStore((s) => s.methods);
   const unitPrice = useMemo(() => {
     if (draft.category === "apparel") {
-      return estimateUnitPriceFromSelections(draft.cuts, draft.materials, draft.printMethod);
+      return estimateUnitPriceFromSelections(draft.cuts, draft.materials, draft.printMethod, printMethods);
     }
-    return estimateHeadwearUnitPrice(draft.headwearType, draft.printMethod, headwearOptions);
-  }, [draft.category, draft.cuts, draft.materials, draft.printMethod, draft.headwearType, headwearOptions]);
+    return estimateHeadwearUnitPrice(draft.headwearType, draft.printMethod, headwearOptions, printMethods);
+  }, [draft.category, draft.cuts, draft.materials, draft.printMethod, draft.headwearType, headwearOptions, printMethods]);
 
   const estimatedTotal = useMemo(() => php(unitPrice * draft.quantity), [unitPrice, draft.quantity]);
   const estimatedDeposit = useMemo(
     () => php(Math.round(estimatedTotal.amount * 0.6)),
     [estimatedTotal.amount],
   );
-
-  const labelFor = (options: { id: string; label: string }[], id: string | null) =>
-    options.find((o) => o.id === id)?.label ?? "—";
 
   const minQuantity = draft.category === "apparel" ? 10 : 1;
   const towelOrder = isTowelCustomOrder(draft.category, draft.headwearType, headwearOptions);
@@ -122,11 +122,12 @@ export function StepSummary() {
   }, [currentUser?.id]);
 
   useEffect(() => {
-    if (draft.shippingInfo.regionCode) return;
-    if (!savedShipping.regionCode) return;
+    if (draft.shippingInfo.regionCode || draft.shippingInfo.address.trim()) return;
+    if (!savedShipping.regionCode && !savedShipping.address.trim()) return;
     updateDraft({ shippingInfo: normalizeShippingInfo(savedShipping) });
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- prefill saved address once
-  }, []);
+    // Prefill when the saved address arrives after sign-in hydration. Stop once the draft has one.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- draft address is the guard, not a dependency
+  }, [savedShipping.regionCode, savedShipping.address]);
 
   const clearDeliveryError = (field: keyof DeliveryAddressFieldErrors) => {
     setDeliveryFieldErrors((prev) => {
@@ -138,7 +139,7 @@ export function StepSummary() {
   };
 
   const canSubmit =
-    draft.contactName.trim() !== "" &&
+    (draft.contactName ?? "").trim() !== "" &&
     isValidEmail(draft.contactEmail) &&
     isValidPhone(draft.contactPhone) &&
     (towelOrder || Boolean(draft.orderSheetFileName)) &&
@@ -152,7 +153,7 @@ export function StepSummary() {
     const deliveryErrors = validateDeliveryAddressFields(mergeCustomOrderShipping(draft));
     setDeliveryFieldErrors(deliveryErrors);
 
-    const errors = validateCustomOrderDraft(draft, { headwearOptions });
+    const errors = validateCustomOrderDraft(draft, { headwearOptions, printMethods });
     if (errors.length > 0) {
       setSubmitErrors(errors);
       scrollToFirstFieldError(formRef.current);
@@ -175,7 +176,9 @@ export function StepSummary() {
       setSubmittedEmail(submittedDraft.contactEmail);
       setReceiptEmail(result.receiptEmail);
       setFileUploadWarnings(result.fileUploadWarnings);
-      void persistCheckoutShipping(submittedDraft.shippingInfo);
+      if (saveForNextOrder && currentUser?.role === "customer") {
+        void persistCheckoutShipping(submittedDraft.shippingInfo);
+      }
       resetDraft();
 
       if (currentUser?.role === "customer") {
@@ -346,12 +349,12 @@ export function StepSummary() {
           <SummaryRow label="Product type" value={headwearOptionLabel(draft.headwearType, headwearOptions)} />
         ) : null}
         {draft.category === "apparel" ? (
-          <>
-            <SummaryRow label="Cuts" value={labelsForSpecIds(CUT_OPTIONS, draft.cuts)} />
-            <SummaryRow label="Fabrics" value={labelsForSpecIds(MATERIAL_OPTIONS, draft.materials)} />
-          </>
+          <SummaryRow label="Cuts" value={labelsForSpecIds(CUT_OPTIONS, draft.cuts)} />
         ) : null}
-        <SummaryRow label="Print" value={labelFor(PRINT_OPTIONS, draft.printMethod)} />
+        <SummaryRow label="Print" value={draft.printMethod ? printMethodLabel(draft.printMethod, printMethods) : "—"} />
+        {draft.category === "apparel" ? (
+          <SummaryRow label="Fabrics" value={labelsForSpecIds(MATERIAL_OPTIONS, draft.materials)} />
+        ) : null}
         <SummaryRow label="Design" value={designSummaryLabel} />
         <SummaryRow
           label={towelOrder ? "Order kit" : "Order sheet"}
@@ -494,7 +497,7 @@ export function StepSummary() {
           Delivery address *
         </h3>
         <p className="mb-4 text-sm text-offgrid-green/60">
-          Where should we ship your finished order? Select manually or use quick-fill search and map.
+          Where should we ship your finished order? Search fills the fields, or pick them yourself.
         </p>
         <Suspense
           fallback={
@@ -508,8 +511,22 @@ export function StepSummary() {
             onChange={(shippingInfo) => updateDraft({ shippingInfo })}
             errors={deliveryFieldErrors}
             onClearError={clearDeliveryError}
+            savedAddress={currentUser?.role === "customer" ? savedShipping : null}
           />
         </Suspense>
+        {currentUser?.role === "customer" ? (
+          <label className="mt-3 flex cursor-pointer items-start gap-2 text-sm text-offgrid-green">
+            <input
+              type="checkbox"
+              checked={saveForNextOrder}
+              onChange={(e) => setSaveForNextOrder(e.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded border-offgrid-green/30 accent-offgrid-green"
+            />
+            Save this address for my next order
+          </label>
+        ) : (
+          <p className="mt-3 text-xs text-offgrid-green/55">Sign in to save this address for your next order.</p>
+        )}
       </div>
 
       {submitErrors.length > 0 ? (

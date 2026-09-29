@@ -71,10 +71,17 @@ describe("customerCustomLifecycleGuide", () => {
     expect(
       customerCustomLifecycleGuide({
         status: "in_production",
-        paymentStatus: "fully_paid",
-        hasOfficialQuote: true,
-      }).nextStep.toLowerCase(),
-    ).toMatch(/production|revision/);
+        paymentStatus: "unpaid",
+        hasOfficialQuote: false,
+      }).title,
+    ).toBe("In production");
+    expect(
+      customerCustomLifecycleGuide({
+        status: "delivered",
+        paymentStatus: "unpaid",
+        hasOfficialQuote: false,
+      }).title,
+    ).toBe("Delivered");
   });
 });
 
@@ -143,5 +150,12 @@ describe("adminCustomLifecycleGuide", () => {
         hasOfficialQuote: true,
       }).nextStep.toLowerCase(),
     ).toContain("delivered");
+    expect(
+      adminCustomLifecycleGuide({
+        status: "delivered",
+        paymentStatus: "unpaid",
+        hasOfficialQuote: false,
+      }).title,
+    ).toBe("Ops complete");
   });
 });

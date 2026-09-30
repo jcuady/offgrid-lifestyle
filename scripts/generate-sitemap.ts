@@ -30,7 +30,12 @@ async function main() {
       slugs = (data ?? []).map((row) => row.slug).filter((slug): slug is string => Boolean(slug));
     }
   } else {
-    console.warn("generate-sitemap: missing Supabase env — static routes only");
+    console.warn("generate-sitemap: missing Supabase env — falling back to local products.ts");
+  }
+
+  if (slugs.length === 0) {
+    const { products } = await import("../src/data/products.ts");
+    slugs = products.filter((p) => p.status === "active").map((p) => p.slug);
   }
 
   const entries = mergeSitemapEntries(STATIC_SITEMAP_ENTRIES, slugs);

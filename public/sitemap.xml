@@ -96,12 +96,17 @@
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://www.oglifestyleph.com/shop/og-voyager</loc>
+    <loc>https://www.oglifestyleph.com/shop/everyday-is-pickle-day</loc>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
   <url>
-    <loc>https://www.oglifestyleph.com/shop/og-stats</loc>
+    <loc>https://www.oglifestyleph.com/shop/get-your-dink</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://www.oglifestyleph.com/shop/motoline</loc>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
@@ -116,47 +121,17 @@
     <priority>0.75</priority>
   </url>
   <url>
+    <loc>https://www.oglifestyleph.com/shop/og-dink-different</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
     <loc>https://www.oglifestyleph.com/shop/og-discfest-towel</loc>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
   <url>
-    <loc>https://www.oglifestyleph.com/shop/pilipinas-aouc-jersey-2025</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-  <url>
-    <loc>https://www.oglifestyleph.com/shop/pilipinas-ultimate-jersey</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-  <url>
-    <loc>https://www.oglifestyleph.com/shop/og-padayon-jersey</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-  <url>
-    <loc>https://www.oglifestyleph.com/shop/running-performance-line</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-  <url>
-    <loc>https://www.oglifestyleph.com/shop/og-stride-collection</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-  <url>
-    <loc>https://www.oglifestyleph.com/shop/motoline</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-  <url>
-    <loc>https://www.oglifestyleph.com/shop/the-og-vibe-collection</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-  <url>
-    <loc>https://www.oglifestyleph.com/shop/og-momentum-caps</loc>
+    <loc>https://www.oglifestyleph.com/shop/og-links-golf-polo</loc>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
@@ -166,42 +141,12 @@
     <priority>0.75</priority>
   </url>
   <url>
-    <loc>https://www.oglifestyleph.com/shop/og-primal-sleeveless</loc>
+    <loc>https://www.oglifestyleph.com/shop/og-momentum-caps</loc>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
   <url>
-    <loc>https://www.oglifestyleph.com/shop/og-primal-shortsleeve</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-  <url>
-    <loc>https://www.oglifestyleph.com/shop/og-primal-longsleeve</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-  <url>
-    <loc>https://www.oglifestyleph.com/shop/og-primal-hoodie</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-  <url>
-    <loc>https://www.oglifestyleph.com/shop/og-solar-sleeveless</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-  <url>
-    <loc>https://www.oglifestyleph.com/shop/og-solar-shortsleeve</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-  <url>
-    <loc>https://www.oglifestyleph.com/shop/og-solar-longsleeve</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-  </url>
-  <url>
-    <loc>https://www.oglifestyleph.com/shop/og-links-golf-polo</loc>
+    <loc>https://www.oglifestyleph.com/shop/og-padayon-jersey</loc>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
@@ -216,12 +161,52 @@
     <priority>0.75</priority>
   </url>
   <url>
-    <loc>https://www.oglifestyleph.com/shop/everyday-is-pickle-day</loc>
+    <loc>https://www.oglifestyleph.com/shop/og-primal-hoodie</loc>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
   <url>
-    <loc>https://www.oglifestyleph.com/shop/get-your-dink</loc>
+    <loc>https://www.oglifestyleph.com/shop/og-primal-longsleeve</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://www.oglifestyleph.com/shop/og-primal-shortsleeve</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://www.oglifestyleph.com/shop/og-primal-sleeveless</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://www.oglifestyleph.com/shop/og-solar-longsleeve</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://www.oglifestyleph.com/shop/og-solar-shortsleeve</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://www.oglifestyleph.com/shop/og-solar-sleeveless</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://www.oglifestyleph.com/shop/og-stats</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://www.oglifestyleph.com/shop/og-stride-collection</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://www.oglifestyleph.com/shop/og-voyager</loc>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
@@ -231,12 +216,27 @@
     <priority>0.75</priority>
   </url>
   <url>
+    <loc>https://www.oglifestyleph.com/shop/pilipinas-aouc-jersey-2025</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://www.oglifestyleph.com/shop/pilipinas-ultimate-jersey</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://www.oglifestyleph.com/shop/running-performance-line</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
     <loc>https://www.oglifestyleph.com/shop/salmon-smasher</loc>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
   <url>
-    <loc>https://www.oglifestyleph.com/shop/og-dink-different</loc>
+    <loc>https://www.oglifestyleph.com/shop/the-og-vibe-collection</loc>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>

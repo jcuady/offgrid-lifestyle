@@ -18,7 +18,7 @@ export default defineConfig(() => {
         manifest: false,
         injectManifest: {
           globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-          globIgnores: ['**/vendor-ph-addresses*.js', '**/vendor-leaflet*.js', '**/PhilippinesAddressFields*.js', '**/PhilippinesLocationMap*.js'],
+          globIgnores: ['**/vendor-ph-addresses*.js', '**/vendor-leaflet*.js', '**/PhilippinesAddressFields*.js', '**/PhilippinesLocationMap*.js', '**/catalog.html'],
           maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         },
         devOptions: {

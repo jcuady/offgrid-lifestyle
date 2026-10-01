@@ -19,7 +19,7 @@ function escJson(val) {
   return `'${JSON.stringify(val).replace(/'/g, "''")}'::jsonb`;
 }
 
-let sql = `-- Migration: Add complete 20-product catalog across all collections with full galleries
+let sql = `-- Migration: Add complete 21-product catalog across 9 collections with full galleries and terms
 -- Timestamp: 2026-10-01
 -- Clean up placeholder and superseded records
 DELETE FROM public.og_products
@@ -33,7 +33,8 @@ WHERE id IN (
   'everyday-is-pickle-day',
   'get-your-dink',
   'pickleball-lifestyle',
-  'og-dink-different'
+  'og-dink-different',
+  'salmon-smasher'
 );
 
 INSERT INTO public.og_products (
@@ -107,6 +108,37 @@ ON CONFLICT (id) DO UPDATE SET
   home_best_seller_rank = EXCLUDED.home_best_seller_rank,
   status = EXCLUDED.status,
   updated_at = now();
+
+-- Seed the 9 official collections and 6 sports in public.og_catalog_terms
+INSERT INTO public.og_catalog_terms (kind, label, slug, sort_order, description, image_url, published)
+VALUES
+  ('collection', 'Pilipinas National Team', 'pilipinas', 10, 'Official Pilipinas National Team tournament jerseys engineered for international ultimate frisbee competition.', '/images/products/pilipinas-aouc-capiz.webp', true),
+  ('collection', 'Primal Power Line', 'primal', 20, 'Heavy-duty performance activewear and drifit essentials built for intense gym training sessions.', '/images/products/primal-sleeveless-black-green.webp', true),
+  ('collection', 'Solar Rise Line', 'solar', 30, 'Lightweight, breathable sun-ready drifit activewear engineered for heat and endurance.', '/images/products/solar-sleeveless-white-teal.webp', true),
+  ('collection', 'Running Performance', 'running', 40, 'Aerodynamic singles and long sleeves built for marathoners and everyday runners.', '/images/products/running-performance-cover.webp', true),
+  ('collection', 'Motoline Collection', 'motoline', 50, 'Off-road and moto-inspired performance lifestyle jerseys built for speed and grit.', '/images/products/motoline-cover.webp', true),
+  ('collection', 'The OG Vibe Lifestyle', 'the-og-vibe', 60, 'Everyday streetwear and graphic tees crafted for comfort beyond the court.', '/images/products/og-vibe-photoshoot-banner.webp', true),
+  ('collection', 'Pickleball Club', 'pickleball', 70, 'Complete court collection featuring lifestyle graphic tees and Salmon Smasher performance activewear.', '/images/products/pickleball-club-cover.webp', true),
+  ('collection', 'Golf Series', 'golf', 80, 'Engineered fairway polos combining technical stretch with modern course aesthetics.', '/images/products/golf-links-cover.webp', true),
+  ('collection', 'Headwear & Accessories', 'accessories', 90, 'Essential caps and ultra-absorbent microfiber towels engineered for all athletes.', '/images/products/momentum-cap-cover.webp', true),
+  ('sport', 'Ultimate Frisbee', 'ultimate-frisbee', 10, 'National team and tournament kits — our top-selling retail line.', null, true),
+  ('sport', 'Gym & Training', 'gym-training', 20, 'Primal Power and Solar Rise performance activewear.', null, true),
+  ('sport', 'Running', 'running', 30, 'Stride-ready singles and long sleeves.', null, true),
+  ('sport', 'Pickleball', 'pickleball', 40, 'Club graphics and Salmon Smasher performance activewear.', null, true),
+  ('sport', 'Golf', 'golf', 50, 'Fairway polos built to move.', null, true),
+  ('sport', 'Lifestyle', 'lifestyle', 60, 'Everyday street tees, motoline jerseys, and headwear.', null, true)
+ON CONFLICT (kind, slug) DO UPDATE SET
+  label = EXCLUDED.label,
+  description = EXCLUDED.description,
+  image_url = coalesce(EXCLUDED.image_url, public.og_catalog_terms.image_url),
+  sort_order = EXCLUDED.sort_order,
+  published = EXCLUDED.published,
+  updated_at = now();
+
+-- Unpublish superseded collections so old rails do not display empty
+UPDATE public.og_catalog_terms
+SET published = false
+WHERE kind = 'collection' AND slug IN ('discfest', 'og-vibe');
 `;
 
 const migrationFile = path.resolve("supabase/migrations/20261001000000_add_full_product_catalog.sql");

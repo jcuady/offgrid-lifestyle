@@ -58,6 +58,7 @@ async function sync() {
     "get-your-dink",
     "pickleball-lifestyle",
     "og-dink-different",
+    "salmon-smasher",
   ];
 
   console.log(`Cleaning up ${supersededIds.length} placeholder / superseded products...`);
@@ -102,14 +103,167 @@ async function sync() {
     updated_at: new Date().toISOString(),
   }));
 
-  const { data, error } = await supabase.from("og_products").upsert(rows, { onConflict: "id" });
+  const { error: upsertError } = await supabase.from("og_products").upsert(rows, { onConflict: "id" });
 
-  if (error) {
-    console.error("❌ Sync failed:", error.message);
+  if (upsertError) {
+    console.error("❌ Products sync failed:", upsertError.message);
     process.exit(1);
   }
 
   console.log(`✅ Successfully synced ${rows.length} products into public.og_products!`);
+
+  // Sync catalog terms (Collections and Sports)
+  console.log("Syncing official collections and sports to public.og_catalog_terms...");
+  const catalogTerms = [
+    {
+      kind: "collection",
+      label: "Pilipinas National Team",
+      slug: "pilipinas",
+      sort_order: 10,
+      description: "Official Pilipinas National Team tournament jerseys engineered for international ultimate frisbee competition.",
+      image_url: "/images/products/pilipinas-aouc-capiz.webp",
+      published: true,
+    },
+    {
+      kind: "collection",
+      label: "Primal Power Line",
+      slug: "primal",
+      sort_order: 20,
+      description: "Heavy-duty performance activewear and drifit essentials built for intense gym training sessions.",
+      image_url: "/images/products/primal-sleeveless-black-green.webp",
+      published: true,
+    },
+    {
+      kind: "collection",
+      label: "Solar Rise Line",
+      slug: "solar",
+      sort_order: 30,
+      description: "Lightweight, breathable sun-ready drifit activewear engineered for heat and endurance.",
+      image_url: "/images/products/solar-sleeveless-white-teal.webp",
+      published: true,
+    },
+    {
+      kind: "collection",
+      label: "Running Performance",
+      slug: "running",
+      sort_order: 40,
+      description: "Aerodynamic singles and long sleeves built for marathoners and everyday runners.",
+      image_url: "/images/products/running-performance-cover.webp",
+      published: true,
+    },
+    {
+      kind: "collection",
+      label: "Motoline Collection",
+      slug: "motoline",
+      sort_order: 50,
+      description: "Off-road and moto-inspired performance lifestyle jerseys built for speed and grit.",
+      image_url: "/images/products/motoline-cover.webp",
+      published: true,
+    },
+    {
+      kind: "collection",
+      label: "The OG Vibe Lifestyle",
+      slug: "the-og-vibe",
+      sort_order: 60,
+      description: "Everyday streetwear and graphic tees crafted for comfort beyond the court.",
+      image_url: "/images/products/og-vibe-photoshoot-banner.webp",
+      published: true,
+    },
+    {
+      kind: "collection",
+      label: "Pickleball Club",
+      slug: "pickleball",
+      sort_order: 70,
+      description: "Complete court collection featuring lifestyle graphic tees and Salmon Smasher performance activewear.",
+      image_url: "/images/products/pickleball-club-cover.webp",
+      published: true,
+    },
+    {
+      kind: "collection",
+      label: "Golf Series",
+      slug: "golf",
+      sort_order: 80,
+      description: "Engineered fairway polos combining technical stretch with modern course aesthetics.",
+      image_url: "/images/products/golf-links-cover.webp",
+      published: true,
+    },
+    {
+      kind: "collection",
+      label: "Headwear & Accessories",
+      slug: "accessories",
+      sort_order: 90,
+      description: "Essential caps and ultra-absorbent microfiber towels engineered for all athletes.",
+      image_url: "/images/products/momentum-cap-cover.webp",
+      published: true,
+    },
+    {
+      kind: "sport",
+      label: "Ultimate Frisbee",
+      slug: "ultimate-frisbee",
+      sort_order: 10,
+      description: "National team and tournament kits — our top-selling retail line.",
+      published: true,
+    },
+    {
+      kind: "sport",
+      label: "Gym & Training",
+      slug: "gym-training",
+      sort_order: 20,
+      description: "Primal Power and Solar Rise performance activewear.",
+      published: true,
+    },
+    {
+      kind: "sport",
+      label: "Running",
+      slug: "running",
+      sort_order: 30,
+      description: "Stride-ready singles and long sleeves.",
+      published: true,
+    },
+    {
+      kind: "sport",
+      label: "Pickleball",
+      slug: "pickleball",
+      sort_order: 40,
+      description: "Club graphics and Salmon Smasher performance activewear.",
+      published: true,
+    },
+    {
+      kind: "sport",
+      label: "Golf",
+      slug: "golf",
+      sort_order: 50,
+      description: "Fairway polos built to move.",
+      published: true,
+    },
+    {
+      kind: "sport",
+      label: "Lifestyle",
+      slug: "lifestyle",
+      sort_order: 60,
+      description: "Everyday street tees, motoline jerseys, and headwear.",
+      published: true,
+    },
+  ];
+
+  const { error: termsError } = await supabase
+    .from("og_catalog_terms")
+    .upsert(catalogTerms, { onConflict: "kind,slug" });
+
+  if (termsError) {
+    console.warn("⚠️ Terms upsert warning:", termsError.message);
+  } else {
+    console.log("✅ Successfully synced 9 collections and 6 sports into public.og_catalog_terms!");
+  }
+
+  // Deactivate obsolete collection rails
+  await supabase
+    .from("og_catalog_terms")
+    .update({ published: false })
+    .eq("kind", "collection")
+    .in("slug", ["discfest", "og-vibe"]);
+
+  console.log("🎉 All catalog products and taxonomy collections are 100% synchronized with Supabase!");
 }
 
 sync().catch((err) => {

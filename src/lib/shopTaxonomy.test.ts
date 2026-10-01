@@ -6,23 +6,37 @@ describe("shopTaxonomy", () => {
     expect(SHOP_BY_SPORT[0]?.label).toBe("Ultimate Frisbee");
     expect(SHOP_BY_SPORT.map((s) => s.category)).toEqual([
       "Ultimate Frisbee",
+      "Gym & Training",
+      "Running",
       "Pickleball",
       "Golf",
-      "Running",
+      "Lifestyle",
     ]);
   });
 
-  it("keeps Discfest under Ultimate Frisbee category for collection browse", () => {
-    const discfest = SHOP_BY_COLLECTION.find((c) => c.label === "Discfest");
-    expect(discfest?.category).toBe("Ultimate Frisbee");
+  it("exposes all 9 official collections", () => {
+    expect(SHOP_BY_COLLECTION).toHaveLength(9);
+    expect(SHOP_BY_COLLECTION.map((c) => c.category)).toEqual([
+      "pilipinas",
+      "primal",
+      "solar",
+      "running",
+      "motoline",
+      "the-og-vibe",
+      "pickleball",
+      "golf",
+      "accessories",
+    ]);
   });
 
-  it("exposes four sport-led named drop entry points", () => {
+  it("exposes six sport-led named entry points", () => {
     expect(SHOP_BY_SPORT.map((s) => s.label)).toEqual([
       "Ultimate Frisbee",
+      "Gym & Training",
+      "Running",
       "Pickleball",
       "Golf",
-      "Running",
+      "Lifestyle",
     ]);
   });
 });

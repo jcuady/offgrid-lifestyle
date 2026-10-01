@@ -35,10 +35,6 @@ export function ProductDetailPage() {
   );
   const displayImage = activeImage && galleryUrls.includes(activeImage) ? activeImage : galleryUrls[0] ?? product?.image ?? "";
 
-  useEffect(() => {
-    setActiveImage(null);
-  }, [product?.id]);
-
   const pageSeo = useMemo(() => {
     if (!product) {
       if (!catalogReady) return null;
@@ -99,16 +95,58 @@ export function ProductDetailPage() {
   const isPurchasable =
     product?.status === "active" && (product.stock === undefined || product.stock > 0);
 
+  const handleSelectColor = (colorValue: string) => {
+    setSelectedColor(colorValue);
+    if (!product) return;
+    const colorObj = product.colors.find((c) => c.value === colorValue);
+    if (!colorObj) return;
+    const matchingVariant = product.variants?.find(
+      (v) => (colorObj.variantSku && v.sku === colorObj.variantSku) || v.designName === colorObj.name,
+    );
+    if (matchingVariant?.imageUrl) {
+      setActiveImage(matchingVariant.imageUrl);
+    }
+  };
+
+  const handleSelectThumbnail = (url: string) => {
+    setActiveImage(url);
+    if (!product) return;
+    const matchingVariant = product.variants?.find((v) => v.imageUrl === url);
+    if (matchingVariant) {
+      const matchingColor = product.colors.find(
+        (c) => (c.variantSku && c.variantSku === matchingVariant.sku) || c.name === matchingVariant.designName,
+      );
+      if (matchingColor) {
+        setSelectedColor(matchingColor.value);
+      }
+    }
+  };
+
   useEffect(() => {
     if (product) {
       setSelectedSize(product.sizes[0]);
-      setSelectedColor(product.colors[0]?.value || "");
+      const initialColor = product.colors[0]?.value || "";
+      setSelectedColor(initialColor);
       setQuantity(1);
       setJustAdded(false);
       window.scrollTo(0, 0);
       reviewService.listApprovedByProduct(product.id).then(setReviews);
+
+      const colorObj = product.colors[0];
+      if (colorObj) {
+        const matchingVariant = product.variants?.find(
+          (v) => (colorObj.variantSku && v.sku === colorObj.variantSku) || v.designName === colorObj.name,
+        );
+        if (matchingVariant?.imageUrl) {
+          setActiveImage(matchingVariant.imageUrl);
+        } else {
+          setActiveImage(null);
+        }
+      } else {
+        setActiveImage(null);
+      }
     }
-  }, [product]);
+  }, [product?.id]);
 
   useEffect(() => {
     if (!justAdded) return;
@@ -142,7 +180,7 @@ export function ProductDetailPage() {
     addToCart({
       productId: product.id,
       name: product.name,
-      image: product.image,
+      image: displayImage || product.image,
       price: product.price,
       size: selectedSize,
       color: activeColor?.name || "",
@@ -191,12 +229,12 @@ export function ProductDetailPage() {
                     <button
                       key={url}
                       type="button"
-                      onClick={() => setActiveImage(url)}
+                      onClick={() => handleSelectThumbnail(url)}
                       className={cn(
                         "h-16 w-16 shrink-0 overflow-hidden rounded-xl border-2 transition-colors",
-                        (activeImage ?? galleryUrls[0]) === url
-                          ? "border-offgrid-green"
-                          : "border-transparent ring-1 ring-offgrid-green/15",
+                        displayImage === url
+                          ? "border-offgrid-green ring-2 ring-offgrid-green/30"
+                          : "border-transparent ring-1 ring-offgrid-green/15 hover:ring-offgrid-green/40",
                       )}
                     >
                       <img src={url} alt="" className="h-full w-full object-cover" />
@@ -276,7 +314,7 @@ export function ProductDetailPage() {
                         return (
                           <button
                             key={color.value}
-                            onClick={() => setSelectedColor(color.value)}
+                            onClick={() => handleSelectColor(color.value)}
                             title={color.name}
                             className={cn(
                               "min-h-11 min-w-11 rounded-full border-2 transition-all duration-200 flex items-center justify-center relative outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offgrid-green",

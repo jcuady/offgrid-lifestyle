@@ -1,6 +1,6 @@
 /** Cover + gallery mapping for product media (index 0 = cover / `image`). */
 
-export const PRODUCT_GALLERY_MAX = 8;
+export const PRODUCT_GALLERY_MAX = 12;
 
 export function imagesFromProduct(image: string, gallery?: string[] | null): string[] {
   const cover = (image ?? "").trim();

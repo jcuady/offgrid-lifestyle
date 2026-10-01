@@ -43,19 +43,19 @@ describe("retailOrderTotalsCentavos — discount-safe PayMongo amounts", () => {
   });
 
   it("charges selling price for discounted items, never basePrice", () => {
-    const voyager = products.find((p) => p.id === "og-voyager")!;
-    expect(isProductDiscounted(voyager)).toBe(true);
-    expect(getDiscountPercent(voyager)).toBeGreaterThan(0);
-    expect(voyager.basePrice).toBeGreaterThan(voyager.price);
+    const discounted = products.find((p) => isProductDiscounted(p))!;
+    expect(isProductDiscounted(discounted)).toBe(true);
+    expect(getDiscountPercent(discounted)).toBeGreaterThan(0);
+    expect(discounted.basePrice).toBeGreaterThan(discounted.price);
 
     const withDiscount = retailOrderTotalsCentavos([
-      { sellingPricePesos: voyager.price, quantity: 1 },
+      { sellingPricePesos: discounted.price, quantity: 1 },
     ]);
     const ifBasePriceWronglyCharged = retailOrderTotalsCentavos([
-      { sellingPricePesos: voyager.basePrice, quantity: 1 },
+      { sellingPricePesos: discounted.basePrice, quantity: 1 },
     ]);
 
-    expect(withDiscount.subtotalCentavos).toBe(Math.round(voyager.price * 100));
+    expect(withDiscount.subtotalCentavos).toBe(Math.round(discounted.price * 100));
     expect(withDiscount.totalCentavos).not.toBe(ifBasePriceWronglyCharged.totalCentavos);
     expect(retailPayMongoChargeCentavos(withDiscount.totalCentavos)).toBe(
       withDiscount.totalCentavos,
@@ -63,30 +63,30 @@ describe("retailOrderTotalsCentavos — discount-safe PayMongo amounts", () => {
   });
 
   it("sums mixed cart: discounted + full-price lines", () => {
-    const voyager = products.find((p) => p.id === "og-voyager")!;
-    const arcade = products.find((p) => p.id === "og-arcade")!;
+    const discounted = products.find((p) => isProductDiscounted(p))!;
+    const fullPrice = products.find((p) => !isProductDiscounted(p))!;
     const totals = retailOrderTotalsCentavos([
-      { sellingPricePesos: voyager.price, quantity: 1 },
-      { sellingPricePesos: arcade.price, quantity: 2 },
+      { sellingPricePesos: discounted.price, quantity: 1 },
+      { sellingPricePesos: fullPrice.price, quantity: 2 },
     ]);
     const expectedSub =
-      Math.round(voyager.price * 100) + Math.round(arcade.price * 100) * 2;
+      Math.round(discounted.price * 100) + Math.round(fullPrice.price * 100) * 2;
     expect(totals.subtotalCentavos).toBe(expectedSub);
     expect(totals.shippingCentavos).toBe(expectedSub >= 200_000 ? 0 : 15_000);
     expect(totals.totalCentavos).toBe(expectedSub + totals.shippingCentavos);
   });
 
   it("toRetailOrderPayload total matches selling-price math (PayMongo input)", () => {
-    const voyager = products.find((p) => p.id === "og-voyager")!;
+    const discounted = products.find((p) => isProductDiscounted(p))!;
     const order = toRetailOrderPayload(
       [
         {
-          productId: voyager.id,
-          name: voyager.name,
-          image: voyager.image,
-          price: voyager.price,
+          productId: discounted.id,
+          name: discounted.name,
+          image: discounted.image,
+          price: discounted.price,
           size: "M",
-          color: voyager.colors[0]?.value ?? "black",
+          color: discounted.colors[0]?.value ?? "black",
           quantity: 1,
         },
       ],
@@ -95,11 +95,11 @@ describe("retailOrderTotalsCentavos — discount-safe PayMongo amounts", () => {
       "og-discount-paymongo-1",
     );
     const expected = retailOrderTotalsCentavos([
-      { sellingPricePesos: voyager.price, quantity: 1 },
+      { sellingPricePesos: discounted.price, quantity: 1 },
     ]);
     expect(Math.round(order.total.amount * 100)).toBe(expected.totalCentavos);
     expect(Math.round(order.subtotal.amount * 100)).not.toBe(
-      Math.round(voyager.basePrice * 100),
+      Math.round(discounted.basePrice * 100),
     );
   });
 });

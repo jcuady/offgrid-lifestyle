@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, Minus, Plus, Star, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -9,6 +9,7 @@ import { Button } from "@/src/components/ui/Button";
 import { cn } from "@/src/lib/utils";
 import { ProductPrice } from "@/src/components/ProductPrice";
 import { SizeGuideModal } from "@/src/components/SizeGuideModal";
+import { imagesFromProduct } from "@/src/lib/productGallery";
 
 interface ProductQuickViewModalProps {
   product: Product | null;
@@ -28,14 +29,59 @@ export function ProductQuickViewModal({ product, onClose }: ProductQuickViewModa
   const [quantity, setQuantity] = useState(1);
   const [error, setError] = useState<string | null>(null);
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
+  const [activeImage, setActiveImage] = useState<string | null>(null);
+
+  const galleryUrls = useMemo(
+    () => (product ? imagesFromProduct(product.image, product.gallery) : []),
+    [product],
+  );
+  const displayImage = activeImage && galleryUrls.includes(activeImage) ? activeImage : galleryUrls[0] ?? product?.image ?? "";
+
+  const handleSelectColor = (colorValue: string) => {
+    setSelectedColor(colorValue);
+    if (!product) return;
+    const colorObj = product.colors.find((c) => c.value === colorValue);
+    if (!colorObj) return;
+    const matchingVariant = product.variants?.find(
+      (v) => (colorObj.variantSku && v.sku === colorObj.variantSku) || v.designName === colorObj.name,
+    );
+    if (matchingVariant?.imageUrl) {
+      setActiveImage(matchingVariant.imageUrl);
+    }
+  };
+
+  const handleSelectThumbnail = (url: string) => {
+    setActiveImage(url);
+    if (!product) return;
+    const matchingVariant = product.variants?.find((v) => v.imageUrl === url);
+    if (matchingVariant) {
+      const matchingColor = product.colors.find(
+        (c) => (c.variantSku && c.variantSku === matchingVariant.sku) || c.name === matchingVariant.designName,
+      );
+      if (matchingColor) {
+        setSelectedColor(matchingColor.value);
+      }
+    }
+  };
 
   useEffect(() => {
     if (!product) return;
     setSelectedSize(product.sizes[0] ?? "");
-    setSelectedColor(product.colors[0]?.value ?? "");
+    const initialColor = product.colors[0]?.value ?? "";
+    setSelectedColor(initialColor);
     setQuantity(1);
     setError(null);
     setSizeGuideOpen(false);
+
+    const colorObj = product.colors[0];
+    if (colorObj) {
+      const matchingVariant = product.variants?.find(
+        (v) => (colorObj.variantSku && v.sku === colorObj.variantSku) || v.designName === colorObj.name,
+      );
+      setActiveImage(matchingVariant?.imageUrl ?? null);
+    } else {
+      setActiveImage(null);
+    }
   }, [product]);
 
   useEffect(() => {
@@ -73,7 +119,7 @@ export function ProductQuickViewModal({ product, onClose }: ProductQuickViewModa
     return {
       productId: product.id,
       name: product.name,
-      image: product.image,
+      image: displayImage || product.image,
       price: product.price,
       size: selectedSize,
       color: activeColor?.name ?? "",
@@ -139,18 +185,39 @@ export function ProductQuickViewModal({ product, onClose }: ProductQuickViewModa
             {/* Body */}
             <div className="flex-1 overflow-y-auto overscroll-contain">
               <div className="grid gap-5 p-4 sm:grid-cols-2 sm:gap-8 sm:p-6">
-                {/* Large image — desktop */}
-                <div className="relative hidden aspect-[4/5] overflow-hidden rounded-2xl bg-white ring-1 ring-offgrid-green/10 sm:block">
-                  {primaryTag ? (
-                    <span className="absolute left-3 top-3 z-10 rounded-full bg-offgrid-lime px-2.5 py-1 font-mono text-[9px] font-bold uppercase tracking-[0.15em] text-white shadow-sm">
-                      {primaryTag}
-                    </span>
+                {/* Large image + thumbnails — desktop */}
+                <div className="hidden flex-col gap-3 sm:flex">
+                  <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-white ring-1 ring-offgrid-green/10">
+                    {primaryTag ? (
+                      <span className="absolute left-3 top-3 z-10 rounded-full bg-offgrid-lime px-2.5 py-1 font-mono text-[9px] font-bold uppercase tracking-[0.15em] text-white shadow-sm">
+                        {primaryTag}
+                      </span>
+                    ) : null}
+                    <img
+                      src={displayImage}
+                      alt={product.name}
+                      className="h-full w-full object-cover object-center transition-all duration-300"
+                    />
+                  </div>
+                  {galleryUrls.length > 1 ? (
+                    <div className="flex gap-2 overflow-x-auto pb-1">
+                      {galleryUrls.map((url) => (
+                        <button
+                          key={url}
+                          type="button"
+                          onClick={() => handleSelectThumbnail(url)}
+                          className={cn(
+                            "h-14 w-14 shrink-0 overflow-hidden rounded-xl border-2 transition-colors",
+                            displayImage === url
+                              ? "border-offgrid-green ring-2 ring-offgrid-green/30"
+                              : "border-transparent ring-1 ring-offgrid-green/15 hover:ring-offgrid-green/40",
+                          )}
+                        >
+                          <img src={url} alt="" className="h-full w-full object-cover" />
+                        </button>
+                      ))}
+                    </div>
                   ) : null}
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="h-full w-full object-cover object-center"
-                  />
                 </div>
 
                 {/* Details */}
@@ -163,7 +230,7 @@ export function ProductQuickViewModal({ product, onClose }: ProductQuickViewModa
                           {primaryTag}
                         </span>
                       ) : null}
-                      <img src={product.image} alt={product.name} className="h-full w-full object-cover object-center" />
+                      <img src={displayImage} alt={product.name} className="h-full w-full object-cover object-center" />
                     </div>
                     <div className="flex min-w-0 flex-1 flex-col">
                       <span className="font-mono text-[9px] font-semibold uppercase tracking-[0.16em] text-offgrid-green/50">
@@ -187,6 +254,27 @@ export function ProductQuickViewModal({ product, onClose }: ProductQuickViewModa
                       </div>
                     </div>
                   </div>
+
+                  {/* Mobile thumbnails */}
+                  {galleryUrls.length > 1 ? (
+                    <div className="mt-3 flex gap-2 overflow-x-auto pb-1 sm:hidden">
+                      {galleryUrls.map((url) => (
+                        <button
+                          key={url}
+                          type="button"
+                          onClick={() => handleSelectThumbnail(url)}
+                          className={cn(
+                            "h-12 w-12 shrink-0 overflow-hidden rounded-lg border-2 transition-colors",
+                            displayImage === url
+                              ? "border-offgrid-green ring-2 ring-offgrid-green/30"
+                              : "border-transparent ring-1 ring-offgrid-green/15",
+                          )}
+                        >
+                          <img src={url} alt="" className="h-full w-full object-cover" />
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
 
                   {/* Header — desktop */}
                   <div className="hidden sm:block">
@@ -240,7 +328,7 @@ export function ProductQuickViewModal({ product, onClose }: ProductQuickViewModa
                               type="button"
                               title={color.name}
                               onClick={() => {
-                                setSelectedColor(color.value);
+                                handleSelectColor(color.value);
                                 setError(null);
                               }}
                               className={cn(

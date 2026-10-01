@@ -13,6 +13,9 @@ interface ProductCardProps {
 export function ProductCard({ product, onSelect, className }: ProductCardProps) {
   const extraColors = Math.max(0, product.colors.length - 4);
   const primaryTag = getProductTags(product)[0];
+  const secondaryImage =
+    product.gallery?.find((img) => img !== product.image) ??
+    (product.gallery && product.gallery.length > 1 ? product.gallery[1] : undefined);
 
   return (
     <article
@@ -40,8 +43,21 @@ export function ProductCard({ product, onSelect, className }: ProductCardProps) 
           alt={product.name}
           loading="lazy"
           decoding="async"
-          className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+          className={cn(
+            "absolute inset-0 h-full w-full object-cover object-center transition-all duration-500 ease-out group-hover:scale-[1.04]",
+            secondaryImage ? "group-hover:opacity-0" : "",
+          )}
         />
+
+        {secondaryImage ? (
+          <img
+            src={secondaryImage}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            className="absolute inset-0 h-full w-full object-cover object-center opacity-0 transition-all duration-500 ease-out group-hover:scale-[1.04] group-hover:opacity-100"
+          />
+        ) : null}
 
         <div className="absolute inset-x-0 bottom-0 z-10 translate-y-full bg-offgrid-green/95 px-4 py-3 text-center backdrop-blur-sm transition-transform duration-300 ease-out group-hover:translate-y-0 group-focus-visible:translate-y-0">
           <span className="inline-flex items-center font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-white">

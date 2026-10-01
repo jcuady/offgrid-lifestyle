@@ -19,9 +19,22 @@ function escJson(val) {
   return `'${JSON.stringify(val).replace(/'/g, "''")}'::jsonb`;
 }
 
-let sql = `-- Migration: Add complete 29-product catalog across all collections
+let sql = `-- Migration: Add complete 20-product catalog across all collections with full galleries
 -- Timestamp: 2026-10-01
--- Idempotent upsert ensuring production checkout and hydration match catalog
+-- Clean up placeholder and superseded records
+DELETE FROM public.og_products
+WHERE id IN (
+  'og-voyager',
+  'og-stats',
+  'og-arcade',
+  'og-comet',
+  'og-discfest-towel',
+  'og-pickleball',
+  'everyday-is-pickle-day',
+  'get-your-dink',
+  'pickleball-lifestyle',
+  'og-dink-different'
+);
 
 INSERT INTO public.og_products (
   id, slug, name, category, sports, collection_ids, base_price, price, image, gallery,

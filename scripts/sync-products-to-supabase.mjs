@@ -47,6 +47,32 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
 async function sync() {
   console.log(`Starting sync of ${products.length} products to ${supabaseUrl}...`);
 
+  const supersededIds = [
+    "og-voyager",
+    "og-stats",
+    "og-arcade",
+    "og-comet",
+    "og-discfest-towel",
+    "og-pickleball",
+    "everyday-is-pickle-day",
+    "get-your-dink",
+    "pickleball-lifestyle",
+    "og-dink-different",
+  ];
+
+  console.log(`Cleaning up ${supersededIds.length} placeholder / superseded products...`);
+  const { error: delError } = await supabase
+    .from("og_products")
+    .delete()
+    .in("id", supersededIds);
+
+  if (delError) {
+    console.warn("Delete blocked (orders may reference them), archiving instead:", delError.message);
+    await supabase.from("og_products").update({ status: "archived" }).in("id", supersededIds);
+  } else {
+    console.log("✅ Successfully removed placeholder products from public.og_products.");
+  }
+
   const rows = products.map((p) => ({
     id: p.id,
     slug: p.slug,

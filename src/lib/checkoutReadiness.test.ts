@@ -34,26 +34,26 @@ const sampleShipping = {
 };
 
 describe("payment gateway readiness — retail checkout", () => {
-  const voyager = products.find((p) => p.id === "og-voyager")!;
+  const sampleProduct = products[0];
 
   it("builds order payload with centavo-safe totals and free shipping threshold", () => {
     const cart = [
       {
-        productId: voyager.id,
-        name: voyager.name,
-        image: voyager.image,
-        price: voyager.price,
+        productId: sampleProduct.id,
+        name: sampleProduct.name,
+        image: sampleProduct.image,
+        price: sampleProduct.price,
         size: "M",
-        color: voyager.colors[0]?.value ?? "black",
+        color: sampleProduct.colors[0]?.value ?? "black",
         quantity: 1,
       },
     ];
     const order = toRetailOrderPayload(cart, sampleShipping, "gcash", "og-test-order-1");
-    expect(order.subtotal.amount).toBe(voyager.price);
+    expect(order.subtotal.amount).toBe(sampleProduct.price);
     expect(order.shipping.amount).toBe(150);
-    expect(order.total.amount).toBe(voyager.price + 150);
+    expect(order.total.amount).toBe(sampleProduct.price + 150);
     expect(order.paymentProvider).toBe("manual");
-    expect(Math.round(order.subtotal.amount * 100)).toBe(Math.round(voyager.price * 100));
+    expect(Math.round(order.subtotal.amount * 100)).toBe(Math.round(sampleProduct.price * 100));
   });
 
   it("waives shipping at ₱2,000 subtotal", () => {
@@ -78,12 +78,12 @@ describe("payment gateway readiness — retail checkout", () => {
   it("resolves PayMongo provider when method is paymongo", () => {
     const cart = [
       {
-        productId: voyager.id,
-        name: voyager.name,
-        image: voyager.image,
-        price: voyager.price,
+        productId: sampleProduct.id,
+        name: sampleProduct.name,
+        image: sampleProduct.image,
+        price: sampleProduct.price,
         size: "S",
-        color: voyager.colors[0]?.value ?? "black",
+        color: sampleProduct.colors[0]?.value ?? "black",
         quantity: 1,
       },
     ];
@@ -190,16 +190,17 @@ describe("payment gateway readiness — payment methods", () => {
 });
 
 describe("payment gateway readiness — catalog pricing display", () => {
-  it("detects discounted voyager and computes savings percent", () => {
-    const voyager = products.find((p) => p.id === "og-voyager")!;
-    expect(isProductDiscounted(voyager)).toBe(true);
-    expect(getDiscountPercent(voyager)).toBeGreaterThan(0);
+  it("detects discounted product and computes savings percent", () => {
+    const discounted = products.find((p) => isProductDiscounted(p))!;
+    expect(isProductDiscounted(discounted)).toBe(true);
+    expect(getDiscountPercent(discounted)).toBeGreaterThan(0);
   });
 
   it("excludes draft/archived products from featured storefront picks", () => {
-    const withDraft = products.map((p) => (p.id === "og-voyager" ? { ...p, status: "draft" as const } : p));
+    const targetId = products[0].id;
+    const withDraft = products.map((p) => (p.id === targetId ? { ...p, status: "draft" as const } : p));
     const featured = selectFeaturedProducts(withDraft, 3);
     expect(featured.every((p) => p.status === "active")).toBe(true);
-    expect(featured.some((p) => p.id === "og-voyager")).toBe(false);
+    expect(featured.some((p) => p.id === targetId)).toBe(false);
   });
 });

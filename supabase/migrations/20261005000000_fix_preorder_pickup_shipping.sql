@@ -15,7 +15,7 @@ SET search_path = public
 AS $$
 DECLARE
   source_line jsonb;
-  product_row public.og_products%ROWTYPE;
+  product_row record;
   normalized_lines jsonb := '[]'::jsonb;
   quantity_value integer;
   subtotal_value bigint := 0;

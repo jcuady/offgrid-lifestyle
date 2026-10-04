@@ -9,13 +9,16 @@ export const STANDARD_SHIPPING_CENTAVOS = 15_000;
 
 export function retailOrderTotalsCentavos(
   lines: { sellingPricePesos: number; quantity: number }[],
+  options?: { isPickup?: boolean },
 ): { subtotalCentavos: number; shippingCentavos: number; totalCentavos: number } {
   const subtotalCentavos = lines.reduce((sum, line) => {
     const unit = Math.round(line.sellingPricePesos * 100);
     return sum + unit * line.quantity;
   }, 0);
   const shippingCentavos =
-    subtotalCentavos >= FREE_SHIPPING_SUBTOTAL_CENTAVOS ? 0 : STANDARD_SHIPPING_CENTAVOS;
+    options?.isPickup || subtotalCentavos >= FREE_SHIPPING_SUBTOTAL_CENTAVOS
+      ? 0
+      : STANDARD_SHIPPING_CENTAVOS;
   return {
     subtotalCentavos,
     shippingCentavos,

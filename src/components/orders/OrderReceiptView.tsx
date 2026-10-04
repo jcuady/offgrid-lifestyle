@@ -16,6 +16,7 @@ export interface OrderReceiptViewProps {
   shipping?: Money | null;
   tax?: Money | null;
   total?: Money | null;
+  shippingInfo?: Record<string, unknown> | null;
   customPayload?: Record<string, unknown> | null;
   className?: string;
 }
@@ -48,6 +49,7 @@ export function OrderReceiptView({
   shipping,
   tax,
   total,
+  shippingInfo,
   customPayload,
   className,
 }: OrderReceiptViewProps) {
@@ -103,6 +105,59 @@ export function OrderReceiptView({
         ) : null}
       </section>
 
+      {(() => {
+        const isPickup = Boolean(
+          orderId.startsWith("PRE-") ||
+            (shippingInfo &&
+              (shippingInfo.fulfillmentType === "pickup" || Boolean(shippingInfo.pickupVenue))),
+        );
+        const venueLabel =
+          (shippingInfo?.pickupVenueLabel as string) ||
+          (shippingInfo?.address as string) ||
+          "Designated Pickup Partner";
+        const availableDate =
+          (shippingInfo?.pickupAvailableDate as string) || "Starting October 15, 2026";
+        const mapsUrl = (shippingInfo?.pickupMapsUrl as string) || null;
+        const isClaimed = Boolean(shippingInfo?.claimed);
+
+        if (!isPickup) return null;
+
+        return (
+          <section className="mt-5 rounded-xl border border-offgrid-green/20 bg-offgrid-cream/45 p-4 text-sm">
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-offgrid-green/60">
+                📍 In-Person Claiming Partner
+              </span>
+              {isClaimed ? (
+                <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800">
+                  Claimed
+                </span>
+              ) : (
+                <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-bold text-amber-800">
+                  Awaiting Pickup
+                </span>
+              )}
+            </div>
+            <p className="mt-1.5 text-base font-bold text-offgrid-green">{venueLabel}</p>
+            <p className="mt-0.5 text-xs text-offgrid-green/75">
+              Available: <span className="font-semibold text-offgrid-green">{availableDate}</span>
+            </p>
+            {mapsUrl ? (
+              <div className="mt-2.5">
+                <a
+                  href={mapsUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center text-xs font-semibold text-offgrid-green underline hover:text-offgrid-green/80"
+                >
+                  Open location on Google Maps ↗
+                </a>
+              </div>
+            ) : null}
+          </section>
+        );
+      })()}
+
       {orderType === "retail" ? (
         <section className="mt-6">
           <h2 className="font-mono text-xs font-semibold uppercase tracking-[0.15em] text-offgrid-green/50">Items</h2>
@@ -116,24 +171,41 @@ export function OrderReceiptView({
               </li>
             ))}
           </ul>
-          <dl className="mt-4 space-y-1 border-t border-offgrid-green/10 pt-3 text-sm">
-            <div className="flex justify-between">
-              <dt className="text-offgrid-green/60">Subtotal</dt>
-              <dd className="tabular-nums">{moneyOrDash(subtotal)}</dd>
-            </div>
-            <div className="flex justify-between">
-              <dt className="text-offgrid-green/60">Shipping</dt>
-              <dd className="tabular-nums">{moneyOrDash(shipping)}</dd>
-            </div>
-            <div className="flex justify-between">
-              <dt className="text-offgrid-green/60">Tax</dt>
-              <dd className="tabular-nums">{moneyOrDash(tax)}</dd>
-            </div>
-            <div className="flex justify-between font-semibold">
-              <dt>Total</dt>
-              <dd className="tabular-nums">{moneyOrDash(total)}</dd>
-            </div>
-          </dl>
+          {(() => {
+            const isPickup = Boolean(
+              orderId.startsWith("PRE-") ||
+                (shippingInfo &&
+                  (shippingInfo.fulfillmentType === "pickup" || Boolean(shippingInfo.pickupVenue))),
+            );
+            const displayTotal = isPickup && subtotal ? subtotal : total;
+
+            return (
+              <dl className="mt-4 space-y-1 border-t border-offgrid-green/10 pt-3 text-sm">
+                <div className="flex justify-between">
+                  <dt className="text-offgrid-green/60">Subtotal</dt>
+                  <dd className="tabular-nums">{moneyOrDash(subtotal)}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-offgrid-green/60">Shipping</dt>
+                  <dd className="tabular-nums">
+                    {isPickup ? (
+                      <span className="font-semibold text-emerald-700">FREE (In-Person Pickup) — ₱0</span>
+                    ) : (
+                      moneyOrDash(shipping)
+                    )}
+                  </dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-offgrid-green/60">Tax</dt>
+                  <dd className="tabular-nums">{moneyOrDash(tax)}</dd>
+                </div>
+                <div className="flex justify-between font-semibold">
+                  <dt>Total</dt>
+                  <dd className="tabular-nums">{moneyOrDash(displayTotal)}</dd>
+                </div>
+              </dl>
+            );
+          })()}
         </section>
       ) : (
         <section className="mt-6 space-y-3 text-sm">

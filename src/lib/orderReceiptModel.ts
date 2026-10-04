@@ -17,6 +17,7 @@ export function receiptPropsFromRetail(retail: ManagedRetailOrder): OrderReceipt
     shipping: retail.shipping,
     tax: retail.tax,
     total: retail.total,
+    shippingInfo: retail.shippingInfo as unknown as Record<string, unknown>,
     customPayload: null,
   };
 }

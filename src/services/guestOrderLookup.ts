@@ -34,6 +34,21 @@ function mapGuestOrderRow(raw: Json): GuestOrderLookupResult | null {
   if (typeof id !== "string") return null;
 
   const orderType = row.order_type === "custom" ? "custom" : "retail";
+  const shippingInfo =
+    row.shipping_info && typeof row.shipping_info === "object"
+      ? (row.shipping_info as Record<string, unknown>)
+      : null;
+  const isPickup =
+    id.startsWith("PRE-") ||
+    shippingInfo?.fulfillmentType === "pickup" ||
+    Boolean(shippingInfo?.pickupVenue);
+
+  const subtotal = centavosToMoney(row.subtotal_centavos as number | null);
+  const rawShipping = centavosToMoney(row.shipping_centavos as number | null);
+  const rawTotal = centavosToMoney(row.total_centavos as number | null);
+
+  const shipping = isPickup ? php(0) : rawShipping;
+  const total = isPickup && subtotal ? subtotal : rawTotal;
 
   return {
     id,
@@ -47,14 +62,11 @@ function mapGuestOrderRow(raw: Json): GuestOrderLookupResult | null {
         ? (row.custom_payload as Record<string, unknown>)
         : null,
     lineItems: Array.isArray(row.line_items) ? (row.line_items as RetailOrderLine[]) : [],
-    subtotal: centavosToMoney(row.subtotal_centavos as number | null),
-    shipping: centavosToMoney(row.shipping_centavos as number | null),
+    subtotal,
+    shipping,
     tax: centavosToMoney(row.tax_centavos as number | null),
-    total: centavosToMoney(row.total_centavos as number | null),
-    shippingInfo:
-      row.shipping_info && typeof row.shipping_info === "object"
-        ? (row.shipping_info as Record<string, unknown>)
-        : null,
+    total,
+    shippingInfo,
     paymentMethod: row.payment_method != null ? String(row.payment_method) : null,
     createdAt: String(row.created_at ?? ""),
     updatedAt: String(row.updated_at ?? ""),

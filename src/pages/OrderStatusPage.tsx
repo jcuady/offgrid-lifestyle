@@ -184,6 +184,7 @@ export function OrderStatusPage() {
               shipping={order.shipping}
               tax={order.tax}
               total={order.total}
+              shippingInfo={order.shippingInfo}
               customPayload={order.customPayload}
             />
 

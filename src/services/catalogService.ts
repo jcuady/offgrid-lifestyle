@@ -1,4 +1,4 @@
-import { getProductSports, getProductTags, type Product } from "@/src/data/products";
+import { getProductSports, getProductTags, products as initialProducts, type Product } from "@/src/data/products";
 import type { Database } from "@/src/types/database";
 import { logger } from "@/src/lib/logger";
 import { supabase } from "@/src/lib/supabase";
@@ -120,7 +120,11 @@ export const supabaseCatalogService: CatalogService = {
     if (error) {
       throw new Error(`Could not load products: ${error.message}`);
     }
-    const products = (data ?? []).map(rowToProduct);
+    const dbProducts = (data ?? []).map(rowToProduct);
+    const dbIds = new Set(dbProducts.map((p) => p.id));
+    const missing = initialProducts.filter((p) => !dbIds.has(p.id));
+    const products = missing.length > 0 ? [...dbProducts, ...missing] : dbProducts;
+
     if (products.length > 0) {
       useSiteContentStore.setState({ products });
     }

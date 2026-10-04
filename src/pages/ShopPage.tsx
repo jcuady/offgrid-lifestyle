@@ -21,6 +21,7 @@ import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import { hydrateProductsFromSupabase } from "@/src/services";
 import { listCatalogTerms, type CatalogTerm } from "@/src/services/catalogTermsService";
 import { catalogSportsToShopLinks, productMatchesCollectionSlug } from "@/src/lib/shopTaxonomyFromCms";
+import { PREORDER_PRODUCT_SLUG, isOfficialReleaseLive } from "@/src/lib/preorderConfig";
 
 type SortOption = "newest" | "price-asc" | "price-desc" | "bestselling" | "name-asc";
 
@@ -210,6 +211,10 @@ export function ShopPage() {
   };
 
   const handleProductClick = (product: Product) => {
+    if (product.slug === PREORDER_PRODUCT_SLUG && !isOfficialReleaseLive()) {
+      navigate("/pre-order/social-club");
+      return;
+    }
     setQuickViewProduct(product);
   };
 

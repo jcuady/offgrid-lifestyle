@@ -331,7 +331,7 @@ const initialCustomSections: CustomContentSection[] = getCanonicalGuideSectionSe
 const initialTemplates: CustomTemplateAsset[] = createCanonicalOgTemplates(nowIso());
 const initialHeadwearOptions: CustomHeadwearOption[] = createDefaultHeadwearOptions(nowIso());
 
-const SITE_CONTENT_PERSIST_VERSION = 19;
+const SITE_CONTENT_PERSIST_VERSION = 21;
 
 type PersistedSiteContentSlice = {
   products?: Product[];
@@ -1085,8 +1085,39 @@ export const useSiteContentStore = create<SiteContentState>()(
           };
         }
 
+        if (version < 20) {
+          const existingIds = new Set((next.products ?? []).map((p: Product) => p.id));
+          const missingInitial = initialProducts.filter((p) => !existingIds.has(p.id));
+          next = {
+            ...next,
+            products: missingInitial.length > 0 ? [...(next.products ?? initialProducts), ...missingInitial] : (next.products ?? initialProducts),
+          };
+        }
+
+        if (version < 21) {
+          next = {
+            ...next,
+            products: (next.products ?? initialProducts).map((p: Product) => {
+              if (p.id === "the-social-club-collection") return { ...p, homeBestSellerRank: 1 };
+              if (p.id === "pilipinas-aouc-jersey") return { ...p, homeBestSellerRank: undefined };
+              return p;
+            }),
+            landingContent: {
+              ...(next.landingContent ?? initialLandingContent),
+              featuredSpotlight: initialFeaturedSpotlightContent,
+            },
+          };
+        }
+
+        const existingProductIds = new Set((next.products ?? []).map((p: Product) => p.id));
+        const missingInitialProducts = initialProducts.filter((p) => !existingProductIds.has(p.id));
+
         next = {
           ...next,
+          products:
+            missingInitialProducts.length > 0
+              ? [...(next.products ?? initialProducts), ...missingInitialProducts]
+              : next.products ?? initialProducts,
           landingContent: normalizeLandingContent(next.landingContent),
           customPageContent: normalizeCustomPageContent(
             next.customPageContent ?? initialCustomPageContent,

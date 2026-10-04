@@ -274,12 +274,12 @@ export const FEATURED_SPOTLIGHT_SLOT_COUNT = 3;
 const emptyFeaturedSlot = (): FeaturedSpotlightSlot => ({ productId: "", imageOverride: "" });
 
 export const initialFeaturedSpotlightContent: LandingFeaturedSpotlightContent = {
-  eyebrow: "Promo of the month",
-  titleLine1: "Ultimate",
-  titleLine2Italic: "frisbee.",
-  subtitle: "Our top-selling retail — Discfest-proven kits. Shop the drop teams keep reordering.",
-  ctaLabel: "Shop the ultimate line",
-  ctaHref: "/shop?category=Ultimate Frisbee",
+  eyebrow: "Limited Pre-Order Drop",
+  titleLine1: "The Social",
+  titleLine2Italic: "Club.",
+  subtitle: "Heavyweight 100% cotton in a contemporary boxy cut. 5% off pre-order window (Oct 5–9). Limited to 30 pieces only.",
+  ctaLabel: "Pre-Order Collection",
+  ctaHref: "/pre-order/social-club",
   layout: "bento",
   source: "best_sellers",
   slots: [emptyFeaturedSlot(), emptyFeaturedSlot(), emptyFeaturedSlot()],

@@ -8,6 +8,7 @@ import { cmsTypographyStyle } from "@/src/lib/cmsTypography";
 import { sectionEyebrow, sectionPaddingCream, sectionTitle, siteContainer } from "@/src/lib/brandLayout";
 import { cn } from "@/src/lib/utils";
 import { ProductPrice } from "@/src/components/ProductPrice";
+import { PREORDER_PRODUCT_SLUG, PREORDER_PATH, isOfficialReleaseLive } from "@/src/lib/preorderConfig";
 
 const MAX_HOME_BEST_SELLERS = 4;
 
@@ -41,6 +42,10 @@ export function BestSellers() {
   }, [crowdFavorites]);
 
   const handleProductClick = (slug: string) => {
+    if (slug === PREORDER_PRODUCT_SLUG && !isOfficialReleaseLive()) {
+      navigate(PREORDER_PATH);
+      return;
+    }
     navigate(`/shop/${slug}`);
   };
 
@@ -109,7 +114,14 @@ export function BestSellers() {
                   </span>
 
                   {getProductTags(product)[0] ? (
-                    <span className="absolute right-3 top-3 z-10 rounded-full bg-offgrid-lime px-2.5 py-1 font-mono text-[11px] font-bold uppercase tracking-[0.15em] text-white shadow-sm">
+                    <span
+                      className={cn(
+                        "absolute right-3 top-3 z-10 rounded-full px-2.5 py-1 font-mono text-[11px] font-bold uppercase tracking-[0.15em] shadow-sm",
+                        getProductTags(product)[0] === "Pre-Order"
+                          ? "bg-amber-500 text-white shadow-md ring-2 ring-white/60"
+                          : "bg-offgrid-lime text-white",
+                      )}
+                    >
                       {getProductTags(product)[0]}
                     </span>
                   ) : null}
@@ -123,7 +135,7 @@ export function BestSellers() {
 
                   <div className="absolute inset-x-0 bottom-0 z-10 translate-y-full bg-offgrid-lime/95 px-4 py-3 text-center backdrop-blur-sm transition-transform duration-300 ease-out group-hover:translate-y-0 group-focus-visible:translate-y-0">
                     <span className="inline-flex items-center font-mono text-xs font-bold uppercase tracking-[0.2em] text-white">
-                      View product
+                      {product.tag === "Pre-Order" || product.slug === PREORDER_PRODUCT_SLUG ? "Pre-Order Now" : "View product"}
                       <ArrowRight className="ml-2 h-3 w-3 transition-transform group-hover:translate-x-1" />
                     </span>
                   </div>
@@ -155,8 +167,16 @@ export function BestSellers() {
                       ))}
                     </div>
                     <div className="flex items-center gap-1 font-mono text-xs font-bold text-offgrid-green/65">
-                      <Star className="h-3 w-3 fill-offgrid-green text-offgrid-green" />
-                      <span className="font-bold text-offgrid-green">{product.sold}</span> sold
+                      {product.tag === "Pre-Order" || product.slug === PREORDER_PRODUCT_SLUG ? (
+                        <span className="rounded bg-amber-100/90 px-1.5 py-0.5 font-mono text-[10px] font-bold text-amber-800 ring-1 ring-amber-300/60">
+                          Limited 30 pcs
+                        </span>
+                      ) : (
+                        <>
+                          <Star className="h-3 w-3 fill-offgrid-green text-offgrid-green" />
+                          <span className="font-bold text-offgrid-green">{product.sold}</span> sold
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>

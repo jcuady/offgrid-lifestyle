@@ -16,6 +16,7 @@ import { productJsonLd, upsertJsonLd } from "@/src/lib/siteSeo";
 
 import { hydrateProductsFromSupabase } from "@/src/services";
 import { imagesFromProduct } from "@/src/lib/productGallery";
+import { PREORDER_PRODUCT_SLUG, isOfficialReleaseLive } from "@/src/lib/preorderConfig";
 
 export function ProductDetailPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -23,6 +24,12 @@ export function ProductDetailPage() {
   const products = useSiteContentStore((state) => state.products);
   const [catalogReady, setCatalogReady] = useState(false);
   const [activeImage, setActiveImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (slug === PREORDER_PRODUCT_SLUG && !isOfficialReleaseLive()) {
+      navigate("/pre-order/social-club", { replace: true });
+    }
+  }, [slug, navigate]);
 
   useEffect(() => {
     void hydrateProductsFromSupabase().finally(() => setCatalogReady(true));

@@ -45,6 +45,9 @@ const ProductDetailPage = lazy(() =>
   import("./pages/ProductDetailPage").then((m) => ({ default: m.ProductDetailPage })),
 );
 const ShopPage = lazy(() => import("./pages/ShopPage").then((m) => ({ default: m.ShopPage })));
+const PreOrderPage = lazy(() =>
+  import("./pages/PreOrderPage").then((m) => ({ default: m.PreOrderPage })),
+);
 const CollectionsPage = lazy(() =>
   import("./pages/CollectionsPage").then((m) => ({ default: m.CollectionsPage })),
 );
@@ -258,6 +261,8 @@ function AppFrame() {
         <Route path="/og-signatures" element={<Navigate to="/collections" replace />} />
         <Route path="/shop" element={<ShopPage />} />
         <Route path="/shop/:slug" element={<ProductDetailPage />} />
+        <Route path="/pre-order/social-club" element={<PreOrderPage />} />
+        <Route path="/preorder/social-club" element={<Navigate to="/pre-order/social-club" replace />} />
         <Route path="/community" element={<EventsPage />} />
         <Route path="/events" element={<Navigate to="/community" replace />} />
         <Route path="/faq" element={<FaqPage />} />

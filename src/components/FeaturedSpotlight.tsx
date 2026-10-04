@@ -7,6 +7,7 @@ import { resolveFeaturedSpotlightItems, type FeaturedDisplayItem } from "@/src/l
 import { siteContainer } from "@/src/lib/brandLayout";
 import { cn } from "@/src/lib/utils";
 import { ProductPrice } from "@/src/components/ProductPrice";
+import { PREORDER_PRODUCT_SLUG, PREORDER_PATH, isOfficialReleaseLive } from "@/src/lib/preorderConfig";
 
 interface FeaturedSpotlightProps {
   placement: "home" | "shop";
@@ -28,6 +29,10 @@ export function FeaturedSpotlight({ placement, className }: FeaturedSpotlightPro
 
   const handleTileClick = (item: FeaturedDisplayItem) => {
     if (item.isProduct && item.slug) {
+      if (item.slug === PREORDER_PRODUCT_SLUG && !isOfficialReleaseLive()) {
+        navigate(PREORDER_PATH);
+        return;
+      }
       navigate(`/shop/${item.slug}`);
       return;
     }
@@ -198,7 +203,14 @@ function FeaturedTile({ item, onClick, index, large = false, className }: Featur
 
       <div className="absolute inset-x-0 top-0 z-10 flex items-start justify-between p-4 sm:p-5">
         {item.tag ? (
-          <span className="rounded-full bg-offgrid-cream px-2.5 py-1 font-mono text-[11px] font-bold uppercase tracking-[0.15em] text-offgrid-lime shadow-sm">
+          <span
+            className={cn(
+              "rounded-full px-2.5 py-1 font-mono text-[11px] font-bold uppercase tracking-[0.15em] shadow-sm",
+              item.tag === "Pre-Order"
+                ? "bg-amber-500 text-white shadow-md ring-2 ring-white/60"
+                : "bg-offgrid-cream text-offgrid-lime",
+            )}
+          >
             {item.tag}
           </span>
         ) : (

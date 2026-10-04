@@ -41,6 +41,7 @@ import { localOrderService } from "@/src/services";
 import { persistOrderPaymentUpdate, persistOrderStatusUpdate } from "@/src/lib/opsOrderUpdate";
 import { useOrderDetail } from "@/src/hooks/useOrderDetail";
 import { useOrderPaymentProof } from "@/src/hooks/useOrderPaymentProof";
+import { isOrderPreorder, getPreorderPickupVenue, markPreorderClaimed } from "@/src/services/preorderService";
 
 function PaymentProofAdminSection({
   orderId,
@@ -311,9 +312,13 @@ export function OperationsOrderDetailPage() {
   const paymentSettings = usePortalStore((s) => s.paymentSettings);
   const headwearOptions = resolveHeadwearOptions(useSiteContentStore((s) => s.customHeadwearOptions));
 
+  const currentUser = usePortalStore((s) => s.currentUser);
+  const [claimUpdating, setClaimUpdating] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const customProof = useOrderPaymentProof(custom?.id);
   const hasPaymentProof = customProof.hasPaymentProof;
+  const isPreorder = retail ? isOrderPreorder(retail) : false;
+  const pickupInfo = retail ? getPreorderPickupVenue(retail.shippingInfo) : { isPickup: false };
 
   const hasLegacyCustomSpecs = Boolean(
     custom &&
@@ -473,8 +478,86 @@ export function OperationsOrderDetailPage() {
 
           <div className="grid gap-6 lg:grid-cols-2">
             <div className="rounded-2xl border border-offgrid-green/10 bg-white p-5 shadow-sm">
-              <h2 className="text-lg font-display font-bold text-offgrid-green">Delivery details</h2>
-              {retail.shippingInfo ? (
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-display font-bold text-offgrid-green">
+                  {pickupInfo.isPickup ? "In-Person Claiming Details" : "Delivery details"}
+                </h2>
+                {isPreorder && (
+                  <span className="rounded-full bg-offgrid-lime px-2.5 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider text-white">
+                    ⚡ PRE-ORDER
+                  </span>
+                )}
+              </div>
+
+              {pickupInfo.isPickup ? (
+                <div className="mt-4 space-y-4 text-sm text-offgrid-green/80">
+                  <div className="rounded-xl border border-offgrid-green/15 bg-offgrid-cream/40 p-4">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-offgrid-green/50">
+                      Pickup Partner Venue
+                    </p>
+                    <p className="font-bold text-base text-offgrid-green mt-0.5">
+                      {pickupInfo.venueLabel || "Designated Pickup Partner"}
+                    </p>
+                    <p className="text-xs text-offgrid-green/70 mt-1">
+                      Customer must present Order ID ({retail.id}) and valid ID in person.
+                    </p>
+                  </div>
+
+                  <dl className="space-y-2 text-sm text-offgrid-green/80">
+                    <div>
+                      <dt className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/45">Customer Name</dt>
+                      <dd className="font-medium text-offgrid-green">{retail.customerName}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/45">Phone</dt>
+                      <dd>{retail.shippingInfo?.phone || "—"}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/45">Email</dt>
+                      <dd>{retail.customerEmail}</dd>
+                    </div>
+                  </dl>
+
+                  {/* Claim Status and Action */}
+                  <div className="pt-3 border-t border-offgrid-green/10 flex flex-col gap-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-offgrid-green/70">Claim Status:</span>
+                      {pickupInfo.claimed ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800">
+                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                          Claimed {pickupInfo.claimedAt ? `· ${formatOrderTimestamp(pickupInfo.claimedAt)}` : ""}
+                        </span>
+                      ) : (
+                        <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-800">
+                          Waiting for Pickup
+                        </span>
+                      )}
+                    </div>
+
+                    {!pickupInfo.claimed && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        disabled={claimUpdating}
+                        onClick={async () => {
+                          setClaimUpdating(true);
+                          try {
+                            await markPreorderClaimed(retail.id, currentUser?.name || "Staff");
+                            setFeedback(`Order ${retail.id} marked as claimed.`);
+                          } catch (err) {
+                            setFeedback(err instanceof Error ? err.message : "Failed to mark as claimed.");
+                          } finally {
+                            setClaimUpdating(false);
+                          }
+                        }}
+                        className="mt-2 w-full bg-offgrid-green text-offgrid-cream hover:bg-offgrid-green/90 font-bold"
+                      >
+                        {claimUpdating ? "Updating..." : "Mark as Claimed (Handed Over)"}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ) : retail.shippingInfo ? (
                 <dl className="mt-4 space-y-2 text-sm text-offgrid-green/80">
                   <div>
                     <dt className="text-[10px] font-semibold uppercase tracking-[0.12em] text-offgrid-green/45">Recipient</dt>

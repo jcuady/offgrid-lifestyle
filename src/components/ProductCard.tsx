@@ -33,7 +33,14 @@ export function ProductCard({ product, onSelect, className }: ProductCardProps) 
     >
       <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-offgrid-green/[0.08] transition-all duration-500 group-hover:-translate-y-1 group-hover:shadow-xl group-hover:ring-offgrid-lime/40 group-focus-visible:ring-2 group-focus-visible:ring-offgrid-lime sm:rounded-2xl">
         {primaryTag && (
-          <span className="absolute left-2.5 top-2.5 z-10 rounded-full bg-offgrid-lime px-2 py-0.5 font-mono text-[8px] font-bold uppercase tracking-[0.15em] text-white shadow-sm sm:left-3 sm:top-3 sm:px-2.5 sm:py-1 sm:text-[9px]">
+          <span
+            className={cn(
+              "absolute left-2.5 top-2.5 z-10 rounded-full px-2 py-0.5 font-mono text-[8px] font-bold uppercase tracking-[0.15em] shadow-sm sm:left-3 sm:top-3 sm:px-2.5 sm:py-1 sm:text-[9px]",
+              primaryTag === "Pre-Order"
+                ? "bg-amber-600 text-white font-black shadow-md ring-2 ring-white/60"
+                : "bg-offgrid-lime text-white",
+            )}
+          >
             {primaryTag}
           </span>
         )}
@@ -61,7 +68,7 @@ export function ProductCard({ product, onSelect, className }: ProductCardProps) 
 
         <div className="absolute inset-x-0 bottom-0 z-10 translate-y-full bg-offgrid-green/95 px-4 py-3 text-center backdrop-blur-sm transition-transform duration-300 ease-out group-hover:translate-y-0 group-focus-visible:translate-y-0">
           <span className="inline-flex items-center font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-white">
-            View product
+            {product.tag === "Pre-Order" || product.slug === "the-social-club-collection" ? "Pre-Order Now" : "View product"}
             <ArrowRight className="ml-2 h-3 w-3 transition-transform group-hover:translate-x-1" />
           </span>
         </div>
@@ -96,8 +103,16 @@ export function ProductCard({ product, onSelect, className }: ProductCardProps) 
             )}
           </div>
           <div className="flex shrink-0 items-center gap-1 font-mono text-[10px] text-offgrid-green/55 sm:text-[11px]">
-            <Star className="h-3 w-3 fill-offgrid-green text-offgrid-green" />
-            <span className="font-bold text-offgrid-green">{product.sold}</span> sold
+            {product.tag === "Pre-Order" || product.slug === "the-social-club-collection" ? (
+              <span className="rounded bg-amber-100/90 px-1.5 py-0.5 font-mono text-[9px] font-bold text-amber-800 ring-1 ring-amber-300/60">
+                Limited 30 pcs
+              </span>
+            ) : (
+              <>
+                <Star className="h-3 w-3 fill-offgrid-green text-offgrid-green" />
+                <span className="font-bold text-offgrid-green">{product.sold}</span> sold
+              </>
+            )}
           </div>
         </div>
       </div>

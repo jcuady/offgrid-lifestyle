@@ -31,13 +31,16 @@ import { localOrderService } from "@/src/services";
 import { persistOrderPaymentUpdate, persistOrderStatusUpdate } from "@/src/lib/opsOrderUpdate";
 import { Button } from "@/src/components/ui/Button";
 import { useEnsureOrdersLoaded } from "@/src/hooks/useEnsureOrdersLoaded";
+import { isOrderPreorder, getPreorderPickupVenue, markPreorderClaimed } from "@/src/services/preorderService";
+import type { PreorderVenueId } from "@/src/lib/preorderConfig";
 
 interface OperationsOrdersPageProps {
   role: UserRole;
 }
 
 type OrderKind = "retail" | "custom";
-type TypeFilter = "all" | OrderKind;
+type TypeFilter = "all" | OrderKind | "preorder";
+type VenueFilter = "all" | PreorderVenueId;
 type QuoteFilter = "all" | "official" | "pending";
 
 type Row = { kind: "retail"; entry: ManagedRetailOrder } | { kind: "custom"; entry: ManagedCustomOrder };
@@ -82,6 +85,7 @@ export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
   const [feedback, setFeedback] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
+  const [venueFilter, setVenueFilter] = useState<VenueFilter>("all");
   const [statusFilter, setStatusFilter] = useState<OrderStatus | "all">("all");
   const [paymentFilter, setPaymentFilter] = useState<PaymentStatus | "all">("all");
   const [quoteFilter, setQuoteFilter] = useState<QuoteFilter>("all");
@@ -110,7 +114,19 @@ export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
   const filteredRows = useMemo(() => {
     const q = query.trim().toLowerCase();
     return allRows.filter((row) => {
-      if (typeFilter !== "all" && row.kind !== typeFilter) return false;
+      if (typeFilter === "retail") {
+        if (row.kind !== "retail" || isOrderPreorder(row.entry)) return false;
+      } else if (typeFilter === "custom") {
+        if (row.kind !== "custom") return false;
+      } else if (typeFilter === "preorder") {
+        if (row.kind !== "retail" || !isOrderPreorder(row.entry)) return false;
+      }
+
+      if (venueFilter !== "all") {
+        const pickup = getPreorderPickupVenue(row.entry.shippingInfo);
+        if (!pickup.isPickup || pickup.venueId !== venueFilter) return false;
+      }
+
       if (statusFilter !== "all" && row.entry.status !== statusFilter) return false;
       if (paymentFilter !== "all" && row.entry.paymentStatus !== paymentFilter) return false;
 
@@ -129,11 +145,12 @@ export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
       }
       return true;
     });
-  }, [allRows, query, typeFilter, statusFilter, paymentFilter, quoteFilter]);
+  }, [allRows, query, typeFilter, venueFilter, statusFilter, paymentFilter, quoteFilter]);
 
   const hasActiveFilters =
     query.trim() !== "" ||
     typeFilter !== "all" ||
+    venueFilter !== "all" ||
     statusFilter !== "all" ||
     paymentFilter !== "all" ||
     quoteFilter !== "all";
@@ -141,6 +158,7 @@ export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
   const clearFilters = () => {
     setQuery("");
     setTypeFilter("all");
+    setVenueFilter("all");
     setStatusFilter("all");
     setPaymentFilter("all");
     setQuoteFilter("all");
@@ -239,6 +257,32 @@ export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
             Payment: admin
           </span>
         )}
+        {row.kind === "retail" && isOrderPreorder(row.entry) && (() => {
+          const p = getPreorderPickupVenue(row.entry.shippingInfo);
+          if (!p.isPickup) return null;
+          return p.claimed ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-bold text-emerald-800">
+              ✓ Claimed
+            </span>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                void (async () => {
+                  try {
+                    await markPreorderClaimed(id, role === "admin" ? "Admin" : "Staff");
+                    setFeedback(`Order ${id} marked as claimed.`);
+                  } catch (err) {
+                    setFeedback(err instanceof Error ? err.message : "Failed to mark as claimed.");
+                  }
+                })();
+              }}
+              className="inline-flex items-center rounded-xl bg-offgrid-green px-2.5 py-1.5 text-xs font-bold text-offgrid-cream hover:bg-offgrid-green/90 shadow-sm transition-colors"
+            >
+              Mark Claimed
+            </button>
+          );
+        })()}
       </div>
     );
   };
@@ -297,18 +341,35 @@ export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
     );
   };
 
-  const typeBadge = (kind: OrderKind) => (
-    <span
-      className={cn(
-        "inline-flex rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em]",
-        kind === "custom"
-          ? "border-offgrid-green/30 bg-offgrid-green text-offgrid-cream"
-          : "border-offgrid-green/12 bg-white text-offgrid-green",
-      )}
-    >
-      {kind}
-    </span>
-  );
+  const typeBadge = (row: Row) => {
+    if (row.kind === "retail" && isOrderPreorder(row.entry)) {
+      const pickup = getPreorderPickupVenue(row.entry.shippingInfo);
+      return (
+        <div className="flex flex-col gap-1 items-start">
+          <span className="inline-flex rounded-full border border-offgrid-lime bg-offgrid-lime/20 px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-[0.14em] text-offgrid-green">
+            ⚡ Pre-Order
+          </span>
+          {pickup.isPickup && (
+            <span className="text-[10px] text-offgrid-green/75 font-semibold">
+              {pickup.venueId === "kado_kohi" ? "Kado Kohi" : "Manila Bloc"}
+            </span>
+          )}
+        </div>
+      );
+    }
+    return (
+      <span
+        className={cn(
+          "inline-flex rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em]",
+          row.kind === "custom"
+            ? "border-offgrid-green/30 bg-offgrid-green text-offgrid-cream"
+            : "border-offgrid-green/12 bg-white text-offgrid-green",
+        )}
+      >
+        {row.kind}
+      </span>
+    );
+  };
 
   return (
     <div className="min-h-full min-w-0 overflow-x-hidden">
@@ -402,15 +463,32 @@ export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
               <div>
                 <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-offgrid-green/40">Type</p>
                 <div className="flex flex-wrap gap-2">
-                  {(["all", "retail", "custom"] as const).map((t) => (
+                  {(["all", "retail", "custom", "preorder"] as const).map((t) => (
                     <Fragment key={t}>
                       <OrderFilterToggle active={typeFilter === t} onClick={() => setTypeFilter(t)}>
-                        {t === "all" ? "All types" : t}
+                        {t === "all" ? "All types" : t === "retail" ? "Shop" : t === "custom" ? "Custom" : "⚡ Pre-Orders"}
                       </OrderFilterToggle>
                     </Fragment>
                   ))}
                 </div>
               </div>
+
+              {typeFilter === "preorder" && (
+                <div>
+                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-offgrid-green/40">Claim Venue</p>
+                  <div className="flex flex-wrap gap-2">
+                    <OrderFilterToggle active={venueFilter === "all"} onClick={() => setVenueFilter("all")}>
+                      All Venues
+                    </OrderFilterToggle>
+                    <OrderFilterToggle active={venueFilter === "kado_kohi"} onClick={() => setVenueFilter("kado_kohi")}>
+                      Kado Kohi (Oct 15+)
+                    </OrderFilterToggle>
+                    <OrderFilterToggle active={venueFilter === "manila_bloc"} onClick={() => setVenueFilter("manila_bloc")}>
+                      Manila Bloc Fest (Oct 17–18)
+                    </OrderFilterToggle>
+                  </div>
+                </div>
+              )}
               <div>
                 <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-offgrid-green/40">Fulfillment</p>
                 <div className="flex max-w-full flex-wrap gap-2">
@@ -530,7 +608,7 @@ export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
                           <p className="font-medium text-offgrid-green">{row.entry.customerName}</p>
                           <p className="mt-0.5 text-xs text-offgrid-green/55">{row.entry.customerEmail}</p>
                         </td>
-                        <td className="px-4 py-3.5 align-top sm:px-5">{typeBadge(row.kind)}</td>
+                        <td className="px-4 py-3.5 align-top sm:px-5">{typeBadge(row)}</td>
                         <td className="px-4 py-3.5 align-top sm:px-5">{fulfillmentBadge(row)}</td>
                         <td className="px-4 py-3.5 align-top sm:px-5">{paymentBadge(row)}</td>
                         <td className="px-4 py-3.5 align-top text-xs text-offgrid-green/75 sm:px-5">
@@ -578,7 +656,7 @@ export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
                         <p className="mt-2 text-sm font-semibold text-offgrid-green">{row.entry.customerName}</p>
                         <p className="mt-0.5 truncate text-xs text-offgrid-green/55">{row.entry.customerEmail}</p>
                       </div>
-                      {typeBadge(row.kind)}
+                      {typeBadge(row)}
                     </div>
                     <div className="mt-4 flex flex-wrap gap-2">
                       {fulfillmentBadge(row)}

@@ -129,7 +129,6 @@ export const products: Product[] = [
     sold: 145,
     tag: "Best Seller",
     tags: ["Best Seller", "Pilipinas", "National Team"],
-    homeBestSellerRank: 1,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     variants: [
@@ -401,6 +400,53 @@ export const products: Product[] = [
       genVariant("the-og-vibe-collection", "SS", "COT", "Black Blossom", "/images/products/og-vibe-blossom-black.webp"),
       genVariant("the-og-vibe-collection", "SS", "COT", "Cream Steampunk", "/images/products/og-vibe-steampunk-cream.webp"),
       genVariant("the-og-vibe-collection", "SS", "COT", "Cream Blossom", "/images/products/og-vibe-blossom-cream.webp"),
+    ],
+  },
+  {
+    id: "the-social-club-collection",
+    slug: "the-social-club-collection",
+    name: "THE SOCIAL CLUB COLLECTION TEE",
+    category: "Lifestyle / The Social Club",
+    sports: ["Lifestyle"],
+    collectionIds: ["the-social-club"],
+    basePrice: 800,
+    price: 760,
+    image: "/images/products/social-club-cover.webp",
+    gallery: [
+      "/images/products/social-club-cover.webp",
+      "/images/products/social-club-chill-sunday.webp",
+      "/images/products/social-club-coffee-cup.webp",
+      "/images/products/social-club-dink-drink.webp",
+      "/images/products/social-club-matcha-therapy.webp",
+    ],
+    colors: [
+      { name: "Chill Sunday", value: "bg-[#7c8b73]", variantSku: "OG-SOCIALCLUB-BOXY-COT-CHILLSUNDAY" },
+      { name: "Coffee and Cup", value: "bg-[#5c4033]", variantSku: "OG-SOCIALCLUB-BOXY-COT-COFFEECUP" },
+      { name: "Dink and Drink", value: "bg-[#2d4030]", variantSku: "OG-SOCIALCLUB-BOXY-COT-DINKDRINK" },
+      { name: "Matcha Therapy", value: "bg-[#8a9a5b]", variantSku: "OG-SOCIALCLUB-BOXY-COT-MATCHATHERAPY" },
+    ],
+    sizes: ["S", "M", "L", "XL", "2XL", "3XL"],
+    sizeRange: "S–3XL",
+    cut: "short_sleeve",
+    fit: "Boxy Cut",
+    fabricType: "cotton",
+    material: "100% Heavyweight Cotton",
+    description:
+      "A new lifestyle collection crafted from 100% heavyweight cotton with a contemporary boxy cut silhouette. Available in four signature coffee and court-inspired graphics: Chill Sunday, Coffee and Cup, Dink and Drink, and Matcha Therapy.",
+    shortDescription: "100% heavyweight cotton boxy cut graphic tee.",
+    status: "active",
+    sold: 0,
+    stock: 30,
+    tag: "Pre-Order",
+    tags: ["Pre-Order", "Lifestyle", "Limited Drop"],
+    homeBestSellerRank: 1,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    variants: [
+      genVariant("the-social-club-collection", "BOXY", "COT", "Chill Sunday", "/images/products/social-club-chill-sunday.webp"),
+      genVariant("the-social-club-collection", "BOXY", "COT", "Coffee and Cup", "/images/products/social-club-coffee-cup.webp"),
+      genVariant("the-social-club-collection", "BOXY", "COT", "Dink and Drink", "/images/products/social-club-dink-drink.webp"),
+      genVariant("the-social-club-collection", "BOXY", "COT", "Matcha Therapy", "/images/products/social-club-matcha-therapy.webp"),
     ],
   },
   {
@@ -1015,7 +1061,7 @@ export function getProductSports(product: Product): string[] {
   if (["Solar Collection", "Primal Collection", "Gym & Training"].includes(product.category)) {
     return ["Gym & Training"];
   }
-  if (["Lifestyle / OG Vibe", "Lifestyle", "Lifestyle / Motoline"].includes(product.category)) {
+  if (["Lifestyle / OG Vibe", "Lifestyle", "Lifestyle / Motoline", "Lifestyle / The Social Club"].includes(product.category)) {
     return ["Lifestyle"];
   }
   return [product.category];

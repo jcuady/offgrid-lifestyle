@@ -9,3 +9,5 @@ export { supabaseAuthService as localAuthService } from "./authService";
 export { supabaseAuditService as localAuditService } from "./auditService";
 export { supabaseStaffService as localStaffService } from "./staffService";
 export { hydratePaymentSettingsFromSupabase, persistPaymentSettings } from "./paymentSettingsService";
+export * as preorderService from "./preorderService";
+

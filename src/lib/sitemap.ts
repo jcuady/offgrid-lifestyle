@@ -10,6 +10,7 @@ export type SitemapEntry = {
 export const STATIC_SITEMAP_ENTRIES: SitemapEntry[] = [
   { path: "/", changefreq: "weekly", priority: 1.0 },
   { path: "/shop", changefreq: "daily", priority: 0.9 },
+  { path: "/pre-order/social-club", changefreq: "daily", priority: 0.95 },
   { path: "/collections", changefreq: "weekly", priority: 0.85 },
   { path: "/custom", changefreq: "weekly", priority: 0.85 },
   { path: "/custom/order", changefreq: "monthly", priority: 0.8 },

@@ -171,6 +171,15 @@ async function sync() {
     },
     {
       kind: "collection",
+      label: "The Social Club",
+      slug: "the-social-club",
+      sort_order: 1,
+      description: "100% heavyweight cotton boxy cut graphic tees and limited pre-order drops.",
+      image_url: "/images/products/social-club-cover.webp",
+      published: true,
+    },
+    {
+      kind: "collection",
       label: "Pickleball Club",
       slug: "pickleball",
       sort_order: 70,

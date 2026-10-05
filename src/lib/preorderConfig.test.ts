@@ -12,6 +12,7 @@ import {
   isOfficialReleaseLive,
   PREORDER_PRODUCT_SLUG,
   PREORDER_PATH,
+  PREORDER_PAYMENT_CONFIG,
 } from "./preorderConfig";
 
 describe("preorderConfig", () => {
@@ -82,5 +83,16 @@ describe("preorderConfig", () => {
   it("has consistent slug and path", () => {
     expect(PREORDER_PRODUCT_SLUG).toBe("the-social-club-collection");
     expect(PREORDER_PATH).toBe("/pre-order/social-club");
+  });
+
+  it("configures QR payment options for BDO and GCash", () => {
+    expect(PREORDER_PAYMENT_CONFIG.gcash).toBeDefined();
+    expect(PREORDER_PAYMENT_CONFIG.gcash.qrImage).toContain("gcash");
+    expect(PREORDER_PAYMENT_CONFIG.gcash.accountNumber).toContain("0917");
+
+    expect(PREORDER_PAYMENT_CONFIG.bdo).toBeDefined();
+    expect(PREORDER_PAYMENT_CONFIG.bdo.qrImage).toContain("bdo");
+    expect(PREORDER_PAYMENT_CONFIG.bdo.accountNumber).toBe("011340033559");
+    expect(PREORDER_PAYMENT_CONFIG.bdo.accountName).toBe("OGLifestylePH");
   });
 });

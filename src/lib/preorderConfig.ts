@@ -83,6 +83,47 @@ export const PREORDER_DESIGNS: PreorderDesign[] = [
 
 export const PREORDER_SIZES = ["S", "M", "L", "XL", "2XL", "3XL"] as const;
 
+export type PreorderPaymentMethod = "gcash" | "bdo";
+
+export interface PreorderPaymentOption {
+  id: PreorderPaymentMethod;
+  name: string;
+  badge: string;
+  qrImage: string;
+  fallbackQrImage: string;
+  accountName: string;
+  accountNumber: string;
+  instructions: string;
+  referenceHint: string;
+}
+
+export const PREORDER_PAYMENT_CONFIG: Record<PreorderPaymentMethod, PreorderPaymentOption> = {
+  gcash: {
+    id: "gcash",
+    name: "GCash QR",
+    badge: "InstaPay / GCash",
+    qrImage: "/payment-qr/gcash.jpg",
+    fallbackQrImage: "/payment qr/GCASH.jpg",
+    accountName: "DO****C KE****H D.",
+    accountNumber: "0917 147 0418",
+    instructions:
+      "Scan the QR code with your GCash app or transfer to the account above. Please include your Order ID in the payment message/remarks.",
+    referenceHint: "GCash Ref. No. (e.g. 100234567890)",
+  },
+  bdo: {
+    id: "bdo",
+    name: "BDO QR",
+    badge: "BDO Unibank / InstaPay",
+    qrImage: "/payment-qr/bdo.jpg",
+    fallbackQrImage: "/payment qr/BDO.jpg",
+    accountName: "OGLifestylePH",
+    accountNumber: "011340033559",
+    instructions:
+      "Scan the QR code with BDO Pay or any InstaPay banking app, or transfer directly to BDO Account 011340033559 (OGLifestylePH). Please include your Order ID in the transfer remarks.",
+    referenceHint: "BDO / InstaPay Ref. No. (e.g. 0123456789)",
+  },
+};
+
 export function isPreorderWindowActive(now: Date = new Date()): boolean {
   const start = new Date(PREORDER_START_ISO).getTime();
   const end = new Date(PREORDER_END_ISO).getTime();

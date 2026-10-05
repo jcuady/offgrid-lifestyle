@@ -10,6 +10,7 @@ export function formatPaymentMethodLabel(method: string | null | undefined): str
   if (!method) return "N/A";
   const m = method.toLowerCase();
   if (m === "gcash") return "GCash";
+  if (m === "bdo") return "BDO QR (InstaPay)";
   if (m === "cod") return "Cash on delivery (COD)";
   if (m === "paymongo") return "PayMongo QR Ph";
   if (m === "card") return "Credit / debit card";

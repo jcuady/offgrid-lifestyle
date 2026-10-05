@@ -13,9 +13,15 @@ import {
   AlertCircle,
   Loader2,
   Wallet,
-  Zap,
+  Building2,
+  Download,
+  Copy,
+  Upload,
+  CheckCircle2,
+  QrCode,
   Info,
   PackageCheck,
+  FileCheck,
 } from "lucide-react";
 import { usePageSeo } from "@/src/hooks/usePageSeo";
 import { formatPrice } from "@/src/data/products";
@@ -32,17 +38,20 @@ import {
   PREORDER_SRP,
   PREORDER_START_ISO,
   PREORDER_VENUES,
+  PREORDER_PAYMENT_CONFIG,
+  type PreorderVenueId,
+  type PreorderPaymentMethod,
   isPreorderWindowActive,
   isPreorderWindowClosed,
-  type PreorderVenueId,
 } from "@/src/lib/preorderConfig";
 import {
   fetchPreorderSlotStatus,
   submitPreorder,
+  submitPreorderPaymentProof,
+  updatePreorderPaymentMethod,
   type PreorderSlotStatus,
 } from "@/src/services/preorderService";
 import { cn } from "@/src/lib/utils";
-import { isGcashQrReady } from "@/src/types/payments";
 import { formatPhilippinePhoneInput } from "@/src/lib/formValidation";
 
 function useCountdown(targetIso: string) {
@@ -102,7 +111,7 @@ export function PreOrderPage() {
   const [selectedSize, setSelectedSize] = useState<string>("L");
   const [quantity, setQuantity] = useState(1);
   const [venueId, setVenueId] = useState<PreorderVenueId>("kado_kohi");
-  const [paymentMethod, setPaymentMethod] = useState<"gcash" | "paymongo">("gcash");
+  const [paymentMethod, setPaymentMethod] = useState<PreorderPaymentMethod>("gcash");
 
   // Contact inputs
   const [fullName, setFullName] = useState(currentUser?.name || "");
@@ -114,6 +123,16 @@ export function PreOrderPage() {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [successOrderId, setSuccessOrderId] = useState<string | null>(null);
+
+  // Post-order payment proof & QR state
+  const [confirmedPaymentMethod, setConfirmedPaymentMethod] = useState<PreorderPaymentMethod>("gcash");
+  const [proofFile, setProofFile] = useState<File | null>(null);
+  const [proofPreviewUrl, setProofPreviewUrl] = useState<string | null>(null);
+  const [proofRefNumber, setProofRefNumber] = useState<string>("");
+  const [proofUploading, setProofUploading] = useState<boolean>(false);
+  const [proofUploadSuccess, setProofUploadSuccess] = useState<boolean>(false);
+  const [proofUploadError, setProofUploadError] = useState<string | null>(null);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
 
   const countdown = useCountdown(PREORDER_END_ISO);
   const isWindowActive = isPreorderWindowActive();
@@ -147,6 +166,50 @@ export function PreOrderPage() {
     };
   }, []);
 
+  const copyToClipboard = (text: string, field: string) => {
+    void navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(null), 2000);
+  };
+
+  const handleSwitchPaymentMethod = async (newMethod: PreorderPaymentMethod) => {
+    if (confirmedPaymentMethod === newMethod) return;
+    setConfirmedPaymentMethod(newMethod);
+    if (successOrderId) {
+      await updatePreorderPaymentMethod(successOrderId, newMethod);
+    }
+  };
+
+  const handleProofSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!successOrderId) return;
+    if (!proofFile && !proofRefNumber.trim()) {
+      setProofUploadError("Please select a screenshot file or enter your reference number.");
+      return;
+    }
+
+    try {
+      setProofUploading(true);
+      setProofUploadError(null);
+      const res = await submitPreorderPaymentProof({
+        orderId: successOrderId,
+        email,
+        file: proofFile,
+        referenceNumber: proofRefNumber,
+      });
+      if (res.success) {
+        setProofUploadSuccess(true);
+        if (res.proofUrl) {
+          setProofPreviewUrl(res.proofUrl);
+        }
+      }
+    } catch (err) {
+      setProofUploadError(err instanceof Error ? err.message : "Upload failed. Please try again.");
+    } finally {
+      setProofUploading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
@@ -168,12 +231,6 @@ export function PreOrderPage() {
       return;
     }
 
-    if (paymentMethod === "gcash" && !isGcashQrReady(paymentSettings.gcashQrImageUrl)) {
-      // If GCash QR image not set in CMS, offer PayMongo
-      setFormError("GCash QR is currently updating. Please select PayMongo QR Ph/Card or try again shortly.");
-      return;
-    }
-
     try {
       setSubmitting(true);
       const orderId = await submitPreorder({
@@ -187,27 +244,8 @@ export function PreOrderPage() {
         paymentMethod,
       });
 
-      if (paymentMethod === "paymongo") {
-        try {
-          const { createPayMongoCheckoutSession, redirectToPayMongoCheckout } = await import(
-            "@/src/lib/paymongo"
-          );
-          const session = await createPayMongoCheckoutSession({
-            orderId,
-            paymentKind: "full",
-            email: email.trim().toLowerCase(),
-          });
-          if (session.checkoutUrl) {
-            redirectToPayMongoCheckout(session.checkoutUrl);
-            return;
-          }
-        } catch (pmErr) {
-          // If PayMongo redirect fails, proceed to order confirmation screen with retry
-          console.warn("PayMongo redirect error:", pmErr);
-        }
-      }
-
       setSuccessOrderId(orderId);
+      setConfirmedPaymentMethod(paymentMethod);
       // Refresh slot status
       void fetchPreorderSlotStatus().then(setSlotStatus);
     } catch (err) {
@@ -291,40 +329,270 @@ export function PreOrderPage() {
               </div>
             </div>
 
-            {/* Payment instructions for GCash */}
-            {paymentMethod === "gcash" && (
-              <div className="mt-6 rounded-2xl border border-offgrid-green/15 bg-white p-5 text-left">
-                <h3 className="font-display font-bold text-base text-offgrid-green flex items-center gap-2">
-                  <Wallet className="h-4 w-4 text-offgrid-lime" />
-                  Complete Payment via GCash
-                </h3>
-                <p className="mt-1 text-xs text-offgrid-green/70">
-                  Scan the QR code below or send <strong>{formatPrice(PREORDER_PRICE * quantity)}</strong> to settle your pre-order slot.
-                </p>
-                {isGcashQrReady(paymentSettings.gcashQrImageUrl) && (
-                  <div className="mt-3 flex justify-center">
-                    <img
-                      src={paymentSettings.gcashQrImageUrl}
-                      alt="OFFGRID GCash QR"
-                      className="max-h-56 rounded-xl border border-offgrid-green/10 shadow-sm"
-                    />
+            {/* Payment Section: QR Display, Mobile Download & Copy, and Proof Uploader */}
+            {(() => {
+              const activeConfig = PREORDER_PAYMENT_CONFIG[confirmedPaymentMethod];
+              return (
+                <div className="mt-6 rounded-3xl border border-offgrid-green/15 bg-white p-5 sm:p-7 text-left shadow-sm space-y-6">
+                  {/* Channel Switcher Tabs */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-offgrid-green/70">
+                        Payment Channel (Scan QR or Transfer)
+                      </span>
+                      <span className="text-[11px] text-offgrid-green/50">Instant InstaPay Transfer</span>
+                    </div>
+                    <div className="flex rounded-xl bg-offgrid-cream p-1 border border-offgrid-green/10">
+                      <button
+                        type="button"
+                        onClick={() => handleSwitchPaymentMethod("gcash")}
+                        className={cn(
+                          "flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all",
+                          confirmedPaymentMethod === "gcash"
+                            ? "bg-white text-offgrid-green shadow-sm ring-1 ring-offgrid-green/10"
+                            : "text-offgrid-green/60 hover:text-offgrid-green",
+                        )}
+                      >
+                        <Wallet className="h-4 w-4 text-offgrid-lime" />
+                        <span>GCash QR</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSwitchPaymentMethod("bdo")}
+                        className={cn(
+                          "flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all",
+                          confirmedPaymentMethod === "bdo"
+                            ? "bg-white text-offgrid-green shadow-sm ring-1 ring-offgrid-green/10"
+                            : "text-offgrid-green/60 hover:text-offgrid-green",
+                        )}
+                      >
+                        <Building2 className="h-4 w-4 text-offgrid-lime" />
+                        <span>BDO QR</span>
+                      </button>
+                    </div>
                   </div>
-                )}
-                {paymentSettings.gcashInstructions && (
-                  <p className="mt-3 text-xs text-offgrid-green/80 whitespace-pre-line bg-offgrid-cream/60 p-3 rounded-xl">
-                    {paymentSettings.gcashInstructions}
-                  </p>
-                )}
-                <div className="mt-4 flex flex-col gap-2">
-                  <Link
-                    to={`/order-status?id=${encodeURIComponent(successOrderId)}&email=${encodeURIComponent(email)}`}
-                    className="w-full text-center rounded-xl bg-offgrid-lime py-3 font-bold text-white hover:bg-offgrid-lime/90 transition-colors shadow-md text-sm"
-                  >
-                    Upload Payment Proof Screenshot
-                  </Link>
+
+                  {/* QR Image and Direct Action Box */}
+                  <div className="flex flex-col sm:flex-row items-center gap-6 rounded-2xl bg-offgrid-cream/40 p-4 sm:p-5 border border-offgrid-green/10">
+                    <div className="relative group shrink-0">
+                      <img
+                        src={activeConfig.qrImage}
+                        alt={`${activeConfig.name} - OFFGRID`}
+                        onError={(e) => {
+                          const target = e.currentTarget as HTMLImageElement;
+                          if (target.src !== activeConfig.fallbackQrImage) {
+                            target.src = activeConfig.fallbackQrImage;
+                          }
+                        }}
+                        className="max-h-56 sm:max-h-64 w-auto rounded-xl border border-offgrid-green/15 bg-white shadow-md object-contain"
+                      />
+                      <div className="mt-2 text-center">
+                        <a
+                          href={activeConfig.qrImage}
+                          download={`OFFGRID-${confirmedPaymentMethod.toUpperCase()}-QR.jpg`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-xs font-bold text-offgrid-lime hover:underline"
+                        >
+                          <Download className="h-3.5 w-3.5" />
+                          Download / Save QR
+                        </a>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3.5 flex-1 min-w-0 w-full">
+                      <div>
+                        <span className="rounded-full bg-offgrid-lime/20 px-2.5 py-0.5 text-[10px] font-mono font-bold text-offgrid-green uppercase">
+                          {activeConfig.badge}
+                        </span>
+                        <h3 className="mt-1 font-display text-lg font-bold text-offgrid-green">
+                          Pay {formatPrice(PREORDER_PRICE * quantity)}
+                        </h3>
+                        <p className="text-xs text-offgrid-green/75 leading-relaxed mt-1">
+                          {activeConfig.instructions}
+                        </p>
+                      </div>
+
+                      {/* Account Details with One-Tap Copy */}
+                      <div className="space-y-2 rounded-xl bg-white p-3.5 border border-offgrid-green/10">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-offgrid-green/60 font-medium">Account / Mobile No.</span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-bold text-offgrid-green">{activeConfig.accountNumber}</span>
+                            <button
+                              type="button"
+                              onClick={() => copyToClipboard(activeConfig.accountNumber.replace(/\s+/g, ""), "accountNumber")}
+                              className="text-offgrid-lime hover:text-offgrid-green transition-colors p-1"
+                              title="Copy Number"
+                            >
+                              {copiedField === "accountNumber" ? (
+                                <span className="text-[10px] font-bold text-emerald-600">Copied!</span>
+                              ) : (
+                                <Copy className="h-3.5 w-3.5" />
+                              )}
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between text-xs pt-2 border-t border-offgrid-green/10">
+                          <span className="text-offgrid-green/60 font-medium">Account Name</span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-offgrid-green truncate max-w-[170px]">{activeConfig.accountName}</span>
+                            <button
+                              type="button"
+                              onClick={() => copyToClipboard(activeConfig.accountName, "accountName")}
+                              className="text-offgrid-lime hover:text-offgrid-green transition-colors p-1"
+                              title="Copy Name"
+                            >
+                              {copiedField === "accountName" ? (
+                                <span className="text-[10px] font-bold text-emerald-600">Copied!</span>
+                              ) : (
+                                <Copy className="h-3.5 w-3.5" />
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Important Reference Prompt */}
+                      <div className="rounded-xl bg-amber-50 border border-amber-200/80 p-3 text-xs text-amber-900 flex items-start gap-2">
+                        <Info className="h-4 w-4 shrink-0 text-amber-700 mt-0.5" />
+                        <div>
+                          <p className="font-bold">Required Reference Note:</p>
+                          <p className="mt-0.5 text-[11px] text-amber-800">
+                            Please type <span className="font-mono font-bold select-all bg-amber-100 px-1 py-0.5 rounded">{successOrderId}</span> in your transfer notes/remarks so we can match your payment instantly.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Inline Proof of Payment Submission */}
+                  <div className="pt-2 border-t border-offgrid-green/10">
+                    {proofUploadSuccess ? (
+                      /* Visual Submitted State */
+                      <div className="rounded-2xl border-2 border-emerald-500/30 bg-emerald-50/50 p-5 text-left">
+                        <div className="flex items-start gap-3.5">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-sm">
+                            <CheckCircle2 className="h-6 w-6" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <h4 className="font-display font-bold text-base text-emerald-950">
+                                Payment Proof Received!
+                              </h4>
+                              <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-emerald-800">
+                                Pending Verification
+                              </span>
+                            </div>
+                            <p className="mt-1 text-xs text-emerald-900/80 leading-relaxed">
+                              Thank you! Our operations team has received your submission and will verify your transfer against order <strong className="font-mono">{successOrderId}</strong> shortly.
+                            </p>
+
+                            {proofRefNumber && (
+                              <p className="mt-2 text-xs text-emerald-900 font-mono">
+                                <strong>Reference:</strong> {proofRefNumber}
+                              </p>
+                            )}
+
+                            {proofPreviewUrl && (
+                              <div className="mt-3">
+                                <p className="text-[11px] font-semibold text-emerald-900/70 mb-1">Attached Receipt Preview:</p>
+                                <img
+                                  src={proofPreviewUrl}
+                                  alt="Receipt preview"
+                                  className="h-28 w-auto rounded-lg border border-emerald-300 object-cover shadow-xs"
+                                />
+                              </div>
+                            )}
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setProofUploadSuccess(false);
+                                setProofFile(null);
+                              }}
+                              className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-emerald-800 underline hover:text-emerald-950"
+                            >
+                              Need to upload another screenshot? Click here
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      /* Upload Proof Form */
+                      <form onSubmit={handleProofSubmit} className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <label className="text-xs font-mono font-bold uppercase tracking-wider text-offgrid-green flex items-center gap-1.5">
+                            <Upload className="h-3.5 w-3.5 text-offgrid-lime" />
+                            Upload Payment Screenshot
+                          </label>
+                          <span className="text-[11px] text-offgrid-green/60">Fast-track confirmation</span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {/* File input */}
+                          <div className="relative">
+                            <input
+                              type="file"
+                              id="payment-proof-file"
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0] || null;
+                                setProofFile(file);
+                                if (file) {
+                                  setProofPreviewUrl(URL.createObjectURL(file));
+                                }
+                              }}
+                              className="hidden"
+                            />
+                            <label
+                              htmlFor="payment-proof-file"
+                              className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-dashed border-offgrid-green/30 bg-offgrid-cream/30 px-3.5 py-2.5 text-xs font-semibold text-offgrid-green hover:bg-offgrid-cream/70 cursor-pointer transition-colors"
+                            >
+                              <Upload className="h-4 w-4 text-offgrid-lime" />
+                              <span className="truncate">
+                                {proofFile ? proofFile.name : "Select Screenshot (JPG/PNG)"}
+                              </span>
+                            </label>
+                          </div>
+
+                          {/* Reference Number input */}
+                          <div>
+                            <input
+                              type="text"
+                              value={proofRefNumber}
+                              onChange={(e) => setProofRefNumber(e.target.value)}
+                              placeholder={activeConfig.referenceHint}
+                              className="w-full min-h-11 rounded-xl border border-offgrid-green/20 bg-white px-3.5 py-2.5 text-xs text-offgrid-green outline-none focus:border-offgrid-lime focus:ring-2 focus:ring-offgrid-lime/25"
+                            />
+                          </div>
+                        </div>
+
+                        {proofUploadError && (
+                          <p className="text-xs text-red-600 font-semibold">{proofUploadError}</p>
+                        )}
+
+                        <Button
+                          type="submit"
+                          disabled={proofUploading || (!proofFile && !proofRefNumber.trim())}
+                          className="w-full bg-offgrid-lime font-bold text-white hover:bg-offgrid-lime/90 py-3 text-xs uppercase tracking-wider shadow-sm"
+                        >
+                          {proofUploading ? (
+                            <>
+                              <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                              Submitting Proof...
+                            </>
+                          ) : (
+                            "Submit Proof of Payment"
+                          )}
+                        </Button>
+                      </form>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             <div className="mt-6 flex flex-col sm:flex-row gap-3">
               <Link
@@ -707,8 +975,8 @@ export function PreOrderPage() {
                   {/* Payment Method Selector */}
                   <div className="space-y-2.5 pt-2 border-t border-offgrid-green/10">
                     <label className="text-xs font-mono font-bold uppercase tracking-wider text-offgrid-green flex items-center justify-between">
-                      <span>Online Payment Method</span>
-                      <span className="text-[10px] text-offgrid-green/50">COD Disabled for Pre-Orders</span>
+                      <span>Exclusive Pre-Order Payment</span>
+                      <span className="text-[10px] text-offgrid-green/50">Direct QR Transfer</span>
                     </label>
 
                     <div className="grid grid-cols-2 gap-2.5">
@@ -718,31 +986,31 @@ export function PreOrderPage() {
                         className={cn(
                           "flex items-center gap-2.5 rounded-xl border-2 p-3 text-left transition-all outline-none",
                           paymentMethod === "gcash"
-                            ? "border-offgrid-green bg-offgrid-green/5 shadow-sm"
+                            ? "border-offgrid-green bg-offgrid-green/5 shadow-sm ring-1 ring-offgrid-lime/40"
                             : "border-offgrid-green/15 bg-white hover:border-offgrid-green/30",
                         )}
                       >
                         <Wallet className="h-5 w-5 text-offgrid-lime shrink-0" />
                         <div>
                           <p className="font-bold text-xs text-offgrid-green">GCash QR</p>
-                          <p className="text-[10px] text-offgrid-green/60">Upload proof</p>
+                          <p className="text-[10px] text-offgrid-green/60">InstaPay / GCash</p>
                         </div>
                       </button>
 
                       <button
                         type="button"
-                        onClick={() => setPaymentMethod("paymongo")}
+                        onClick={() => setPaymentMethod("bdo")}
                         className={cn(
                           "flex items-center gap-2.5 rounded-xl border-2 p-3 text-left transition-all outline-none",
-                          paymentMethod === "paymongo"
-                            ? "border-offgrid-green bg-offgrid-green/5 shadow-sm"
+                          paymentMethod === "bdo"
+                            ? "border-offgrid-green bg-offgrid-green/5 shadow-sm ring-1 ring-offgrid-lime/40"
                             : "border-offgrid-green/15 bg-white hover:border-offgrid-green/30",
                         )}
                       >
-                        <Zap className="h-5 w-5 text-amber-500 shrink-0" />
+                        <Building2 className="h-5 w-5 text-offgrid-lime shrink-0" />
                         <div>
-                          <p className="font-bold text-xs text-offgrid-green">PayMongo</p>
-                          <p className="text-[10px] text-offgrid-green/60">QR Ph / Maya / Card</p>
+                          <p className="font-bold text-xs text-offgrid-green">BDO QR</p>
+                          <p className="text-[10px] text-offgrid-green/60">InstaPay / Bank</p>
                         </div>
                       </button>
                     </div>

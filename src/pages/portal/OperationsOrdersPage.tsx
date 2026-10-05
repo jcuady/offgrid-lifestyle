@@ -270,7 +270,10 @@ export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
               onClick={() => {
                 void (async () => {
                   try {
-                    await markPreorderClaimed(id, role === "admin" ? "Admin" : "Staff");
+                    await markPreorderClaimed(id, {
+                      staffName: role === "admin" ? "Admin" : "Staff",
+                      confirmPaymentOnSpot: row.entry.paymentStatus !== "fully_paid",
+                    });
                     setFeedback(`Order ${id} marked as claimed.`);
                   } catch (err) {
                     setFeedback(err instanceof Error ? err.message : "Failed to mark as claimed.");
@@ -279,7 +282,7 @@ export function OperationsOrdersPage({ role }: OperationsOrdersPageProps) {
               }}
               className="inline-flex items-center rounded-xl bg-offgrid-green px-2.5 py-1.5 text-xs font-bold text-offgrid-cream hover:bg-offgrid-green/90 shadow-sm transition-colors"
             >
-              Mark Claimed
+              {row.entry.paymentStatus !== "fully_paid" ? "Verify & Claim" : "Mark Claimed"}
             </button>
           );
         })()}

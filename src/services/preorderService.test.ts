@@ -61,13 +61,16 @@ describe("preorderService", () => {
   });
 
   describe("getPreorderPickupVenue", () => {
-    it("extracts venue and claim status when fulfillmentType is pickup", () => {
+    it("extracts venue, claim status, claimant name, and notes when fulfillmentType is pickup", () => {
       const shipping = {
         fulfillmentType: "pickup",
         pickupVenue: "kado_kohi",
         pickupVenueLabel: "Kado Kohi - Marikina Branch",
         claimed: true,
         claimedAt: "2026-10-15T10:00:00Z",
+        claimedBy: "Staff Maria",
+        claimantName: "Pedro Penduko (Brother)",
+        claimNotes: "Student ID verified",
       };
       const result = getPreorderPickupVenue(shipping);
       expect(result.isPickup).toBe(true);
@@ -75,6 +78,9 @@ describe("preorderService", () => {
       expect(result.venueLabel).toBe("Kado Kohi - Marikina Branch");
       expect(result.claimed).toBe(true);
       expect(result.claimedAt).toBe("2026-10-15T10:00:00Z");
+      expect(result.claimedBy).toBe("Staff Maria");
+      expect(result.claimantName).toBe("Pedro Penduko (Brother)");
+      expect(result.claimNotes).toBe("Student ID verified");
     });
 
     it("returns isPickup false for regular delivery addresses", () => {

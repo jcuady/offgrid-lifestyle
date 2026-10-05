@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
-import { ArrowLeft, CheckCircle2, ImageOff } from "lucide-react";
+import { AlertTriangle, ArrowLeft, CheckCircle2, ImageOff, PackageCheck, X } from "lucide-react";
 import { usePortalStore, type ManagedCustomOrder } from "@/src/store/usePortalStore";
 import { useSiteContentStore } from "@/src/store/useSiteContentStore";
 import {
@@ -319,6 +319,10 @@ export function OperationsOrderDetailPage() {
   const hasPaymentProof = customProof.hasPaymentProof;
   const isPreorder = retail ? isOrderPreorder(retail) : false;
   const pickupInfo = retail ? getPreorderPickupVenue(retail.shippingInfo) : { isPickup: false };
+  const [showHandoverModal, setShowHandoverModal] = useState(false);
+  const [claimantNameInput, setClaimantNameInput] = useState("");
+  const [claimNotesInput, setClaimNotesInput] = useState("");
+  const [confirmPaymentChecked, setConfirmPaymentChecked] = useState(false);
 
   const hasLegacyCustomSpecs = Boolean(
     custom &&
@@ -331,6 +335,25 @@ export function OperationsOrderDetailPage() {
         ? "Towels"
         : "Headwear"
     : "—";
+
+  const handleHandoverSubmit = async () => {
+    if (!retail) return;
+    setClaimUpdating(true);
+    try {
+      await markPreorderClaimed(retail.id, {
+        staffName: currentUser?.name || (role === "admin" ? "Admin" : "Staff"),
+        claimantName: claimantNameInput.trim() || undefined,
+        claimNotes: claimNotesInput.trim() || undefined,
+        confirmPaymentOnSpot: confirmPaymentChecked,
+      });
+      setFeedback(`Order ${retail.id} handed over and marked as claimed.`);
+      setShowHandoverModal(false);
+    } catch (err) {
+      setFeedback(err instanceof Error ? err.message : "Failed to mark as claimed.");
+    } finally {
+      setClaimUpdating(false);
+    }
+  };
 
   if (!orderId || loading) {
     return (
@@ -519,7 +542,7 @@ export function OperationsOrderDetailPage() {
                   </dl>
 
                   {/* Claim Status and Action */}
-                  <div className="pt-3 border-t border-offgrid-green/10 flex flex-col gap-2">
+                  <div className="pt-3 border-t border-offgrid-green/10 flex flex-col gap-2.5">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-semibold text-offgrid-green/70">Claim Status:</span>
                       {pickupInfo.claimed ? (
@@ -534,26 +557,49 @@ export function OperationsOrderDetailPage() {
                       )}
                     </div>
 
-                    {!pickupInfo.claimed && (
-                      <Button
-                        type="button"
-                        size="sm"
-                        disabled={claimUpdating}
-                        onClick={async () => {
-                          setClaimUpdating(true);
-                          try {
-                            await markPreorderClaimed(retail.id, currentUser?.name || "Staff");
-                            setFeedback(`Order ${retail.id} marked as claimed.`);
-                          } catch (err) {
-                            setFeedback(err instanceof Error ? err.message : "Failed to mark as claimed.");
-                          } finally {
-                            setClaimUpdating(false);
-                          }
-                        }}
-                        className="mt-2 w-full bg-offgrid-green text-offgrid-cream hover:bg-offgrid-green/90 font-bold"
-                      >
-                        {claimUpdating ? "Updating..." : "Mark as Claimed (Handed Over)"}
-                      </Button>
+                    {pickupInfo.claimed ? (
+                      <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-3 text-xs space-y-1 text-emerald-950">
+                        {pickupInfo.claimedBy && (
+                          <p><span className="font-semibold text-emerald-900">Verified by Staff:</span> {pickupInfo.claimedBy}</p>
+                        )}
+                        {pickupInfo.claimantName && (
+                          <p><span className="font-semibold text-emerald-900">Claimant / Rep:</span> {pickupInfo.claimantName}</p>
+                        )}
+                        {pickupInfo.claimNotes && (
+                          <p><span className="font-semibold text-emerald-900">Handover Notes:</span> {pickupInfo.claimNotes}</p>
+                        )}
+                      </div>
+                    ) : (
+                      <>
+                        {retail.paymentStatus !== "fully_paid" && (
+                          <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-950">
+                            <div className="flex items-center gap-1.5 font-bold text-amber-900">
+                              <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
+                              <span>Payment Unconfirmed ({formatPaymentStatus(retail.paymentStatus)})</span>
+                            </div>
+                            <p className="mt-1 text-amber-900/80 leading-relaxed text-[11px]">
+                              Verify customer payment proof before handing over shirts, or confirm on-site payment in the handover checklist.
+                            </p>
+                            {retail.paymentProviderRef && (
+                              <p className="mt-1 font-mono text-amber-950 text-[11px]">
+                                Submitted Ref: <strong>{retail.paymentProviderRef}</strong>
+                              </p>
+                            )}
+                          </div>
+                        )}
+
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() => {
+                            setConfirmPaymentChecked(retail.paymentStatus !== "fully_paid");
+                            setShowHandoverModal(true);
+                          }}
+                          className="mt-1 w-full bg-offgrid-green text-offgrid-cream hover:bg-offgrid-green/90 font-bold"
+                        >
+                          Verify & Hand Over Items
+                        </Button>
+                      </>
                     )}
                   </div>
                 </div>
@@ -1101,6 +1147,137 @@ export function OperationsOrderDetailPage() {
           </div>
         </div>
       ) : null}
+
+      {showHandoverModal && retail && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-lg rounded-3xl border border-offgrid-green/20 bg-white p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-offgrid-green/10 pb-4">
+              <div>
+                <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-offgrid-lime">
+                  Handover Checklist
+                </span>
+                <h3 className="font-display font-black text-xl text-offgrid-green">
+                  Pre-Order Claim Verification
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowHandoverModal(false)}
+                className="rounded-full p-1.5 text-offgrid-green/50 hover:bg-offgrid-cream hover:text-offgrid-green"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="mt-4 space-y-4">
+              {/* Order & Recipient summary */}
+              <div className="rounded-xl border border-offgrid-green/15 bg-offgrid-cream/40 p-3.5 text-xs text-offgrid-green">
+                <div className="flex justify-between items-center">
+                  <span className="font-mono font-bold">{retail.id}</span>
+                  <span className="font-semibold text-offgrid-green/70">{pickupInfo.venueLabel}</span>
+                </div>
+                <p className="mt-1 font-medium">Customer: <strong>{retail.customerName}</strong></p>
+              </div>
+
+              {/* Item Checklist to Physically Hand Over */}
+              <div>
+                <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-offgrid-green/60 mb-2">
+                  Items to Hand Over
+                </p>
+                <div className="space-y-2 rounded-2xl border border-offgrid-green/15 bg-white p-3">
+                  {retail.lines.map((line) => (
+                    <div key={line.lineItemId} className="flex items-center justify-between text-xs py-1 border-b border-offgrid-green/8 last:border-0">
+                      <div className="flex items-center gap-2">
+                        <PackageCheck className="h-4 w-4 text-emerald-600 shrink-0" />
+                        <div>
+                          <span className="font-bold text-offgrid-green">{line.name}</span>
+                          <span className="ml-2 font-mono text-[11px] bg-offgrid-cream px-1.5 py-0.5 rounded text-offgrid-green">
+                            Size: {line.size}
+                          </span>
+                        </div>
+                      </div>
+                      <span className="font-bold font-mono text-offgrid-green">Qty: {line.quantity}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Payment Warning & On-the-spot confirmation */}
+              {retail.paymentStatus !== "fully_paid" && (
+                <div className="rounded-xl border border-amber-300 bg-amber-50 p-3.5 text-xs">
+                  <div className="flex items-center gap-2 font-bold text-amber-900">
+                    <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
+                    <span>Payment Unconfirmed ({formatPaymentStatus(retail.paymentStatus)})</span>
+                  </div>
+                  {retail.paymentProviderRef && (
+                    <p className="mt-1 text-amber-900 font-mono">
+                      Submitted Ref: <strong>{retail.paymentProviderRef}</strong>
+                    </p>
+                  )}
+                  <label className="mt-2.5 flex items-center gap-2 font-bold text-amber-950 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={confirmPaymentChecked}
+                      onChange={(e) => setConfirmPaymentChecked(e.target.checked)}
+                      className="h-4 w-4 rounded border-amber-300 text-offgrid-green focus:ring-offgrid-lime"
+                    />
+                    <span>Confirm payment received on the spot (mark as Paid)</span>
+                  </label>
+                </div>
+              )}
+
+              {/* Optional representative and ID notes */}
+              <div className="space-y-3">
+                <div>
+                  <label className="block font-mono text-[10px] font-bold uppercase tracking-wider text-offgrid-green/60 mb-1">
+                    Claimant Name (Leave blank if claimed by customer)
+                  </label>
+                  <input
+                    type="text"
+                    value={claimantNameInput}
+                    onChange={(e) => setClaimantNameInput(e.target.value)}
+                    placeholder="e.g. Maria Santos (Authorized representative)"
+                    className="w-full rounded-xl border border-offgrid-green/20 bg-white px-3 py-2 text-xs text-offgrid-green outline-none focus:border-offgrid-lime focus:ring-1 focus:ring-offgrid-lime"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-mono text-[10px] font-bold uppercase tracking-wider text-offgrid-green/60 mb-1">
+                    ID / Verification Notes (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={claimNotesInput}
+                    onChange={(e) => setClaimNotesInput(e.target.value)}
+                    placeholder="e.g. Student ID verified, signed physical claim sheet"
+                    className="w-full rounded-xl border border-offgrid-green/20 bg-white px-3 py-2 text-xs text-offgrid-green outline-none focus:border-offgrid-lime focus:ring-1 focus:ring-offgrid-lime"
+                  />
+                </div>
+              </div>
+
+              {/* Action buttons */}
+              <div className="mt-5 flex gap-2 border-t border-offgrid-green/10 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setShowHandoverModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  disabled={claimUpdating || (retail.paymentStatus !== "fully_paid" && !confirmPaymentChecked)}
+                  onClick={handleHandoverSubmit}
+                  className="flex-1 bg-offgrid-green text-offgrid-cream hover:bg-offgrid-green/90 font-bold"
+                >
+                  {claimUpdating ? "Confirming..." : "Confirm Handover & Claim"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

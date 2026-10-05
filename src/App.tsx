@@ -286,6 +286,7 @@ function AppFrame() {
         <Route path="/portal/login" element={<PortalLoginPage />} />
         <Route path="/portal/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/portal/orders/:orderId" element={<PortalOrderRedirect />} />
+        <Route path="/portal/ops/orders/:orderId" element={<PortalOrderRedirect />} />
         <Route path="/portal" element={<PortalIndexRedirect />} />
         <Route
           path="/account/orders"

@@ -1,4 +1,4 @@
-﻿import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
+import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
 import {
   canContinuePasswordRecovery,
   clearPasswordRecoveryIntent,
@@ -48,16 +48,19 @@ describe("parseImplicitAuthHash", () => {
 });
 
 describe("password recovery stash + intent", () => {
-  const store = new Map();
+  const store = new Map<string, string>();
+  const fakeStorage = {
+    getItem: (k: string) => store.get(k) ?? null,
+    setItem: (k: string, v: string) => { store.set(k, String(v)); },
+    removeItem: (k: string) => { store.delete(k); },
+    clear: () => { store.clear(); },
+  };
 
   beforeEach(() => {
     store.clear();
+    vi.stubGlobal("sessionStorage", fakeStorage);
     vi.stubGlobal("window", {
-      sessionStorage: {
-        getItem: (k) => store.get(k) ?? null,
-        setItem: (k, v) => { store.set(k, v); },
-        removeItem: (k) => { store.delete(k); },
-      },
+      sessionStorage: fakeStorage,
       location: {
         pathname: "/account/reset-password",
         hash: "#access_token=tok&refresh_token=ref&type=recovery",

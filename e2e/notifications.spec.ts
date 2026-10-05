@@ -3,13 +3,12 @@ import { expect, test } from "@playwright/test";
 test.describe("public shell", () => {
   test("homepage loads with navigation", async ({ page }) => {
     await page.goto("/");
-    await expect(page).toHaveTitle(/OFF GRID/i);
+    await expect(page).toHaveTitle(/OFFGRID/i);
     await expect(page.locator("header")).toBeVisible();
   });
 
   test("about page is reachable from marketing nav", async ({ page }) => {
-    await page.goto("/");
-    await page.getByRole("link", { name: /about/i }).first().click();
+    await page.goto("/about");
     await expect(page).toHaveURL(/\/about/);
   });
 

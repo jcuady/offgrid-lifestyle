@@ -42,6 +42,8 @@ export interface ExtendedPreorderShippingInfo extends ShippingInfo {
   claimed: boolean;
   claimedAt: string | null;
   claimedBy: string | null;
+  claimantName?: string | null;
+  claimNotes?: string | null;
 }
 
 export function isOrderPreorder(order: { id: string; lines?: RetailOrderLine[]; line_items?: unknown }): boolean {
@@ -50,13 +52,18 @@ export function isOrderPreorder(order: { id: string; lines?: RetailOrderLine[]; 
   return lines.some((l) => l.productId === PREORDER_PRODUCT_SLUG);
 }
 
-export function getPreorderPickupVenue(shippingInfo: unknown): {
+export interface PreorderPickupVenueInfo {
   isPickup: boolean;
   venueId?: PreorderVenueId;
   venueLabel?: string;
   claimed?: boolean;
   claimedAt?: string | null;
-} {
+  claimedBy?: string | null;
+  claimantName?: string | null;
+  claimNotes?: string | null;
+}
+
+export function getPreorderPickupVenue(shippingInfo: unknown): PreorderPickupVenueInfo {
   if (!shippingInfo || typeof shippingInfo !== "object") {
     return { isPickup: false };
   }
@@ -68,6 +75,9 @@ export function getPreorderPickupVenue(shippingInfo: unknown): {
     venueLabel: (s.pickupVenueLabel as string) || undefined,
     claimed: Boolean(s.claimed),
     claimedAt: (s.claimedAt as string) || null,
+    claimedBy: (s.claimedBy as string) || null,
+    claimantName: (s.claimantName as string) || null,
+    claimNotes: (s.claimNotes as string) || null,
   };
 }
 
@@ -261,11 +271,38 @@ export async function submitPreorder(input: SubmitPreorderInput): Promise<string
   return orderId;
 }
 
-export async function markPreorderClaimed(orderId: string, staffName: string): Promise<void> {
+export interface MarkPreorderClaimedOptions {
+  staffName: string;
+  claimantName?: string;
+  claimNotes?: string;
+  confirmPaymentOnSpot?: boolean;
+}
+
+export async function markPreorderClaimed(
+  orderId: string,
+  staffNameOrOptions: string | MarkPreorderClaimedOptions,
+): Promise<void> {
+  const staffName =
+    typeof staffNameOrOptions === "string"
+      ? staffNameOrOptions || "Staff"
+      : staffNameOrOptions.staffName || "Staff";
+  const claimantName =
+    typeof staffNameOrOptions === "object"
+      ? staffNameOrOptions.claimantName?.trim() || null
+      : null;
+  const claimNotes =
+    typeof staffNameOrOptions === "object"
+      ? staffNameOrOptions.claimNotes?.trim() || null
+      : null;
+  const confirmPaymentOnSpot =
+    typeof staffNameOrOptions === "object"
+      ? Boolean(staffNameOrOptions.confirmPaymentOnSpot)
+      : false;
+
   // Fetch existing shipping_info
   const { data, error } = await supabase
     .from("og_orders")
-    .select("shipping_info")
+    .select("shipping_info, payment_status")
     .eq("id", orderId)
     .single();
 
@@ -278,15 +315,29 @@ export async function markPreorderClaimed(orderId: string, staffName: string): P
     ...existingShipping,
     claimed: true,
     claimedAt: new Date().toISOString(),
-    claimedBy: staffName || "Staff",
+    claimedBy: staffName,
+    ...(claimantName ? { claimantName } : {}),
+    ...(claimNotes ? { claimNotes } : {}),
   };
+
+  const patch: {
+    shipping_info?: Json;
+    status?: string;
+    updated_at?: string;
+    payment_status?: string;
+  } = {
+    shipping_info: updatedShipping as unknown as Json,
+    status: "delivered", // maps to 'Claimed' for pickup orders in UI
+    updated_at: new Date().toISOString(),
+  };
+
+  if (confirmPaymentOnSpot) {
+    patch.payment_status = "fully_paid";
+  }
 
   const { error: updateError } = await supabase
     .from("og_orders")
-    .update({
-      shipping_info: updatedShipping as unknown as Json,
-      status: "delivered", // maps to 'Claimed' for pickup orders in UI
-    })
+    .update(patch)
     .eq("id", orderId);
 
   if (updateError) {
@@ -298,6 +349,9 @@ export async function markPreorderClaimed(orderId: string, staffName: string): P
   const order = state.retailOrders.find((o) => o.id === orderId);
   if (order) {
     state.updateRetailOrderStatus(orderId, "delivered");
+    if (confirmPaymentOnSpot) {
+      state.updateRetailPaymentStatus(orderId, "fully_paid");
+    }
   }
 }
 

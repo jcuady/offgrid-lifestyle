@@ -119,41 +119,133 @@ export function OrderReceiptView({
           (shippingInfo?.pickupAvailableDate as string) || "Starting October 15, 2026";
         const mapsUrl = (shippingInfo?.pickupMapsUrl as string) || null;
         const isClaimed = Boolean(shippingInfo?.claimed);
+        const claimedAt = (shippingInfo?.claimedAt as string) || null;
+        const claimedBy = (shippingInfo?.claimedBy as string) || null;
+        const claimantName = (shippingInfo?.claimantName as string) || null;
+        const claimNotes = (shippingInfo?.claimNotes as string) || null;
 
         if (!isPickup) return null;
 
-        return (
-          <section className="mt-5 rounded-xl border border-offgrid-green/20 bg-offgrid-cream/45 p-4 text-sm">
-            <div className="flex items-center justify-between">
-              <span className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-offgrid-green/60">
-                📍 In-Person Claiming Partner
-              </span>
-              {isClaimed ? (
-                <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800">
-                  Claimed
+        const origin = typeof window !== "undefined" ? window.location.origin : "https://www.oglifestyleph.com";
+        const claimValidationUrl = `${origin}/portal/ops/orders/${encodeURIComponent(orderId)}`;
+        const claimQrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(claimValidationUrl)}`;
+
+        if (isClaimed) {
+          return (
+            <section className="mt-5 rounded-2xl border-2 border-emerald-500/35 bg-emerald-50/70 p-5 text-emerald-950 text-left">
+              <div className="flex items-center justify-between gap-2 border-b border-emerald-200/60 pb-3">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-600 text-white font-black text-xs">
+                    ✓
+                  </span>
+                  <span className="font-mono text-xs font-black uppercase tracking-wider text-emerald-900">
+                    Pre-Order Claimed & Redeemed
+                  </span>
+                </div>
+                <span className="rounded-full bg-emerald-200/80 px-2.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-emerald-900">
+                  Redeemed
                 </span>
-              ) : (
-                <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-bold text-amber-800">
-                  Awaiting Pickup
-                </span>
-              )}
-            </div>
-            <p className="mt-1.5 text-base font-bold text-offgrid-green">{venueLabel}</p>
-            <p className="mt-0.5 text-xs text-offgrid-green/75">
-              Available: <span className="font-semibold text-offgrid-green">{availableDate}</span>
-            </p>
-            {mapsUrl ? (
-              <div className="mt-2.5">
-                <a
-                  href={mapsUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center text-xs font-semibold text-offgrid-green underline hover:text-offgrid-green/80"
-                >
-                  Open location on Google Maps ↗
-                </a>
               </div>
-            ) : null}
+
+              <p className="mt-3 text-xs text-emerald-900/80 leading-relaxed">
+                This order was verified and handed over at the pickup partner venue. It cannot be redeemed again.
+              </p>
+
+              <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2.5 rounded-xl bg-white/70 p-3 text-xs border border-emerald-200/50">
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-emerald-800/60">Claimed At</span>
+                  <p className="font-semibold text-emerald-950 mt-0.5">
+                    {claimedAt ? formatOrderTimestamp(claimedAt) : "Verified in person"}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-emerald-800/60">Pickup Partner</span>
+                  <p className="font-semibold text-emerald-950 mt-0.5">{venueLabel}</p>
+                </div>
+                {claimedBy && (
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-emerald-800/60">Verified By Staff</span>
+                    <p className="font-semibold text-emerald-950 mt-0.5">{claimedBy}</p>
+                  </div>
+                )}
+                {claimantName && (
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-emerald-800/60">Claimed By (Claimant)</span>
+                    <p className="font-semibold text-emerald-950 mt-0.5">{claimantName}</p>
+                  </div>
+                )}
+                {claimNotes && (
+                  <div className="sm:col-span-2">
+                    <span className="text-[10px] uppercase font-bold text-emerald-800/60">Verification Notes</span>
+                    <p className="font-semibold text-emerald-950 mt-0.5">{claimNotes}</p>
+                  </div>
+                )}
+              </div>
+            </section>
+          );
+        }
+
+        return (
+          <section className="mt-5 rounded-2xl border-2 border-offgrid-green/20 bg-white p-5 text-sm text-offgrid-green shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-offgrid-green/10 pb-3">
+              <div>
+                <span className="rounded-full bg-offgrid-lime/20 text-offgrid-green px-2.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-widest">
+                  Official Digital Pass
+                </span>
+                <h3 className="font-display font-black text-lg tracking-tight text-offgrid-green mt-1">
+                  Pre-Order Claim Pass
+                </h3>
+              </div>
+              <span className="rounded-full bg-amber-100 text-amber-800 px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-wider">
+                Ready for Pickup
+              </span>
+            </div>
+
+            <div className="mt-4 flex flex-col sm:flex-row items-center gap-5">
+              {/* Dynamic QR code for staff scanning */}
+              <div className="flex flex-col items-center rounded-xl border border-offgrid-green/15 bg-offgrid-cream/35 p-3 shrink-0 text-center">
+                <img
+                  src={claimQrImageUrl}
+                  alt={`Claim QR code for order ${orderId}`}
+                  className="h-32 w-32 rounded-lg bg-white p-1.5 shadow-xs"
+                  loading="lazy"
+                />
+                <span className="mt-2 font-mono text-[9px] font-bold uppercase tracking-wider text-offgrid-green/70">
+                  Staff Scan to Validate
+                </span>
+              </div>
+
+              {/* Venue details and claiming requirements */}
+              <div className="flex-1 space-y-2 text-xs text-left">
+                <div>
+                  <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-offgrid-green/50">
+                    Pickup Partner Venue
+                  </p>
+                  <p className="text-sm font-bold text-offgrid-green">{venueLabel}</p>
+                </div>
+                <div>
+                  <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-offgrid-green/50">
+                    Claiming Schedule
+                  </p>
+                  <p className="font-medium text-offgrid-green">{availableDate}</p>
+                </div>
+                <div className="rounded-xl border border-amber-200/70 bg-amber-50/70 p-2.5 text-[11px] text-amber-900 leading-relaxed">
+                  <strong>Verification Requirement:</strong> Present this Claim Pass on your phone alongside a valid ID matching <strong>{customerName}</strong>. If a representative is claiming, provide them with an authorization letter/note.
+                </div>
+                {mapsUrl ? (
+                  <div className="pt-1">
+                    <a
+                      href={mapsUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center text-xs font-semibold text-offgrid-green underline hover:text-offgrid-green/80"
+                    >
+                      Open location on Google Maps ↗
+                    </a>
+                  </div>
+                ) : null}
+              </div>
+            </div>
           </section>
         );
       })()}

@@ -1,6 +1,7 @@
 import { supabase } from "@/src/lib/supabase";
 import { usePortalStore } from "@/src/store/usePortalStore";
 import { notifyStaffOrderEvent } from "@/src/lib/notifications";
+import { toStorageReference } from "@/src/lib/storageAccess";
 import { sendOrderReceiptEmail } from "@/src/services/emailService";
 import {
   PREORDER_DESIGNS,
@@ -359,33 +360,44 @@ export async function updatePreorderPaymentMethod(
   orderId: string,
   newMethod: PreorderPaymentMethod,
 ): Promise<void> {
-  // Update in local store
+  const order = usePortalStore.getState().retailOrders.find((entry) => entry.id === orderId);
+  await callOrderPaymentRpc({
+    orderId,
+    email: order?.customerEmail ?? "",
+    paymentMethod: newMethod,
+  });
+
+  // Mirror locally only once the database accepted it.
   usePortalStore.setState((state) => ({
     retailOrders: state.retailOrders.map((entry) =>
       entry.id === orderId
-        ? {
-            ...entry,
-            paymentMethod: newMethod,
-            updatedAt: new Date().toISOString(),
-          }
+        ? { ...entry, paymentMethod: newMethod, updatedAt: new Date().toISOString() }
         : entry,
     ),
   }));
+}
 
-  try {
-    const { error } = await supabase
-      .from("og_orders")
-      .update({ payment_method: newMethod, updated_at: new Date().toISOString() })
-      .eq("id", orderId);
-    if (error && error.message.includes("og_orders_payment_method_check")) {
-      await supabase
-        .from("og_orders")
-        .update({ payment_method: "gcash", updated_at: new Date().toISOString() })
-        .eq("id", orderId);
-    }
-  } catch {
-    // Non-fatal if offline or DB error
-  }
+/**
+ * Single guest- and customer-safe write path for the post-checkout payment step.
+ * The RPC checks ownership (order email or signed-in owner) and the proof path, so no
+ * direct og_orders UPDATE is needed (RLS gives guests none, and customers may not touch
+ * payment columns).
+ */
+async function callOrderPaymentRpc(args: {
+  orderId: string;
+  email: string;
+  paymentMethod?: PreorderPaymentMethod | null;
+  proofRef?: string | null;
+  reference?: string | null;
+}): Promise<void> {
+  const { error } = await supabase.rpc("og_submit_order_payment", {
+    p_order_id: args.orderId,
+    p_email: args.email,
+    p_payment_method: args.paymentMethod ?? null,
+    p_proof_ref: args.proofRef ?? null,
+    p_reference: args.reference ?? null,
+  });
+  if (error) throw new Error(error.message);
 }
 
 export interface SubmitPreorderPaymentProofInput {
@@ -405,29 +417,29 @@ export interface PreorderPaymentProofResult {
 export async function submitPreorderPaymentProof(
   input: SubmitPreorderPaymentProofInput,
 ): Promise<PreorderPaymentProofResult> {
-  let uploadedUrl: string | null = null;
+  let proofRef: string | null = null;
   const cleanRef = input.referenceNumber?.trim() || null;
 
   if (input.file) {
-    try {
-      const ext = input.file.name.split(".").pop() || "jpg";
-      const filePath = `${input.orderId}/${Date.now()}-proof.${ext}`;
-      const { data, error } = await supabase.storage
-        .from("payment-proofs")
-        .upload(filePath, input.file, { upsert: true });
+    const ext =
+      (input.file.name.split(".").pop() ?? "").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 5) || "jpg";
+    const filePath = `${input.orderId}/${Date.now()}-proof.${ext}`;
+    const { data, error } = await supabase.storage
+      .from("payment-proofs")
+      .upload(filePath, input.file, { upsert: false, contentType: input.file.type || undefined });
 
-      if (!error && data?.path) {
-        uploadedUrl = data.path;
-      }
-    } catch {
-      // Offline fallback: Use browser blob URL for instant preview
-      try {
-        uploadedUrl = URL.createObjectURL(input.file);
-      } catch {
-        uploadedUrl = null;
-      }
+    if (error || !data?.path) {
+      throw new Error(`Could not upload your screenshot: ${error?.message ?? "unknown error"}`);
     }
+    proofRef = toStorageReference("payment-proofs", data.path);
   }
+
+  await callOrderPaymentRpc({
+    orderId: input.orderId,
+    email: input.email,
+    proofRef,
+    reference: cleanRef,
+  });
 
   // Update in local Zustand store
   usePortalStore.setState((state) => ({
@@ -442,28 +454,12 @@ export async function submitPreorderPaymentProof(
     ),
   }));
 
-  // Update in Supabase
-  try {
-    const patch: {
-      updated_at: string;
-      payment_proof_url?: string | null;
-      payment_provider_ref?: string | null;
-    } = {
-      updated_at: new Date().toISOString(),
-    };
-    if (uploadedUrl) patch.payment_proof_url = uploadedUrl;
-    if (cleanRef) patch.payment_provider_ref = cleanRef;
-
-    await supabase.from("og_orders").update(patch).eq("id", input.orderId);
-  } catch {
-    // Non-fatal
-  }
-
   void notifyStaffOrderEvent(input.orderId, "payment_proof");
 
   return {
     success: true,
-    proofUrl: uploadedUrl,
+    /** Storage reference (`bucket:path`) as stored on the order - not a browsable URL. */
+    proofUrl: proofRef,
     referenceNumber: cleanRef,
   };
 }

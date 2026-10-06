@@ -973,6 +973,20 @@ export type Database = {
         Returns: undefined
       }
       og_staff_admin_user_ids: { Args: Record<string, never>; Returns: string[] }
+      og_finalize_custom_order: {
+        Args: { p_order_id: string; p_email: string; p_payload: Json }
+        Returns: undefined
+      }
+      og_submit_order_payment: {
+        Args: {
+          p_order_id: string
+          p_email: string
+          p_payment_method?: string | null
+          p_proof_ref?: string | null
+          p_reference?: string | null
+        }
+        Returns: undefined
+      }
       og_submit_payment_proof: { Args: { p_order_id: string; p_proof_url: string }; Returns: undefined }
       og_upsert_my_push_subscription: {
         Args: { p_endpoint: string; p_keys_p256dh: string; p_keys_auth: string }

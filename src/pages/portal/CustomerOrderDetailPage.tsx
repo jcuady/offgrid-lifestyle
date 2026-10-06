@@ -479,7 +479,7 @@ function PaymentProofSection({
       const path = `${orderId}/${Date.now()}-${safeName}`;
       const { data, error: storageErr } = await supabase.storage
         .from("payment-proofs")
-        .upload(path, file, { upsert: true });
+        .upload(path, file, { upsert: false });
       if (storageErr) throw storageErr;
       const reference = toStorageReference("payment-proofs", data.path);
       await localOrderService.updateOrderField(orderId, { payment_proof_url: reference });

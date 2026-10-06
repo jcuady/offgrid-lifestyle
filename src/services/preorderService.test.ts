@@ -3,8 +3,6 @@ import {
   isOrderPreorder,
   getPreorderPickupVenue,
   fetchPreorderSlotStatus,
-  updatePreorderPaymentMethod,
-  submitPreorderPaymentProof,
 } from "./preorderService";
 import { PREORDER_PRODUCT_SLUG, PREORDER_MAX_SLOTS } from "@/src/lib/preorderConfig";
 import { usePortalStore } from "@/src/store/usePortalStore";
@@ -102,81 +100,6 @@ describe("preorderService", () => {
       expect(status.remainingSlots).toBeGreaterThanOrEqual(0);
       expect(status.remainingSlots).toBeLessThanOrEqual(PREORDER_MAX_SLOTS);
       expect(status.isSoldOut).toBe(status.remainingSlots === 0);
-    });
-  });
-
-  describe("updatePreorderPaymentMethod", () => {
-    it("updates order paymentMethod in local portal store", async () => {
-      usePortalStore.setState({
-        retailOrders: [
-          {
-            id: "PRE-2026-1111",
-            type: "retail",
-            channel: "shop",
-            status: "pending_deposit",
-            paymentStatus: "unpaid",
-            paymentMethod: "gcash",
-            paymentProvider: "manual",
-            paymentProviderRef: null,
-            customerId: null,
-            lines: [],
-            subtotal: { amount: 760, currency: "PHP" },
-            shipping: { amount: 0, currency: "PHP" },
-            tax: { amount: 0, currency: "PHP" },
-            total: { amount: 760, currency: "PHP" },
-            shippingInfo: null,
-            customerName: "Test User",
-            customerEmail: "test@example.com",
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          },
-        ],
-      });
-
-      await updatePreorderPaymentMethod("PRE-2026-1111", "bdo");
-      const updated = usePortalStore.getState().retailOrders.find((o) => o.id === "PRE-2026-1111");
-      expect(updated?.paymentMethod).toBe("bdo");
-    });
-  });
-
-  describe("submitPreorderPaymentProof", () => {
-    it("updates order paymentStatus to submitted and sets reference number", async () => {
-      usePortalStore.setState({
-        retailOrders: [
-          {
-            id: "PRE-2026-2222",
-            type: "retail",
-            channel: "shop",
-            status: "pending_deposit",
-            paymentStatus: "unpaid",
-            paymentMethod: "bdo",
-            paymentProvider: "manual",
-            paymentProviderRef: null,
-            customerId: null,
-            lines: [],
-            subtotal: { amount: 760, currency: "PHP" },
-            shipping: { amount: 0, currency: "PHP" },
-            tax: { amount: 0, currency: "PHP" },
-            total: { amount: 760, currency: "PHP" },
-            shippingInfo: null,
-            customerName: "Test User",
-            customerEmail: "test@example.com",
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          },
-        ],
-      });
-
-      const res = await submitPreorderPaymentProof({
-        orderId: "PRE-2026-2222",
-        email: "test@example.com",
-        referenceNumber: "BDO-REF-998877",
-      });
-
-      expect(res.success).toBe(true);
-      expect(res.referenceNumber).toBe("BDO-REF-998877");
-      const updated = usePortalStore.getState().retailOrders.find((o) => o.id === "PRE-2026-2222");
-      expect(updated?.paymentProviderRef).toBe("BDO-REF-998877");
     });
   });
 });

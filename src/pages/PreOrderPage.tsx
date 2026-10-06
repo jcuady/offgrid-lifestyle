@@ -174,9 +174,16 @@ export function PreOrderPage() {
 
   const handleSwitchPaymentMethod = async (newMethod: PreorderPaymentMethod) => {
     if (confirmedPaymentMethod === newMethod) return;
+    const previous = confirmedPaymentMethod;
     setConfirmedPaymentMethod(newMethod);
+    setProofUploadError(null);
     if (successOrderId) {
-      await updatePreorderPaymentMethod(successOrderId, newMethod);
+      try {
+        await updatePreorderPaymentMethod(successOrderId, newMethod);
+      } catch (err) {
+        setConfirmedPaymentMethod(previous);
+        setProofUploadError(err instanceof Error ? err.message : "Could not switch payment method.");
+      }
     }
   };
 
@@ -197,12 +204,8 @@ export function PreOrderPage() {
         file: proofFile,
         referenceNumber: proofRefNumber,
       });
-      if (res.success) {
-        setProofUploadSuccess(true);
-        if (res.proofUrl) {
-          setProofPreviewUrl(res.proofUrl);
-        }
-      }
+      // The preview is the local file picked above; res.proofUrl is a private storage reference.
+      if (res.success) setProofUploadSuccess(true);
     } catch (err) {
       setProofUploadError(err instanceof Error ? err.message : "Upload failed. Please try again.");
     } finally {

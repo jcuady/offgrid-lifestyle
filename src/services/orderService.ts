@@ -342,13 +342,12 @@ export const supabaseOrderService: OrderService = {
       },
     );
 
-    const { error: patchError } = await supabase
-      .from("og_orders")
-      .update({
-        custom_payload: finalDraft as unknown as Json,
-        updated_at: finalDraft.updatedAt,
-      })
-      .eq("id", orderId);
+    // RPC, not UPDATE: guests cannot SELECT og_orders, so a direct UPDATE silently matched 0 rows.
+    const { error: patchError } = await supabase.rpc("og_finalize_custom_order", {
+      p_order_id: orderId,
+      p_email: customerEmail ?? draft.contactEmail ?? "",
+      p_payload: finalDraft as unknown as Json,
+    });
 
     if (patchError) {
       throw new Error(`Order saved but file metadata could not be updated: ${patchError.message}`);

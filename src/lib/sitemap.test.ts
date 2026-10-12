@@ -5,6 +5,7 @@ import {
   mergeSitemapEntries,
   productSitemapEntry,
 } from "./sitemap";
+import { resolveRouteSeo } from "./routeSeo";
 
 describe("sitemap", () => {
   it("includes product PDP paths when slugs are provided", () => {
@@ -26,6 +27,15 @@ describe("sitemap", () => {
     expect(xml).toContain('<?xml version="1.0" encoding="UTF-8"?>');
     expect(xml).toContain("<loc>https://www.oglifestyleph.com/shop/test-product</loc>");
     expect(xml).toContain("<changefreq>weekly</changefreq>");
+  });
+
+  it("lists only indexable pages that own their route SEO (no redirects or 404 fallbacks)", () => {
+    for (const { path } of STATIC_SITEMAP_ENTRIES) {
+      const seo = resolveRouteSeo(path);
+      expect(seo?.path, path).toBe(path);
+      expect(seo?.noindex, path).toBeFalsy();
+      expect(seo?.title, path).not.toMatch(/Page Not Found|Custom Ordering Guide/);
+    }
   });
 
   it("preserves fractional priorities like 0.85", () => {

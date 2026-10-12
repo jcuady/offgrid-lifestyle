@@ -3,6 +3,8 @@
   "buildCommand": "NODE_OPTIONS=--max-old-space-size=4096 npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
+  "cleanUrls": true,
+  "trailingSlash": false,
   "headers": [
     {
       "source": "/(.*)",
@@ -57,12 +59,20 @@
       "has": [{ "type": "host", "value": "oglifestyleph.com" }],
       "destination": "https://www.oglifestyleph.com/:path*",
       "permanent": true
-    }
+    },
+    {
+      "source": "/custom/:section(how-to-order|product-catalog|team-deals|sizing-chart|free-jersey-promo|faqs|lead-times)",
+      "destination": "/custom#:section",
+      "permanent": true
+    },
+    { "source": "/og-signatures", "destination": "/collections", "permanent": true },
+    { "source": "/preorder/social-club", "destination": "/pre-order/social-club", "permanent": true },
+    { "source": "/events", "destination": "/community", "permanent": true }
   ],
   "rewrites": [
     {
       "source": "/((?!assets/|images/|favicon/|favicon_io/|templates/|OG%20logo/|logo\\.png|favicon\\.ico|robots\\.txt|sitemap\\.xml|manifest\\.webmanifest|sw\\.js|workbox-.*\\.js).*)",
-      "destination": "/index.html"
+      "destination": "/spa.html"
     }
   ]
 }

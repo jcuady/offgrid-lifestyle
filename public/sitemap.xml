@@ -36,36 +36,6 @@
     <priority>0.75</priority>
   </url>
   <url>
-    <loc>https://www.oglifestyleph.com/custom/how-to-order</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.oglifestyleph.com/custom/product-catalog</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.oglifestyleph.com/custom/team-deals</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.oglifestyleph.com/custom/sizing-chart</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.oglifestyleph.com/custom/faqs</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.65</priority>
-  </url>
-  <url>
-    <loc>https://www.oglifestyleph.com/custom/lead-times</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.65</priority>
-  </url>
-  <url>
     <loc>https://www.oglifestyleph.com/community</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>

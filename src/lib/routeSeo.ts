@@ -21,6 +21,13 @@ const STATIC_ROUTE_SEO: Record<string, PageSeoInput> = {
       "Browse premium pickleball, golf, running, and lifestyle apparel. Crowd favorites, new drops, and OG Signatures — ships nationwide in the Philippines.",
     path: "/shop",
   },
+  "/pre-order/social-club": {
+    title: `Pre-Order: The Social Club Collection | ${BRAND}`,
+    description:
+      "Pre-order the limited Social Club Collection Boxy Cut Cotton Shirt. 5% off until Oct 9. Strictly limited to 30 pieces worldwide.",
+    path: "/pre-order/social-club",
+    imagePath: "/images/products/social-club-cover.webp",
+  },
   "/collections": {
     title: `Shop By Collection — Discfest, Solar, Primal & OG Vibe | ${BRAND}`,
     description:

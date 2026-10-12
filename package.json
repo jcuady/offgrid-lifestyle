@@ -8,6 +8,7 @@
     "generate:sitemap": "tsx scripts/generate-sitemap.ts",
     "prebuild": "npm run generate:sitemap",
     "build": "vite build",
+    "postbuild": "tsx scripts/prerender-seo.ts",
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",

@@ -72,7 +72,7 @@
   "rewrites": [
     {
       "source": "/((?!assets/|images/|favicon/|favicon_io/|templates/|OG%20logo/|logo\\.png|favicon\\.ico|robots\\.txt|sitemap\\.xml|manifest\\.webmanifest|sw\\.js|workbox-.*\\.js).*)",
-      "destination": "/spa.html"
+      "destination": "/spa"
     }
   ]
 }

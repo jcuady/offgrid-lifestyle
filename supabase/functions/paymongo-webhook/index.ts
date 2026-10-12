@@ -17,58 +17,11 @@ import {
 } from "../_shared/orderPayment.ts";
 import { dispatchPaymentReceiptEmail } from "../_shared/dispatchPaymentReceipt.ts";
 import { notifyPaymentConfirmed } from "../_shared/notifyPaymentConfirmed.ts";
-
-type CheckoutSessionData = {
-  id?: string;
-  attributes?: {
-    reference_number?: string;
-    metadata?: Record<string, unknown>;
-    payments?: Array<{
-      id?: string;
-      attributes?: {
-        status?: string;
-        amount?: number;
-        fee?: number;
-        net_amount?: number;
-        source?: { type?: string };
-      };
-    }>;
-    payment_intent?: { id?: string };
-    status?: string;
-  };
-};
-
-function extractEvent(payload: unknown): {
-  eventId: string;
-  eventType: string;
-  session: CheckoutSessionData | null;
-  livemode: boolean;
-} | null {
-  const root = payload as Record<string, unknown>;
-  const envelope = (root.data ?? root) as Record<string, unknown>;
-  const eventType =
-    (typeof envelope.type === "string" && envelope.type) ||
-    (typeof root.type === "string" && root.type) ||
-    "";
-  const eventId =
-    (typeof envelope.id === "string" && envelope.id) ||
-    (typeof root.id === "string" && root.id) ||
-    "";
-  if (!eventType) return null;
-
-  const nested = (envelope.data ?? root.data) as CheckoutSessionData | undefined;
-  const session =
-    nested && typeof nested === "object"
-      ? nested
-      : (envelope as unknown as CheckoutSessionData);
-
-  return {
-    eventId: eventId || `${eventType}:${session?.id ?? crypto.randomUUID()}`,
-    eventType,
-    session: session ?? null,
-    livemode: Boolean(envelope.livemode ?? root.livemode),
-  };
-}
+import {
+  isSettlementEvent,
+  parsePaymongoEvent,
+  type CheckoutSessionData,
+} from "../_shared/paymongoEvent.ts";
 
 function resolveOrderId(session: CheckoutSessionData): string | null {
   const meta = session.attributes?.metadata;
@@ -247,7 +200,7 @@ Deno.serve(async (req: Request) => {
       return jsonResponse({ error: "Invalid JSON." }, 400, {});
     }
 
-    const parsed = extractEvent(payload);
+    const parsed = parsePaymongoEvent(payload);
     if (!parsed) {
       return jsonResponse({ received: true, ignored: true }, 200, {});
     }
@@ -267,14 +220,7 @@ Deno.serve(async (req: Request) => {
       console.error("webhook event insert", insertEvtErr);
     }
 
-    const handledTypes = new Set([
-      "checkout_session.payment.paid",
-      "payment.paid",
-      "payment.failed",
-      "checkout_session.payment.failed",
-    ]);
-
-    if (!handledTypes.has(eventType)) {
+    if (!isSettlementEvent(eventType)) {
       return jsonResponse({ received: true, ignored: true, eventType }, 200, {});
     }
 
